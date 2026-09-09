@@ -214,11 +214,13 @@
 
   // js/data/skins.js
   var SKINS = [
+    // ── 3 套初始預設外觀 ──
     {
       id: "skin_cyber_warrior",
       name: "\u8CFD\u535A\u6B66\u8005",
       title: "\u5168\u606F\u524D\u7DDA\u5C16\u5175",
       category: "default",
+      series: "\u7D93\u5178\u5148\u92D2",
       price: 0,
       isDefault: true,
       themeColor: "#00f3ff",
@@ -243,6 +245,7 @@
       name: "\u9713\u8679\u6697\u5F71\u523A\u5BA2",
       title: "\u6697\u5F71\u533F\u8E64\u99ED\u5BA2",
       category: "default",
+      series: "\u6697\u591C\u9713\u8679",
       price: 0,
       isDefault: true,
       themeColor: "#ff007f",
@@ -267,6 +270,7 @@
       name: "\u8108\u885D\u91CD\u88DD\u57F7\u6CD5\u5B98",
       title: "\u6975\u9650\u8B66\u5099\u91CD\u88DD",
       category: "default",
+      series: "\u91CD\u88DD\u9632\u79A6",
       price: 0,
       isDefault: true,
       themeColor: "#ffd700",
@@ -286,11 +290,88 @@
       },
       creator: "Official Core"
     },
+    // ── 商城熱門角色 (依價格梯度排列，豐富多元風格) ──
+    {
+      id: "skin_cosmic_ronin",
+      name: "\u661F\u7A79\u91CF\u5B50\u6D6A\u4EBA",
+      title: "\u661F\u969B\u6D41\u6D6A\u5C45\u5408\u528D\u5BA2",
+      category: "shop",
+      series: "\u6771\u65B9\u6A5F\u6B66",
+      price: 1800,
+      isDefault: false,
+      themeColor: "#818cf8",
+      secondaryColor: "#c084fc",
+      glowColor: "rgba(129, 140, 248, 0.6)",
+      accentColor: "#a5b4fc",
+      armorColor: "#1e1b4b",
+      visorColor: "#818cf8",
+      coreColor: "#c084fc",
+      desc: "\u6F2B\u904A\u661F\u96F2\u7684\u7121\u4E3B\u6B66\u58EB\uFF0C\u4F69\u6234\u647A\u758A\u96FB\u6F3F\u592A\u5200\uFF0C\u51FA\u62DB\u5982\u6D41\u661F\u96E8\u822C\u7D62\u9E97\u6D41\u66A2\u3002",
+      vfx: {
+        punchTrail: "\u975B\u85CD\u661F\u5875\u5200\u5F27\u3001\u661F\u8292\u6B98\u8DE1",
+        sk1: "\u7D2B\u85CD\u8272\u5F57\u661F\u6838\u5FC3\u5F48\uFF0C\u62D6\u66F3\u661F\u5875\u661F\u74B0",
+        sk2: "\u7834\u7A7A\u6C96\u5929\u4E4B\u661F\u96F2\u6F29\u6E26\u65AC",
+        guardShield: "\u661F\u74B0\u516B\u5366\u8B77\u9AD4\u9663",
+        hitEffect: "\u7480\u74A8\u661F\u5C51\u8FF8\u767C"
+      },
+      creator: "Community Workshop (PR #19)"
+    },
+    {
+      id: "skin_volt_ranger",
+      name: "\u96F7\u9706\u795E\u901F\u904A\u4FE0",
+      title: "\u8D85\u97F3\u901F\u96FB\u78C1\u5148\u92D2",
+      category: "shop",
+      series: "\u5143\u7D20\u8D85\u8F09",
+      price: 2e3,
+      isDefault: false,
+      themeColor: "#facc15",
+      secondaryColor: "#fde047",
+      glowColor: "rgba(250, 204, 21, 0.6)",
+      accentColor: "#eab308",
+      armorColor: "#1a1702",
+      visorColor: "#facc15",
+      coreColor: "#fde047",
+      desc: "\u5B89\u88DD\u8D85\u9AD8\u58D3\u7279\u65AF\u62C9\u7DDA\u5708\u7684\u6975\u901F\u523A\u5BA2\uFF0C\u5468\u8EAB\u6C38\u9060\u74B0\u7E5E\u8457\u6ECB\u6ECB\u4F5C\u97FF\u7684\u767E\u842C\u4F0F\u7279\u9AD8\u58D3\u96FB\u5F27\u3002",
+      vfx: {
+        punchTrail: "\u91D1\u9EC3\u9023\u9396\u9583\u96FB\u9739\u9742\u5149\u75D5",
+        sk1: "\u9AD8\u983B\u65CB\u8F49\u7279\u65AF\u62C9\u7403\u578B\u9583\u96FB",
+        sk2: "\u5F15\u96F7\u6C96\u5929\u4E4B\u66B4\u98A8\u96F7\u67F1",
+        guardShield: "\u767E\u842C\u4F0F\u7279\u96FB\u78C1\u611F\u61C9\u7F69",
+        hitEffect: "\u9AD8\u58D3\u96FB\u706B\u82B1\u70B8\u88C2"
+      },
+      creator: "Community Workshop (PR #24)"
+    },
+    {
+      id: "skin_abyssal_ghost",
+      name: "\u6DF1\u6DF5\u5E7D\u9748\u7279\u5DE5",
+      title: "\u9ED1\u6C34\u6DF1\u6D77\u533F\u8E64\u523A\u5BA2",
+      category: "shop",
+      series: "\u7279\u52E4\u8ADC\u5F71",
+      price: 2200,
+      isDefault: false,
+      themeColor: "#06b6d4",
+      secondaryColor: "#22d3ee",
+      glowColor: "rgba(6, 182, 212, 0.6)",
+      accentColor: "#67e8f9",
+      armorColor: "#082f49",
+      visorColor: "#06b6d4",
+      coreColor: "#06b6d4",
+      desc: "\u914D\u5099\u5168\u50CF\u6298\u5C04\u8FF7\u5F69\u8207\u6C34\u51B7\u53CD\u61C9\u5806\u7684\u5E7D\u9748\u7279\u52D9\uFF0C\u5728\u9ED1\u6697\u4E2D\u5B9B\u5982\u6DF1\u6D77\u63A0\u98DF\u8005\u822C\u81F4\u547D\u3002",
+      vfx: {
+        punchTrail: "\u9752\u78A7\u8272\u6C34\u6CE2\u6F23\u6F2A\u5149\u8ECC",
+        sk1: "\u9AD8\u58D3\u6C34\u6D41\u7B49\u96E2\u5B50\u7A7F\u7532\u5F48",
+        sk2: "\u65CB\u8F49\u5347\u9A30\u4E4B\u6DF1\u6D77\u6F29\u6E26\u5674\u5C04\u6D41",
+        guardShield: "\u8D85\u6D41\u9AD4\u6298\u5C04\u5E7E\u4F55\u529B\u5834",
+        hitEffect: "\u6C34\u85CD\u8272\u8072\u7D0D\u8108\u885D\u74B0"
+      },
+      creator: "Community Workshop (PR #31)"
+    },
     {
       id: "skin_dark_hacker",
       name: "\u6697\u9ED1\u99ED\u5BA2",
       title: "\u4E8C\u9032\u5236\u6DF1\u7DB2\u5E7B\u5F71",
       category: "shop",
+      series: "\u77E9\u9663\u4EE3\u78BC",
       price: 2500,
       isDefault: false,
       themeColor: "#00ff66",
@@ -305,16 +386,117 @@
         punchTrail: "\u7DA0\u8272 0 \u8207 1 \u4E8C\u9032\u5236\u4EE3\u78BC\u6D41\u63EE\u780D",
         sk1: "\u7DA0\u8272\u7D42\u7AEF\u5B57\u7B26\u4EE3\u78BC\u5149\u675F\u7403",
         sk2: "\u5782\u76F4\u5347\u9A30\u4E4B\u7DA0\u8272\u6578\u64DA\u77E9\u9663\u5149\u7246",
-        guardShield: "\u7DA0\u8272\u6383\u63CF\u7DDA\u529B\u5834",
-        hitEffect: "\u7DA0\u8272\u50CF\u7D20\u5149\u5875"
+        guardShield: "\u7DA0\u8272\u6383\u63CF\u7DDA\u4EE3\u78BC\u529B\u5834",
+        hitEffect: "\u7DA0\u8272\u50CF\u7D20\u6578\u64DA\u5149\u5875"
       },
       creator: "Community Workshop (PR #42)"
+    },
+    {
+      id: "skin_nano_cyborg",
+      name: "\u5948\u7C73\u751F\u5316\u6230\u8B66",
+      title: "\u751F\u5316\u6DB2\u614B\u91D1\u5C6C\u6539\u9020\u4EBA",
+      category: "shop",
+      series: "\u751F\u5316\u79D1\u6280",
+      price: 2600,
+      isDefault: false,
+      themeColor: "#84cc16",
+      secondaryColor: "#a3e635",
+      glowColor: "rgba(132, 204, 22, 0.6)",
+      accentColor: "#65a30d",
+      armorColor: "#142005",
+      visorColor: "#84cc16",
+      coreColor: "#bef264",
+      desc: "\u56DB\u80A2\u7531\u5341\u5104\u7D1A\u5948\u7C73\u6A5F\u68B0\u7FA4\u69CB\u6210\uFF0C\u51FA\u62F3\u6642\u6DB2\u614B\u91D1\u5C6C\u80FD\u96A8\u5FC3\u6240\u6B32\u8B8A\u5F62\u70BA\u5C16\u523A\u8207\u5DE8\u5203\u3002",
+      vfx: {
+        punchTrail: "\u6BD2\u7DA0\u6DB2\u614B\u91D1\u5C6C\u8B8A\u5F62\u523A\u5203\u5149\u75D5",
+        sk1: "\u5BC6\u96C6\u8702\u7FA4\u5948\u7C73\u6A5F\u68B0\u5718",
+        sk2: "\u6DB2\u614B\u91D1\u5C6C\u5DE8\u77DB\u6C96\u5929\u7A7F\u523A",
+        guardShield: "\u516D\u89D2\u5948\u7C73\u81EA\u6211\u4FEE\u5FA9\u76FE",
+        hitEffect: "\u8702\u5DE2\u6676\u683C\u91D1\u5C6C\u788E\u5C51"
+      },
+      creator: "Community Workshop (PR #48)"
+    },
+    {
+      id: "skin_crimson_tyrant",
+      name: "\u8D64\u7D05\u66B4\u541B\u91CD\u6A5F\u7532",
+      title: "\u7194\u5CA9\u8D85\u8F09\u91CD\u88DD\u72C2\u6230\u58EB",
+      category: "shop",
+      series: "\u91CD\u88DD\u9632\u79A6",
+      price: 2800,
+      isDefault: false,
+      themeColor: "#ef4444",
+      secondaryColor: "#f97316",
+      glowColor: "rgba(239, 68, 68, 0.6)",
+      accentColor: "#dc2626",
+      armorColor: "#2b0707",
+      visorColor: "#ef4444",
+      coreColor: "#f97316",
+      desc: "\u91CD\u578B\u8FD1\u6230\u653B\u57CE\u6A5F\u7532\uFF0C\u642D\u8F09\u7194\u5CA9\u904E\u71B1\u52D5\u529B\u7210\uFF0C\u6BCF\u4E00\u6B21\u91CD\u62F3\u63EE\u52D5\u7686\u4F34\u96A8\u6FC3\u7159\u8207\u9AD8\u6EAB\u7194\u6E23\u3002",
+      vfx: {
+        punchTrail: "\u71BE\u7D05\u7194\u5CA9\u904E\u71B1\u91CD\u62F3\u5149\u75D5\u3001\u706B\u661F\u56DB\u6FFA",
+        sk1: "\u9AD8\u6EAB\u71C3\u71D2\u7194\u5CA9\u5DE8\u7403\uFF0C\u5E36\u9ED1\u7159\u5C3E\u8DE1",
+        sk2: "\u706B\u5C71\u5674\u767C\u822C\u5730\u88C2\u706B\u67F1\u5347\u9A30",
+        guardShield: "\u5C16\u523A\u91CD\u88DD\u751F\u9435\u71BE\u708E\u76FE",
+        hitEffect: "\u8D64\u7D05\u9AD8\u71B1\u706B\u82B1\u788E\u88C2"
+      },
+      creator: "Community Workshop (PR #53)"
+    },
+    {
+      id: "skin_cryo_maiden",
+      name: "\u6975\u5BD2\u8D85\u5C0E\u6B66\u59EC",
+      title: "\u7D55\u5C0D\u96F6\u5EA6\u51B0\u6676\u5B88\u885B",
+      category: "shop",
+      series: "\u5143\u7D20\u8D85\u8F09",
+      price: 3e3,
+      isDefault: false,
+      themeColor: "#38bdf8",
+      secondaryColor: "#e0f2fe",
+      glowColor: "rgba(56, 189, 248, 0.6)",
+      accentColor: "#7dd3fc",
+      armorColor: "#08253a",
+      visorColor: "#38bdf8",
+      coreColor: "#bae6fd",
+      desc: "\u642D\u8F09\u8D85\u5C0E\u4F4E\u6EAB\u51B7\u51CD\u6280\u8853\u7684\u6230\u9B25\u4EBA\u5F62\uFF0C\u5468\u8EAB\u7C60\u7F69\u8457\u6975\u81F4\u7684\u51B0\u85CD\u5BD2\u971C\u8207\u947D\u77F3\u51B0\u6676\u5875\u57C3\u3002",
+      vfx: {
+        punchTrail: "\u96EA\u767D\u51B0\u7A1C\u5207\u9762\u3001\u51B0\u971C\u5149\u9727",
+        sk1: "\u65CB\u8F49\u6975\u5BD2\u51B0\u9B44\u6C34\u6676\u5F48",
+        sk2: "\u62D4\u5730\u800C\u8D77\u4E4B\u53C3\u5929\u51B0\u523A\u5DE8\u5854",
+        guardShield: "\u947D\u77F3\u7A1C\u93E1\u51B0\u58C1\u9632\u79A6",
+        hitEffect: "\u51B0\u6676\u788E\u88C2\u6676\u7469\u96EA\u82B1"
+      },
+      creator: "Community Workshop (PR #59)"
+    },
+    {
+      id: "skin_void_devourer",
+      name: "\u865B\u7A7A\u541E\u566C\u8005",
+      title: "\u53CD\u7269\u8CEA\u9ED1\u6D1E\u5947\u9EDE\u884C\u8005",
+      category: "shop",
+      series: "\u672A\u4F86\u6A5F\u795E",
+      price: 3200,
+      isDefault: false,
+      themeColor: "#9333ea",
+      secondaryColor: "#a855f7",
+      glowColor: "rgba(147, 51, 234, 0.6)",
+      accentColor: "#7e22ce",
+      armorColor: "#0a0212",
+      visorColor: "#c084fc",
+      coreColor: "#9333ea",
+      desc: "\u7531\u6697\u7269\u8CEA\u80FD\u91CF\u51DD\u805A\u800C\u6210\u7684\u7570\u6B21\u5143\u7375\u624B\uFF0C\u6838\u5FC3\u5982\u540C\u5FAE\u578B\u9ED1\u6D1E\uFF0C\u80FD\u541E\u566C\u5468\u906D\u7684\u5149\u7DDA\u8207\u7A7A\u9593\u3002",
+      vfx: {
+        punchTrail: "\u6DF1\u7D2B\u9ED1\u6D1E\u91CD\u529B\u6CE2\u5207\u75D5",
+        sk1: "\u65CB\u8F49\u7684\u53CD\u7269\u8CEA\u574D\u7E2E\u9ED1\u6D1E\u7403",
+        sk2: "\u865B\u7A7A\u6495\u88C2\u7DAD\u5EA6\u88C2\u9699\u5149\u67F1",
+        guardShield: "\u4E8B\u4EF6\u8996\u754C\u5F15\u529B\u504F\u6298\u76FE",
+        hitEffect: "\u7DAD\u5EA6\u7834\u788E\u6697\u5F71\u88C2\u7D0B"
+      },
+      creator: "Community Workshop (PR #65)"
     },
     {
       id: "skin_solar_valkyrie",
       name: "\u592A\u967D\u5973\u6B66\u795E",
       title: "\u6046\u661F\u70C8\u7130\u6230\u795E",
       category: "event",
+      series: "\u7D42\u6975\u5178\u85CF",
       price: 3500,
       isDefault: false,
       themeColor: "#ff4500",
@@ -333,6 +515,81 @@
         hitEffect: "\u71BE\u71B1\u706B\u661F\u8FF8\u767C"
       },
       creator: "Season 1 Grand Master"
+    },
+    {
+      id: "skin_cyber_diva",
+      name: "\u8CFD\u535A\u6B4C\u59EC\u97F3\u5F8B",
+      title: "\u5168\u606F\u96FB\u5B50\u97F3\u6A02\u865B\u64EC\u5076\u50CF",
+      category: "shop",
+      series: "\u6697\u591C\u9713\u8679",
+      price: 3800,
+      isDefault: false,
+      themeColor: "#14b8a6",
+      secondaryColor: "#f43f5e",
+      glowColor: "rgba(20, 184, 166, 0.6)",
+      accentColor: "#2dd4bf",
+      armorColor: "#042f2e",
+      visorColor: "#14b8a6",
+      coreColor: "#f43f5e",
+      desc: "\u5C07\u96FB\u5B50\u97F3\u6A02\u7B49\u5316\u5668\u8F49\u5316\u70BA\u6B66\u88DD\u7684\u5168\u606F\u6B4C\u59EC\uFF0C\u63EE\u62F3\u5E36\u6709\u97F3\u5F8B\u7B26\u865F\uFF0C\u6230\u9B25\u5B9B\u5982\u76DB\u5927\u6F14\u5531\u6703\u3002",
+      vfx: {
+        punchTrail: "\u9752\u7DA0/\u6843\u7D05\u96D9\u8272\u52D5\u614B\u7B49\u5316\u5668\u97F3\u6CE2\u6CE2\u5F62",
+        sk1: "\u5168\u606F\u516B\u5206\u97F3\u7B26\u8207\u9AD8\u97F3\u8B5C\u865F\u97F3\u7206\u7403",
+        sk2: "\u4E03\u5F69\u9713\u8679\u821E\u53F0\u805A\u5149\u71C8\u97F3\u5F8B\u5149\u67F1",
+        guardShield: "\u52D5\u611F\u8072\u6CE2\u983B\u8B5C\u5E7E\u4F55\u9632\u8B77\u5C4F",
+        hitEffect: "\u8DF3\u8E8D\u7684\u97F3\u7B26\u8207\u70AB\u5F69\u7C92\u5B50"
+      },
+      creator: "Community Workshop (PR #77)"
+    },
+    {
+      id: "skin_archangel_judicator",
+      name: "\u66DC\u767D\u88C1\u6C7A\u8056\u4F7F",
+      title: "\u5149\u5B50\u8056\u5F8B\u7D42\u6975\u57F7\u884C\u8005",
+      category: "shop",
+      series: "\u672A\u4F86\u6A5F\u795E",
+      price: 4e3,
+      isDefault: false,
+      themeColor: "#f8fafc",
+      secondaryColor: "#38bdf8",
+      glowColor: "rgba(248, 250, 252, 0.7)",
+      accentColor: "#93c5fd",
+      armorColor: "#1e293b",
+      visorColor: "#38bdf8",
+      coreColor: "#f8fafc",
+      desc: "\u901A\u9AD4\u63A1\u7528\u7D14\u767D\u5948\u7C73\u9676\u74F7\u8207\u767D\u91D1\u88DD\u7532\u7684\u9AD8\u6F54\u6B66\u88DD\uFF0C\u80CC\u5F8C\u5C55\u9732\u516D\u9053\u7D14\u5149\u5B50\u69CB\u6210\u7684\u5BE9\u5224\u5149\u7FFC\u3002",
+      vfx: {
+        punchTrail: "\u795E\u8056\u66DC\u767D\u5149\u7FBD\u5149\u5F27\u3001\u8056\u5149\u7C92\u5B50",
+        sk1: "\u7D14\u6DE8\u5149\u5B50\u795E\u8056\u9577\u77DB\u5C04\u7DDA",
+        sk2: "\u516D\u7FFC\u5C55\u7FC5\u62D4\u5730\u800C\u8D77\u4E4B\u5929\u5802\u8056\u5149\u67F1",
+        guardShield: "\u5927\u6559\u5802\u5F69\u7E6A\u73BB\u7483\u5149\u8292\u795E\u8056\u529B\u5834",
+        hitEffect: "\u91D1\u8272\u8056\u7FBD\u8207\u7D14\u767D\u5149\u74B0"
+      },
+      creator: "Community Workshop (PR #88)"
+    },
+    {
+      id: "skin_omega_emperor",
+      name: "\u9EC3\u91D1\u7D42\u6975\u6A5F\u795E",
+      title: "\u91CF\u5B50\u5E1D\u570B\u59CB\u7956\u6A5F\u7687",
+      category: "shop",
+      series: "\u7D42\u6975\u5178\u85CF",
+      price: 5e3,
+      isDefault: false,
+      themeColor: "#eab308",
+      secondaryColor: "#ffffff",
+      glowColor: "rgba(234, 179, 8, 0.7)",
+      accentColor: "#ca8a04",
+      armorColor: "#1e1601",
+      visorColor: "#ffffff",
+      coreColor: "#eab308",
+      desc: "\u53E4\u4EE3\u8D85\u6587\u660E\u907A\u7559\u7684\u7D42\u6975\u7687\u5E1D\u6A5F\u7532\uFF0C\u901A\u9AD4\u7531\u4E0D\u6EC5\u7684\u91CF\u5B50\u771F\u91D1\u9444\u9020\uFF0C\u5C0A\u8CB4\u5A01\u56B4\u51CC\u99D5\u773E\u751F\u3002",
+      vfx: {
+        punchTrail: "\u5E1D\u738B\u771F\u91D1\u8F1D\u714C\u65E5\u5195\u65AC\u3001\u795E\u5A01\u91D1\u5149",
+        sk1: "\u8D85\u65B0\u661F\u7206\u767C\u5E1D\u738B\u91D1\u8F2A\u6838\u7206\u5F48",
+        sk2: "\u842C\u4E08\u91D1\u5149\u8CAB\u7A7F\u5929\u5730\u7684\u81F3\u5C0A\u5E1D\u7687\u67F1",
+        guardShield: "\u4E5D\u4E94\u81F3\u5C0A\u771F\u91D1\u9F8D\u7D0B\u7D50\u754C",
+        hitEffect: "\u5E1D\u7687\u9F8D\u9C57\u91D1\u5149\u70B8\u88C2"
+      },
+      creator: "Legendary Artisan (PR #99)"
     }
   ];
 
@@ -1429,6 +1686,37 @@
         } else if (skin.id === "skin_solar_valkyrie") {
           ctx.fillStyle = "#ff4500";
           ctx.fillRect(vfx.x - 4, vfx.y - 4, 8, 8);
+        } else if (skin.id === "skin_cyber_diva") {
+          ctx.font = "13px sans-serif";
+          ctx.fillStyle = "#f43f5e";
+          ctx.fillText("\u266A", vfx.x - 6, vfx.y - 10);
+        } else if (skin.id === "skin_cryo_maiden") {
+          ctx.font = "12px sans-serif";
+          ctx.fillStyle = "#bae6fd";
+          ctx.fillText("\u2744", vfx.x - 6, vfx.y - 8);
+        } else if (skin.id === "skin_cosmic_ronin") {
+          ctx.font = "12px sans-serif";
+          ctx.fillStyle = "#c084fc";
+          ctx.fillText("\u2726", vfx.x - 6, vfx.y - 10);
+        } else if (skin.id === "skin_archangel_judicator") {
+          ctx.font = "14px sans-serif";
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText("\u2727", vfx.x - 6, vfx.y - 10);
+        } else if (skin.id === "skin_volt_ranger") {
+          ctx.strokeStyle = "#fde047";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(vfx.x - 10, vfx.y - 10);
+          ctx.lineTo(vfx.x - 4, vfx.y - 2);
+          ctx.lineTo(vfx.x - 8, vfx.y + 2);
+          ctx.lineTo(vfx.x, vfx.y + 8);
+          ctx.stroke();
+        } else if (skin.id === "skin_omega_emperor") {
+          ctx.strokeStyle = "#fef08a";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(vfx.x, vfx.y, 12, 0, Math.PI * 2);
+          ctx.stroke();
         }
       } else if (vfx.type === "kick") {
         ctx.beginPath();
@@ -1436,6 +1724,13 @@
         ctx.lineWidth = 6;
         ctx.strokeStyle = skin.themeColor;
         ctx.stroke();
+        if (skin.secondaryColor) {
+          ctx.beginPath();
+          ctx.arc(vfx.x - 10, vfx.y, 34, -Math.PI / 3, Math.PI / 6);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = skin.secondaryColor;
+          ctx.stroke();
+        }
       } else if (vfx.type === "shoryuken") {
         ctx.fillStyle = skin.glowColor;
         ctx.fillRect(vfx.x - 15, vfx.y, 30, 90);
@@ -2793,12 +3088,15 @@
       });
     }
     // ─── 分頁二：商店渲染 ───
-    renderShopCatalog() {
+    renderShopCatalog(filterSeries = "all") {
       const container = document.getElementById("shopGrid");
       if (!container) return;
       const u = saveSystem.currentUser;
       const owned = u ? u.skins : [];
-      const forSaleSkins = SKINS.filter((s) => s.price > 0);
+      let forSaleSkins = SKINS.filter((s) => s.price > 0);
+      if (filterSeries && filterSeries !== "all") {
+        forSaleSkins = forSaleSkins.filter((s) => s.series === filterSeries);
+      }
       container.innerHTML = forSaleSkins.map((s) => {
         const isOwned = owned.includes(s.id);
         return `
@@ -2806,7 +3104,7 @@
           <div class="skin-header">
             <div>
               <div class="skin-name" style="color: ${s.themeColor}">${s.name}</div>
-              <div style="font-size: 11px; color: #94a3b8;">${s.title}</div>
+              <div style="font-size: 11px; color: #94a3b8;">${s.title} | ${s.series || "\u6230\u8853\u5916\u88DD"}</div>
             </div>
             <span class="stat-capsule" style="font-size: 13px;">\u{1FA99} ${s.price.toLocaleString()}</span>
           </div>
@@ -2815,6 +3113,7 @@
             <div><strong>\u26A1 \u5C08\u5C6C\u5149\u8ECC\uFF1A</strong>${s.vfx.punchTrail}</div>
             <div><strong>\u{1F6E1}\uFE0F \u5C08\u5C6C\u8B77\u76FE\uFF1A</strong>${s.vfx.guardShield}</div>
           </div>
+          <div style="font-size: 11px; color: #64748b;">\u{1F3A8} \u5275\u4F5C\u8005\uFF1A${s.creator || "\u5B98\u65B9\u793E\u7FA4"}</div>
           <div style="display: flex; gap: 8px; margin-top: 8px;">
             <button class="nav-tab-btn try-on-btn" data-id="${s.id}" style="flex: 1; justify-content: center; border-color: ${s.themeColor}; color: ${s.themeColor}">
               <i class="fa-solid fa-eye"></i> \u8A66\u7A7F\u6F14\u793A
@@ -2851,7 +3150,7 @@
           if (res.success) {
             soundEngine.playUI("equip");
             alert(`\u{1F389} \u606D\u559C\u6210\u529F\u89E3\u9396\u9020\u578B\u3010${SKINS.find((s) => s.id === id).name}\u3011\uFF01\u5DF2\u76F4\u63A5\u70BA\u60A8\u51FA\u6230\u88DD\u5099\u3002`);
-            this.renderShopCatalog();
+            this.renderShopCatalog(filterSeries);
             this.renderSkinsInventory();
             this.updateUserHUD();
           } else {
@@ -3364,6 +3663,28 @@
           const m = document.getElementById("workshopModal");
           if (m) m.classList.add("active");
         };
+      }
+      document.querySelectorAll(".shop-filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".shop-filter-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          const series = btn.dataset.series;
+          this.renderShopCatalog(series);
+          soundEngine.playUI("click");
+        });
+      });
+      const claimRewardBtn = document.getElementById("dailyRewardClaimBtn");
+      if (claimRewardBtn) {
+        claimRewardBtn.addEventListener("click", () => {
+          if (saveSystem.currentUser) {
+            saveSystem.currentUser.credits += 1500;
+            saveSystem._saveCurrent();
+            this.updateUserHUD();
+            soundEngine.playUI("equip");
+            alert("\u{1F381} \u6BCF\u65E5\u6230\u5099\u88DC\u7D66\u9818\u53D6\u6210\u529F\uFF01\u5DF2\u7372\u5F97 +1,500 \u80FD\u91CF\u5E63\uFF0C\u5FEB\u53BB\u89E3\u9396\u5FC3\u5100\u7684\u6230\u5C07\u5427\uFF01");
+            this.renderShopCatalog();
+          }
+        });
       }
       document.querySelectorAll(".modal-close-btn").forEach((btn) => {
         btn.onclick = () => {

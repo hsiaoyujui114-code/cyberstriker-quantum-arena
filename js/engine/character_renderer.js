@@ -505,7 +505,7 @@ export class CharacterRenderer {
       ctx.strokeStyle = skin.secondaryColor || '#ffffff';
       ctx.stroke();
 
-      // 外觀專屬粒子
+      // 外觀專屬粒子特效
       if (skin.id === 'skin_dark_hacker') {
         ctx.font = '10px monospace';
         ctx.fillStyle = '#00ff66';
@@ -513,6 +513,37 @@ export class CharacterRenderer {
       } else if (skin.id === 'skin_solar_valkyrie') {
         ctx.fillStyle = '#ff4500';
         ctx.fillRect(vfx.x - 4, vfx.y - 4, 8, 8);
+      } else if (skin.id === 'skin_cyber_diva') {
+        ctx.font = '13px sans-serif';
+        ctx.fillStyle = '#f43f5e';
+        ctx.fillText('♪', vfx.x - 6, vfx.y - 10);
+      } else if (skin.id === 'skin_cryo_maiden') {
+        ctx.font = '12px sans-serif';
+        ctx.fillStyle = '#bae6fd';
+        ctx.fillText('❄', vfx.x - 6, vfx.y - 8);
+      } else if (skin.id === 'skin_cosmic_ronin') {
+        ctx.font = '12px sans-serif';
+        ctx.fillStyle = '#c084fc';
+        ctx.fillText('✦', vfx.x - 6, vfx.y - 10);
+      } else if (skin.id === 'skin_archangel_judicator') {
+        ctx.font = '14px sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('✧', vfx.x - 6, vfx.y - 10);
+      } else if (skin.id === 'skin_volt_ranger') {
+        ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 10, vfx.y - 10);
+        ctx.lineTo(vfx.x - 4, vfx.y - 2);
+        ctx.lineTo(vfx.x - 8, vfx.y + 2);
+        ctx.lineTo(vfx.x, vfx.y + 8);
+        ctx.stroke();
+      } else if (skin.id === 'skin_omega_emperor') {
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 12, 0, Math.PI * 2);
+        ctx.stroke();
       }
     } else if (vfx.type === 'kick') {
       // 重踢弧線掃光
@@ -521,6 +552,15 @@ export class CharacterRenderer {
       ctx.lineWidth = 6;
       ctx.strokeStyle = skin.themeColor;
       ctx.stroke();
+
+      // 重踢輔助雙色粒子
+      if (skin.secondaryColor) {
+        ctx.beginPath();
+        ctx.arc(vfx.x - 10, vfx.y, 34, -Math.PI / 3, Math.PI / 6);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = skin.secondaryColor;
+        ctx.stroke();
+      }
     } else if (vfx.type === 'shoryuken') {
       // 昇龍衝天光柱
       ctx.fillStyle = skin.glowColor;

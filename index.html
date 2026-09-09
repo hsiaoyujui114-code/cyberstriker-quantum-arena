@@ -172,7 +172,30 @@
           <span class="stat-capsule" style="font-size: 15px;">零數值課金保證</span>
         </div>
 
-        <h3 style="color: var(--primary-cyan); margin-bottom: 8px;"><i class="fa-solid fa-store"></i> 外觀商品貨架</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <h3 style="color: var(--primary-cyan); margin-bottom: 0;"><i class="fa-solid fa-store"></i> 全息武裝商城 (12 款全新個性戰將)</h3>
+            <span class="skin-tag" style="border-color: #00f3ff; color: #00f3ff;">純換裝 100% 公平</span>
+          </div>
+          <button class="nav-tab-btn" id="dailyRewardClaimBtn" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; font-weight: 800; border: none; padding: 8px 16px;">
+            <i class="fa-solid fa-gift"></i> 領取每日戰備補給 (+1,500 能量幣)
+          </button>
+        </div>
+
+        <!-- 系列分類標籤 -->
+        <div class="shop-filter-bar" id="shopFilterBar" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+          <button class="nav-tab-btn shop-filter-btn active" data-series="all" style="font-size: 12px; padding: 6px 12px;">全部系列</button>
+          <button class="nav-tab-btn shop-filter-btn" data-series="東方機武" style="font-size: 12px; padding: 6px 12px;">東方機武</button>
+          <button class="nav-tab-btn shop-filter-btn" data-series="元素超載" style="font-size: 12px; padding: 6px 12px;">元素超載</button>
+          <button class="nav-tab-btn shop-filter-btn" data-series="特勤諜影" style="font-size: 12px; padding: 6px 12px;">特勤諜影</button>
+          <button class="nav-tab-btn shop-filter-btn" data-series="生化科技" style="font-size: 12px; padding: 6px 12px;">生化科技</button>
+          <button class="nav-tab-btn shop-filter-btn" data-series="重裝防禦" style="font-size: 12px; padding: 6px 12px;">重裝防禦</button>
+          <button class="nav-tab-btn shop-filter-btn" data-series="矩陣代碼" style="font-size: 12px; padding: 6px 12px;">矩陣代碼</button>
+          <button class="nav-tab-btn shop-filter-btn" data-series="暗夜霓虹" style="font-size: 12px; padding: 6px 12px;">暗夜霓虹</button>
+          <button class="nav-tab-btn shop-filter-btn" data-series="未來機神" style="font-size: 12px; padding: 6px 12px;">未來機神</button>
+          <button class="nav-tab-btn shop-filter-btn" data-series="終極典藏" style="font-size: 12px; padding: 6px 12px;">終極典藏</button>
+        </div>
+
         <div class="skins-grid" id="shopGrid">
           <!-- 動態渲染商店造型商品 -->
         </div>

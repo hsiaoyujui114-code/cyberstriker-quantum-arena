@@ -287,14 +287,17 @@ class CyberStrikerApp {
   }
 
   // ─── 分頁二：商店渲染 ───
-  renderShopCatalog() {
+  renderShopCatalog(filterSeries = 'all') {
     const container = document.getElementById('shopGrid');
     if (!container) return;
 
     const u = saveSystem.currentUser;
     const owned = u ? u.skins : [];
 
-    const forSaleSkins = SKINS.filter(s => s.price > 0);
+    let forSaleSkins = SKINS.filter(s => s.price > 0);
+    if (filterSeries && filterSeries !== 'all') {
+      forSaleSkins = forSaleSkins.filter(s => s.series === filterSeries);
+    }
 
     container.innerHTML = forSaleSkins.map(s => {
       const isOwned = owned.includes(s.id);
@@ -303,7 +306,7 @@ class CyberStrikerApp {
           <div class="skin-header">
             <div>
               <div class="skin-name" style="color: ${s.themeColor}">${s.name}</div>
-              <div style="font-size: 11px; color: #94a3b8;">${s.title}</div>
+              <div style="font-size: 11px; color: #94a3b8;">${s.title} | ${s.series || '戰術外裝'}</div>
             </div>
             <span class="stat-capsule" style="font-size: 13px;">🪙 ${s.price.toLocaleString()}</span>
           </div>
@@ -312,6 +315,7 @@ class CyberStrikerApp {
             <div><strong>⚡ 專屬光軌：</strong>${s.vfx.punchTrail}</div>
             <div><strong>🛡️ 專屬護盾：</strong>${s.vfx.guardShield}</div>
           </div>
+          <div style="font-size: 11px; color: #64748b;">🎨 創作者：${s.creator || '官方社群'}</div>
           <div style="display: flex; gap: 8px; margin-top: 8px;">
             <button class="nav-tab-btn try-on-btn" data-id="${s.id}" style="flex: 1; justify-content: center; border-color: ${s.themeColor}; color: ${s.themeColor}">
               <i class="fa-solid fa-eye"></i> 試穿演示
@@ -350,7 +354,7 @@ class CyberStrikerApp {
         if (res.success) {
           soundEngine.playUI('equip');
           alert(`🎉 恭喜成功解鎖造型【${SKINS.find(s=>s.id===id).name}】！已直接為您出戰裝備。`);
-          this.renderShopCatalog();
+          this.renderShopCatalog(filterSeries);
           this.renderSkinsInventory();
           this.updateUserHUD();
         } else {
@@ -997,6 +1001,32 @@ class CyberStrikerApp {
         const m = document.getElementById('workshopModal');
         if (m) m.classList.add('active');
       };
+    }
+
+    // 商城系列分類過濾
+    document.querySelectorAll('.shop-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.shop-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const series = btn.dataset.series;
+        this.renderShopCatalog(series);
+        soundEngine.playUI('click');
+      });
+    });
+
+    // 每日戰備補給領取按鈕
+    const claimRewardBtn = document.getElementById('dailyRewardClaimBtn');
+    if (claimRewardBtn) {
+      claimRewardBtn.addEventListener('click', () => {
+        if (saveSystem.currentUser) {
+          saveSystem.currentUser.credits += 1500;
+          saveSystem._saveCurrent();
+          this.updateUserHUD();
+          soundEngine.playUI('equip');
+          alert('🎁 每日戰備補給領取成功！已獲得 +1,500 能量幣，快去解鎖心儀的戰將吧！');
+          this.renderShopCatalog();
+        }
+      });
     }
 
     // 所有關閉按鈕

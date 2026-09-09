@@ -1,18 +1,19 @@
 /**
  * 《CyberStriker: Quantum Arena》
- * 5 套外觀專屬打擊視覺特效 (VFX) 分離映射表
- * 完全符合 GAME_PROJECT_PLAN.md 第 3.1 節
+ * 15 大外觀造型與專屬打擊視覺特效 (VFX) 映射表
  * 
  * 核心原則：所有外觀的物理受擊盒 (Hurtbox) 與判定盒 (Hitbox) 精確至像素級 100% 相同，
  * 僅造型塗裝、光影色彩與招式專屬 VFX 特效分離獨立渲染。
  */
 
 export const SKINS = [
+  // ── 3 套初始預設外觀 ──
   {
     id: 'skin_cyber_warrior',
     name: '賽博武者',
     title: '全息前線尖兵',
     category: 'default',
+    series: '經典先鋒',
     price: 0,
     isDefault: true,
     themeColor: '#00f3ff',
@@ -37,6 +38,7 @@ export const SKINS = [
     name: '霓虹暗影刺客',
     title: '暗影匿蹤駭客',
     category: 'default',
+    series: '暗夜霓虹',
     price: 0,
     isDefault: true,
     themeColor: '#ff007f',
@@ -61,6 +63,7 @@ export const SKINS = [
     name: '脈衝重裝執法官',
     title: '極限警備重裝',
     category: 'default',
+    series: '重裝防禦',
     price: 0,
     isDefault: true,
     themeColor: '#ffd700',
@@ -80,11 +83,89 @@ export const SKINS = [
     },
     creator: 'Official Core'
   },
+
+  // ── 商城熱門角色 (依價格梯度排列，豐富多元風格) ──
+  {
+    id: 'skin_cosmic_ronin',
+    name: '星穹量子浪人',
+    title: '星際流浪居合劍客',
+    category: 'shop',
+    series: '東方機武',
+    price: 1800,
+    isDefault: false,
+    themeColor: '#818cf8',
+    secondaryColor: '#c084fc',
+    glowColor: 'rgba(129, 140, 248, 0.6)',
+    accentColor: '#a5b4fc',
+    armorColor: '#1e1b4b',
+    visorColor: '#818cf8',
+    coreColor: '#c084fc',
+    desc: '漫遊星雲的無主武士，佩戴摺疊電漿太刀，出招如流星雨般絢麗流暢。',
+    vfx: {
+      punchTrail: '靛藍星塵刀弧、星芒殘跡',
+      sk1: '紫藍色彗星核心彈，拖曳星塵星環',
+      sk2: '破空沖天之星雲漩渦斬',
+      guardShield: '星環八卦護體陣',
+      hitEffect: '璀璨星屑迸發'
+    },
+    creator: 'Community Workshop (PR #19)'
+  },
+  {
+    id: 'skin_volt_ranger',
+    name: '雷霆神速遊俠',
+    title: '超音速電磁先鋒',
+    category: 'shop',
+    series: '元素超載',
+    price: 2000,
+    isDefault: false,
+    themeColor: '#facc15',
+    secondaryColor: '#fde047',
+    glowColor: 'rgba(250, 204, 21, 0.6)',
+    accentColor: '#eab308',
+    armorColor: '#1a1702',
+    visorColor: '#facc15',
+    coreColor: '#fde047',
+    desc: '安裝超高壓特斯拉線圈的極速刺客，周身永遠環繞著滋滋作響的百萬伏特高壓電弧。',
+    vfx: {
+      punchTrail: '金黃連鎖閃電霹靂光痕',
+      sk1: '高頻旋轉特斯拉球型閃電',
+      sk2: '引雷沖天之暴風雷柱',
+      guardShield: '百萬伏特電磁感應罩',
+      hitEffect: '高壓電火花炸裂'
+    },
+    creator: 'Community Workshop (PR #24)'
+  },
+  {
+    id: 'skin_abyssal_ghost',
+    name: '深淵幽靈特工',
+    title: '黑水深海匿蹤刺客',
+    category: 'shop',
+    series: '特勤諜影',
+    price: 2200,
+    isDefault: false,
+    themeColor: '#06b6d4',
+    secondaryColor: '#22d3ee',
+    glowColor: 'rgba(6, 182, 212, 0.6)',
+    accentColor: '#67e8f9',
+    armorColor: '#082f49',
+    visorColor: '#06b6d4',
+    coreColor: '#06b6d4',
+    desc: '配備全像折射迷彩與水冷反應堆的幽靈特務，在黑暗中宛如深海掠食者般致命。',
+    vfx: {
+      punchTrail: '青碧色水波漣漪光軌',
+      sk1: '高壓水流等離子穿甲彈',
+      sk2: '旋轉升騰之深海漩渦噴射流',
+      guardShield: '超流體折射幾何力場',
+      hitEffect: '水藍色聲納脈衝環'
+    },
+    creator: 'Community Workshop (PR #31)'
+  },
   {
     id: 'skin_dark_hacker',
     name: '暗黑駭客',
     title: '二進制深網幻影',
     category: 'shop',
+    series: '矩陣代碼',
     price: 2500,
     isDefault: false,
     themeColor: '#00ff66',
@@ -99,16 +180,117 @@ export const SKINS = [
       punchTrail: '綠色 0 與 1 二進制代碼流揮砍',
       sk1: '綠色終端字符代碼光束球',
       sk2: '垂直升騰之綠色數據矩陣光牆',
-      guardShield: '綠色掃描線力場',
-      hitEffect: '綠色像素光塵'
+      guardShield: '綠色掃描線代碼力場',
+      hitEffect: '綠色像素數據光塵'
     },
     creator: 'Community Workshop (PR #42)'
+  },
+  {
+    id: 'skin_nano_cyborg',
+    name: '奈米生化戰警',
+    title: '生化液態金屬改造人',
+    category: 'shop',
+    series: '生化科技',
+    price: 2600,
+    isDefault: false,
+    themeColor: '#84cc16',
+    secondaryColor: '#a3e635',
+    glowColor: 'rgba(132, 204, 22, 0.6)',
+    accentColor: '#65a30d',
+    armorColor: '#142005',
+    visorColor: '#84cc16',
+    coreColor: '#bef264',
+    desc: '四肢由十億級奈米機械群構成，出拳時液態金屬能隨心所欲變形為尖刺與巨刃。',
+    vfx: {
+      punchTrail: '毒綠液態金屬變形刺刃光痕',
+      sk1: '密集蜂群奈米機械團',
+      sk2: '液態金屬巨矛沖天穿刺',
+      guardShield: '六角奈米自我修復盾',
+      hitEffect: '蜂巢晶格金屬碎屑'
+    },
+    creator: 'Community Workshop (PR #48)'
+  },
+  {
+    id: 'skin_crimson_tyrant',
+    name: '赤紅暴君重機甲',
+    title: '熔岩超載重裝狂戰士',
+    category: 'shop',
+    series: '重裝防禦',
+    price: 2800,
+    isDefault: false,
+    themeColor: '#ef4444',
+    secondaryColor: '#f97316',
+    glowColor: 'rgba(239, 68, 68, 0.6)',
+    accentColor: '#dc2626',
+    armorColor: '#2b0707',
+    visorColor: '#ef4444',
+    coreColor: '#f97316',
+    desc: '重型近戰攻城機甲，搭載熔岩過熱動力爐，每一次重拳揮動皆伴隨濃煙與高溫熔渣。',
+    vfx: {
+      punchTrail: '熾紅熔岩過熱重拳光痕、火星四濺',
+      sk1: '高溫燃燒熔岩巨球，帶黑煙尾跡',
+      sk2: '火山噴發般地裂火柱升騰',
+      guardShield: '尖刺重裝生鐵熾炎盾',
+      hitEffect: '赤紅高熱火花碎裂'
+    },
+    creator: 'Community Workshop (PR #53)'
+  },
+  {
+    id: 'skin_cryo_maiden',
+    name: '極寒超導武姬',
+    title: '絕對零度冰晶守衛',
+    category: 'shop',
+    series: '元素超載',
+    price: 3000,
+    isDefault: false,
+    themeColor: '#38bdf8',
+    secondaryColor: '#e0f2fe',
+    glowColor: 'rgba(56, 189, 248, 0.6)',
+    accentColor: '#7dd3fc',
+    armorColor: '#08253a',
+    visorColor: '#38bdf8',
+    coreColor: '#bae6fd',
+    desc: '搭載超導低溫冷凍技術的戰鬥人形，周身籠罩著極致的冰藍寒霜與鑽石冰晶塵埃。',
+    vfx: {
+      punchTrail: '雪白冰稜切面、冰霜光霧',
+      sk1: '旋轉極寒冰魄水晶彈',
+      sk2: '拔地而起之參天冰刺巨塔',
+      guardShield: '鑽石稜鏡冰壁防禦',
+      hitEffect: '冰晶碎裂晶瑩雪花'
+    },
+    creator: 'Community Workshop (PR #59)'
+  },
+  {
+    id: 'skin_void_devourer',
+    name: '虛空吞噬者',
+    title: '反物質黑洞奇點行者',
+    category: 'shop',
+    series: '未來機神',
+    price: 3200,
+    isDefault: false,
+    themeColor: '#9333ea',
+    secondaryColor: '#a855f7',
+    glowColor: 'rgba(147, 51, 234, 0.6)',
+    accentColor: '#7e22ce',
+    armorColor: '#0a0212',
+    visorColor: '#c084fc',
+    coreColor: '#9333ea',
+    desc: '由暗物質能量凝聚而成的異次元獵手，核心如同微型黑洞，能吞噬周遭的光線與空間。',
+    vfx: {
+      punchTrail: '深紫黑洞重力波切痕',
+      sk1: '旋轉的反物質坍縮黑洞球',
+      sk2: '虛空撕裂維度裂隙光柱',
+      guardShield: '事件視界引力偏折盾',
+      hitEffect: '維度破碎暗影裂紋'
+    },
+    creator: 'Community Workshop (PR #65)'
   },
   {
     id: 'skin_solar_valkyrie',
     name: '太陽女武神',
     title: '恆星烈焰戰神',
     category: 'event',
+    series: '終極典藏',
     price: 3500,
     isDefault: false,
     themeColor: '#ff4500',
@@ -127,5 +309,80 @@ export const SKINS = [
       hitEffect: '熾熱火星迸發'
     },
     creator: 'Season 1 Grand Master'
+  },
+  {
+    id: 'skin_cyber_diva',
+    name: '賽博歌姬音律',
+    title: '全息電子音樂虛擬偶像',
+    category: 'shop',
+    series: '暗夜霓虹',
+    price: 3800,
+    isDefault: false,
+    themeColor: '#14b8a6',
+    secondaryColor: '#f43f5e',
+    glowColor: 'rgba(20, 184, 166, 0.6)',
+    accentColor: '#2dd4bf',
+    armorColor: '#042f2e',
+    visorColor: '#14b8a6',
+    coreColor: '#f43f5e',
+    desc: '將電子音樂等化器轉化為武裝的全息歌姬，揮拳帶有音律符號，戰鬥宛如盛大演唱會。',
+    vfx: {
+      punchTrail: '青綠/桃紅雙色動態等化器音波波形',
+      sk1: '全息八分音符與高音譜號音爆球',
+      sk2: '七彩霓虹舞台聚光燈音律光柱',
+      guardShield: '動感聲波頻譜幾何防護屏',
+      hitEffect: '跳躍的音符與炫彩粒子'
+    },
+    creator: 'Community Workshop (PR #77)'
+  },
+  {
+    id: 'skin_archangel_judicator',
+    name: '曜白裁決聖使',
+    title: '光子聖律終極執行者',
+    category: 'shop',
+    series: '未來機神',
+    price: 4000,
+    isDefault: false,
+    themeColor: '#f8fafc',
+    secondaryColor: '#38bdf8',
+    glowColor: 'rgba(248, 250, 252, 0.7)',
+    accentColor: '#93c5fd',
+    armorColor: '#1e293b',
+    visorColor: '#38bdf8',
+    coreColor: '#f8fafc',
+    desc: '通體採用純白奈米陶瓷與白金裝甲的高潔武裝，背後展露六道純光子構成的審判光翼。',
+    vfx: {
+      punchTrail: '神聖曜白光羽光弧、聖光粒子',
+      sk1: '純淨光子神聖長矛射線',
+      sk2: '六翼展翅拔地而起之天堂聖光柱',
+      guardShield: '大教堂彩繪玻璃光芒神聖力場',
+      hitEffect: '金色聖羽與純白光環'
+    },
+    creator: 'Community Workshop (PR #88)'
+  },
+  {
+    id: 'skin_omega_emperor',
+    name: '黃金終極機神',
+    title: '量子帝國始祖機皇',
+    category: 'shop',
+    series: '終極典藏',
+    price: 5000,
+    isDefault: false,
+    themeColor: '#eab308',
+    secondaryColor: '#ffffff',
+    glowColor: 'rgba(234, 179, 8, 0.7)',
+    accentColor: '#ca8a04',
+    armorColor: '#1e1601',
+    visorColor: '#ffffff',
+    coreColor: '#eab308',
+    desc: '古代超文明遺留的終極皇帝機甲，通體由不滅的量子真金鑄造，尊貴威嚴凌駕眾生。',
+    vfx: {
+      punchTrail: '帝王真金輝煌日冕斬、神威金光',
+      sk1: '超新星爆發帝王金輪核爆彈',
+      sk2: '萬丈金光貫穿天地的至尊帝皇柱',
+      guardShield: '九五至尊真金龍紋結界',
+      hitEffect: '帝皇龍鱗金光炸裂'
+    },
+    creator: 'Legendary Artisan (PR #99)'
   }
 ];
