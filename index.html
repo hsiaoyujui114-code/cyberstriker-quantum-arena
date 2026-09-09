@@ -341,16 +341,17 @@
     </div>
   </div>
 
-  <!-- ── 賽前 15 秒「10 選 3」配技視窗 (Loadout Modal) ── -->
+  <!-- ── 賽前戰術配技視窗 (Loadout Modal - 無時間限制) ── -->
   <div class="modal-overlay" id="loadoutModal">
     <div class="modal-card" style="max-width: 740px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+      <button class="modal-close-btn">&times;</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; padding-right: 32px;">
         <div>
-          <h2 style="font-size: 20px; color: var(--primary-cyan);"><i class="fa-solid fa-boxes-stacked"></i> 賽前戰術配技 (10 選 3)</h2>
-          <div style="font-size: 12px; color: #94a3b8;">自由選取 3 招綁定至 [U]、[I]、[O] 按鍵</div>
+          <h2 style="font-size: 20px; color: var(--primary-cyan);"><i class="fa-solid fa-boxes-stacked"></i> 賽前戰術配技 (10 大技能自由挑選 3 招)</h2>
+          <div style="font-size: 12px; color: #94a3b8;">無時間限制，依戰術喜好自由挑選 3 招綁定至 [U]、[I]、[O] 按鍵</div>
         </div>
-        <div class="stat-capsule" style="font-size: 18px; border-color: #ff007f; color: #ff007f;">
-          ⏱️ <span id="loadoutCountdown">15</span> 秒
+        <div class="stat-capsule" style="font-size: 14px; border-color: #00f3ff; color: #00f3ff;">
+          <i class="fa-solid fa-infinity"></i> 不限時間
         </div>
       </div>
 

@@ -409,32 +409,22 @@ class CyberStrikerApp {
     if (modal) modal.classList.remove('active');
   }
 
-  // ─── 賽前 15 秒「10 選 3」配技視窗 ───
+  // ─── 賽前「10 選 3」配技視窗 (無時間限制) ───
   openLoadoutModal(startMatchCallback) {
     const modal = document.getElementById('loadoutModal');
     if (!modal) return;
     modal.classList.add('active');
 
-    this.loadoutTimer = 15;
-    const timerDisplay = document.getElementById('loadoutCountdown');
+    // 清除舊倒數 (若有)
+    if (this.loadoutInterval) {
+      clearInterval(this.loadoutInterval);
+      this.loadoutInterval = null;
+    }
 
     const u = saveSystem.currentUser;
     this.loadoutSelection = (u && u.loadout && u.loadout.length === 3) ? [...u.loadout] : ['SK-01', 'SK-02', 'SK-09'];
 
     this._renderLoadoutSkillsGrid();
-
-    // 啟動 15 秒倒數
-    clearInterval(this.loadoutInterval);
-    this.loadoutInterval = setInterval(() => {
-      this.loadoutTimer--;
-      if (timerDisplay) timerDisplay.textContent = this.loadoutTimer;
-      if (this.loadoutTimer <= 3) soundEngine.playUI('countdown');
-
-      if (this.loadoutTimer <= 0) {
-        clearInterval(this.loadoutInterval);
-        this._confirmLoadout(startMatchCallback);
-      }
-    }, 1000);
 
     // 綁定三大流派快捷按鈕
     document.querySelectorAll('.archetype-btn').forEach(btn => {
@@ -449,11 +439,10 @@ class CyberStrikerApp {
       };
     });
 
-    // 確認按鈕
+    // 確認按鈕 (點擊後才開戰，完全無時間限制)
     const confirmBtn = document.getElementById('confirmLoadoutBtn');
     if (confirmBtn) {
       confirmBtn.onclick = () => {
-        clearInterval(this.loadoutInterval);
         this._confirmLoadout(startMatchCallback);
       };
     }
