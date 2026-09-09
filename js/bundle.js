@@ -2327,6 +2327,8 @@
         this._executeHeavyKick(char, opp);
         return;
       }
+      const moveX = input.x || 0;
+      const moveY = input.y || 0;
       if (input.guard && char.isGrounded) {
         const wasGuarding = char.isGuarding;
         char.isGuarding = true;

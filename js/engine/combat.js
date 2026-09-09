@@ -355,6 +355,9 @@ export class CombatEngine {
       return;
     }
 
+    const moveX = input.x || 0;
+    const moveY = input.y || 0;
+
     // 3. 專屬按鍵主動召喚量子防護罩 (Dedicated Guard Key: L / Shift / 觸控盾牌)
     // 只有在按下防禦鍵時才會召喚防護罩；單純向後走位後退絕不觸發防護罩
     if (input.guard && char.isGrounded) {
