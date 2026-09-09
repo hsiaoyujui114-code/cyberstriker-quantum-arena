@@ -183,6 +183,7 @@ export class CombatEngine {
         char.vy = 0;
         char.vx = 0;
         char.isGrounded = true;
+        char.facing = char.x < opp.x ? 1 : -1; // 落地確保面向對手
         if (char.state === 'jump') {
           char.state = 'idle';
           char.stateTime = 0;
@@ -216,8 +217,13 @@ export class CombatEngine {
         break;
 
       case 'jump':
-        // 空中可施展跳躍攻擊
+        // 空中越頂自動校正面向（若越過對手，且尚未出招，自動朝向對手）
+        if (char.currentAction !== 'air_attack') {
+          char.facing = char.x < opp.x ? 1 : -1;
+        }
+        // 空中可施展跳躍攻擊 (逆向 Cross-up 打擊)
         if (input && (input.punch || input.kick) && char.currentAction !== 'air_attack') {
+          char.facing = char.x < opp.x ? 1 : -1; // 出招時面向對手
           char.currentAction = 'air_attack';
           this._executeAirAttack(char, opp, input.kick ? 'kick' : 'punch');
         }
@@ -768,19 +774,99 @@ export class CombatEngine {
   }
 
   _resolvePositions() {
-    // 防止兩人重疊穿透
-    const minDistance = 50;
-    const dx = this.p2.x - this.p1.x;
-    if (Math.abs(dx) < minDistance) {
-      const push = (minDistance - Math.abs(dx)) / 2;
-      if (dx >= 0) {
-        this.p1.x = Math.max(50, this.p1.x - push);
-        this.p2.x = Math.min(this.arenaWidth - 50, this.p2.x + push);
+    const p1 = this.p1;
+    const p2 = this.p2;
+    if (!p1 || !p2) return;
+
+    // 1. 技能穿身或倒地/起身豁免 (Pass-through exemptions)
+    // 音速滑踢 (SK-03) 貼地疾衝、折躍斬 (SK-05) 瞬移，或任一方處於倒地 (knockdown)、起身 (wakeup) 狀態時，完全豁免阻擋，允許自由穿身換邊
+    const isP1Passing = (p1.state === 'skill' && p1.currentAction && (p1.currentAction.id === 'SK-03' || p1.currentAction.id === 'SK-05'));
+    const isP2Passing = (p2.state === 'skill' && p2.currentAction && (p2.currentAction.id === 'SK-03' || p2.currentAction.id === 'SK-05'));
+    const isP1Down = (p1.state === 'knockdown' || p1.state === 'wakeup');
+    const isP2Down = (p2.state === 'knockdown' || p2.state === 'wakeup');
+
+    if (isP1Passing || isP2Passing || isP1Down || isP2Down) {
+      p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
+      p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
+      return;
+    }
+
+    // 2. 空中越頂跳躍檢測 (Jump Over / Cross-up)
+    const dy = Math.abs(p1.y - p2.y);
+    const p1Air = !p1.isGrounded;
+    const p2Air = !p2.isGrounded;
+
+    // 若有角色在空中且高度差超過 35px，代表處於越頂身位，完全不阻擋 X 軸移動，順暢越過對手頭頂換邊
+    if ((p1Air || p2Air) && dy > 35) {
+      p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
+      p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
+      return;
+    }
+
+    // 3. 空中近身交錯保護 (保持水平動量順勢越過，絕不硬阻彈回)
+    if (p1Air || p2Air) {
+      const dx = p2.x - p1.x;
+      if (Math.abs(dx) < 40) {
+        if (p1Air && Math.abs(p1.vx) > 0.5) {
+          p1.x += Math.sign(p1.vx) * 2.5;
+        } else if (p2Air && Math.abs(p2.vx) > 0.5) {
+          p2.x += Math.sign(p2.vx) * 2.5;
+        }
+      }
+      p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
+      p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
+      return;
+    }
+
+    // 4. 地面近身接觸與主動推擠換邊 (Ground Soft Collision & Slip-Through)
+    const minDistance = 44;
+    const dx = p2.x - p1.x;
+    const dist = Math.abs(dx);
+
+    if (dist < minDistance) {
+      const p1Pushing = (p1.state === 'walk_fwd');
+      const p2Pushing = (p2.state === 'walk_fwd');
+
+      if (p1Pushing && !p2Pushing) {
+        // P1 主動向前走推擠：P1 順暢前推滑過對手身側換邊
+        p1.x += p1.facing * 3.8;
+        p2.x -= p1.facing * 1.2;
+      } else if (p2Pushing && !p1Pushing) {
+        // P2 主動向前走推擠：P2 順暢前推滑過對手身側換邊
+        p2.x += p2.facing * 3.8;
+        p1.x -= p2.facing * 1.2;
+      } else if (p1Pushing && p2Pushing) {
+        // 雙方同時前推：順勢交錯互換身位
+        p1.x += p1.facing * 2.8;
+        p2.x += p2.facing * 2.8;
       } else {
-        this.p1.x = Math.min(this.arenaWidth - 50, this.p1.x + push);
-        this.p2.x = Math.max(50, this.p2.x - push);
+        // 雙方均未主動推擠（待機/格擋/受擊）：維持正常站位軟隔離，防止重疊
+        const push = (minDistance - dist) / 2;
+        if (dx >= 0) {
+          p1.x -= push;
+          p2.x += push;
+        } else {
+          p1.x += push;
+          p2.x -= push;
+        }
       }
     }
+
+    // 5. 擂台角落換邊防夾死保護 (Corner Cross-up Safeguard)
+    if (p1.x > this.arenaWidth - 65 && p2.x > this.arenaWidth - 110) {
+      p2.x = this.arenaWidth - 110;
+    } else if (p1.x < 65 && p2.x < 110) {
+      p2.x = 110;
+    }
+    if (p2.x > this.arenaWidth - 65 && p1.x > this.arenaWidth - 110) {
+      p1.x = this.arenaWidth - 110;
+    } else if (p2.x < 65 && p1.x < 110) {
+      p1.x = 110;
+    }
+
+    // 6. 邊界最終限制
+    p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
+    p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
   }
 
   _handleTimeOver() {

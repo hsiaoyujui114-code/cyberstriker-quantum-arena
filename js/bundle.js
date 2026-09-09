@@ -1960,6 +1960,7 @@
           char.vy = 0;
           char.vx = 0;
           char.isGrounded = true;
+          char.facing = char.x < opp.x ? 1 : -1;
           if (char.state === "jump") {
             char.state = "idle";
             char.stateTime = 0;
@@ -1985,7 +1986,11 @@
           this._handleNormalInputs(char, opp, input);
           break;
         case "jump":
+          if (char.currentAction !== "air_attack") {
+            char.facing = char.x < opp.x ? 1 : -1;
+          }
           if (input && (input.punch || input.kick) && char.currentAction !== "air_attack") {
+            char.facing = char.x < opp.x ? 1 : -1;
             char.currentAction = "air_attack";
             this._executeAirAttack(char, opp, input.kick ? "kick" : "punch");
           }
@@ -2434,18 +2439,77 @@
       }
     }
     _resolvePositions() {
-      const minDistance = 50;
-      const dx = this.p2.x - this.p1.x;
-      if (Math.abs(dx) < minDistance) {
-        const push = (minDistance - Math.abs(dx)) / 2;
-        if (dx >= 0) {
-          this.p1.x = Math.max(50, this.p1.x - push);
-          this.p2.x = Math.min(this.arenaWidth - 50, this.p2.x + push);
+      const p1 = this.p1;
+      const p2 = this.p2;
+      if (!p1 || !p2) return;
+      const isP1Passing = p1.state === "skill" && p1.currentAction && (p1.currentAction.id === "SK-03" || p1.currentAction.id === "SK-05");
+      const isP2Passing = p2.state === "skill" && p2.currentAction && (p2.currentAction.id === "SK-03" || p2.currentAction.id === "SK-05");
+      const isP1Down = p1.state === "knockdown" || p1.state === "wakeup";
+      const isP2Down = p2.state === "knockdown" || p2.state === "wakeup";
+      if (isP1Passing || isP2Passing || isP1Down || isP2Down) {
+        p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
+        p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
+        return;
+      }
+      const dy = Math.abs(p1.y - p2.y);
+      const p1Air = !p1.isGrounded;
+      const p2Air = !p2.isGrounded;
+      if ((p1Air || p2Air) && dy > 35) {
+        p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
+        p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
+        return;
+      }
+      if (p1Air || p2Air) {
+        const dx2 = p2.x - p1.x;
+        if (Math.abs(dx2) < 40) {
+          if (p1Air && Math.abs(p1.vx) > 0.5) {
+            p1.x += Math.sign(p1.vx) * 2.5;
+          } else if (p2Air && Math.abs(p2.vx) > 0.5) {
+            p2.x += Math.sign(p2.vx) * 2.5;
+          }
+        }
+        p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
+        p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
+        return;
+      }
+      const minDistance = 44;
+      const dx = p2.x - p1.x;
+      const dist = Math.abs(dx);
+      if (dist < minDistance) {
+        const p1Pushing = p1.state === "walk_fwd";
+        const p2Pushing = p2.state === "walk_fwd";
+        if (p1Pushing && !p2Pushing) {
+          p1.x += p1.facing * 3.8;
+          p2.x -= p1.facing * 1.2;
+        } else if (p2Pushing && !p1Pushing) {
+          p2.x += p2.facing * 3.8;
+          p1.x -= p2.facing * 1.2;
+        } else if (p1Pushing && p2Pushing) {
+          p1.x += p1.facing * 2.8;
+          p2.x += p2.facing * 2.8;
         } else {
-          this.p1.x = Math.min(this.arenaWidth - 50, this.p1.x + push);
-          this.p2.x = Math.max(50, this.p2.x - push);
+          const push = (minDistance - dist) / 2;
+          if (dx >= 0) {
+            p1.x -= push;
+            p2.x += push;
+          } else {
+            p1.x += push;
+            p2.x -= push;
+          }
         }
       }
+      if (p1.x > this.arenaWidth - 65 && p2.x > this.arenaWidth - 110) {
+        p2.x = this.arenaWidth - 110;
+      } else if (p1.x < 65 && p2.x < 110) {
+        p2.x = 110;
+      }
+      if (p2.x > this.arenaWidth - 65 && p1.x > this.arenaWidth - 110) {
+        p1.x = this.arenaWidth - 110;
+      } else if (p2.x < 65 && p1.x < 110) {
+        p1.x = 110;
+      }
+      p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
+      p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
     }
     _handleTimeOver() {
       this.isOver = true;
