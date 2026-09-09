@@ -1,404 +1,336 @@
 /**
- * 跨次元大亂鬥 (Dimension Clash Online)
- * 帳號存檔、Google 登入、每日簽到獎勵與嚴格成就驗證系統
- * (Save System, Google Login, Daily Rewards & Strict Genesis Achievement Verifier)
+ * 《CyberStriker: Quantum Arena》
+ * 跨裝置雲端存檔與雙軌 Google 驗證系統 (Save System & Dual Auth)
+ * 完全符合 GAME_PROJECT_PLAN.md 第一章規格
  */
 
-const STORAGE_KEY = "DIMENSION_CLASH_ONLINE_SAVE_V3";
+const STORAGE_KEY_CURRENT = 'cyberstriker_current_session';
+const STORAGE_KEY_ACCOUNTS = 'cyberstriker_cloud_accounts';
 
-class SaveSystem {
+export class SaveSystem {
   constructor() {
-    this.user = {
-      isLoggedIn: true,
-      uid: "PLAYER_" + Math.floor(100000 + Math.random() * 900000),
-      nickname: "次元戰神",
-      email: "player@gmail.com",
-      avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=DimensionGamer",
-      gold: 1500, // 初始贈送 1500 金幣
-      trophies: 1000,
-      pvpWins: 0,
-      pvpLosses: 0,
-      totalDamage: 0,
-      bossRushMaxFloor: 0, // 通關魔王塔最高層數
-      bossRushNoDeathCleared: false, // 是否一命無傷通關魔王塔
-      psychoCrystals: 0, // 感應骨架結晶 (獨角獸材料)
-      has1v5Sweep: false, // 是否達成 5v5 單人 1 穿 5 紀錄
-      unlockedCharacters: ["goku_kid", "cap_america", "gm_rgm79"], // 免費新手三劍客
-      selectedTeam: ["goku_kid", "cap_america", "gm_rgm79"], // 預設 3 隻上場角色
-      characterLevels: {
-        goku_kid: 25,
-        cap_america: 20,
-        gm_rgm79: 15
+    this.currentUser = null;
+    this.isGuest = false;
+    this.accounts = this._loadAccountsFromStorage();
+  }
+
+  _loadAccountsFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.warn('Failed to parse saved accounts:', e);
+    }
+
+    // 預設模擬多個本機曾登入之 Google 帳號 (參考《條碼戰士》多帳號切換體驗)
+    const initialAccounts = {
+      'player@gmail.com': {
+        uid: 'CY-UID-882101',
+        email: 'player@gmail.com',
+        nickname: '量子先鋒',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=QuantumVanguard',
+        credits: 2450,
+        eventTokens: 120,
+        skins: ['skin_cyber_warrior', 'skin_neon_shadow', 'skin_pulse_enforcer', 'skin_dark_hacker'],
+        equippedSkin: 'skin_cyber_warrior',
+        loadout: ['SK-01', 'SK-02', 'SK-09'],
+        stats: { total: 18, wins: 14, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: false } },
+        preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
+        lastLogin: new Date(Date.now() - 3600000 * 2).toISOString(),
+        updatedAt: new Date(Date.now() - 3600000 * 2).toISOString()
       },
-      characterMastery: {
-        goku_kid: 10,
-        cap_america: 5
-      },
-      equippedGear: {
-        goku_kid: ["gravity_wristband", "senzu_pouch", "potara_earring_single", "saiyan_spirit_chip"],
-        cap_america: [null, "vibranium_weave", null, "jarvis_tactical_os"],
-        gm_rgm79: ["minovsky_reactor", "twin_beam_cannon_pack", null, null]
-      },
-      dailyReward: {
-        lastClaimDate: "",
-        streakDay: 1,
-        claimedToday: false
+      'ethan.cyber@gmail.com': {
+        uid: 'CY-UID-773902',
+        email: 'ethan.cyber@gmail.com',
+        nickname: '伊森大師',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=EthanStriker',
+        credits: 4800,
+        eventTokens: 350,
+        skins: ['skin_cyber_warrior', 'skin_neon_shadow', 'skin_pulse_enforcer', 'skin_dark_hacker', 'skin_solar_valkyrie'],
+        equippedSkin: 'skin_solar_valkyrie',
+        loadout: ['SK-03', 'SK-04', 'SK-07'],
+        stats: { total: 42, wins: 38, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: true } },
+        preferences: { bgmVol: 0.5, sfxVol: 0.85, haptics: true },
+        lastLogin: new Date(Date.now() - 86400000).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000).toISOString()
       }
     };
 
-    this.load();
-    this.checkDailyRewardStatus();
+    localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(initialAccounts));
+    return initialAccounts;
   }
 
-  load() {
+  _saveAccountsToStorage() {
     try {
-      const dataStr = localStorage.getItem(STORAGE_KEY);
-      if (dataStr) {
-        const parsed = JSON.parse(dataStr);
-        this.user = Object.assign(this.user, parsed);
+      localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(this.accounts));
+    } catch (e) {
+      console.error('Failed to persist accounts:', e);
+    }
+  }
+
+  /**
+   * 初始化系統與自動嘗試恢復前次登入
+   */
+  init() {
+    try {
+      const lastSession = localStorage.getItem(STORAGE_KEY_CURRENT);
+      if (lastSession) {
+        const sessionData = JSON.parse(lastSession);
+        if (sessionData.isGuest) {
+          this.loginAsGuest(sessionData.user);
+          return;
+        } else if (sessionData.email && this.accounts[sessionData.email]) {
+          this.currentUser = this.accounts[sessionData.email];
+          this.currentUser.lastLogin = new Date().toISOString();
+          this._saveAccountsToStorage();
+          return;
+        }
       }
     } catch (e) {
-      console.warn("Failed to load save from localStorage", e);
+      console.warn('Session resume failed, defaulting to guest:', e);
+    }
+
+    // 預設以首個帳號或訪客登入
+    const firstEmail = Object.keys(this.accounts)[0];
+    if (firstEmail) {
+      this.loginWithEmail(firstEmail);
+    } else {
+      this.loginAsGuest();
     }
   }
 
-  save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.user));
-    } catch (e) {
-      console.error("Failed to save to localStorage", e);
-    }
-  }
+  /**
+   * 途徑一：手動輸入 Gmail 信箱
+   */
+  loginWithEmail(email, customNickname = '') {
+    email = email.trim().toLowerCase();
+    const isNewUser = !this.accounts[email];
 
-  checkDailyRewardStatus() {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    if (this.user.dailyReward.lastClaimDate !== todayStr) {
-      this.user.dailyReward.claimedToday = false;
-    }
-  }
-
-  loginWithGoogle(email = "player@gmail.com", nickname = "超次元戰神", avatar = "", googleUid = "") {
-    const cleanEmail = (email || "player@gmail.com").trim();
-    const cleanNick = (nickname || cleanEmail.split("@")[0] || "次元戰神").trim();
-    const cleanAvatar = avatar || ("https://api.dicebear.com/7.x/bottts/svg?seed=" + encodeURIComponent(cleanNick));
-    const cleanUid = googleUid || ("G_" + Math.abs(this.hashCode(cleanEmail)));
-
-    // 儲存至特定帳號的專屬存檔槽 (Account-specific persistence)
-    const userSaveKey = `${STORAGE_KEY}_USER_${cleanEmail.toLowerCase()}`;
-    try {
-      const savedUserData = localStorage.getItem(userSaveKey);
-      if (savedUserData) {
-        const parsed = JSON.parse(savedUserData);
-        this.user = Object.assign(this.user, parsed);
-      }
-    } catch (e) {
-      console.warn("Failed loading user specific save", e);
-    }
-
-    this.user.isLoggedIn = true;
-    this.user.email = cleanEmail;
-    this.user.nickname = cleanNick;
-    this.user.avatar = cleanAvatar;
-    this.user.uid = cleanUid;
-    this.user.lastSyncedAt = new Date().toISOString();
-
-    // 記錄至最近登入的 Google 帳號清單 (Recent Accounts Cache)
-    this.recordRecentAccount({
-      email: cleanEmail,
-      nickname: cleanNick,
-      avatar: cleanAvatar,
-      uid: cleanUid,
-      lastLoginAt: this.user.lastSyncedAt,
-      trophies: this.user.trophies || 1000,
-      gold: this.user.gold || 1500
-    });
-
-    this.save();
-    try {
-      localStorage.setItem(userSaveKey, JSON.stringify(this.user));
-    } catch (err) {}
-  }
-
-  hashCode(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) - hash + str.charCodeAt(i);
-      hash |= 0;
-    }
-    return hash;
-  }
-
-  recordRecentAccount(acc) {
-    try {
-      let recents = this.getRecentGoogleAccounts();
-      recents = recents.filter(a => a.email.toLowerCase() !== acc.email.toLowerCase());
-      recents.unshift(acc);
-      if (recents.length > 4) recents = recents.slice(0, 4);
-      localStorage.setItem(`${STORAGE_KEY}_RECENT_ACCOUNTS`, JSON.stringify(recents));
-    } catch (e) {}
-  }
-
-  getRecentGoogleAccounts() {
-    try {
-      const data = localStorage.getItem(`${STORAGE_KEY}_RECENT_ACCOUNTS`);
-      return data ? JSON.parse(data) : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  setAvatar(avatarUrl) {
-    this.user.avatar = avatarUrl;
-    this.save();
-  }
-
-  addPsychoCrystals(amount = 1) {
-    this.user.psychoCrystals = (this.user.psychoCrystals || 0) + amount;
-    this.save();
-  }
-
-  logout() {
-    this.user.isLoggedIn = false;
-    this.save();
-  }
-
-  claimDailyReward() {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    if (this.user.dailyReward.claimedToday && this.user.dailyReward.lastClaimDate === todayStr) {
-      return { success: false, reason: "今日每日獎勵已領取，明天再來領取吧！" };
-    }
-
-    const rewardsTable = [
-      { day: 1, gold: 500, desc: "500 金幣 + 仙豆補給包" },
-      { day: 2, gold: 1000, desc: "1,000 金幣 + 綠階召募券" },
-      { day: 3, gold: 1500, desc: "1,500 金幣 + 振金編織內襯" },
-      { day: 4, gold: 2000, desc: "2,000 金幣 + 初鋼改裝零件" },
-      { day: 5, gold: 3000, desc: "3,000 金幣 + 2顆感應骨架結晶" },
-      { day: 6, gold: 4000, desc: "4,000 金幣 + 特南克斯解鎖碎片" },
-      { day: 7, gold: 10000, desc: "10,000 金幣 + 史詩英雄自選箱！" }
-    ];
-
-    const currentDay = this.user.dailyReward.streakDay;
-    const reward = rewardsTable[(currentDay - 1) % rewardsTable.length];
-
-    this.user.gold += reward.gold;
-    if (currentDay === 5) this.user.psychoCrystals += 2;
-
-    this.user.dailyReward.claimedToday = true;
-    this.user.dailyReward.lastClaimDate = todayStr;
-    this.user.dailyReward.streakDay = (currentDay % 7) + 1;
-    this.save();
-
-    return { success: true, reward, nextStreakDay: this.user.dailyReward.streakDay };
-  }
-
-  // ─── 嚴格創世級成就解鎖檢查 (Strict Genesis Achievement Verifier) ───
-  getGenesisProgress(charId) {
-    const u = this.user;
-    switch (charId) {
-      case "thanos_gauntlet":
-        const thanosAchieved = u.bossRushMaxFloor >= 10 && u.bossRushNoDeathCleared;
-        return {
-          achieved: thanosAchieved,
-          desc: "PVE 極限「無限之戰」一命單人無傷通關 10 層魔王塔",
-          progressText: `魔王塔進度：${u.bossRushMaxFloor} / 10 層 ${u.bossRushNoDeathCleared ? '(一命達成)' : '(尚未一命通關)'}`,
-          percent: thanosAchieved ? 100 : Math.min(90, u.bossRushMaxFloor * 9)
-        };
-
-      case "goku_ultra_instinct":
-        const uiAchieved = u.pvpWins >= 150 && u.trophies >= 2500;
-        return {
-          achieved: uiAchieved,
-          desc: "PVP 天梯達到宗師段位 (2,500 獎盃) 且累計 150 勝場",
-          progressText: `勝場：${u.pvpWins} / 150 勝 ｜ 獎盃：${u.trophies} / 2500 盃`,
-          percent: Math.min(100, Math.round(((u.pvpWins / 150) * 0.5 + (u.trophies / 2500) * 0.5) * 100))
-        };
-
-      case "unicorn_crystal":
-        const unicornAchieved = u.psychoCrystals >= 15;
-        return {
-          achieved: unicornAchieved,
-          desc: "收集 15 顆感應骨架結晶 (通關魔王塔高層掉落)",
-          progressText: `結晶收集：${u.psychoCrystals} / 15 顆`,
-          percent: Math.min(100, Math.round((u.psychoCrystals / 15) * 100))
-        };
-
-      case "jiren_fullpower":
-        const jirenAchieved = u.has1v5Sweep === true;
-        return {
-          achieved: jirenAchieved,
-          desc: "5v5 模式中首發先鋒達成「1 穿 5 不換人」全勝完封",
-          progressText: u.has1v5Sweep ? "已達成 1 穿 5 紀錄" : "尚未達成 1 穿 5 (0 / 1)",
-          percent: u.has1v5Sweep ? 100 : 0
-        };
-
-      case "beerus_god":
-        const beerusAchieved = u.bossRushMaxFloor >= 10;
-        return {
-          achieved: beerusAchieved,
-          desc: "通關次元魔王塔全部 10 層挑戰",
-          progressText: `魔王塔挑戰：${Math.min(10, u.bossRushMaxFloor)} / 10 層`,
-          percent: Math.min(100, u.bossRushMaxFloor * 10)
-        };
-
-      case "kang":
-        const kangAchieved = u.totalDamage >= 5000000;
-        return {
-          achieved: kangAchieved,
-          desc: "PVP / 戰鬥累計造成 5,000,000 點總戰鬥傷害",
-          progressText: `累計傷害：${u.totalDamage.toLocaleString()} / 5,000,000 點`,
-          percent: Math.min(100, Math.round((u.totalDamage / 5000000) * 100))
-        };
-
-      default:
-        return { achieved: false, desc: "未知條件", progressText: "0 / 0", percent: 0 };
-    }
-  }
-
-  tryStrictGenesisUnlock(charId) {
-    if (this.user.unlockedCharacters.includes(charId)) {
-      return { success: false, reason: "該角色已經解鎖！" };
-    }
-
-    const check = this.getGenesisProgress(charId);
-    if (!check.achieved) {
-      return {
-        success: false,
-        reason: `❌ 尚未達成解鎖條件！\n\n【目標】：${check.desc}\n【目前進度】：${check.progressText} (${check.percent}%)\n\n請先在戰鬥中完成真實目標後再來領取！`
+    if (isNewUser) {
+      // 首次輸入：雲端即刻創建新帳號，贈送 1,200 點初始能量幣與 3 套初始預設外觀
+      const defaultNick = customNickname.trim() || email.split('@')[0];
+      const newAccount = {
+        uid: 'CY-UID-' + Math.floor(100000 + Math.random() * 900000),
+        email: email,
+        nickname: defaultNick.slice(0, 12),
+        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
+        credits: 1200,
+        eventTokens: 0,
+        skins: ['skin_cyber_warrior', 'skin_neon_shadow', 'skin_pulse_enforcer'],
+        equippedSkin: 'skin_cyber_warrior',
+        loadout: ['SK-01', 'SK-02', 'SK-09'],
+        stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
+        preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
+        lastLogin: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
-    }
-
-    this.unlockCharacter(charId);
-    return { success: true, charId };
-  }
-
-  getAchievementProgress(ach) {
-    const u = this.user;
-    let current = 0;
-    if (ach.type === "pvp_wins" || ach.type === "wins") current = u.pvpWins || 0;
-    else if (ach.type === "total_damage") current = u.totalDamage || 0;
-    else if (ach.type === "rank_trophies") current = u.trophies || 0;
-    else if (ach.type === "boss_floor") current = u.bossRushMaxFloor || 0;
-    else if (ach.type === "combo") current = u.maxCombo || 0;
-    else current = 0;
-
-    const achieved = current >= ach.target;
-    const claimed = (u.achievementsClaimed || []).includes(ach.id);
-    const percent = Math.min(100, Math.round((current / (ach.target || 1)) * 100));
-
-    return { current, target: ach.target, achieved, claimed, percent };
-  }
-
-  claimAchievement(achId) {
-    if (!this.user.achievementsClaimed) this.user.achievementsClaimed = [];
-    if (this.user.achievementsClaimed.includes(achId)) {
-      return { success: false, reason: "該成就獎勵已領取過！" };
-    }
-
-    const ach = window.ACHIEVEMENTS_DATA ? window.ACHIEVEMENTS_DATA.find(a => a.id === achId) : null;
-    if (!ach) return { success: false, reason: "找不到該成就" };
-
-    const prog = this.getAchievementProgress(ach);
-    if (!prog.achieved) {
-      return { success: false, reason: `尚未達成目標進度 (${prog.current} / ${prog.target})` };
-    }
-
-    this.user.achievementsClaimed.push(achId);
-    this.addGold(ach.rewardGold || 1000);
-    if (ach.unlockedHero) {
-      this.unlockCharacter(ach.unlockedHero);
-    }
-    this.save();
-    return { success: true, rewardGold: ach.rewardGold, unlockedHero: ach.unlockedHero };
-  }
-
-  setTeam(teamArray) {
-    this.user.selectedTeam = teamArray.slice(0, 5);
-    this.save();
-  }
-
-  addGold(amount) {
-    this.user.gold += amount;
-    this.save();
-  }
-
-  spendGold(amount) {
-    if (this.user.gold >= amount) {
-      this.user.gold -= amount;
-      this.save();
-      return true;
-    }
-    return false;
-  }
-
-  unlockCharacter(charId) {
-    if (!this.user.unlockedCharacters.includes(charId)) {
-      this.user.unlockedCharacters.push(charId);
-      if (!this.user.characterLevels[charId]) {
-        this.user.characterLevels[charId] = 1;
+      this.accounts[email] = newAccount;
+      this.currentUser = newAccount;
+    } else {
+      // 老玩家：自動調取歷史進度
+      this.currentUser = this.accounts[email];
+      if (customNickname && customNickname.trim()) {
+        this.currentUser.nickname = customNickname.trim().slice(0, 12);
       }
-      this.save();
-      return true;
+      this.currentUser.lastLogin = new Date().toISOString();
     }
-    return false;
+
+    this.isGuest = false;
+    this._persistSession();
+    this._saveAccountsToStorage();
+    return { user: this.currentUser, isNewUser };
   }
 
-  upgradeCharacter(charId) {
-    const currentLvl = this.user.characterLevels[charId] || 1;
-    if (currentLvl >= 100) return { success: false, reason: "已達最高等級 Lv.100" };
-
-    const cost = Math.round(100 * Math.pow(currentLvl, 1.35));
-    if (this.spendGold(cost)) {
-      this.user.characterLevels[charId] = currentLvl + 1;
-      this.save();
-      return { success: true, newLevel: currentLvl + 1, cost };
+  /**
+   * 途徑二：選擇電腦現有 Google 帳號清單一鍵切換
+   */
+  switchAccount(email) {
+    if (this.accounts[email]) {
+      this.currentUser = this.accounts[email];
+      this.currentUser.lastLogin = new Date().toISOString();
+      this.isGuest = false;
+      this._persistSession();
+      this._saveAccountsToStorage();
+      return this.currentUser;
     }
-    return { success: false, reason: `金幣不足 (需要 ${cost} 金幣)` };
+    return null;
   }
 
-  equipItem(charId, slotIndex, gearId) {
-    if (!this.user.equippedGear[charId]) {
-      this.user.equippedGear[charId] = [null, null, null, null];
-    }
-    this.user.equippedGear[charId][slotIndex - 1] = gearId;
-    this.save();
+  /**
+   * 途徑三：訪客試玩體驗模式 (Guest Play Mode)
+   */
+  loginAsGuest(existingGuestData = null) {
+    this.isGuest = true;
+    this.currentUser = existingGuestData || {
+      uid: 'CY-GUEST-' + Math.floor(1000 + Math.random() * 9000),
+      email: 'guest@offline.local',
+      nickname: '訪客戰士',
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=GuestStriker',
+      credits: 600,
+      eventTokens: 0,
+      skins: ['skin_cyber_warrior', 'skin_neon_shadow', 'skin_pulse_enforcer'],
+      equippedSkin: 'skin_cyber_warrior',
+      loadout: ['SK-01', 'SK-02', 'SK-09'],
+      stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
+      preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
+      lastLogin: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this._persistSession();
+    return this.currentUser;
   }
 
-  unequipItem(charId, slotIndex) {
-    if (this.user.equippedGear[charId]) {
-      this.user.equippedGear[charId][slotIndex - 1] = null;
-      this.save();
+  /**
+   * 將訪客帳號綁定至真實 Gmail (資料無痛轉移)
+   */
+  bindGuestToEmail(email, nickname = '') {
+    email = email.trim().toLowerCase();
+    const isNew = !this.accounts[email];
+    if (isNew) {
+      this.currentUser.email = email;
+      if (nickname.trim()) this.currentUser.nickname = nickname.trim().slice(0, 12);
+      this.currentUser.isGuest = false;
+      this.accounts[email] = { ...this.currentUser, updatedAt: new Date().toISOString() };
+    } else {
+      // 若該信箱已存在，安全合併金幣與戰績
+      const existing = this.accounts[email];
+      existing.credits += this.currentUser.credits;
+      existing.stats.total += this.currentUser.stats.total;
+      existing.stats.wins += this.currentUser.stats.wins;
+      existing.stats.losses += this.currentUser.stats.losses;
+      this.currentUser = existing;
     }
+    this.isGuest = false;
+    this._persistSession();
+    this._saveAccountsToStorage();
+    return this.currentUser;
   }
 
-  recordMatchResult(isWin, damageDealt = 0, isPvp = true, isBossRush = false, floorNumber = 0, isSweep1v5 = false) {
-    if (isPvp) {
-      if (isWin) {
-        this.user.pvpWins++;
-        this.user.trophies += 30;
-      } else {
-        this.user.pvpLosses++;
-        this.user.trophies = Math.max(0, this.user.trophies - 15);
+  /**
+   * 取得所有本機已登記 Google 帳號卡片清單
+   */
+  getRegisteredAccountsList() {
+    return Object.values(this.accounts).map(acc => ({
+      email: acc.email,
+      nickname: acc.nickname,
+      avatar: acc.avatar,
+      credits: acc.credits,
+      lastLogin: acc.lastLogin || acc.updatedAt,
+      isCurrent: !this.isGuest && this.currentUser && this.currentUser.email === acc.email
+    }));
+  }
+
+  /**
+   * 戰鬥獲勝/落敗經濟收益結算
+   * 勝場 +350, 敗場 +120, 困難/惡夢 +200
+   */
+  recordBattleResult(won, difficulty = 'normal', isAi = true) {
+    if (!this.currentUser) return { gained: 0, total: 0 };
+
+    let gained = won ? 350 : 120;
+    if (won && (difficulty === 'hard' || difficulty === 'nightmare')) {
+      gained += 200;
+    }
+
+    this.currentUser.credits += gained;
+    this.currentUser.stats.total++;
+    if (won) {
+      this.currentUser.stats.wins++;
+      if (isAi && this.currentUser.stats.aiBeaten) {
+        this.currentUser.stats.aiBeaten[difficulty] = true;
       }
+    } else {
+      this.currentUser.stats.losses++;
     }
 
-    if (isBossRush && isWin && floorNumber > 0) {
-      this.user.bossRushMaxFloor = Math.max(this.user.bossRushMaxFloor, floorNumber);
-      this.user.psychoCrystals += 1; // 魔王塔掉落結晶
-      if (floorNumber === 10) {
-        this.user.bossRushNoDeathCleared = true;
+    this.currentUser.updatedAt = new Date().toISOString();
+    this._saveCurrent();
+    return { gained, total: this.currentUser.credits };
+  }
+
+  equipSkin(skinId) {
+    if (!this.currentUser) return false;
+    if (!this.currentUser.skins.includes(skinId)) return false;
+    this.currentUser.equippedSkin = skinId;
+    this._saveCurrent();
+    return true;
+  }
+
+  purchaseSkin(skinId, price) {
+    if (!this.currentUser) return { success: false, reason: '未登入' };
+    if (this.currentUser.skins.includes(skinId)) {
+      return { success: false, reason: '已擁有此造型' };
+    }
+    if (this.currentUser.credits < price) {
+      return { success: false, reason: '能量幣餘額不足' };
+    }
+    this.currentUser.credits -= price;
+    this.currentUser.skins.push(skinId);
+    this.currentUser.equippedSkin = skinId;
+    this._saveCurrent();
+    return { success: true, remaining: this.currentUser.credits };
+  }
+
+  updateLoadout(skillsArray) {
+    if (!this.currentUser) return;
+    if (Array.isArray(skillsArray) && skillsArray.length === 3) {
+      this.currentUser.loadout = [...skillsArray];
+      this._saveCurrent();
+    }
+  }
+
+  savePreferences(prefs) {
+    if (!this.currentUser) return;
+    this.currentUser.preferences = { ...this.currentUser.preferences, ...prefs };
+    this._saveCurrent();
+  }
+
+  _saveCurrent() {
+    if (!this.isGuest && this.currentUser && this.currentUser.email) {
+      this.accounts[this.currentUser.email] = { ...this.currentUser, updatedAt: new Date().toISOString() };
+      this._saveAccountsToStorage();
+    }
+    this._persistSession();
+  }
+
+  _persistSession() {
+    try {
+      localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify({
+        isGuest: this.isGuest,
+        email: this.currentUser ? this.currentUser.email : null,
+        user: this.currentUser
+      }));
+    } catch (e) {
+      console.error('Session write failed:', e);
+    }
+  }
+
+  // 跨裝置匯出存檔 JSON (支援一鍵同步到手機或另一台電腦)
+  exportDataJson() {
+    return JSON.stringify(this.currentUser, null, 2);
+  }
+
+  // 跨裝置匯入存檔 JSON (時間戳記智能合併)
+  importDataJson(jsonString) {
+    try {
+      const imported = JSON.parse(jsonString);
+      if (!imported.email || !imported.uid) return false;
+
+      const existing = this.accounts[imported.email];
+      if (!existing || new Date(imported.updatedAt) > new Date(existing.updatedAt)) {
+        this.accounts[imported.email] = imported;
+        this.currentUser = imported;
+        this.isGuest = false;
+        this._saveAccountsToStorage();
+        this._persistSession();
+        return true;
       }
+      return false;
+    } catch (e) {
+      console.error('Failed to import data:', e);
+      return false;
     }
-
-    if (isSweep1v5) {
-      this.user.has1v5Sweep = true;
-    }
-
-    this.user.totalDamage += damageDealt;
-    this.save();
   }
 }
 
-if (typeof window !== "undefined") {
-  window.saveSystem = new SaveSystem();
-}
+export const saveSystem = new SaveSystem();

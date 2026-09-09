@@ -1,414 +1,480 @@
 /**
- * 跨次元大亂鬥 (Dimension Clash Online)
- * 音效與動態戰鬥音樂引擎 (Web Audio API Sound & Dynamic BGM Synthesizer)
- * 零外部資產依賴，極致低延遲，保證 GitHub Pages / Vercel 100% 相容
+ * 《CyberStriker: Quantum Arena》
+ * 程序化合成音效引擎 (Web Audio API Synthesizer)
+ * 零外部音訊檔案相依，無載入延遲，完美支援打擊反饋與賽博龐克合成背景音律。
  */
 
 class SoundEngine {
   constructor() {
     this.ctx = null;
+    this.masterGain = null;
+    this.sfxGain = null;
+    this.bgmGain = null;
     this.isMuted = false;
+    this.sfxVolume = 0.8;
+    this.bgmVolume = 0.4;
     this.bgmPlaying = false;
     this.bgmTimer = null;
-    this.bgmStep = 0;
-    this.volume = 0.6;
-    this.bgmGain = null;
-    this.sfxGain = null;
+    this.stepIndex = 0;
   }
 
   init() {
-    if (!this.ctx) {
+    if (this.ctx) return;
+    try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        this.ctx = new AudioContext();
-        this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
-        this.masterGain.connect(this.ctx.destination);
+      this.ctx = new AudioContext();
 
-        this.sfxGain = this.ctx.createGain();
-        this.sfxGain.gain.setValueAtTime(0.8, this.ctx.currentTime);
-        this.sfxGain.connect(this.masterGain);
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      this.masterGain.connect(this.ctx.destination);
 
-        this.bgmGain = this.ctx.createGain();
-        this.bgmGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-        this.bgmGain.connect(this.masterGain);
-      }
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.setValueAtTime(this.sfxVolume, this.ctx.currentTime);
+      this.sfxGain.connect(this.masterGain);
+
+      this.bgmGain = this.ctx.createGain();
+      this.bgmGain.gain.setValueAtTime(this.bgmVolume, this.ctx.currentTime);
+      this.bgmGain.connect(this.masterGain);
+    } catch (e) {
+      console.warn('Web Audio not supported or failed to initialize:', e);
     }
-    if (this.ctx && this.ctx.state === "suspended") {
+  }
+
+  ensureContext() {
+    if (!this.ctx) this.init();
+    if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
     }
   }
 
-  toggleMute() {
-    this.isMuted = !this.isMuted;
+  setMuted(muted) {
+    this.isMuted = muted;
     if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime);
-    }
-    return this.isMuted;
-  }
-
-  setVolume(vol) {
-    this.volume = Math.max(0, Math.min(1, vol));
-    if (this.masterGain && this.ctx && !this.isMuted) {
-      this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(muted ? 0 : 1.0, this.ctx.currentTime);
     }
   }
 
-  // ─── 基礎音效生成器 ───
-  playHit(type = "light") {
+  setSfxVolume(vol) {
+    this.sfxVolume = Math.max(0, Math.min(1, vol));
+    if (this.sfxGain && this.ctx) {
+      this.sfxGain.gain.setValueAtTime(this.sfxVolume, this.ctx.currentTime);
+    }
+  }
+
+  setBgmVolume(vol) {
+    this.bgmVolume = Math.max(0, Math.min(1, vol));
+    if (this.bgmGain && this.ctx) {
+      this.bgmGain.gain.setValueAtTime(this.bgmVolume, this.ctx.currentTime);
+    }
+  }
+
+  // ─── 程序化打擊音效 ───
+  playHit(type = 'punch') {
     if (this.isMuted) return;
-    this.init();
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+
+    switch (type) {
+      case 'punch': {
+        // 刺拳輕快打擊聲
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(260, t);
+        osc.frequency.exponentialRampToValueAtTime(70, t + 0.08);
+
+        gain.gain.setValueAtTime(0.7, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+
+        // 加上一小段高頻噪聲模擬破風擊打
+        this._playNoise(t, 0.04, 800, 0.4);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.08);
+        break;
+      }
+
+      case 'kick': {
+        // 重踢下沉重低音爆
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(200, t);
+        osc.frequency.exponentialRampToValueAtTime(35, t + 0.16);
+
+        gain.gain.setValueAtTime(1.0, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.16);
+
+        this._playNoise(t, 0.07, 500, 0.6);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.16);
+        break;
+      }
+
+      case 'guard': {
+        // 金屬幾何力場彈開清脆鏘聲
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(1240, t);
+        osc1.frequency.exponentialRampToValueAtTime(880, t + 0.12);
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1860, t);
+        osc2.frequency.exponentialRampToValueAtTime(1100, t + 0.12);
+
+        gain.gain.setValueAtTime(0.8, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.14);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(this.sfxGain);
+
+        osc1.start(t);
+        osc2.start(t);
+        osc1.stop(t + 0.14);
+        osc2.stop(t + 0.14);
+        break;
+      }
+
+      case 'burst': {
+        // 量子逆轉爆發衝擊力場 (震波轟鳴)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, t);
+        osc.frequency.exponentialRampToValueAtTime(30, t + 0.45);
+
+        gain.gain.setValueAtTime(1.0, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.45);
+
+        this._playNoise(t, 0.35, 1200, 0.8);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.45);
+        break;
+      }
+
+      case 'laser':
+      case 'projectile': {
+        // 高速飛行電漿脈衝發射聲
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, t);
+        osc.frequency.exponentialRampToValueAtTime(120, t + 0.18);
+
+        gain.gain.setValueAtTime(0.6, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.18);
+        break;
+      }
+
+      case 'anti_air':
+      case 'dp': {
+        // 升龍昇空氣浪與撕裂聲
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(160, t);
+        osc.frequency.exponentialRampToValueAtTime(650, t + 0.22);
+
+        gain.gain.setValueAtTime(0.7, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.22);
+
+        this._playNoise(t, 0.2, 1400, 0.5);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.22);
+        break;
+      }
+
+      case 'slide': {
+        // 下段滑鏟摩擦聲
+        this._playNoise(t, 0.22, 600, 0.6);
+        break;
+      }
+
+      case 'teleport': {
+        // 虛空折躍斬瞬移穿透聲
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, t);
+        osc.frequency.exponentialRampToValueAtTime(1200, t + 0.1);
+        osc.frequency.exponentialRampToValueAtTime(200, t + 0.2);
+
+        gain.gain.setValueAtTime(0.6, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.2);
+        break;
+      }
+
+      case 'parry_trigger': {
+        // 架招成功反打音
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1400, t);
+        osc.frequency.exponentialRampToValueAtTime(2200, t + 0.08);
+
+        gain.gain.setValueAtTime(0.8, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.2);
+        break;
+      }
+
+      case 'slam': {
+        // 磁暴重摔地面震撼轟響
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, t);
+        osc.frequency.exponentialRampToValueAtTime(25, t + 0.35);
+
+        gain.gain.setValueAtTime(1.0, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+
+        this._playNoise(t, 0.25, 400, 0.8);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.35);
+        break;
+      }
+
+      case 'beam': {
+        // 終極離子巨砲咆哮
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(240, t);
+        osc.frequency.linearRampToValueAtTime(320, t + 0.4);
+        osc.frequency.exponentialRampToValueAtTime(60, t + 0.7);
+
+        gain.gain.setValueAtTime(0.9, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.7);
+
+        this._playNoise(t, 0.6, 2000, 0.7);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.7);
+        break;
+      }
+
+      case 'knockdown': {
+        // 倒地重重跌落聲
+        this._playNoise(t, 0.15, 300, 0.7);
+        break;
+      }
+
+      case 'ko': {
+        // K.O. 勝利號角與長音
+        const chords = [220, 277.18, 329.63, 440];
+        chords.forEach(freq => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.4, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 1.2);
+        });
+        break;
+      }
+    }
+  }
+
+  // ─── 介面音效 ───
+  playUI(type = 'click') {
+    if (this.isMuted) return;
+    this.ensureContext();
     if (!this.ctx) return;
 
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    const noise = this.createNoiseBuffer(0.1);
-    const noiseNode = this.ctx.createBufferSource();
-    const noiseGain = this.ctx.createGain();
 
-    noiseNode.buffer = noise;
-
-    if (type === "light") {
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(220, t);
-      osc.frequency.exponentialRampToValueAtTime(60, t + 0.08);
-      gain.gain.setValueAtTime(0.4, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
-
-      noiseGain.gain.setValueAtTime(0.2, t);
-      noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
-    } else if (type === "heavy" || type === "guard_break") {
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(320, t);
-      osc.frequency.exponentialRampToValueAtTime(40, t + 0.25);
-      gain.gain.setValueAtTime(0.7, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
-
-      noiseGain.gain.setValueAtTime(0.5, t);
-      noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
-    } else if (type === "slash") {
-      osc.type = "sine";
+    if (type === 'hover') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(480, t);
+      gain.gain.setValueAtTime(0.08, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(t);
+      osc.stop(t + 0.04);
+    } else if (type === 'click') {
+      osc.type = 'triangle';
       osc.frequency.setValueAtTime(800, t);
-      osc.frequency.exponentialRampToValueAtTime(200, t + 0.12);
-      gain.gain.setValueAtTime(0.5, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
-
-      noiseGain.gain.setValueAtTime(0.4, t);
-      noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(400, t + 0.06);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(t);
+      osc.stop(t + 0.06);
+    } else if (type === 'equip') {
+      // 裝備成功雙音
+      const notes = [523.25, 783.99];
+      notes.forEach((f, idx) => {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(f, t + idx * 0.07);
+        g.gain.setValueAtTime(0.25, t + idx * 0.07);
+        g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.07 + 0.12);
+        o.connect(g);
+        g.connect(this.sfxGain);
+        o.start(t + idx * 0.07);
+        o.stop(t + idx * 0.07 + 0.12);
+      });
+    } else if (type === 'countdown') {
+      // 倒數嗶聲
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, t);
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(t);
+      osc.stop(t + 0.1);
+    } else if (type === 'fight') {
+      // 開戰高音嗶聲
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(920, t);
+      osc.frequency.exponentialRampToValueAtTime(1400, t + 0.25);
+      gain.gain.setValueAtTime(0.4, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(t);
+      osc.stop(t + 0.25);
     }
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-
-    noiseNode.connect(noiseGain);
-    noiseGain.connect(this.sfxGain);
-
-    osc.start(t);
-    osc.stop(t + 0.3);
-    noiseNode.start(t);
-    noiseNode.stop(t + 0.2);
   }
 
-  playGuard() {
-    if (this.isMuted) return;
-    this.init();
+  // 噪聲發生器輔助
+  _playNoise(t, duration, cutoff = 1000, volume = 0.5) {
     if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(880, t);
-    osc.frequency.exponentialRampToValueAtTime(1760, t + 0.04);
-    osc.frequency.exponentialRampToValueAtTime(440, t + 0.15);
-
-    gain.gain.setValueAtTime(0.4, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-    osc.start(t);
-    osc.stop(t + 0.16);
-  }
-
-  playDodge() {
-    if (this.isMuted) return;
-    this.init();
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(300, t);
-    osc.frequency.exponentialRampToValueAtTime(600, t + 0.08);
-    osc.frequency.exponentialRampToValueAtTime(150, t + 0.18);
-
-    gain.gain.setValueAtTime(0.25, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-    osc.start(t);
-    osc.stop(t + 0.2);
-  }
-
-  playBeam() {
-    if (this.isMuted) return;
-    this.init();
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(1200, t);
-    osc.frequency.exponentialRampToValueAtTime(200, t + 0.25);
-
-    gain.gain.setValueAtTime(0.45, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-    osc.start(t);
-    osc.stop(t + 0.26);
-  }
-
-  playKiBlast() {
-    if (this.isMuted) return;
-    this.init();
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(450, t);
-    osc.frequency.exponentialRampToValueAtTime(900, t + 0.06);
-    osc.frequency.exponentialRampToValueAtTime(200, t + 0.15);
-
-    gain.gain.setValueAtTime(0.4, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
-
-    osc.connect(gain);
-    gain.connect(this.sfxGain);
-    osc.start(t);
-    osc.stop(t + 0.16);
-  }
-
-  playBurst() {
-    if (this.isMuted) return;
-    this.init();
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    const osc1 = this.ctx.createOscillator();
-    const osc2 = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc1.type = "sine";
-    osc1.frequency.setValueAtTime(150, t);
-    osc1.frequency.exponentialRampToValueAtTime(800, t + 0.1);
-    osc1.frequency.exponentialRampToValueAtTime(50, t + 0.4);
-
-    osc2.type = "sawtooth";
-    osc2.frequency.setValueAtTime(300, t);
-    osc2.frequency.exponentialRampToValueAtTime(1000, t + 0.1);
-    osc2.frequency.exponentialRampToValueAtTime(100, t + 0.4);
-
-    gain.gain.setValueAtTime(0.8, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.45);
-
-    osc1.connect(gain);
-    osc2.connect(gain);
-    gain.connect(this.sfxGain);
-
-    osc1.start(t);
-    osc2.start(t);
-    osc1.stop(t + 0.45);
-    osc2.stop(t + 0.45);
-  }
-
-  playUltCutin() {
-    if (this.isMuted) return;
-    this.init();
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-
-    // 808 Sub-bass drop
-    const subOsc = this.ctx.createOscillator();
-    const subGain = this.ctx.createGain();
-    subOsc.type = "sine";
-    subOsc.frequency.setValueAtTime(180, t);
-    subOsc.frequency.exponentialRampToValueAtTime(35, t + 0.6);
-    subGain.gain.setValueAtTime(0.9, t);
-    subGain.gain.exponentialRampToValueAtTime(0.01, t + 0.7);
-
-    subOsc.connect(subGain);
-    subGain.connect(this.sfxGain);
-    subOsc.start(t);
-    subOsc.stop(t + 0.75);
-
-    // High shimmer chord
-    const chordNotes = [523.25, 659.25, 783.99, 1046.5]; // C E G C
-    chordNotes.forEach((freq, idx) => {
-      const chordOsc = this.ctx.createOscillator();
-      const chordGain = this.ctx.createGain();
-      chordOsc.type = "triangle";
-      chordOsc.frequency.setValueAtTime(freq, t + 0.05 * idx);
-      chordGain.gain.setValueAtTime(0.2, t + 0.05 * idx);
-      chordGain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
-      chordOsc.connect(chordGain);
-      chordGain.connect(this.sfxGain);
-      chordOsc.start(t + 0.05 * idx);
-      chordOsc.stop(t + 0.85);
-    });
-  }
-
-  playKO() {
-    if (this.isMuted) return;
-    this.init();
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    const notes = [440, 330, 220, 110];
-    notes.forEach((freq, i) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(freq, t + i * 0.15);
-      gain.gain.setValueAtTime(0.5, t + i * 0.15);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + i * 0.15 + 0.35);
-      osc.connect(gain);
-      gain.connect(this.sfxGain);
-      osc.start(t + i * 0.15);
-      osc.stop(t + i * 0.15 + 0.4);
-    });
-  }
-
-  playVictory() {
-    if (this.isMuted) return;
-    this.init();
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    const fanfare = [
-      { f: 523.25, d: 0.15, offset: 0 },
-      { f: 523.25, d: 0.15, offset: 0.15 },
-      { f: 523.25, d: 0.15, offset: 0.3 },
-      { f: 659.25, d: 0.35, offset: 0.45 },
-      { f: 587.33, d: 0.2, offset: 0.8 },
-      { f: 783.99, d: 0.6, offset: 1.0 }
-    ];
-    fanfare.forEach(note => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "square";
-      osc.frequency.setValueAtTime(note.f, t + note.offset);
-      gain.gain.setValueAtTime(0.35, t + note.offset);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + note.offset + note.d);
-      osc.connect(gain);
-      gain.connect(this.sfxGain);
-      osc.start(t + note.offset);
-      osc.stop(t + note.offset + note.d + 0.05);
-    });
-  }
-
-  playLevelUp() {
-    if (this.isMuted) return;
-    this.init();
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    const notes = [440, 554.37, 659.25, 880];
-    notes.forEach((freq, idx) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, t + idx * 0.08);
-      gain.gain.setValueAtTime(0.4, t + idx * 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + idx * 0.08 + 0.3);
-      osc.connect(gain);
-      gain.connect(this.sfxGain);
-      osc.start(t + idx * 0.08);
-      osc.stop(t + idx * 0.08 + 0.35);
-    });
-  }
-
-  createNoiseBuffer(duration) {
     const bufferSize = this.ctx.sampleRate * duration;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
       data[i] = Math.random() * 2 - 1;
     }
-    return buffer;
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(cutoff, t);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(volume, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + duration);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.sfxGain);
+
+    noise.start(t);
+    noise.stop(t + duration);
   }
 
-  // ─── 動態合成背景音樂 (Dynamic Synth Battle BGM) ───
+  // ─── 賽博龐克合成背景旋律 (Procedural Cyberpunk Synth BGM) ───
   startBgm() {
     if (this.bgmPlaying) return;
-    this.init();
+    this.ensureContext();
     if (!this.ctx) return;
+
     this.bgmPlaying = true;
-    this.bgmStep = 0;
+    const bassScale = [65.41, 73.42, 82.41, 98.00, 110.00, 130.81]; // C2, D2, E2, G2, A2, C3
+    const leadScale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
 
-    const bassLine = [110, 110, 130.81, 146.83, 110, 110, 164.81, 146.83, 98, 98, 130.81, 146.83, 110, 123.47, 130.81, 146.83];
-    const melody = [
-      440, 0, 523.25, 659.25, 587.33, 0, 440, 0,
-      392, 0, 440, 523.25, 587.33, 659.25, 783.99, 880
-    ];
-
-    const tempo = 135; // BPM
-    const stepInterval = (60 / tempo) / 4 * 1000; // 16th notes
+    const tempo = 128; // BPM
+    const stepInterval = (60 / tempo) / 2 * 1000; // 16分音符間隔
 
     this.bgmTimer = setInterval(() => {
-      if (this.isMuted || !this.bgmPlaying || !this.ctx) return;
+      if (!this.bgmPlaying || this.isMuted) return;
       const t = this.ctx.currentTime;
-      const currentStep = this.bgmStep % 16;
+      this.stepIndex++;
 
-      // Bass note
-      if (currentStep % 2 === 0) {
-        const bassFreq = bassLine[currentStep];
+      // 貝斯琶音 (每2拍切換)
+      if (this.stepIndex % 2 === 0) {
+        const bassFreq = bassScale[(Math.floor(this.stepIndex / 4) + (this.stepIndex % 4)) % bassScale.length];
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(bassFreq / 2, t);
-        gain.gain.setValueAtTime(0.2, t);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(bassFreq, t);
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(320, t);
+        filter.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.bgmGain);
+
+        osc.start(t);
+        osc.stop(t + 0.15);
+      }
+
+      // 踩鈸節奏 (每步隨機或交替)
+      if (this.stepIndex % 2 === 1) {
+        this._playNoise(t, 0.03, 5000, 0.05);
+      }
+
+      // 科技感高頻琶音旋律 (偶爾點綴)
+      if (this.stepIndex % 8 === 4 || this.stepIndex % 8 === 7) {
+        const leadFreq = leadScale[(this.stepIndex * 3) % leadScale.length];
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(leadFreq, t);
+
+        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+
         osc.connect(gain);
         gain.connect(this.bgmGain);
         osc.start(t);
         osc.stop(t + 0.18);
       }
-
-      // Melody note
-      const melFreq = melody[currentStep];
-      if (melFreq > 0 && Math.random() > 0.2) {
-        const oscMel = this.ctx.createOscillator();
-        const gainMel = this.ctx.createGain();
-        oscMel.type = "square";
-        oscMel.frequency.setValueAtTime(melFreq, t);
-        gainMel.gain.setValueAtTime(0.12, t);
-        gainMel.gain.exponentialRampToValueAtTime(0.005, t + 0.18);
-        oscMel.connect(gainMel);
-        gainMel.connect(this.bgmGain);
-        oscMel.start(t);
-        oscMel.stop(t + 0.2);
-      }
-
-      // Synth Hi-hat on every odd 16th note
-      if (currentStep % 2 === 1) {
-        const noise = this.createNoiseBuffer(0.04);
-        const noiseSource = this.ctx.createBufferSource();
-        const noiseGain = this.ctx.createGain();
-        noiseSource.buffer = noise;
-        noiseGain.gain.setValueAtTime(0.08, t);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-        noiseSource.connect(noiseGain);
-        noiseGain.connect(this.bgmGain);
-        noiseSource.start(t);
-        noiseSource.stop(t + 0.05);
-      }
-
-      this.bgmStep++;
     }, stepInterval);
   }
 
@@ -421,6 +487,4 @@ class SoundEngine {
   }
 }
 
-if (typeof window !== "undefined") {
-  window.soundEngine = new SoundEngine();
-}
+export const soundEngine = new SoundEngine();

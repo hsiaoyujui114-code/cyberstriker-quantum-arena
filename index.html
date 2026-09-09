@@ -3,20 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>跨次元大亂鬥 3D (Dimension Clash Online 3D) | 全向動作格鬥大亂鬥</title>
-  <meta name="description" content="《跨次元大亂鬥 3D (Dimension Clash Online 3D)》跨平台 3D 動作格鬥大亂鬥網頁遊戲。支援 Google 登入、角色養成、每日獎勵、第一人稱/第三人稱/上方俯瞰視角切換、360 度走位與跳躍！">
+  <title>CyberStriker: Quantum Arena | 賽博衝擊：量子競技場</title>
+  <meta name="description" content="《CyberStriker: Quantum Arena》2D 橫向科技風格鬥競技場。純技術立回，十技自由選三，零數值課金壓制，全憑格鬥硬實力！支援 Google 雙軌登入、量子逆轉爆發、60 FPS 幀數判定與跨裝置存檔。">
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800;900&family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800;900&family=Orbitron:wght@600;800;900&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
 
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-  <!-- Three.js 3D WebGL Library (with CDN fallback) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>if (typeof THREE === 'undefined') { document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>'); }</script>
 
   <!-- Google Identity Services (GIS) Official OAuth SDK -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -25,466 +21,484 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=20260903_google_quantum_v9">
+  <link rel="stylesheet" href="css/style.css?v=20260909_cyberstriker_v1">
 </head>
 <body>
 
-  <!-- ── 頂部導航欄 (App Header) ── -->
+  <!-- ── 科技網格與微弱掃描線背景 ── -->
+  <div class="cyber-bg-overlay"></div>
+  <div class="scanlines"></div>
+
+  <!-- ── 遊戲前置載入畫面 (Splash & Loading Screen) ── -->
+  <div id="splashScreen" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #040711; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s;">
+    <div style="font-size: 54px; color: #00f3ff; margin-bottom: 20px; animation: pulse-event 1.8s infinite;">
+      <i class="fa-solid fa-shield-halved"></i>
+    </div>
+    <div style="font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 900; letter-spacing: 3px; background: linear-gradient(90deg, #00f3ff, #ff007f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;">
+      CYBERSTRIKER
+    </div>
+    <div style="font-size: 12px; color: #94a3b8; letter-spacing: 4px; margin-bottom: 36px; text-transform: uppercase;">
+      QUANTUM ARENA
+    </div>
+    <div style="width: 320px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 14px;">
+      <div id="splashProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00f3ff, #ff007f); transition: width 0.1s;"></div>
+    </div>
+    <div id="splashStatusText" style="font-size: 13px; color: #00f3ff; font-family: monospace;">正在初始化量子戰鬥引擎...</div>
+    <div style="position: absolute; bottom: 20px; font-size: 11px; color: #64748b;">
+      本遊戲為公平競技格鬥專案，全外觀數值 100% 相同，絕無數值增益 | V1.0.0-PROD
+    </div>
+  </div>
+
+  <!-- ── 頂部科技 HUD 導航列 ── -->
   <header class="app-header">
-    <div class="logo-container">
-      <div class="logo-icon"><i class="fa-solid fa-cube"></i></div>
-      <div>
-        <span class="logo-title">跨次元大亂鬥 3D</span>
-        <span class="logo-subtitle">Dimension Clash Online 3D</span>
+    <div class="logo-container" onclick="app.switchTab('skins')">
+      <div class="logo-badge">
+        <i class="fa-solid fa-bolt"></i>
+      </div>
+      <div class="logo-text-group">
+        <span class="logo-title">CYBERSTRIKER</span>
+        <span class="logo-subtitle">Quantum Arena</span>
       </div>
     </div>
 
-    <div class="user-status-bar">
-      <button class="btn-header" id="dailyRewardBtn" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-        <i class="fa-solid fa-gift"></i> 每日獎勵
+    <!-- 中央四大分頁 -->
+    <nav class="nav-tabs">
+      <button class="nav-tab-btn active" data-tab="skins">
+        <i class="fa-solid fa-user-astronaut"></i> 我的外觀
       </button>
-      <div class="stat-chip gold">
+      <button class="nav-tab-btn" data-tab="shop">
+        <i class="fa-solid fa-cart-shopping"></i> 商店
+      </button>
+      <button class="nav-tab-btn event-tab" data-tab="events">
+        <i class="fa-solid fa-trophy"></i> 活動殿堂
+      </button>
+      <button class="nav-tab-btn" data-tab="bugs">
+        <i class="fa-solid fa-bug"></i> 錯誤回報
+      </button>
+    </nav>
+
+    <!-- 右側個人資產與徽章 -->
+    <div class="header-right">
+      <div class="stat-capsule" title="當前持有的能量幣餘額（每場對戰無論勝負皆可獲得）">
         <i class="fa-solid fa-coins"></i>
-        <span id="userGoldDisplay">1,500</span>
+        <span id="userCreditsDisplay">1,200</span>
       </div>
-      <div class="stat-chip trophy">
-        <i class="fa-solid fa-trophy"></i>
-        <span id="userTrophyDisplay">1,000</span>
-      </div>
-      <button class="btn-header" id="cameraViewBtn" style="background: linear-gradient(135deg, #0284c7, #06b6d4);">
-        <i class="fa-solid fa-video"></i> 🎥 視角切換
+
+      <button class="nav-tab-btn" id="workshopOpenBtn" title="GitHub 社群外觀工作坊" style="padding: 6px 12px; font-size: 12px; border-color: rgba(255,255,255,0.2);">
+        <i class="fa-brands fa-github"></i> 工作坊
       </button>
-      <!-- 🔄 立即手動更新按鈕 -->
-      <button class="btn-header" id="manualSyncBtn" style="background: linear-gradient(135deg, #10b981, #059669);" title="手動立即更新並同步遊戲存檔與畫面">
-        <i class="fa-solid fa-rotate" id="syncSpinIcon"></i> <span>立即更新</span>
-      </button>
-      <!-- 👤 登入頭像徽章 -->
-      <div class="user-avatar-badge" id="userAvatarBadge" title="點擊查看玩家個人檔案與切換頭像">
-        <img id="userAvatarImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=DimensionGamer" alt="Avatar" class="user-avatar-img">
-        <span id="userNicknameDisplay" class="user-nickname-text">Google 帳號</span>
+
+      <div class="user-badge" id="userBadge" title="量子授權儀：點擊切換 Google 帳號或綁定 Gmail">
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=QuantumVanguard" id="userAvatarImg" class="user-avatar" alt="Avatar">
+        <div style="display: flex; flex-direction: column;">
+          <span class="user-name" id="userNickDisplay">量子先鋒</span>
+          <span id="guestStatusBadge" style="font-size: 9px; color: #ffd700; display: none;">訪客離線</span>
+        </div>
       </div>
-      <button class="btn-secondary" id="muteToggleBtn" style="padding: 6px 12px; font-size: 13px;">
+
+      <button class="icon-btn" id="muteToggleBtn" title="靜音 / 開啟音效">
         <i class="fa-solid fa-volume-high"></i>
       </button>
     </div>
   </header>
 
-  <!-- ── 主導航分頁 (Navigation Tabs) ── -->
-  <nav class="nav-tabs">
-    <button class="tab-btn active" data-tab="roster"><i class="fa-solid fa-users"></i> 👥 我的角色 & 陣容編組</button>
-    <button class="tab-btn" data-tab="battle"><i class="fa-solid fa-gamepad"></i> ⚔️ 3D 戰鬥大廳</button>
-    <button class="tab-btn" data-tab="ranked"><i class="fa-solid fa-medal"></i> 🏆 天梯公平競技</button>
-    <button class="tab-btn" data-tab="boss_rush"><i class="fa-solid fa-dungeon"></i> 🗼 3D 次元挑戰塔</button>
-    <button class="tab-btn" data-tab="quests"><i class="fa-solid fa-scroll"></i> 📜 任務與成就挑戰</button>
-    <button class="tab-btn" data-tab="shop"><i class="fa-solid fa-cart-shopping"></i> 🛒 英雄招募商店</button>
-    <button class="tab-btn" data-tab="guide"><i class="fa-solid fa-book-open"></i> 📖 操作手冊 & 說明</button>
-  </nav>
-
-  <!-- ── 主要內容區域 ── -->
+  <!-- ── 主要分頁內容容器 ── -->
   <main class="main-container">
 
-    <!-- ── 1. 我的角色名冊與出賽陣容選擇 (Roster View) ── -->
-    <section id="view_roster" class="view-section active">
-      <div id="rosterTeamBanner"></div>
-
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">👥 所有英雄名冊與養成 (100 位跨次元頂級全明星陣容)</h2>
-          <p style="color: #94a3b8; font-size: 13px;">點擊角色可進行 Level 1~100 屬性升級，並自由配置 1~5 隻上場出賽陣容！</p>
-        </div>
-        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-          <button class="btn-secondary roster-filter-btn active" data-series="all">全部陣容 (100)</button>
-          <button class="btn-secondary roster-filter-btn" data-series="dragonball">七龍珠</button>
-          <button class="btn-secondary roster-filter-btn" data-series="marvel">漫威宇宙</button>
-          <button class="btn-secondary roster-filter-btn" data-series="gundam">機動戰士鋼彈</button>
-          <button class="btn-secondary roster-filter-btn" data-series="anime">熱血動漫</button>
-          <button class="btn-secondary roster-filter-btn" data-series="gaming">遊戲傳奇</button>
-        </div>
-      </div>
-      <div id="rosterGrid" class="character-grid"></div>
-    </section>
-
-    <!-- ── 2. 3D 戰鬥大廳 (3D Battle View) ── -->
-    <section id="view_battle" class="view-section">
-      <div class="battle-wrapper" style="position: relative; min-height: 580px;">
-        <!-- 3D Three.js WebGL Viewport -->
-        <div id="battle3DContainer" style="width: 100%; height: 580px; background: #000; overflow: hidden; border-radius: 14px;"></div>
-
-        <!-- 3D 戰鬥準備與換人彈窗 Overlay (調整 1, 4, 5) -->
-        <div id="battleOverlay" class="battle-overlay"></div>
-
-        <!-- 3D 戰鬥頂部 HUD -->
-        <div class="battle-hud">
-          <!-- P1 Status -->
-          <div class="hud-fighter p1">
-            <div class="hud-fighter-info">
-              <span class="hud-name" id="p1NameDisplay" style="color: #38bdf8;">我方角色</span>
-              <span class="hud-level-badge" id="p1LvlDisplay">Lv.25</span>
-            </div>
-            <div class="hp-bar-bg"><div class="hp-bar-fill" id="p1HpFill"></div></div>
-            <div class="rage-bar-bg"><div class="rage-bar-fill" id="p1RageFill"></div></div>
+    <!-- ── 1. 我的外觀 (My Skins) ── -->
+    <section id="view_skins" class="tab-view active">
+      <div class="skins-layout">
+        <!-- 左欄：2D 骨骼即時展示擂台 -->
+        <div class="preview-arena-panel">
+          <div class="arena-title-bar">
+            <span style="font-weight: 800; font-size: 15px; color: var(--primary-cyan);"><i class="fa-solid fa-cubes"></i> 2D 骨骼即時展示擂台</span>
+            <span style="font-size: 11px; color: #94a3b8;">自然呼吸動態 / 全息能量底座</span>
           </div>
 
-          <!-- Center Mode Indicator & Direct Start Game Button -->
-          <div class="hud-center">
-            <div class="hud-vs-badge">3D BATTLE</div>
-            <button id="hudStartGameBtn" class="hud-start-btn" onclick="window.matchEngine3D.confirmStartMatch()" title="點擊立即開始 3D 對決">
-              <i class="fa-solid fa-play"></i> ⚔️ 開始遊戲
+          <div class="pedestal-canvas-wrapper">
+            <canvas id="pedestalCanvas"></canvas>
+          </div>
+
+          <!-- 4 大互動即時預覽動作按鈕 -->
+          <div class="preview-action-group">
+            <button class="preview-btn" id="pedestalPunchBtn">
+              <i class="fa-solid fa-hand-fist"></i> 展示輕拳
+            </button>
+            <button class="preview-btn" id="pedestalKickBtn">
+              <i class="fa-solid fa-shoe-prints"></i> 展示重踢
+            </button>
+            <button class="preview-btn" id="pedestalJumpBtn">
+              <i class="fa-solid fa-angles-up"></i> 展示跳躍
+            </button>
+            <button class="preview-btn" id="pedestalGuardBtn">
+              <i class="fa-solid fa-shield"></i> 展示格擋
             </button>
           </div>
+        </div>
 
-          <!-- P2 Status -->
-          <div class="hud-fighter p2">
-            <div class="hud-fighter-info">
-              <span class="hud-name" id="p2NameDisplay" style="color: #ef4444;">對手角色</span>
-              <span class="hud-level-badge" id="p2LvlDisplay">Lv.20</span>
+        <!-- 右欄：裝備庫清單 -->
+        <div class="skins-inventory-panel">
+          <div class="fair-play-banner">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <i class="fa-solid fa-scale-balanced" style="color: var(--primary-cyan); font-size: 20px;"></i>
+              <div>
+                <strong style="color: var(--primary-cyan);">全外觀數值與判定 100% 相同</strong>
+                <div style="font-size: 12px; color: var(--text-muted);">本遊戲所有外觀之碰撞盒、生命值與招式幀數完全對稱一致，絕無任何數值課金加成！</div>
+              </div>
             </div>
-            <div class="hp-bar-bg"><div class="hp-bar-fill" id="p2HpFill"></div></div>
-            <div class="rage-bar-bg"><div class="rage-bar-fill" id="p2RageFill"></div></div>
-          </div>
-        </div>
-
-        <!-- ── 手機端 360° 虛擬搖桿與觸控按鈕 ── -->
-        <div class="touch-controls">
-          <!-- Left 360° Virtual Joystick -->
-          <div style="position: relative; width: 110px; height: 110px; background: rgba(15, 23, 42, 0.7); border: 2px solid rgba(56, 189, 248, 0.4); border-radius: 50%; display: flex; justify-content: center; align-items: center;" id="virtualJoystickArea">
-            <div id="virtualJoystickKnob" style="width: 44px; height: 44px; background: #38bdf8; border-radius: 50%; box-shadow: 0 0 12px #38bdf8; pointer-events: none;"></div>
+            <span class="skin-tag" style="border: 1px solid var(--primary-cyan); color: var(--primary-cyan);">公平標籤</span>
           </div>
 
-          <!-- Right Action Controls (獨立專屬按鈕，支援 CD 冷卻顯示) -->
-          <div class="touch-group" style="flex-wrap: wrap; justify-content: flex-end; max-width: 330px;">
-            <button class="touch-btn" id="touchBtnFlight" style="display: none; background: linear-gradient(135deg, #0284c7, #06b6d4);"><i class="fa-solid fa-plane-departure"></i><span class="label">飛行[F]</span></button>
-            <button class="touch-btn btn-assist" id="touchBtnAssist"><i class="fa-solid fa-handshake"></i><span class="label">援護[Q]</span></button>
-            <button class="touch-btn btn-burst" id="touchBtnBurst"><i class="fa-solid fa-sun"></i><span class="label">爆發[B]</span></button>
-            <button class="touch-btn" id="touchBtnSkill1"><i class="fa-solid fa-bolt"></i><span class="label">技1[U]</span></button>
-            <button class="touch-btn" id="touchBtnSkill2"><i class="fa-solid fa-meteor"></i><span class="label">技2[I]</span></button>
-            <button class="touch-btn" id="touchBtnJump"><i class="fa-solid fa-arrow-up"></i><span class="label">跳躍[Space]</span></button>
-            <button class="touch-btn" id="touchBtnGuard"><i class="fa-solid fa-shield"></i><span class="label">格擋[G]</span></button>
-            <button class="touch-btn" id="touchBtnRoll"><i class="fa-solid fa-person-running"></i><span class="label">閃避[Shift]</span></button>
-            <button class="touch-btn" id="touchBtnGrab"><i class="fa-solid fa-hand"></i><span class="label">抓技[O]</span></button>
-            <button class="touch-btn" id="touchBtnHeavy"><i class="fa-solid fa-hammer"></i><span class="label">破防[K]</span></button>
-            <button class="touch-btn btn-atk" id="touchBtnAtk"><i class="fa-solid fa-hand-fist"></i><span class="label">普攻[J]</span></button>
-            <button class="touch-btn btn-ult" id="touchBtnUlt"><i class="fa-solid fa-dragon"></i><span class="label">奧義[L]</span></button>
+          <div class="skins-grid" id="skinsGrid">
+            <!-- 動態渲染造型卡片 -->
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- ⌨️ 電腦鍵盤快捷鍵指示條 (PC Hotkeys Quick Legend) -->
-      <div class="pc-key-hints" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 10px 16px; margin-top: 10px; font-size: 11px; color: #cbd5e1; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-        <span style="color: #facc15; font-weight: 800;"><i class="fa-solid fa-keyboard"></i> 鍵盤熱鍵對照：</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">W A S D</kbd> 360°走位</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">Space</kbd> 跳躍</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">F</kbd> 飛行模式</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">Shift / Z</kbd> 翻滾閃避</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">G / H</kbd> 格擋防禦</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">J</kbd> 普攻</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">K / X</kbd> 蓄力破防</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">O / T</kbd> 抓技摔投</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">U</kbd> 戰術技1</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">I</kbd> 戰術技2</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#facc15; font-weight:700;">L</kbd> 奧義大招</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#c084fc; font-weight:700;">B</kbd> 爆氣脫身</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">Q / E</kbd> 隊友援護</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#38bdf8; font-weight:700;">V / C</kbd> 視角切換</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#10b981; font-weight:700;">1~7</kbd> 切換分頁</span>
-        <span><kbd style="background:#1e293b; border:1px solid #475569; padding:2px 5px; border-radius:4px; color:#ef4444; font-weight:700;">Esc</kbd> 關閉彈窗</span>
-      </div>
-
-      <!-- 戰鬥準備與隊伍編組面板 -->
-      <div style="background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 20px; margin-top: 24px;">
-        <div class="section-header">
-          <div>
-            <h3 style="font-size: 18px; font-weight: 900; color: #38bdf8;">KOF 輪替賽制出場順序 (1v1 ~ 5v5 自訂編組)</h3>
-            <p style="font-size: 12px; color: #94a3b8; margin-top: 2px;">點擊角色卡片可自由替換出場陣容（勝者留場、殘血接戰、陣亡按 Enter 換下一隻英雄登場）</p>
-          </div>
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button class="btn-secondary team-size-btn" data-size="1">1v1 單挑</button>
-            <button class="btn-secondary team-size-btn" data-size="2">2v2 雙人</button>
-            <button class="btn-secondary team-size-btn active" data-size="3">3v3 經典</button>
-            <button class="btn-secondary team-size-btn" data-size="4">4v4 四連</button>
-            <button class="btn-secondary team-size-btn" data-size="5">5v5 終極</button>
-            <button class="btn-primary" id="startBattleBtn"><i class="fa-solid fa-play"></i> 開始 3D 戰鬥</button>
-          </div>
-        </div>
-
-        <!-- 🤖 AI 難度選擇器 (自由對決模式可調，其他模式鎖定) -->
-        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 12px 16px; margin: 16px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <span style="font-size: 13px; font-weight: 800; color: #facc15;"><i class="fa-solid fa-robot"></i> AI 對手難度設定：</span>
-            <span style="font-size: 11px; color: #cbd5e1;" id="difficultyRewardHint">當前 [中等]：標準反應 ｜ 勝場 +800 金幣 / +35 獎盃</span>
-          </div>
-          <div style="display: flex; gap: 6px;">
-            <button class="btn-secondary diff-btn" data-diff="easy">🟢 簡單 (Easy)</button>
-            <button class="btn-secondary diff-btn active" data-diff="medium">🟡 中等 (Normal)</button>
-            <button class="btn-secondary diff-btn" data-diff="hard">🔴 困難 (Hard / 結晶掉落)</button>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-          <!-- P1 Team -->
-          <div>
-            <h4 style="font-size: 14px; font-weight: 800; color: #38bdf8; margin-bottom: 10px;">🔷 玩家方陣容 (我方出場順序)</h4>
-            <div id="p1TeamSlots" style="display: flex; flex-direction: column; gap: 8px;"></div>
-          </div>
-          <!-- P2 Team -->
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-              <h4 style="font-size: 14px; font-weight: 800; color: #ef4444;" id="p2TeamHeaderTitle">🔴 電腦對手陣容 (依難度隨機抽角)</h4>
-              <button class="btn-secondary" id="rerollAiTeamBtn" style="font-size: 11px; padding: 4px 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; cursor: pointer;" onclick="window.app.draftComputerTeam()"><i class="fa-solid fa-dice"></i> 隨機重抽電腦陣容</button>
+    <!-- ── 2. 商店 (Shop) ── -->
+    <section id="view_shop" class="tab-view">
+      <div class="shop-layout">
+        <div class="economy-guide-card">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <i class="fa-solid fa-coins" style="color: var(--accent-gold); font-size: 28px;"></i>
+            <div>
+              <strong style="font-size: 16px; color: var(--accent-gold);">能量幣收支精算模型（公平不肝不課）</strong>
+              <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                每場對戰無論勝負皆能產出貨幣：勝 +350 幣，敗 +120 幣，困難/惡夢 AI +200 幣，每日簽到 +200 幣。商城純外觀換裝，嚴格杜絕破壞平衡。
+              </div>
             </div>
-            <div id="p2TeamSlots" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          </div>
+          <span class="stat-capsule" style="font-size: 15px;">零數值課金保證</span>
+        </div>
+
+        <h3 style="color: var(--primary-cyan); margin-bottom: 8px;"><i class="fa-solid fa-store"></i> 外觀商品貨架</h3>
+        <div class="skins-grid" id="shopGrid">
+          <!-- 動態渲染商店造型商品 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 3. 活動殿堂 (Event Hall) ── -->
+    <section id="view_events" class="tab-view">
+      <div class="event-hero-banner">
+        <div style="max-width: 600px;">
+          <span class="skin-tag" style="background: rgba(255,69,0,0.3); border: 1px solid #ff4500; color: #ff9966;">第一季限時賽季</span>
+          <h2 style="font-size: 32px; font-weight: 900; margin: 10px 0; color: #fff;">賽博頂尖決賽盛典 (Grand Finals)</h2>
+          <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+            參與量子競技場天梯對決，完成賽季專屬成就任務，即可免費領取典藏限定外觀【太陽女武神】！
+          </p>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <span class="stat-capsule" style="background: rgba(0,0,0,0.5); border-color: #ff4500; color: #ff9966;">
+              <i class="fa-solid fa-clock"></i> 剩餘時間：14 天 08 小時 32 分
+            </span>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ── 3. 天梯公平排位 (Ranked View) ── -->
-    <section id="view_ranked" class="view-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">🏆 天梯公平排位賽 (Fair Play Tournament)</h2>
-          <p style="color: #94a3b8; font-size: 13px;">所有參賽角色的屬性數值強制拉平至標準化 Lv.100，純粹比拼 3D 走位、連招與視角掌控！</p>
-        </div>
-        <button class="btn-primary" onclick="window.app.startSelectedBattle('ranked', null, true)"><i class="fa-solid fa-crosshairs"></i> 開始天梯 3D 標準化對局</button>
-      </div>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px;">
-        <div style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3);">
-          <h3 style="font-size: 16px; font-weight: 800; color: #38bdf8;">🥇 3D 天梯積分排位</h3>
-          <p style="font-size: 13px; color: #cbd5e1; margin-top: 8px;">勝場 +30 獎盃，敗場 -15 獎盃。達到 2000 獎盃 (大師段位) 可解鎖彩階【黑化奇異博士】！達到 150 勝登頂傳奇宗師可解鎖創世【自在極意悟空】！</p>
-        </div>
-        <div style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid rgba(250, 204, 21, 0.3);">
-          <h3 style="font-size: 16px; font-weight: 800; color: #facc15;">🌐 同一房間跨機台 3D 即時對戰 (P2P WebRTC)</h3>
-          <p style="font-size: 13px; color: #cbd5e1; margin-top: 8px;">免架伺服器！兩台不同裝置（電腦對電腦、手機對電腦）連進同一個房間碼即可雙人實時 3D 對決！</p>
-          <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
-            <button class="btn-primary" style="font-size: 12px; padding: 8px 14px;" onclick="window.app.createP2PRoom()"><i class="fa-solid fa-house-chimney-medical"></i> 建立對戰房間</button>
-            <input type="text" id="p2pRoomInput" placeholder="輸入 6 位房間碼" style="background: #0f172a; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; width: 130px;">
-            <button class="btn-secondary" style="font-size: 12px; padding: 8px 14px;" onclick="window.app.joinP2PRoom()"><i class="fa-solid fa-right-to-bracket"></i> 加入房間</button>
+      <h3 style="color: var(--primary-cyan); margin-bottom: 14px;"><i class="fa-solid fa-list-check"></i> 賽季限時任務</h3>
+      <div class="event-quests-list">
+        <div class="quest-card">
+          <div style="display: flex; justify-content: space-between;">
+            <strong>任務一：頂尖戰士之路</strong>
+            <span style="color: #ffd700;">+500 幣</span>
           </div>
-          <div id="p2pStatusBanner" style="font-size: 12px; color: #38bdf8; margin-top: 10px; font-weight: 700;"></div>
+          <div style="font-size: 13px; color: #94a3b8;">累計取得 5 場對戰勝場</div>
+          <div style="font-size: 12px; color: #00f3ff;">進度：1 / 5 (進行中)</div>
+        </div>
+        <div class="quest-card">
+          <div style="display: flex; justify-content: space-between;">
+            <strong>任務二：升龍破空截擊</strong>
+            <span style="color: #ffd700;">+300 幣</span>
+          </div>
+          <div style="font-size: 13px; color: #94a3b8;">使用【升龍衝天擊】終結對手 3 次</div>
+          <div style="font-size: 12px; color: #00f3ff;">進度：0 / 3 (進行中)</div>
+        </div>
+        <div class="quest-card">
+          <div style="display: flex; justify-content: space-between;">
+            <strong>任務三：量子逆轉脫身</strong>
+            <span style="color: #ffd700;">+200 幣</span>
+          </div>
+          <div style="font-size: 13px; color: #94a3b8;">在受擊硬直中成功觸發量子逆轉爆發 (Burst) 2 次</div>
+          <div style="font-size: 12px; color: #00f3ff;">進度：1 / 2 (進行中)</div>
         </div>
       </div>
     </section>
 
-    <!-- ── 4. 次元裂縫魔王塔 (Boss Rush View) ── -->
-    <section id="view_boss_rush" class="view-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">🗼 3D 次元裂縫挑戰塔 (10 層 Arcade Boss Rush)</h2>
-          <p style="color: #94a3b8; font-size: 13px;">組建精銳戰隊通關 10 層 3D 隨機強化魔王，每層血量僅回復 20%，通關獲得傳奇頭銜與神級創世解鎖！</p>
+    <!-- ── 4. 錯誤回報 (Bug Report) ── -->
+    <section id="view_bugs" class="tab-view">
+      <form class="bug-report-form" id="bugReportForm">
+        <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+          <h2 style="font-size: 20px; color: var(--primary-cyan);"><i class="fa-solid fa-headset"></i> 玩家問題反饋與錯誤回報</h2>
+          <p style="font-size: 13px; color: #94a3b8; margin-top: 4px;">感謝您協助我們讓遊戲更完美！系統已自動採集運行環境參數。</p>
         </div>
-      </div>
-      <div id="bossRushFloorList"></div>
+
+        <div class="form-group">
+          <label class="form-label">問題分類</label>
+          <select class="form-select" id="bugCategorySelect" required>
+            <option value="combat">戰鬥判定異常 (Combat Hitbox & Stun Issue)</option>
+            <option value="visual">畫面視覺錯誤 (Visual / Animation Glitch)</option>
+            <option value="auth">Google 登入與存檔問題 (Auth & Cloud Save Issue)</option>
+            <option value="balance">遊戲平衡與建議 (Game Balance & Feature Suggestion)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">詳細問題描述與重現步驟</label>
+          <textarea class="form-textarea" rows="4" placeholder="請詳細描述發生情境、對決模式、招式名稱與異常現象..." required></textarea>
+        </div>
+
+        <!-- 系統自動採集環境參數 -->
+        <div class="telemetry-display">
+          <div><strong>自動打包之環境診斷數據：</strong></div>
+          <div>• 玩家 UID：<span id="telemetryUid">CY-UID-882101</span></div>
+          <div>• 綁定 Gmail：<span id="telemetryEmail">player@gmail.com</span></div>
+          <div>• 瀏覽器版本：<span id="telemetryUA">Mozilla/5.0 (WebKit 60 FPS)</span></div>
+          <div>• 螢幕解析度：<span id="telemetryScreen">1920 x 1080</span></div>
+          <div>• 即時遊戲 FPS：<span id="telemetryFps">60.0 FPS (Lock)</span></div>
+        </div>
+
+        <button type="submit" class="nav-tab-btn" style="background: linear-gradient(135deg, #00f3ff, #ff007f); color: #fff; padding: 12px; justify-content: center; font-size: 15px;">
+          <i class="fa-solid fa-paper-plane"></i> 提交回報工單
+        </button>
+      </form>
     </section>
 
-    <!-- ── 5. 任務與成就挑戰 (Quests & Achievements View - 獨立專區) ── -->
-    <section id="view_quests" class="view-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">📜 任務與成就挑戰 (Quests & Achievements)</h2>
-          <p style="color: #94a3b8; font-size: 13px;">每日簽到福利、極限創世神級挑戰與里程碑戰鬥成就，完成目標即可領取豐厚金幣與稀有英雄解鎖！</p>
-        </div>
-        <button class="btn-primary" onclick="window.app.openDailyRewardModal()"><i class="fa-solid fa-gift"></i> 領取每日獎勵</button>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 24px;">
-        <!-- ★ 六大創世神級挑戰 (非賣品專屬) -->
-        <div>
-          <h3 style="font-size: 17px; font-weight: 900; color: #fb7185; margin-bottom: 12px;"><i class="fa-solid fa-crown"></i> ★ 創世 / 概念級神級挑戰 (禁止購買，只能憑實力解鎖)</h3>
-          <div id="genesisChallengesList"></div>
-        </div>
-
-        <!-- 🏆 里程碑戰鬥成就列表 -->
-        <div>
-          <h3 style="font-size: 17px; font-weight: 900; color: #38bdf8; margin-bottom: 12px;"><i class="fa-solid fa-trophy"></i> 🏆 戰鬥成就與里程碑任務 (點擊領取金幣)</h3>
-          <div id="achievementsMilestoneList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px;"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── 6. 英雄招募商店 (Shop View - 純淨商店) ── -->
-    <section id="view_shop" class="view-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">🛒 英雄招募商店 (Hero Recruitment Shop)</h2>
-          <p style="color: #94a3b8; font-size: 13px;">使用對戰累積的金幣招募來自七龍珠、漫威宇宙、機動戰士鋼彈、熱血動漫與遊戲傳奇的強力英雄！</p>
-        </div>
-        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-          <button class="btn-secondary shop-filter-btn active" data-series="all">全部系列</button>
-          <button class="btn-secondary shop-filter-btn" data-series="dragonball">七龍珠</button>
-          <button class="btn-secondary shop-filter-btn" data-series="marvel">漫威宇宙</button>
-          <button class="btn-secondary shop-filter-btn" data-series="gundam">機動戰士鋼彈</button>
-          <button class="btn-secondary shop-filter-btn" data-series="anime">熱血動漫</button>
-          <button class="btn-secondary shop-filter-btn" data-series="gaming">遊戲傳奇</button>
-        </div>
-      </div>
-      <div id="shopHeroGrid" class="character-grid"></div>
-    </section>
-
-    <!-- ── 7. 免責聲明與操作指南 (Guide View) ── -->
-    <section id="view_guide" class="view-section">
-      <div style="background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 24px; max-width: 900px; margin: 0 auto;">
-        <h2 style="font-size: 20px; font-weight: 900; color: #facc15; margin-bottom: 12px;">📜 非營利同人二創學習免責聲明 (Disclaimer)</h2>
-        <p style="font-size: 13px; line-height: 1.8; color: #cbd5e1;">
-          本遊戲《跨次元大亂鬥 3D (Dimension Clash Online 3D)》為非營利個人同人二創與 WebGL 3D 遊戲引擎技術學習專案。遊戲中所引用之七龍珠 (Dragon Ball)、漫威 (Marvel)、機動戰士鋼彈 (Gundam) 等角色、名稱、招式及世界觀商標版權，均歸屬於原著作權人、東映動畫、萬代南夢宮、漫威娛樂及迪士尼所有。本專案不包含任何商業收費、付費抽卡或盈利行為，純供技術展示與愛好者交流使用。
-        </p>
-
-        <hr style="border-color: rgba(255,255,255,0.08); margin: 20px 0;">
-
-        <h3 style="font-size: 16px; font-weight: 800; color: #38bdf8; margin-bottom: 12px;">🎮 專屬 3D 戰鬥操作指令全覽表 (各動作獨立按鍵，絕不衝突)</h3>
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #f8fafc;">
-          <thead>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.15); text-align: left; color: #94a3b8;">
-              <th style="padding: 8px;">動作種類</th>
-              <th style="padding: 8px;">PC 鍵盤獨立按鍵</th>
-              <th style="padding: 8px;">手機螢幕觸控按鈕</th>
-              <th style="padding: 8px;">CD 冷卻 / 消耗與效果說明</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>四面八方立體走位</b></td><td style="padding: 8px; color: #38bdf8;"><b>W / S / A / D</b></td><td style="padding: 8px;">左側 360° 虛擬搖桿</td><td style="padding: 8px;">W 前進、S 後退、A 向左、D 向右 (360 度全向流暢移動)</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>3D 跳躍 / 二段跳</b></td><td style="padding: 8px; color: #38bdf8;"><b>Space 空白鍵</b></td><td style="padding: 8px;">「跳躍[Space]」按鈕</td><td style="padding: 8px;">無 CD，支援空中二段跳與滯空打擊</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>飛行升空 / 降落</b></td><td style="padding: 8px; color: #38bdf8;"><b>F 鍵</b></td><td style="padding: 8px;">「飛行[F]」按鈕</td><td style="padding: 8px;">飛行角色專屬：升空懸浮，空中 360 度全向飛行制空</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>專屬格擋防禦</b></td><td style="padding: 8px; color: #38bdf8;"><b>G 鍵 (獨立防禦鍵)</b></td><td style="padding: 8px;">「格擋[G]」按鈕</td><td style="padding: 8px;">減免 80% 傷害 (不與 S 鍵後退混淆衝突)</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>快速翻滾閃避</b></td><td style="padding: 8px; color: #38bdf8;"><b>Shift 鍵</b></td><td style="padding: 8px;">「閃避[Shift]」按鈕</td><td style="padding: 8px;">CD 1.2s，附帶 0.3 秒無敵幀突進</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>普通攻擊 (輕擊)</b></td><td style="padding: 8px; color: #38bdf8;"><b>J 鍵</b></td><td style="padding: 8px;">「普攻[J]」按鈕</td><td style="padding: 8px;">無 CD，多段體術連招，具備磁性貼身追擊</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>蓄力破防重擊</b></td><td style="padding: 8px; color: #38bdf8;"><b>K 鍵</b></td><td style="padding: 8px;">「破防[K]」按鈕</td><td style="padding: 8px;">CD 2.5s，單次霸體蓄力，強制破除對手格擋</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>摔投 / 抓技</b></td><td style="padding: 8px; color: #38bdf8;"><b>O 鍵</b></td><td style="padding: 8px;">「抓技[O]」按鈕</td><td style="padding: 8px;">CD 3.5s，無視防禦近身抓起對手過肩摔</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>戰術小招 1</b></td><td style="padding: 8px; color: #38bdf8;"><b>U 鍵</b></td><td style="padding: 8px;">「技1[U]」按鈕</td><td style="padding: 8px;">CD 6~10s，立體遠程牽制或中距離突進</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>戰術小招 2</b></td><td style="padding: 8px; color: #38bdf8;"><b>I 鍵</b></td><td style="padding: 8px;">「技2[I]」按鈕</td><td style="padding: 8px;">CD 8~14s，強力擊飛或多段爆破</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>終極奧義大招</b></td><td style="padding: 8px; color: #38bdf8;"><b>L 鍵</b></td><td style="padding: 8px;">「奧義[L]」金色按鈕</td><td style="padding: 8px;">CD 20s + 需蓄滿 100% 怒氣，全螢幕特寫高額傷害</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>極限爆氣脫身</b></td><td style="padding: 8px; color: #38bdf8;"><b>B 鍵</b></td><td style="padding: 8px;">「爆發[B]」紫色按鈕</td><td style="padding: 8px;">CD 12s + 50% 怒氣，受擊震退對手防止被連招</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding: 8px;"><b>備戰援護出擊</b></td><td style="padding: 8px; color: #38bdf8;"><b>Q 或 E 鍵</b></td><td style="padding: 8px;">「援護[Q]」按鈕</td><td style="padding: 8px;">CD 20s，呼叫下一位隊友突入戰場協同進攻</td></tr>
-            <tr><td style="padding: 8px;"><b>3D 視角切換</b></td><td style="padding: 8px; color: #38bdf8;"><b>V 鍵</b></td><td style="padding: 8px;">頂部「🎥 視角切換」</td><td style="padding: 8px;">第三人稱背後跟隨 ⇄ 第一人稱 ⇄ 上方俯瞰</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
   </main>
 
-  <!-- ── 模態彈窗：跨次元量子神經網絡・Google 帳號星門授權儀 (Quantum Google Auth Portal) ── -->
-  <div id="googleLoginModal" class="modal-backdrop">
-    <div class="quantum-google-card">
-      <!-- 旋轉 Google 四色光環 (Google Colors Rainbow Hologram Ring) -->
-      <div class="google-stargate-ring">
-        <div class="google-stargate-inner">
-          <i class="fa-brands fa-google" style="background: linear-gradient(135deg, #4285f4, #ea4335, #fbbc05, #34a853); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-        </div>
-      </div>
+  <!-- ── 常駐右下角開始按鈕 (FAB) ── -->
+  <button class="fab-start-btn" id="fabStartBtn" title="點擊展開模式選擇對話框">
+    <i class="fa-solid fa-gamepad"></i> 開始遊戲
+  </button>
 
-      <h2 style="font-size: 22px; font-weight: 900; color: #f8fafc; margin-bottom: 4px; letter-spacing: 0.5px;">
-        跨次元量子神經網絡
-      </h2>
-      <p style="font-size: 13px; color: #94a3b8; margin-bottom: 16px;">
-        連結 Google 帳戶 ⇄ 即時同步 100 位跨次元英雄、天梯階級與雲端存檔
-      </p>
+  <!-- ── 模式選擇對話框 (Mode Select Modal) ── -->
+  <div class="modal-overlay" id="modeSelectModal">
+    <div class="modal-card">
+      <button class="modal-close-btn">&times;</button>
+      <h2 style="color: var(--primary-cyan);"><i class="fa-solid fa-crosshairs"></i> 選擇對戰模式</h2>
+      <p style="font-size: 13px; color: var(--text-muted);">純技術立回對決，請選擇您的挑戰模式：</p>
 
-      <!-- 官方 Google 一鍵快速授權按鈕 (GIS Button Slot / Official Google OAuth) -->
-      <div style="margin-bottom: 16px;">
-        <div id="googleGisBtnSlot"></div>
-        <button class="google-oauth-btn" id="instantGoogleAuthBtn" onclick="window.app.triggerOneTapGoogleAuth()">
-          <svg width="20" height="20" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-          </svg>
-          <span>使用 Google 帳戶一鍵快速授權登入</span>
-        </button>
-      </div>
-
-      <!-- 帳號詳細自訂與手動綁定 -->
-      <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin-bottom: 16px; text-align: left;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-size: 11px; font-weight: 800; color: #38bdf8;"><i class="fa-solid fa-sliders"></i> 自訂 Google 帳號與戰神暱稱</span>
-          <span class="cloud-sync-badge"><i class="fa-solid fa-shield-halved"></i> 量子加密防護</span>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <div>
-            <label style="font-size: 11px; color: #cbd5e1;">Google 信箱 (Gmail)：</label>
-            <input type="email" id="googleCustomEmailInput" value="dimension.hero@gmail.com" placeholder="例如: yourname@gmail.com" style="width: 100%; background: #0f172a; border: 1px solid rgba(66, 133, 244, 0.3); color: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 13px; margin-top: 3px; outline: none;">
-          </div>
-          <div>
-            <label style="font-size: 11px; color: #cbd5e1;">遊戲暱稱 (Gamer Tag)：</label>
-            <input type="text" id="googleCustomNickInput" value="次元戰神" placeholder="請輸入您的自訂戰神暱稱" style="width: 100%; background: #0f172a; border: 1px solid rgba(66, 133, 244, 0.3); color: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 13px; margin-top: 3px; outline: none;">
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+        <!-- 1. 對戰 AI -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
+          <div style="font-weight: 800; margin-bottom: 8px; color: #00f3ff;"><i class="fa-solid fa-robot"></i> 對戰 AI (4 大難度行為樹)</div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+            <button class="nav-tab-btn select-ai-btn" data-diff="easy" style="justify-content: center; padding: 8px 4px;">簡單</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="normal" style="justify-content: center; padding: 8px 4px;">普通</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="hard" style="justify-content: center; padding: 8px 4px; border-color: #ffd700; color: #ffd700;">困難</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="nightmare" style="justify-content: center; padding: 8px 4px; border-color: #ff007f; color: #ff007f;">惡夢</button>
           </div>
         </div>
+
+        <!-- 2. 雙人對打 -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
+          <div style="font-weight: 800; margin-bottom: 8px; color: #a855f7;"><i class="fa-solid fa-user-group"></i> 雙人對打</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="nav-tab-btn" id="selectLocal2pBtn" style="flex: 1; justify-content: center; border-color: #a855f7; color: #c084fc;">
+              <i class="fa-solid fa-keyboard"></i> 同機同鍵盤雙人
+            </button>
+            <button class="nav-tab-btn" id="hostRoomBtn" style="flex: 1; justify-content: center;">
+              <i class="fa-solid fa-satellite-dish"></i> 建立房間
+            </button>
+            <button class="nav-tab-btn" id="joinRoomBtn" style="flex: 1; justify-content: center;">
+              <i class="fa-solid fa-right-to-bracket"></i> 輸入代碼加入
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. 自由格鬥訓練營 -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(0,255,102,0.3); border-radius: 8px; padding: 14px;">
+          <div style="font-weight: 800; margin-bottom: 6px; color: #00ff66;"><i class="fa-solid fa-dumbbell"></i> 自由格鬥訓練營 (Training Mode)</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;">無限血量木樁假人，自訂站立/蹲防/跳躍，具備一鍵重置冷卻與幀數優劣勢即時指示燈！</div>
+          <button class="nav-tab-btn" id="selectTrainingBtn" style="width: 100%; justify-content: center; background: rgba(0,255,102,0.15); border-color: #00ff66; color: #00ff66;">
+            進入自由訓練營
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 賽前 15 秒「10 選 3」配技視窗 (Loadout Modal) ── -->
+  <div class="modal-overlay" id="loadoutModal">
+    <div class="modal-card" style="max-width: 740px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+        <div>
+          <h2 style="font-size: 20px; color: var(--primary-cyan);"><i class="fa-solid fa-boxes-stacked"></i> 賽前戰術配技 (10 選 3)</h2>
+          <div style="font-size: 12px; color: #94a3b8;">自由選取 3 招綁定至 [U]、[I]、[O] 按鍵</div>
+        </div>
+        <div class="stat-capsule" style="font-size: 18px; border-color: #ff007f; color: #ff007f;">
+          ⏱️ <span id="loadoutCountdown">15</span> 秒
+        </div>
       </div>
 
-      <!-- 🎁 登入特典提示 -->
-      <div style="display: flex; justify-content: space-around; background: rgba(16, 185, 129, 0.1); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 8px 10px; margin-bottom: 16px; font-size: 11px; color: #6ee7b7;">
-        <span>🎁 +1,500 金幣</span>
-        <span>⚡ 3 位初始英雄</span>
-        <span>☁️ Google 雲端存檔</span>
+      <!-- 三大流派快捷選擇 -->
+      <div style="display: flex; gap: 8px;">
+        <button class="nav-tab-btn archetype-btn" data-arch="wave_dp" style="flex: 1; justify-content: center; font-size: 12px;">波升控制流</button>
+        <button class="nav-tab-btn archetype-btn" data-arch="low_rush" style="flex: 1; justify-content: center; font-size: 12px;">下段狂攻流</button>
+        <button class="nav-tab-btn archetype-btn" data-arch="counter_cross" style="flex: 1; justify-content: center; font-size: 12px;">奇襲反打流</button>
       </div>
 
-      <button class="btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 15px; font-weight: 900; background: linear-gradient(135deg, #4285f4, #1d4ed8); box-shadow: 0 0 20px rgba(66,133,244,0.4);" onclick="window.app.submitCustomGoogleLogin()">
-        <i class="fa-solid fa-arrow-right-to-bracket"></i> 進入 3D 次元大亂鬥世界
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 380px; overflow-y: auto;" id="loadoutSkillsGrid">
+        <!-- 動態渲染 10 大技能卡片 -->
+      </div>
+
+      <button class="nav-tab-btn" id="confirmLoadoutBtn" style="background: linear-gradient(90deg, #00f3ff, #ff007f); color: #fff; justify-content: center; padding: 12px; font-size: 16px;">
+        確認配置並開戰！
       </button>
     </div>
   </div>
 
-  <!-- ── 模態彈窗：每日簽到獎勵 ── -->
-  <div id="dailyRewardModal" class="modal-backdrop">
-    <div class="modal-content" style="max-width: 580px;">
-      <button class="modal-close-btn">&times;</button>
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-        <span style="font-size: 28px;">🎁</span>
-        <div>
-          <h3 style="font-size: 20px; font-weight: 900; color: #facc15;">每日登入補給站</h3>
-          <p style="font-size: 12px; color: #94a3b8;">連續 7 天簽到，天天送大量金幣、裝備配件與史詩英雄！</p>
+  <!-- ── 戰鬥全螢幕畫面 (Battle Screen) ── -->
+  <div id="battleScreen">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- 頂部 HUD (血條、計時、爆發槽) -->
+    <div class="battle-hud-top">
+      <!-- 1P HUD -->
+      <div class="fighter-hud-box">
+        <div class="hp-bar-outer">
+          <div class="hp-bar-fill" id="p1HpFill"></div>
+        </div>
+        <div class="burst-meter-box" style="left: 0;">
+          <div class="burst-meter-fill" id="p1BurstFill"></div>
         </div>
       </div>
-      <div id="dailyRewardContent"></div>
+
+      <!-- 中央 99s 倒數計時 -->
+      <div class="round-timer-box" id="roundTimerText">99</div>
+
+      <!-- 2P HUD -->
+      <div class="fighter-hud-box p2">
+        <div class="hp-bar-outer">
+          <div class="hp-bar-fill" id="p2HpFill" style="background: linear-gradient(270deg, #ff007f, #ffd700);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 訓練營控制工具列 (僅訓練模式顯示) -->
+    <div id="trainingToolbar" style="position: absolute; top: 90px; left: 50%; transform: translateX(-50%); display: none; gap: 8px; background: rgba(11,17,32,0.9); border: 1px solid var(--border-tech); padding: 8px 16px; border-radius: 8px; z-index: 60; align-items: center;">
+      <span id="frameAdvantageIndicator" style="font-weight: 800; font-size: 13px;">均勢 0 幀</span>
+      <button class="nav-tab-btn" id="exitTrainingBtn" style="padding: 4px 10px; font-size: 12px; border-color: #ff007f; color: #ff007f;">
+        退出訓練營
+      </button>
+    </div>
+
+    <!-- 底部戰鬥技能操作列 -->
+    <div class="battle-action-bar" id="battleActionBar">
+      <!-- 動態填充 3 招 HUD + Burst 鈕 -->
+    </div>
+
+    <!-- 行動裝置觸控層 -->
+    <div class="mobile-controls-layer" id="mobileControlsLayer">
+      <div class="mobile-joystick-zone" id="mobileJoystickZone"></div>
+      <div class="mobile-buttons-arc">
+        <div class="mobile-touch-btn" id="touchPunchBtn" style="bottom: 10px; right: 80px;">J</div>
+        <div class="mobile-touch-btn" id="touchKickBtn" style="bottom: 75px; right: 20px;">K</div>
+        <div class="mobile-touch-btn" id="touchSkill1Btn" style="bottom: 130px; right: 70px;">U</div>
+        <div class="mobile-touch-btn" id="touchSkill2Btn" style="bottom: 140px; right: 140px;">I</div>
+        <div class="mobile-touch-btn" id="touchSkill3Btn" style="bottom: 90px; right: 190px;">O</div>
+        <div class="mobile-touch-btn" id="touchBurstBtn" style="bottom: 20px; right: 160px; background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #ffd700;">B</div>
+      </div>
     </div>
   </div>
 
-  <!-- ── 模態彈窗：英雄詳情與升級 ── -->
-  <div id="charDetailModal" class="modal-backdrop">
-    <div class="modal-content">
+  <!-- ── 賽後結算對話框 (Match End Modal) ── -->
+  <div class="modal-overlay" id="matchEndModal">
+    <div class="modal-card" style="text-align: center; align-items: center;">
+      <h2 id="matchResultTitle" style="font-size: 32px; font-weight: 900; font-family: 'Orbitron'; margin-bottom: 8px;">VICTORY</h2>
+      <div class="stat-capsule" id="matchRewardAmount" style="font-size: 18px; margin-bottom: 16px;">+350 能量幣</div>
+
+      <!-- 戰鬥重播短碼分享 (5KB 確定性重播) -->
+      <div style="background: rgba(0,0,0,0.4); border: 1px dashed rgba(0,243,255,0.4); border-radius: 8px; padding: 14px; width: 100%; margin-bottom: 16px;">
+        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">賽後精彩戰鬥重播短碼 (Deterministic Replay)</div>
+        <div id="matchReplayCode" style="font-family: monospace; font-size: 20px; font-weight: 900; color: #00f3ff; letter-spacing: 2px;">CY-REP-883921</div>
+        <button class="nav-tab-btn" id="copyReplayCodeBtn" style="margin: 8px auto 0; font-size: 12px; padding: 4px 12px;">
+          <i class="fa-solid fa-copy"></i> 複製重播短碼
+        </button>
+      </div>
+
+      <button class="nav-tab-btn" id="matchBackLobbyBtn" style="background: linear-gradient(90deg, #00f3ff, #ff007f); color: #fff; width: 100%; justify-content: center; padding: 12px; font-size: 16px;">
+        返回大廳
+      </button>
+    </div>
+  </div>
+
+  <!-- ── 量子身分授權儀 (Authentication Modal) ── -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-card">
       <button class="modal-close-btn">&times;</button>
-      <div id="charDetailContent"></div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-atom" style="color: var(--primary-cyan); font-size: 24px;"></i>
+        <div>
+          <h2 style="font-size: 18px; color: var(--primary-cyan);">量子身分授權儀 (Authentication Gateway)</h2>
+          <p style="font-size: 12px; color: var(--text-muted);">支援手動 Gmail 輸入與 Google 多帳號一鍵切換，進度永久雲端漫遊</p>
+        </div>
+      </div>
+
+      <!-- 途徑二：電腦現有 Google 帳號清單 (參考《條碼戰士》多帳號切換) -->
+      <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
+        <div style="font-weight: 800; font-size: 13px; color: #ffd700; margin-bottom: 8px;"><i class="fa-brands fa-google"></i> 本機已記錄之 Google 帳號</div>
+        <div id="googleAccountsList">
+          <!-- 動態卡片清單 -->
+        </div>
+      </div>
+
+      <!-- 途徑一：手動輸入 Gmail 信箱 -->
+      <form id="manualEmailForm" style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="form-group">
+          <label class="form-label">手動輸入 Gmail 信箱</label>
+          <input type="email" class="form-input" id="authEmailInput" placeholder="例如：player@gmail.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">自訂戰將暱稱 (2~12 字元，選填)</label>
+          <input type="text" class="form-input" id="authNicknameInput" placeholder="預設採用信箱前綴">
+        </div>
+        <button type="submit" class="nav-tab-btn" style="background: linear-gradient(135deg, #00f3ff, #ff007f); color: #fff; justify-content: center; padding: 10px;">
+          確認登入並同步進度
+        </button>
+      </form>
+
+      <!-- 訪客體驗按鈕 -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+        <span style="font-size: 11px; color: #94a3b8;">離線無帳號？</span>
+        <button class="nav-tab-btn" id="authGuestBtn" style="font-size: 12px; padding: 6px 14px;">
+          暫以訪客身分試玩
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- ── 模態彈窗：陣容選人器 ── -->
-  <div id="heroPickerModal" class="modal-backdrop">
-    <div class="modal-content" style="max-width: 500px;">
+  <!-- ── GitHub 社群外觀工作坊對話框 (Community Skin Workshop Modal) ── -->
+  <div class="modal-overlay" id="workshopModal">
+    <div class="modal-card" style="max-width: 680px;">
       <button class="modal-close-btn">&times;</button>
-      <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 14px; color: #38bdf8;">選擇出場英雄</h3>
-      <div id="pickerHeroGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 60vh; overflow-y: auto;"></div>
+      <h2 style="color: var(--primary-cyan);"><i class="fa-brands fa-github"></i> GitHub 開源社群外觀工作坊</h2>
+      <p style="font-size: 13px; color: var(--text-muted);">
+        《CyberStriker》數值與外觀完全脫鉤。歡迎全球玩家提交 Pull Request (PR) 貢獻自製 2D 骨骼外觀！
+      </p>
+
+      <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
+        <strong style="color: #ffd700;">🏆 創作者激勵計畫：</strong>
+        <div style="font-size: 13px; color: #cbd5e1; margin-top: 4px; line-height: 1.6;">
+          • 通過官方判定盒公平性審核之上架造型，卡片永久標註「創作者署名」與 GitHub 個人主頁。<br>
+          • 官方發放 <strong>10,000 點能量幣</strong> 與遊戲內專屬金色限定稱號邊框！
+        </div>
+      </div>
+
+      <div style="font-size: 13px; color: #94a3b8; line-height: 1.6;">
+        <strong>參與共創 3 步驟：</strong><br>
+        1. Fork 本專案倉庫，查閱 <code>js/engine/character_renderer.js</code> 的 8 大骨骼部件尺寸規範。<br>
+        2. 在 <code>js/data/skins.js</code> 新增您的專屬塗裝色系與 VFX 映射。<br>
+        3. 發起 Pull Request，CI 自動執行 100% 判定盒對稱驗證後即可正式收錄！
+      </div>
+
+      <a href="https://github.com/hsiaoyujui114-code/dimension-clash-3d" target="_blank" class="nav-tab-btn" style="background: #24292e; color: #fff; justify-content: center; padding: 10px;">
+        <i class="fa-brands fa-github"></i> 造訪 GitHub 倉庫參與共創
+      </a>
     </div>
   </div>
 
-
-
-  <!-- ── 模態彈窗：玩家個人檔案與頭像管理 ── -->
-  <div id="userProfileModal" class="modal-backdrop">
-    <div class="modal-content" style="max-width: 480px;">
-      <button class="modal-close-btn">&times;</button>
-      <div id="userProfileContent"></div>
-    </div>
-  </div>
-
-  <!-- ── 模態彈窗：戰鬥勝負結算畫面 (你贏了 / 你輸了 + 重新開始按鈕) ── -->
-  <div id="matchSettlementModal" class="modal-backdrop">
-    <div class="modal-content settlement-card" id="settlementCardContent"></div>
-  </div>
-
-  <!-- Game Scripts -->
-  <script src="js/data/characters.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/data/equipment.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/data/achievements.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/engine/audio.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/engine/effects.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/3d/three_scene.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/3d/camera_controller.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/3d/character_3d.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/3d/combat_3d.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/3d/ai_3d.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/network/p2p.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/save_system.js?v=20260903_canon_scale_1_24_v14"></script>
-  <script src="js/app.js?v=20260903_canon_scale_1_24_v14"></script>
+  <!-- 主邏輯入口模組 -->
+  <script type="module" src="js/app.js?v=20260909_cyberstriker_v1"></script>
 </body>
 </html>

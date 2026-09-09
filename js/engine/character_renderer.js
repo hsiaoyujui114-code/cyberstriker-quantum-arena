@@ -1,548 +1,596 @@
 /**
- * 跨次元大亂鬥 (Dimension Clash Online)
- * 2D 角色與機體動態渲染系統 (Dynamic Character & Mecha 2D Canvas Renderer)
- * 支援 45+ 位角色的獨特特徵、光環、武器、姿勢、形態變身與神力特效
+ * 《CyberStriker: Quantum Arena》
+ * 2D 人體骨骼程序化渲染引擎 (Articulated Skeletal Renderer)
+ * 8 大肢體關節部件 + 12 種戰鬥武打姿態 + 5 套專屬外觀 VFX 色彩分離
+ * 完全符合 GAME_PROJECT_PLAN.md 第 2.3 與 3.1 節
  */
 
-class CharacterRenderer {
+export class CharacterRenderer {
   constructor() {
-    this.animTime = 0;
+    // 8 大骨骼標準尺寸規格 (像素級精確，全外觀判定盒 100% 對稱)
+    this.boneSpec = {
+      headRadius: 18,
+      visorWidth: 16,
+      visorHeight: 6,
+      torsoWidth: 32,
+      torsoHeight: 46,
+      coreRadius: 7,
+      pelvisWidth: 26,
+      pelvisHeight: 14,
+      upperArmLength: 24,
+      upperArmWidth: 10,
+      forearmLength: 26,
+      forearmWidth: 12,
+      thighLength: 30,
+      thighWidth: 13,
+      shinLength: 32,
+      shinWidth: 12,
+      footLength: 20,
+      footHeight: 10
+    };
   }
 
-  update(dt = 1 / 60) {
-    this.animTime += dt;
-  }
-
-  renderCharacter(ctx, fighter, cameraX = 0, cameraY = 0) {
-    const x = fighter.x - cameraX;
-    const y = fighter.y - cameraY;
-    const dir = fighter.facing; // 1 = right, -1 = left
-    const char = fighter.charData;
-    const state = fighter.state;
-    const level = fighter.level || 1;
-
+  /**
+   * 渲染單一角色至 2D Canvas
+   * @param {CanvasRenderingContext2D} ctx 
+   * @param {Object} char 角色資料模型（包含 x, y, facing, state, stateTime, skin, isGuarding, etc.）
+   */
+  draw(ctx, char) {
     ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(dir, 1);
 
-    // ─── 1. 地面陰影與 Lv.100 極境神力光環 (God Aura) ───
-    this.renderShadowAndAura(ctx, fighter, char, level);
+    const skin = char.skin;
+    const facing = char.facing || 1; // 1: 朝右, -1: 朝左
+    const state = char.state || 'idle';
+    const t = char.stateTime || 0;
 
-    // ─── 2. 登場護盾 / 無敵狀態渲染 ───
-    if (fighter.invulnerableTimer > 0 || fighter.spawnShieldTimer > 0) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(0, -fighter.height * 0.5, fighter.height * 0.65, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(56, 189, 248, 0.25)";
-      ctx.fill();
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "rgba(56, 189, 248, 0.8)";
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = "#38bdf8";
-      ctx.stroke();
-      ctx.restore();
+    // 定位角色基準原點 (底部腳掌中心)
+    ctx.translate(Math.round(char.x), Math.round(char.y));
+    ctx.scale(facing, 1);
+
+    // 起身無敵閃爍保護 (15 幀)
+    if (char.invincibleTimer > 0 && Math.floor(char.invincibleTimer / 3) % 2 === 0) {
+      ctx.globalAlpha = 0.5;
     }
 
-    // ─── 3. 蓄力霸體金光 / 殘影 ───
-    if (fighter.isCharging) {
-      ctx.save();
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = "#eab308";
-      ctx.strokeStyle = "rgba(234, 179, 8, 0.6)";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(0, -fighter.height * 0.5, fighter.height * 0.55 + Math.sin(this.animTime * 15) * 5, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+    // 計算 12 種姿態骨骼角度
+    const pose = this.calculatePose(state, t, char);
+
+    // 1. 繪製後層肢體 (背側手臂、背側腿)
+    this.drawLimb(ctx, pose.backLeg, skin, 'backLeg');
+    this.drawArm(ctx, pose.backArm, skin, 'backArm');
+
+    // 2. 繪製軀幹、骨盆與量子反應爐
+    this.drawTorso(ctx, pose.torso, skin, t);
+
+    // 3. 繪製頭部與全息目鏡
+    this.drawHead(ctx, pose.head, skin);
+
+    // 4. 繪製前層肢體 (前側腿、前側手臂)
+    this.drawLimb(ctx, pose.frontLeg, skin, 'frontLeg');
+    this.drawArm(ctx, pose.frontArm, skin, 'frontArm');
+
+    // 5. 繪製防禦幾何力場護盾 (若正在格擋)
+    if (char.isGuarding) {
+      this.drawGuardShield(ctx, char.guardStance || 'high', skin, t);
     }
 
-    // ─── 4. 角色本體渲染 (依系列與 ID 分流) ───
-    if (char.series === "gundam") {
-      this.renderGundam(ctx, fighter, char);
-    } else if (char.series === "dragonball") {
-      this.renderDragonBall(ctx, fighter, char);
-    } else {
-      this.renderMarvel(ctx, fighter, char);
-    }
-
-    // ─── 5. 防禦護盾特效 ───
-    if (state === "guard") {
-      this.renderGuardEffect(ctx, fighter);
-    }
-
-    // ─── 6. ZERO 系統預警標記 (Warning System) ───
-    if (fighter.zeroSystemAlert) {
-      ctx.save();
-      ctx.fillStyle = "#ef4444";
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = "#ef4444";
-      ctx.font = "bold 14px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("⚠️ 預判警報!", 0, -fighter.height - 25);
-      ctx.restore();
+    // 6. 繪製專屬 VFX (出拳光軌、重踢光弧、粒子殘影)
+    if (pose.vfx) {
+      this.drawAttackVFX(ctx, pose.vfx, skin);
     }
 
     ctx.restore();
   }
 
-  renderShadowAndAura(ctx, fighter, char, level) {
-    ctx.save();
-    // Ground oval shadow
-    ctx.beginPath();
-    ctx.ellipse(0, 0, fighter.width * 0.6, 10, 0, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-    ctx.fill();
+  /**
+   * 計算 12 種武打姿態下的關節角度與位移
+   */
+  calculatePose(state, t, char) {
+    const defaultPose = {
+      torso: { x: 0, y: -74, angle: 0 },
+      head: { x: 0, y: -98, angle: 0 },
+      frontArm: { shoulderX: 8, shoulderY: -86, upperAngle: 0.5, foreAngle: 1.2 },
+      backArm: { shoulderX: -8, shoulderY: -86, upperAngle: 0.3, foreAngle: 1.0 },
+      frontLeg: { hipX: 6, hipY: -42, thighAngle: 0.2, shinAngle: 0.1 },
+      backLeg: { hipX: -6, hipY: -42, thighAngle: -0.2, shinAngle: 0.1 },
+      vfx: null
+    };
 
-    // Lv. 100 God Aura (極境神力光環)
-    if (level >= 100 || char.rarity === 9) {
-      const pulse = Math.sin(this.animTime * 6) * 6;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, fighter.width * 0.8 + pulse, 14 + pulse * 0.3, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = char.rarity === 9 ? "rgba(251, 113, 133, 0.9)" : "rgba(234, 179, 8, 0.9)";
-      ctx.lineWidth = 3;
-      ctx.shadowBlur = 18;
-      ctx.shadowColor = char.rarity === 9 ? "#fb7185" : "#facc15";
-      ctx.stroke();
-
-      // Rising god particles
-      for (let i = 0; i < 3; i++) {
-        const offset = ((this.animTime * 80 + i * 40) % fighter.height);
-        const px = Math.sin(this.animTime * 8 + i) * 20;
-        ctx.fillStyle = char.rarity === 9 ? "rgba(251, 113, 133, 0.7)" : "rgba(250, 204, 21, 0.7)";
-        ctx.beginPath();
-        ctx.arc(px, -offset, 2.5, 0, Math.PI * 2);
-        ctx.fill();
+    switch (state) {
+      case 'idle': {
+        // 自然呼吸起伏
+        const breath = Math.sin(t * 0.08) * 3;
+        defaultPose.torso.y = -74 + breath;
+        defaultPose.head.y = -98 + breath;
+        defaultPose.frontArm.upperAngle = 0.4 + Math.sin(t * 0.08) * 0.08;
+        defaultPose.frontArm.foreAngle = 1.3 + Math.sin(t * 0.08) * 0.05;
+        defaultPose.backArm.upperAngle = 0.2;
+        defaultPose.backArm.foreAngle = 1.1;
+        return defaultPose;
       }
+
+      case 'walk_fwd': {
+        // 向前大步邁進，軀幹前傾約 7 度
+        const cycle = Math.sin(t * 0.2);
+        const cycleCos = Math.cos(t * 0.2);
+        defaultPose.torso.angle = 0.12; // 約 7 度前傾
+        defaultPose.torso.y = -74 + Math.abs(cycle) * 4;
+        defaultPose.head.y = -98 + Math.abs(cycle) * 4;
+
+        defaultPose.frontLeg.thighAngle = cycle * 0.7;
+        defaultPose.frontLeg.shinAngle = Math.max(0, -cycle * 0.6);
+        defaultPose.backLeg.thighAngle = -cycle * 0.7;
+        defaultPose.backLeg.shinAngle = Math.max(0, cycle * 0.6);
+
+        defaultPose.frontArm.upperAngle = -cycle * 0.6 + 0.3;
+        defaultPose.frontArm.foreAngle = 0.8;
+        defaultPose.backArm.upperAngle = cycle * 0.6 + 0.3;
+        defaultPose.backArm.foreAngle = 0.8;
+        return defaultPose;
+      }
+
+      case 'walk_back': {
+        // 後撤防守步，上身微仰收緊，自動高防
+        const cycle = Math.sin(t * 0.16);
+        defaultPose.torso.angle = -0.08; // 軀幹微後仰
+        defaultPose.frontArm.upperAngle = 0.9;
+        defaultPose.frontArm.foreAngle = 1.6; // 前手緊收防禦
+        defaultPose.backArm.upperAngle = 0.7;
+        defaultPose.backArm.foreAngle = 1.4;
+
+        defaultPose.frontLeg.thighAngle = -cycle * 0.4;
+        defaultPose.backLeg.thighAngle = cycle * 0.4;
+        return defaultPose;
+      }
+
+      case 'jump':
+      case 'jump_up': {
+        // 騰空躍起，膝部收斂
+        defaultPose.torso.y = -82;
+        defaultPose.head.y = -106;
+        defaultPose.frontLeg.thighAngle = -0.8;
+        defaultPose.frontLeg.shinAngle = 1.2;
+        defaultPose.backLeg.thighAngle = -0.5;
+        defaultPose.backLeg.shinAngle = 1.0;
+        defaultPose.frontArm.upperAngle = -0.6;
+        defaultPose.frontArm.foreAngle = 0.4;
+        defaultPose.backArm.upperAngle = -0.8;
+        defaultPose.backArm.foreAngle = 0.4;
+        return defaultPose;
+      }
+
+      case 'crouch': {
+        // 蹲姿壓低 30 像素，雙臂前臂向下護腹
+        defaultPose.torso.y = -48;
+        defaultPose.torso.angle = 0.25;
+        defaultPose.head.y = -72;
+        defaultPose.frontLeg.thighAngle = -1.4;
+        defaultPose.frontLeg.shinAngle = 2.1;
+        defaultPose.backLeg.thighAngle = -1.2;
+        defaultPose.backLeg.shinAngle = 2.0;
+        defaultPose.frontArm.upperAngle = 0.8;
+        defaultPose.frontArm.foreAngle = 0.9;
+        defaultPose.backArm.upperAngle = 0.6;
+        defaultPose.backArm.foreAngle = 0.8;
+        return defaultPose;
+      }
+
+      case 'high_guard': {
+        // 高段格擋，雙臂垂直上抬架在面部前
+        defaultPose.frontArm.upperAngle = 1.2;
+        defaultPose.frontArm.foreAngle = 1.8;
+        defaultPose.backArm.upperAngle = 1.0;
+        defaultPose.backArm.foreAngle = 1.6;
+        return defaultPose;
+      }
+
+      case 'low_guard': {
+        // 下段格擋，沉腰下蹲，雙前臂向斜下方壓制
+        defaultPose.torso.y = -50;
+        defaultPose.head.y = -74;
+        defaultPose.frontLeg.thighAngle = -1.3;
+        defaultPose.frontLeg.shinAngle = 2.0;
+        defaultPose.frontArm.upperAngle = 0.5;
+        defaultPose.frontArm.foreAngle = 0.4;
+        defaultPose.backArm.upperAngle = 0.4;
+        defaultPose.backArm.foreAngle = 0.4;
+        return defaultPose;
+      }
+
+      case 'light_punch': {
+        // 刺拳：前手閃電般直刺出擊，手肘由屈至直，腰部轉動
+        const pProgress = Math.min(1, t / 14);
+        const reach = Math.sin(pProgress * Math.PI);
+        defaultPose.torso.angle = 0.15 * reach;
+        defaultPose.frontArm.upperAngle = 0.2 - reach * 0.9;
+        defaultPose.frontArm.foreAngle = 1.2 - reach * 1.1; // 伸直
+        defaultPose.backArm.upperAngle = 0.6;
+        defaultPose.backArm.foreAngle = 1.4;
+        if (reach > 0.3) {
+          defaultPose.vfx = { type: 'punch', progress: reach, x: 50, y: -78 };
+        }
+        return defaultPose;
+      }
+
+      case 'heavy_kick': {
+        // 重力猛踢：踢擊腿大角度破空踢擊，上身反向後仰平衡
+        const kProgress = Math.min(1, t / 18);
+        const kickWave = Math.sin(kProgress * Math.PI);
+        defaultPose.torso.angle = -0.3 * kickWave; // 上身反向後仰
+        defaultPose.frontLeg.thighAngle = 0.2 - kickWave * 1.8; // 大角度踢出
+        defaultPose.frontLeg.shinAngle = 0.1 - kickWave * 0.4;
+        defaultPose.frontArm.upperAngle = -0.4;
+        defaultPose.frontArm.foreAngle = 0.5;
+        if (kickWave > 0.4) {
+          defaultPose.vfx = { type: 'kick', progress: kickWave, x: 54, y: -60 };
+        }
+        return defaultPose;
+      }
+
+      case 'hit_stun': {
+        // 受擊仰頭，目鏡閃爍，身形後仰滑行
+        const hOffset = Math.sin(t * 0.4) * 4;
+        defaultPose.torso.angle = -0.35;
+        defaultPose.head.angle = -0.45;
+        defaultPose.torso.x = -8 + hOffset;
+        defaultPose.head.x = -12 + hOffset;
+        defaultPose.frontArm.upperAngle = -0.8;
+        defaultPose.frontArm.foreAngle = 0.4;
+        defaultPose.backArm.upperAngle = -0.6;
+        defaultPose.backArm.foreAngle = 0.5;
+        defaultPose.vfx = { type: 'hit_sparks', x: 0, y: -74 };
+        return defaultPose;
+      }
+
+      case 'knockdown': {
+        // 倒地翻滾：旋轉橫飛、平躺
+        defaultPose.torso.y = -16;
+        defaultPose.torso.angle = -Math.PI / 2;
+        defaultPose.head.y = -16;
+        defaultPose.head.x = -32;
+        defaultPose.head.angle = -Math.PI / 2;
+        defaultPose.frontLeg.thighAngle = -Math.PI / 2;
+        defaultPose.frontLeg.shinAngle = 0.2;
+        defaultPose.backLeg.thighAngle = -Math.PI / 2;
+        defaultPose.frontArm.upperAngle = -Math.PI / 2;
+        defaultPose.frontArm.foreAngle = 0.2;
+        return defaultPose;
+      }
+
+      case 'wakeup': {
+        // 單手撐地彈起
+        const wRatio = Math.min(1, t / 15);
+        defaultPose.torso.y = -16 - wRatio * 58;
+        defaultPose.head.y = -16 - wRatio * 82;
+        defaultPose.torso.angle = -Math.PI / 2 * (1 - wRatio);
+        defaultPose.head.angle = -Math.PI / 2 * (1 - wRatio);
+        return defaultPose;
+      }
+
+      // 招式專屬姿態
+      case 'SK-02': { // 升龍拳
+        defaultPose.torso.angle = 0.1;
+        defaultPose.frontArm.upperAngle = -2.2; // 垂直沖天
+        defaultPose.frontArm.foreAngle = 0.1;
+        defaultPose.frontLeg.thighAngle = -0.9;
+        defaultPose.frontLeg.shinAngle = 1.4;
+        defaultPose.vfx = { type: 'shoryuken', x: 12, y: -110 };
+        return defaultPose;
+      }
+
+      case 'SK-03': { // 音速滑踢
+        defaultPose.torso.y = -26;
+        defaultPose.torso.angle = -0.5;
+        defaultPose.head.y = -40;
+        defaultPose.frontLeg.thighAngle = -1.5;
+        defaultPose.frontLeg.shinAngle = 0.1;
+        defaultPose.backLeg.thighAngle = 0.6;
+        defaultPose.backLeg.shinAngle = 1.8;
+        defaultPose.vfx = { type: 'slide_dust', x: 30, y: -5 };
+        return defaultPose;
+      }
+
+      default:
+        return defaultPose;
     }
-    ctx.restore();
   }
 
-  renderGuardEffect(ctx, fighter) {
+  // ─── 肢體繪製方法 ───
+
+  drawTorso(ctx, torso, skin, t) {
     ctx.save();
+    ctx.translate(torso.x, torso.y);
+    ctx.rotate(torso.angle);
+
+    // 胸甲護板
+    ctx.fillStyle = skin.armorColor || '#0f172a';
+    ctx.strokeStyle = skin.themeColor || '#00f3ff';
+    ctx.lineWidth = 2;
+
     ctx.beginPath();
-    ctx.arc(20, -fighter.height * 0.5, fighter.height * 0.5, -Math.PI * 0.4, Math.PI * 0.4);
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
-    ctx.lineWidth = 6;
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "#38bdf8";
+    ctx.moveTo(-16, -23);
+    ctx.lineTo(16, -23);
+    ctx.lineTo(12, 16);
+    ctx.lineTo(-12, 16);
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
 
-    // Hexagon pattern shield
-    ctx.fillStyle = "rgba(56, 189, 248, 0.2)";
-    ctx.fill();
-    ctx.restore();
-  }
+    // 骨盆/腰帶
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(-11, 16, 22, 12);
+    ctx.strokeRect(-11, 16, 22, 12);
 
-  // ─── 鋼彈機體渲染器 (Gundam Mecha Renderer) ───
-  renderGundam(ctx, fighter, char) {
-    const h = fighter.height;
-    const w = fighter.width;
-    const t = this.animTime;
-    const isAttacking = fighter.state.startsWith("attack") || fighter.state.startsWith("skill") || fighter.state === "ult";
-    const attackFrame = isAttacking ? Math.sin(fighter.attackTimer * 20) : 0;
-
+    // 中央量子反應爐核心 (自然脈衝微光)
+    const pulse = 1 + Math.sin(t * 0.1) * 0.15;
     ctx.save();
-
-    // Backpack & Thrusters / Wings
-    ctx.save();
-    if (char.id.includes("wing") || char.id.includes("strike_freedom") || char.id.includes("destiny")) {
-      // Glowing Wings
-      ctx.beginPath();
-      ctx.moveTo(-15, -h * 0.6);
-      ctx.lineTo(-45 - Math.sin(t * 3) * 5, -h * 0.95);
-      ctx.lineTo(-20, -h * 0.4);
-      ctx.closePath();
-      ctx.fillStyle = char.id.includes("destiny") ? "rgba(239, 68, 68, 0.8)" : "rgba(56, 189, 248, 0.8)";
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = ctx.fillStyle;
-      ctx.fill();
-    } else if (char.id === "kshatriya") {
-      // 4 Binder Wings
-      ctx.fillStyle = "#15803d";
-      ctx.fillRect(-35, -h * 0.85, 20, 50);
-      ctx.fillRect(15, -h * 0.85, 20, 50);
-    }
-    ctx.restore();
-
-    // Legs
-    const legOffset = fighter.state === "run" ? Math.sin(t * 15) * 12 : 0;
-    ctx.fillStyle = "#334155";
-    ctx.fillRect(-14, -28 + legOffset, 10, 28);
-    ctx.fillRect(4, -28 - legOffset, 10, 28);
-
-    // Feet
-    ctx.fillStyle = "#dc2626";
-    ctx.fillRect(-16, -6 + legOffset, 14, 6);
-    ctx.fillRect(4, -6 - legOffset, 14, 6);
-
-    // Torso / Cockpit
-    ctx.fillStyle = char.themeColor;
-    ctx.fillRect(-15, -h * 0.65, 30, h * 0.35);
-
-    // Chest vents & Cockpit hatch
-    ctx.fillStyle = "#facc15";
-    ctx.fillRect(-10, -h * 0.6, 6, 6);
-    ctx.fillRect(4, -h * 0.6, 6, 6);
-    ctx.fillStyle = "#dc2626";
-    ctx.fillRect(-5, -h * 0.48, 10, 10);
-
-    // Shoulders
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(-22, -h * 0.72, 12, 14);
-    ctx.fillRect(10, -h * 0.72, 12, 14);
-
-    // Gundam Head & V-Fin
-    ctx.fillStyle = "#f8fafc";
-    ctx.fillRect(-10, -h * 0.9, 20, 18);
-
-    // V-Fin Antennas (Golden / White)
+    ctx.shadowColor = skin.themeColor;
+    ctx.shadowBlur = 12 * pulse;
+    ctx.fillStyle = skin.coreColor || skin.themeColor;
     ctx.beginPath();
-    ctx.moveTo(0, -h * 0.9);
-    ctx.lineTo(-18, -h * 1.05);
-    ctx.lineTo(-2, -h * 0.92);
-    ctx.lineTo(0, -h * 0.95);
-    ctx.lineTo(2, -h * 0.92);
-    ctx.lineTo(18, -h * 1.05);
-    ctx.closePath();
-    ctx.fillStyle = char.id === "char_zaku2" ? "#dc2626" : "#facc15";
+    ctx.arc(0, -6, 6 * pulse, 0, Math.PI * 2);
     ctx.fill();
 
-    // Eyes (Green / Red monoeye)
-    if (char.id === "char_zaku2") {
-      ctx.fillStyle = "#ec4899";
-      ctx.beginPath();
-      ctx.arc(3, -h * 0.83, 3, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      ctx.fillStyle = char.id === "unicorn_crystal" ? "#10b981" : "#22c55e";
-      ctx.fillRect(0, -h * 0.84, 8, 3);
-    }
-
-    // Weapons / Arms
-    if (isAttacking) {
-      // Beam Saber / Beam Rifle Slash
-      ctx.save();
-      ctx.translate(15, -h * 0.55);
-      ctx.rotate(attackFrame * 1.5);
-      ctx.fillStyle = "#f43f5e";
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = "#f43f5e";
-      ctx.fillRect(0, -4, 45, 8); // Beam Blade
-      ctx.restore();
-    } else {
-      // Holding weapon resting
-      ctx.fillStyle = "#475569";
-      ctx.fillRect(10, -h * 0.55, 16, 8);
-    }
-
-    // Unicorn Psycho-Frame glow
-    if (char.id === "unicorn_crystal") {
-      ctx.strokeStyle = "rgba(16, 185, 129, 0.9)";
-      ctx.lineWidth = 2;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = "#10b981";
-      ctx.strokeRect(-12, -h * 0.63, 24, h * 0.3);
-    }
+    // 核心內核高亮白
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(0, -6, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
     ctx.restore();
   }
 
-  // ─── 七龍珠角色渲染器 (Dragon Ball Fighter Renderer) ───
-  renderDragonBall(ctx, fighter, char) {
-    const h = fighter.height;
-    const t = this.animTime;
-    const isAttacking = fighter.state.startsWith("attack") || fighter.state.startsWith("skill") || fighter.state === "ult";
-    const attackFrame = isAttacking ? Math.sin(fighter.attackTimer * 20) : 0;
-
+  drawHead(ctx, head, skin) {
     ctx.save();
+    ctx.translate(head.x, head.y);
+    ctx.rotate(head.angle);
 
-    // Saiyan / Ki Aura
-    if (fighter.rage >= 50 || char.rarity >= 6 || fighter.isCharging) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(-25, 0);
-      ctx.quadraticCurveTo(-35 - Math.sin(t * 10) * 8, -h * 0.5, 0, -h * 1.15 - Math.cos(t * 12) * 10);
-      ctx.quadraticCurveTo(35 + Math.sin(t * 10) * 8, -h * 0.5, 25, 0);
-      ctx.closePath();
-      ctx.fillStyle = char.auraColor;
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = char.themeColor;
-      ctx.fill();
-      ctx.restore();
-    }
+    // 頭盔外廓
+    ctx.fillStyle = skin.armorColor || '#0f172a';
+    ctx.strokeStyle = skin.accentColor || skin.themeColor;
+    ctx.lineWidth = 2;
 
-    // Legs / Pants
-    const legOffset = fighter.state === "run" ? Math.sin(t * 15) * 10 : 0;
-    ctx.fillStyle = char.id === "vegeta" ? "#1e3a8a" : (char.id === "piccolo" ? "#581c87" : "#ea580c");
-    if (char.id === "frieza_final" || char.id === "kid_buu") {
-      ctx.fillStyle = char.id === "kid_buu" ? "#f472b6" : "#f1f5f9";
-    }
-    ctx.fillRect(-12, -26 + legOffset, 9, 26);
-    ctx.fillRect(3, -26 - legOffset, 9, 26);
-
-    // Boots
-    ctx.fillStyle = "#1e293b";
-    ctx.fillRect(-14, -6 + legOffset, 12, 6);
-    ctx.fillRect(3, -6 - legOffset, 12, 6);
-
-    // Torso / Gi
-    ctx.fillStyle = char.id === "vegeta" ? "#1e3a8a" : (char.id === "piccolo" ? "#581c87" : "#ea580c");
-    if (char.id === "frieza_final") ctx.fillStyle = "#f8fafc";
-    if (char.id === "kid_buu") ctx.fillStyle = "#f472b6";
-    if (char.id === "broly_legendary") ctx.fillStyle = "#166534";
-    ctx.fillRect(-14, -h * 0.65, 28, h * 0.35);
-
-    // Chest & Shirt Undervest
-    if (char.id.includes("goku") || char.id === "krillin" || char.id === "yamcha") {
-      ctx.fillStyle = "#1d4ed8"; // Blue inner shirt
-      ctx.fillRect(-6, -h * 0.65, 12, 10);
-      ctx.fillStyle = "#1d4ed8"; // Blue belt
-      ctx.fillRect(-15, -h * 0.35, 30, 6);
-    } else if (char.id === "vegeta") {
-      // Saiyan Armor Chestplate
-      ctx.fillStyle = "#f8fafc";
-      ctx.fillRect(-12, -h * 0.65, 24, 18);
-      ctx.fillStyle = "#ca8a04";
-      ctx.fillRect(-8, -h * 0.62, 16, 6);
-    }
-
-    // Head / Face
-    ctx.fillStyle = char.id === "piccolo" ? "#22c55e" : (char.id === "kid_buu" ? "#f472b6" : "#fed7aa");
     ctx.beginPath();
-    ctx.arc(0, -h * 0.78, 12, 0, Math.PI * 2);
+    ctx.arc(0, 0, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // 面部發光科技目鏡 (Visor)
+    ctx.save();
+    ctx.shadowColor = skin.visorColor || skin.themeColor;
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = skin.visorColor || skin.themeColor;
+    ctx.beginPath();
+    ctx.roundRect(0, -4, 14, 7, 3);
     ctx.fill();
 
-    // Eyes
-    ctx.fillStyle = char.id === "goku_ultra_instinct" ? "#e2e8f0" : "#0f172a";
-    ctx.fillRect(3, -h * 0.8, 4, 3);
+    // 目鏡高光
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(2, -3, 8, 2);
+    ctx.restore();
 
-    // Distinctive Hair / Antennae / Crown
-    if (char.id === "goku_kid") {
-      // Spiky black hair
-      ctx.fillStyle = "#0f172a";
+    ctx.restore();
+  }
+
+  drawArm(ctx, arm, skin, layer) {
+    ctx.save();
+    ctx.translate(arm.shoulderX, arm.shoulderY);
+    ctx.rotate(arm.upperAngle);
+
+    const isBack = layer === 'backArm';
+    const armorCol = isBack ? '#0a0f1d' : (skin.armorColor || '#0f172a');
+    const strokeCol = isBack ? '#1e293b' : skin.themeColor;
+
+    // 1. 上臂
+    ctx.fillStyle = armorCol;
+    ctx.strokeStyle = strokeCol;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(-4, 0, 8, 22, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // 2. 前臂與科技拳套
+    ctx.translate(0, 20);
+    ctx.rotate(arm.foreAngle);
+
+    ctx.fillStyle = skin.accentColor || skin.themeColor;
+    ctx.beginPath();
+    ctx.roundRect(-5, 0, 10, 22, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // 拳套關節金屬飾邊
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(-3, 16, 6, 4);
+
+    ctx.restore();
+  }
+
+  drawLimb(ctx, leg, skin, layer) {
+    ctx.save();
+    ctx.translate(leg.hipX, leg.hipY);
+    ctx.rotate(leg.thighAngle);
+
+    const isBack = layer === 'backLeg';
+    const armorCol = isBack ? '#090d18' : (skin.armorColor || '#0f172a');
+    const strokeCol = isBack ? '#1e293b' : skin.themeColor;
+
+    // 1. 大腿護甲
+    ctx.fillStyle = armorCol;
+    ctx.strokeStyle = strokeCol;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(-5, 0, 10, 26, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // 2. 小腿與戰靴
+    ctx.translate(0, 24);
+    ctx.rotate(leg.shinAngle);
+
+    ctx.fillStyle = armorCol;
+    ctx.beginPath();
+    ctx.roundRect(-5, 0, 10, 28, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // 戰靴底部噴射裝甲
+    ctx.fillStyle = skin.themeColor;
+    ctx.fillRect(-4, 24, 15, 6);
+
+    ctx.restore();
+  }
+
+  // ─── 防禦力場護盾渲染 ───
+  drawGuardShield(ctx, stance, skin, t) {
+    ctx.save();
+    const pulse = Math.sin(t * 0.2) * 0.1 + 0.9;
+    ctx.shadowColor = skin.themeColor;
+    ctx.shadowBlur = 18;
+    ctx.strokeStyle = skin.themeColor;
+    ctx.fillStyle = skin.glowColor || 'rgba(0, 243, 255, 0.2)';
+    ctx.lineWidth = 3;
+
+    if (stance === 'low') {
+      // 下段斜向下菱形幾何護盾
       ctx.beginPath();
-      ctx.moveTo(-12, -h * 0.82);
-      ctx.lineTo(-20, -h * 0.95);
-      ctx.lineTo(-8, -h * 0.92);
-      ctx.lineTo(0, -h * 1.02);
-      ctx.lineTo(8, -h * 0.92);
-      ctx.lineTo(18, -h * 0.95);
-      ctx.lineTo(12, -h * 0.82);
+      ctx.moveTo(10, -10);
+      ctx.lineTo(44, -20);
+      ctx.lineTo(36, -60);
+      ctx.lineTo(6, -45);
       ctx.closePath();
       ctx.fill();
-    } else if (char.id === "ssj3_goku") {
-      // Golden Long SSJ3 Hair
-      ctx.fillStyle = "#facc15";
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = "#facc15";
-      ctx.beginPath();
-      ctx.moveTo(-15, -h * 0.7);
-      ctx.lineTo(-30, -h * 0.4);
-      ctx.lineTo(-25, -h * 0.85);
-      ctx.lineTo(-15, -h * 1.08);
-      ctx.lineTo(0, -h * 1.15);
-      ctx.lineTo(15, -h * 1.05);
-      ctx.lineTo(25, -h * 0.85);
-      ctx.lineTo(15, -h * 0.7);
-      ctx.closePath();
-      ctx.fill();
-    } else if (char.id === "goku_ultra_instinct") {
-      // Silver UI Hair
-      ctx.fillStyle = "#e2e8f0";
-      ctx.shadowBlur = 18;
-      ctx.shadowColor = "#ffffff";
-      ctx.beginPath();
-      ctx.moveTo(-14, -h * 0.82);
-      ctx.lineTo(-22, -h * 1.02);
-      ctx.lineTo(-8, -h * 0.95);
-      ctx.lineTo(0, -h * 1.08);
-      ctx.lineTo(10, -h * 0.95);
-      ctx.lineTo(20, -h * 1.02);
-      ctx.lineTo(14, -h * 0.82);
-      ctx.closePath();
-      ctx.fill();
-    } else if (char.id === "piccolo") {
-      // Piccolo Antennae & Turban / Ears
-      ctx.fillStyle = "#15803d";
-      ctx.fillRect(-2, -h * 0.92, 2, 8);
-      ctx.fillRect(4, -h * 0.92, 2, 8);
-    } else if (char.id === "frieza_final") {
-      // Frieza Purple Head Gem & Tail
-      ctx.fillStyle = "#9333ea";
-      ctx.beginPath();
-      ctx.arc(0, -h * 0.84, 5, 0, Math.PI * 2);
-      ctx.fill();
-      // Tail
-      ctx.strokeStyle = "#f8fafc";
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.moveTo(-10, -h * 0.35);
-      ctx.quadraticCurveTo(-28, -h * 0.3, -25, -h * 0.55 + Math.sin(t * 5) * 5);
       ctx.stroke();
-    } else if (char.id === "broly_legendary") {
-      // Massive Green Super Saiyan Hair
-      ctx.fillStyle = "#22c55e";
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = "#22c55e";
+    } else {
+      // 高段正前方六角蜂巢力場
+      const shieldY = -74;
       ctx.beginPath();
-      ctx.moveTo(-20, -h * 0.8);
-      ctx.lineTo(-35, -h * 1.1);
-      ctx.lineTo(-12, -h * 1.0);
-      ctx.lineTo(0, -h * 1.25);
-      ctx.lineTo(15, -h * 1.0);
-      ctx.lineTo(35, -h * 1.1);
-      ctx.lineTo(20, -h * 0.8);
+      ctx.moveTo(24, shieldY - 45);
+      ctx.lineTo(48, shieldY - 25);
+      ctx.lineTo(48, shieldY + 25);
+      ctx.lineTo(24, shieldY + 45);
+      ctx.lineTo(14, shieldY + 20);
+      ctx.lineTo(14, shieldY - 20);
       ctx.closePath();
       ctx.fill();
-    }
+      ctx.stroke();
 
-    // Arms & Attack Poses
-    if (isAttacking) {
-      ctx.save();
-      ctx.translate(10, -h * 0.55);
-      ctx.rotate(attackFrame);
-      ctx.fillStyle = char.id === "piccolo" ? "#22c55e" : "#fed7aa";
-      ctx.fillRect(0, -5, 26, 10); // Thrusting fist
-      // Fist Energy Spark
-      ctx.fillStyle = char.themeColor;
+      // 護盾網格線
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(28, 0, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    } else {
-      ctx.fillStyle = char.id === "piccolo" ? "#22c55e" : "#fed7aa";
-      ctx.fillRect(8, -h * 0.55, 10, 16);
+      ctx.moveTo(24, shieldY - 45);
+      ctx.lineTo(48, shieldY + 25);
+      ctx.moveTo(48, shieldY - 25);
+      ctx.lineTo(24, shieldY + 45);
+      ctx.stroke();
     }
 
     ctx.restore();
   }
 
-  // ─── 漫威英雄渲染器 (Marvel Superhero Renderer) ───
-  renderMarvel(ctx, fighter, char) {
-    const h = fighter.height;
-    const t = this.animTime;
-    const isAttacking = fighter.state.startsWith("attack") || fighter.state.startsWith("skill") || fighter.state === "ult";
-    const attackFrame = isAttacking ? Math.sin(fighter.attackTimer * 20) : 0;
-
+  // ─── 武打 VFX 渲染 (依外觀色彩分離映射) ───
+  drawAttackVFX(ctx, vfx, skin) {
     ctx.save();
+    ctx.shadowColor = skin.themeColor;
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = skin.themeColor;
 
-    // Legs
-    const legOffset = fighter.state === "run" ? Math.sin(t * 15) * 10 : 0;
-    ctx.fillStyle = char.id === "spiderman_classic" ? "#1e40af" : (char.id === "ironman_mk50" ? "#b91c1c" : "#334155");
-    if (char.id === "hulk") ctx.fillStyle = "#6b21a8"; // Purple shorts
-    ctx.fillRect(-12, -26 + legOffset, 10, 26);
-    ctx.fillRect(3, -26 - legOffset, 10, 26);
+    if (vfx.type === 'punch') {
+      // 刺拳能量刃弧光
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 18, -Math.PI / 4, Math.PI / 4);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = skin.secondaryColor || '#ffffff';
+      ctx.stroke();
 
-    // Boots
-    ctx.fillStyle = char.id === "cap_america" ? "#dc2626" : (char.id === "ironman_mk50" ? "#ca8a04" : "#0f172a");
-    ctx.fillRect(-14, -6 + legOffset, 12, 6);
-    ctx.fillRect(3, -6 - legOffset, 12, 6);
-
-    // Torso / Armor / Suit
-    ctx.fillStyle = char.themeColor;
-    if (char.id === "hulk") ctx.fillStyle = "#16a34a"; // Green muscular torso
-    ctx.fillRect(-14, -h * 0.65, 28, h * 0.35);
-
-    // Specific Superhero Features
-    if (char.id === "cap_america") {
-      // Star on chest
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(-4, -h * 0.58, 8, 8);
-      // Vibranium Shield on Arm
-      ctx.save();
-      ctx.translate(14, -h * 0.48);
+      // 外觀專屬粒子
+      if (skin.id === 'skin_dark_hacker') {
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#00ff66';
+        ctx.fillText('0101', vfx.x - 10, vfx.y - 12);
+      } else if (skin.id === 'skin_solar_valkyrie') {
+        ctx.fillStyle = '#ff4500';
+        ctx.fillRect(vfx.x - 4, vfx.y - 4, 8, 8);
+      }
+    } else if (vfx.type === 'kick') {
+      // 重踢弧線掃光
       ctx.beginPath();
-      ctx.arc(0, 0, 14, 0, Math.PI * 2);
-      ctx.fillStyle = "#dc2626";
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(0, 0, 10, 0, Math.PI * 2);
-      ctx.fillStyle = "#f8fafc";
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(0, 0, 6, 0, Math.PI * 2);
-      ctx.fillStyle = "#2563eb";
-      ctx.fill();
-      ctx.restore();
-    } else if (char.id === "ironman_mk50") {
-      // Glowing Arc Reactor
-      ctx.fillStyle = "#38bdf8";
-      ctx.shadowBlur = 12;
-      ctx.shadowColor = "#38bdf8";
-      ctx.beginPath();
-      ctx.arc(0, -h * 0.52, 5, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (char.id === "thor") {
-      // Red Cape
-      ctx.fillStyle = "#dc2626";
-      ctx.fillRect(-18, -h * 0.65, 8, 35);
-      // Mjolnir Hammer
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(12, -h * 0.45, 14, 10);
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(17, -h * 0.35, 4, 12);
-    } else if (char.id === "thanos_gauntlet") {
-      // Infinity Gauntlet Golden Arm + 6 Stones
-      ctx.save();
-      ctx.translate(14, -h * 0.5);
-      ctx.fillStyle = "#eab308";
-      ctx.fillRect(0, -8, 22, 16);
-      // Glowing Infinity Stones
-      const stoneColors = ["#8b5cf6", "#3b82f6", "#ef4444", "#eab308", "#10b981", "#ec4899"];
-      stoneColors.forEach((color, idx) => {
-        ctx.fillStyle = color;
-        ctx.shadowBlur = 6;
-        ctx.shadowColor = color;
-        ctx.fillRect(16, -6 + idx * 3, 3, 3);
-      });
-      ctx.restore();
-    } else if (char.id === "dr_strange" || char.id === "strange_supreme") {
-      // Cloak of Levitation High Collar
-      ctx.fillStyle = char.id === "strange_supreme" ? "#581c87" : "#dc2626";
-      ctx.beginPath();
-      ctx.moveTo(-18, -h * 0.68);
-      ctx.lineTo(-24, -h * 0.85);
-      ctx.lineTo(-14, -h * 0.72);
-      ctx.closePath();
-      ctx.fill();
+      ctx.arc(vfx.x - 10, vfx.y, 40, -Math.PI / 3, Math.PI / 6);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = skin.themeColor;
+      ctx.stroke();
+    } else if (vfx.type === 'shoryuken') {
+      // 昇龍衝天光柱
+      ctx.fillStyle = skin.glowColor;
+      ctx.fillRect(vfx.x - 15, vfx.y, 30, 90);
+      ctx.strokeStyle = skin.themeColor;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(vfx.x - 15, vfx.y, 30, 90);
+    } else if (vfx.type === 'hit_sparks') {
+      // 受擊火花
+      for (let i = 0; i < 4; i++) {
+        const ang = (Math.PI * 2 / 4) * i;
+        ctx.fillStyle = skin.themeColor;
+        ctx.fillRect(Math.cos(ang) * 16, vfx.y + Math.sin(ang) * 16, 4, 4);
+      }
     }
 
-    // Head / Mask / Helmet
-    ctx.fillStyle = char.id === "ironman_mk50" ? "#ca8a04" : (char.id === "hulk" ? "#16a34a" : (char.id === "thanos_gauntlet" ? "#a855f7" : "#fed7aa"));
-    if (char.id === "spiderman_classic") ctx.fillStyle = "#dc2626";
-    if (char.id === "black_panther") ctx.fillStyle = "#0f172a";
+    ctx.restore();
+  }
+
+  /**
+   * 繪製大廳外觀展示台專屬全息光圈底座
+   */
+  drawPedestal(ctx, cx, cy, radius, skin, t) {
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // 旋轉全息六角外環
+    ctx.save();
+    ctx.rotate(t * 0.02);
+    ctx.shadowColor = skin.themeColor;
+    ctx.shadowBlur = 20;
+    ctx.strokeStyle = skin.themeColor;
+    ctx.lineWidth = 3;
+
     ctx.beginPath();
-    ctx.arc(0, -h * 0.78, 12, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eyes / Mask Visor
-    if (char.id === "spiderman_classic") {
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.ellipse(4, -h * 0.78, 5, 3, 0.2, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (char.id === "ironman_mk50") {
-      ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(2, -h * 0.8, 6, 2);
-    } else {
-      ctx.fillStyle = "#0f172a";
-      ctx.fillRect(3, -h * 0.8, 4, 3);
+    for (let i = 0; i < 6; i++) {
+      const ang = (Math.PI / 3) * i;
+      const px = Math.cos(ang) * radius;
+      const py = Math.sin(ang) * (radius * 0.35); // 橢圓透視
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
     }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
 
-    // Arms & Attack Action
-    if (isAttacking) {
-      ctx.save();
-      ctx.translate(10, -h * 0.55);
-      ctx.rotate(attackFrame);
-      ctx.fillStyle = char.themeColor;
-      ctx.fillRect(0, -5, 24, 10);
-      ctx.restore();
+    // 內層發光光環
+    ctx.save();
+    ctx.rotate(-t * 0.03);
+    ctx.strokeStyle = skin.secondaryColor || '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, radius * 0.75, radius * 0.28, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // 向上升騰的全息微粒光芒
+    ctx.fillStyle = skin.glowColor;
+    for (let i = 0; i < 6; i++) {
+      const partT = (t * 0.05 + i * 1.2) % 3;
+      const py = -partT * 30;
+      const px = (i - 2.5) * 18;
+      const alpha = Math.max(0, 1 - partT / 3);
+      ctx.fillStyle = skin.themeColor;
+      ctx.globalAlpha = alpha;
+      ctx.fillRect(px, py, 3, 3);
     }
 
     ctx.restore();
   }
 }
 
-if (typeof window !== "undefined") {
-  window.characterRenderer = new CharacterRenderer();
-}
+export const characterRenderer = new CharacterRenderer();

@@ -1,755 +1,804 @@
 /**
- * 跨次元大亂鬥 (Dimension Clash Online)
- * 核心戰鬥、KOF 輪替賽制、援護與爆發系統引擎 (Core Combat & KOF Relay Engine)
+ * 《CyberStriker: Quantum Arena》
+ * 核心格鬥與戰鬥物理引擎 (Deterministic 60 FPS Combat Engine)
+ * 攻防三段體系 + 量子逆轉爆發 (Burst) + 10 大技能幀數判定
+ * 完全符合 GAME_PROJECT_PLAN.md 第二章與第四章規格
  */
 
-class Fighter {
-  constructor(charData, level = 1, equippedGear = [], isPlayer = true) {
-    this.charData = charData;
-    this.level = Math.max(1, Math.min(100, level));
-    this.equippedGear = equippedGear || [];
-    this.isPlayer = isPlayer;
+import { SKILLS } from '../data/skills.js';
+import { soundEngine } from './audio.js';
 
-    // Physical dimensions & position
-    this.width = 54;
-    this.height = 80;
-    this.x = isPlayer ? 350 : 1050;
-    this.y = 460;
-    this.vx = 0;
-    this.vy = 0;
-    this.facing = isPlayer ? 1 : -1;
-    this.isGrounded = true;
-    this.jumpCount = 0;
-    this.maxJumps = 2; // Supports double jump
-
-    // Calculate base + level + gear stats
-    this.calcStats();
-
-    // Combat State
-    this.hp = this.maxHp;
-    this.rage = 20; // Initial starter rage
-    this.maxRage = 100;
-    this.guardMeter = 100;
-    this.maxGuardMeter = 100;
-
-    this.state = "idle"; // idle, walk, run, jump, fall, guard, dodge, attack_1..4, heavy_charge, heavy_release, grab, skill1, skill2, ult, burst, hit, dizzy, down, ko
-    this.stateTimer = 0;
-    this.attackTimer = 0;
-    this.hitstunTimer = 0;
-    this.invulnerableTimer = 0;
-    this.spawnShieldTimer = 2.0; // 2s spawn invulnerability
-    this.chargeTime = 0;
-    this.isCharging = false;
-
-    // Skill cooldowns (in seconds)
-    this.skill1Cd = 0;
-    this.skill2Cd = 0;
-    this.ultCd = 0;
-    this.gadgetUses = 2; // 2 uses per match
-
-    // Combos & Tracking
-    this.comboHitCount = 0;
-    this.comboDamageSum = 0;
-    this.comboResetTimer = 0;
-
-    // Equipment & Passive flags
-    this.ntdTriggered = false;
-    this.senzuUsed = false;
-    this.nanoRepairActive = false;
-    this.nanoRepairTimer = 0;
-    this.zeroSystemAlert = false;
-  }
-
-  calcStats() {
-    // Level scaling: +2% per level (Lv100 is 300% of Lv1)
-    const levelMultiplier = 1 + (this.level - 1) * 0.02;
-
-    let bonusHp = 0;
-    let bonusAtk = 0;
-    let bonusDef = 0;
-    let speedMod = 0;
-
-    for (const gear of this.equippedGear) {
-      if (!gear) continue;
-      bonusHp += gear.bonusHp || 0;
-      bonusAtk += gear.bonusAtk || 0;
-      bonusDef += gear.bonusDef || 0;
-      if (gear.speedBonus) speedMod += gear.speedBonus;
-      if (gear.speedDebuff) speedMod += gear.speedDebuff;
-    }
-
-    this.maxHp = Math.round(this.charData.baseHp * levelMultiplier + bonusHp);
-    this.atk = Math.round(this.charData.baseAtk * levelMultiplier + bonusAtk);
-    this.def = Math.round(this.charData.baseDef + bonusDef);
-    this.baseSpeed = this.charData.speed * (1 + speedMod);
-  }
-
-  setState(newState, duration = 0) {
-    this.state = newState;
-    this.stateTimer = duration;
-  }
-
-  update(dt, opponent, match) {
-    // Cooldown ticks
-    if (this.skill1Cd > 0) this.skill1Cd = Math.max(0, this.skill1Cd - dt);
-    if (this.skill2Cd > 0) this.skill2Cd = Math.max(0, this.skill2Cd - dt);
-    if (this.ultCd > 0) this.ultCd = Math.max(0, this.ultCd - dt);
-    if (this.invulnerableTimer > 0) this.invulnerableTimer = Math.max(0, this.invulnerableTimer - dt);
-    if (this.spawnShieldTimer > 0) this.spawnShieldTimer = Math.max(0, this.spawnShieldTimer - dt);
-
-    // Guard meter recovery
-    if (this.state !== "guard" && this.guardMeter < this.maxGuardMeter) {
-      this.guardMeter = Math.min(this.maxGuardMeter, this.guardMeter + dt * 15);
-    }
-
-    // Passive & Gear: NT-D Trigger (under 40% HP)
-    const hasNtd = this.equippedGear.some(g => g && g.id === "ntd_system_chip");
-    if (hasNtd && !this.ntdTriggered && this.hp < this.maxHp * 0.4) {
-      this.ntdTriggered = true;
-      this.atk = Math.round(this.atk * 1.35);
-      this.skill1Cd = 0;
-      this.skill2Cd = 0;
-      if (window.effectsEngine) {
-        window.effectsEngine.addFloatingText("NT-D DESTROY MODE!", this.x, this.y - 60, "#ef4444", true);
-        window.effectsEngine.createExplosion(this.x, this.y - 40, "#ef4444", 25, 1.5);
-      }
-    }
-
-    // Passive & Gear: Nano Repair Injector (under 30% HP)
-    const hasNanoRepair = this.equippedGear.some(g => g && g.id === "nano_repair_injector");
-    if (hasNanoRepair && this.hp < this.maxHp * 0.3 && !this.nanoRepairActive && this.nanoRepairTimer === 0) {
-      this.nanoRepairActive = true;
-      this.nanoRepairTimer = 5;
-    }
-    if (this.nanoRepairActive && this.nanoRepairTimer > 0) {
-      this.nanoRepairTimer -= dt;
-      const healAmt = Math.round(this.maxHp * 0.03 * dt);
-      this.hp = Math.min(this.maxHp, this.hp + healAmt);
-      if (this.nanoRepairTimer <= 0) {
-        this.nanoRepairActive = false;
-      }
-    }
-
-    // Passive & Gear: ZERO System Warning Indicator
-    const hasZero = this.equippedGear.some(g => g && g.id === "zero_system_chip") || this.charData.id === "wing_gundam_zero";
-    if (hasZero && opponent && opponent.state === "ult") {
-      this.zeroSystemAlert = true;
-    } else {
-      this.zeroSystemAlert = false;
-    }
-
-    // State timers
-    if (this.stateTimer > 0) {
-      this.stateTimer -= dt;
-      if (this.stateTimer <= 0) {
-        if (this.state === "hit" || this.state === "dizzy" || this.state.startsWith("attack") || this.state.startsWith("skill") || this.state === "dodge") {
-          this.setState("idle");
-        }
-      }
-    }
-
-    // Charging heavy attack
-    if (this.isCharging) {
-      this.chargeTime += dt;
-      this.vx = 0;
-      if (this.chargeTime >= 0.8) {
-        // Auto release fully charged break attack
-        this.releaseHeavyCharge(opponent);
-      }
-    }
-
-    // Auto facing when idle or walking
-    if (opponent && (this.state === "idle" || this.state === "walk")) {
-      this.facing = opponent.x > this.x ? 1 : -1;
-    }
-
-    // Physics integration
-    if (window.physicsEngine) {
-      window.physicsEngine.updateFighter(this, dt);
-    }
-  }
-
-  // ─── 行動指令方法 ───
-  move(dir) {
-    if (this.state === "hit" || this.state === "dizzy" || this.state === "ko" || this.state === "guard" || this.isCharging) return;
-    this.vx = dir * this.baseSpeed;
-    this.facing = dir;
-    if (this.isGrounded && this.state !== "attack_1" && this.state !== "attack_2" && this.state !== "attack_3") {
-      this.setState("walk");
-    }
-  }
-
-  dash(dir) {
-    if (this.state === "hit" || this.state === "dizzy" || this.state === "ko" || this.state === "guard" || this.isCharging) return;
-    this.vx = dir * this.baseSpeed * 2.2;
-    this.facing = dir;
-    this.setState("run", 0.35);
-    if (window.soundEngine) window.soundEngine.playDodge();
-    if (window.effectsEngine) {
-      window.effectsEngine.createSlashWave(this.x, this.y - 30, dir, this.charData.themeColor, 0.8);
-    }
-  }
-
-  jump() {
-    if (this.state === "hit" || this.state === "dizzy" || this.state === "ko" || this.isCharging) return;
-    if (this.isGrounded) {
-      this.vy = -14;
-      this.isGrounded = false;
-      this.jumpCount = 1;
-      this.setState("jump");
-    } else if (this.jumpCount < this.maxJumps) {
-      // Double jump
-      this.vy = -12;
-      this.jumpCount++;
-      this.setState("jump");
-      if (window.effectsEngine) {
-        window.effectsEngine.addParticle({
-          x: this.x,
-          y: this.y - 10,
-          size: 8,
-          growth: 1.5,
-          color: "#38bdf8",
-          maxLife: 0.2,
-          shape: "ring"
-        });
-      }
-    }
-  }
-
-  guard(active) {
-    if (this.state === "hit" || this.state === "dizzy" || this.state === "ko" || this.isCharging) return;
-    if (active && this.isGrounded && this.guardMeter > 10) {
-      this.setState("guard");
-      this.vx = 0;
-    } else if (!active && this.state === "guard") {
-      this.setState("idle");
-    }
-  }
-
-  dodge() {
-    if (this.state === "hit" || this.state === "dizzy" || this.state === "ko" || this.state === "dodge") return;
-    this.setState("dodge", 0.35);
-    this.invulnerableTimer = 0.3; // 0.3s i-frame
-    this.vx = this.facing * this.baseSpeed * 2.5;
-    if (window.soundEngine) window.soundEngine.playDodge();
-    if (window.effectsEngine) {
-      window.effectsEngine.addParticle({
-        x: this.x,
-        y: this.y - 40,
-        size: 15,
-        growth: 2,
-        color: this.charData.themeColor,
-        maxLife: 0.2,
-        shape: "ring"
-      });
-    }
-  }
-
-  lightAttack(opponent) {
-    if (this.state === "hit" || this.state === "dizzy" || this.state === "ko" || this.isCharging) return;
-
-    if (!this.isGrounded) {
-      // Aerial Attack
-      this.airAttack(opponent);
-      return;
-    }
-
-    // 3 to 4 stage combo
-    let attackStage = 1;
-    if (this.state === "attack_1") attackStage = 2;
-    else if (this.state === "attack_2") attackStage = 3;
-    else if (this.state === "attack_3") attackStage = 4;
-
-    this.setState(`attack_${attackStage}`, 0.28);
-    this.attackTimer = 0.28;
-    this.vx = this.facing * 3.5; // Slight forward lunge
-
-    if (window.soundEngine) window.soundEngine.playHit("light");
-
-    // Hitbox check
-    if (opponent) {
-      const hitbox = window.physicsEngine.getHitbox(this, "light");
-      const hurtbox = window.physicsEngine.getHurtbox(opponent);
-
-      if (window.physicsEngine.checkAABB(hitbox, hurtbox)) {
-        const damage = Math.round((this.atk * 0.45) * (1 + attackStage * 0.15));
-        opponent.takeDamage(damage, this, false, false);
-        this.gainRage(8);
-      }
-    }
-  }
-
-  startHeavyCharge() {
-    if (this.state === "hit" || this.state === "dizzy" || this.state === "ko" || !this.isGrounded) return;
-    this.isCharging = true;
-    this.chargeTime = 0;
-    this.setState("heavy_charge");
-  }
-
-  releaseHeavyCharge(opponent) {
-    if (!this.isCharging) return;
-    this.isCharging = false;
-    const isFullCharge = this.chargeTime >= 0.7;
-    this.setState("heavy_release", 0.4);
-    this.vx = this.facing * (isFullCharge ? 9 : 5);
-
-    if (window.soundEngine) window.soundEngine.playHit("heavy");
-    if (window.effectsEngine) {
-      window.effectsEngine.createSlashWave(this.x + this.facing * 30, this.y - 40, this.facing, "#f59e0b", isFullCharge ? 1.8 : 1.2);
-    }
-
-    if (opponent) {
-      const hitbox = window.physicsEngine.getHitbox(this, "heavy");
-      const hurtbox = window.physicsEngine.getHurtbox(opponent);
-
-      if (window.physicsEngine.checkAABB(hitbox, hurtbox)) {
-        const damage = Math.round(this.atk * (isFullCharge ? 1.4 : 0.85));
-        opponent.takeDamage(damage, this, isFullCharge, true);
-        this.gainRage(18);
-      }
-    }
-  }
-
-  airAttack(opponent) {
-    this.setState("air_attack", 0.35);
-    this.vy = 8; // Downward slam dive
-    this.vx = this.facing * 5;
-
-    if (window.soundEngine) window.soundEngine.playHit("slash");
-
-    if (opponent) {
-      const hitbox = window.physicsEngine.getHitbox(this, "light");
-      const hurtbox = window.physicsEngine.getHurtbox(opponent);
-      if (window.physicsEngine.checkAABB(hitbox, hurtbox)) {
-        const damage = Math.round(this.atk * 0.7);
-        opponent.takeDamage(damage, this, false, false);
-        this.gainRage(10);
-      }
-    }
-  }
-
-  grab(opponent) {
-    if (this.state === "hit" || this.state === "dizzy" || this.state === "ko" || !this.isGrounded) return;
-    this.setState("grab", 0.45);
-    this.vx = this.facing * 4;
-
-    if (opponent) {
-      const hitbox = window.physicsEngine.getHitbox(this, "grab");
-      const hurtbox = window.physicsEngine.getHurtbox(opponent);
-
-      if (window.physicsEngine.checkAABB(hitbox, hurtbox)) {
-        // Unblockable Grab Slam!
-        const damage = Math.round(this.atk * 0.95);
-        opponent.takeDamage(damage, this, true, true, true);
-        opponent.vx = this.facing * 14;
-        opponent.vy = -8;
-        if (window.soundEngine) window.soundEngine.playHit("heavy");
-        if (window.effectsEngine) {
-          window.effectsEngine.createExplosion(opponent.x, opponent.y - 30, "#a855f7", 20, 1.2);
-          window.effectsEngine.addFloatingText("GRAB SLAM!", opponent.x, opponent.y - 60, "#a855f7", true);
-        }
-      }
-    }
-  }
-
-  useSkill1(opponent) {
-    if (this.skill1Cd > 0 || this.state === "hit" || this.state === "dizzy" || this.state === "ko") return;
-    const skill = this.charData.skills.skill1;
-    this.skill1Cd = skill.cd;
-    this.setState("skill1", 0.4);
-    this.vx = this.facing * 7;
-
-    if (window.soundEngine) window.soundEngine.playKiBlast();
-    if (window.effectsEngine) {
-      if (skill.type.includes("beam") || skill.type.includes("rifle")) {
-        window.effectsEngine.spawnBeam({
-          owner: this,
-          startX: this.x + this.facing * 30,
-          startY: this.y - 45,
-          endX: this.x + this.facing * 450,
-          color: this.charData.themeColor,
-          damage: Math.round(this.atk * 0.9)
-        });
-      } else {
-        window.effectsEngine.spawnProjectile({
-          owner: this,
-          x: this.x + this.facing * 30,
-          y: this.y - 45,
-          vx: this.facing * 12,
-          color: this.charData.themeColor,
-          damage: Math.round(this.atk * 0.85)
-        });
-      }
-    }
-
-    if (opponent) {
-      const hitbox = window.physicsEngine.getHitbox(this, "skill1");
-      const hurtbox = window.physicsEngine.getHurtbox(opponent);
-      if (window.physicsEngine.checkAABB(hitbox, hurtbox)) {
-        const damage = Math.round(this.atk * 0.9);
-        opponent.takeDamage(damage, this, false, false);
-        this.gainRage(12);
-      }
-    }
-  }
-
-  useSkill2(opponent) {
-    if (this.skill2Cd > 0 || this.state === "hit" || this.state === "dizzy" || this.state === "ko") return;
-    const skill = this.charData.skills.skill2;
-    this.skill2Cd = skill.cd;
-    this.setState("skill2", 0.5);
-    this.vx = this.facing * 5;
-
-    if (window.soundEngine) window.soundEngine.playHit("heavy");
-    if (window.effectsEngine) {
-      window.effectsEngine.createExplosion(this.x + this.facing * 60, this.y - 40, this.charData.themeColor, 18, 1.4);
-    }
-
-    if (opponent) {
-      const hitbox = window.physicsEngine.getHitbox(this, "skill2");
-      const hurtbox = window.physicsEngine.getHurtbox(opponent);
-      if (window.physicsEngine.checkAABB(hitbox, hurtbox)) {
-        const damage = Math.round(this.atk * 1.15);
-        opponent.takeDamage(damage, this, false, true);
-        opponent.vy = -10; // Launch
-        this.gainRage(15);
-      }
-    }
-  }
-
-  useUlt(opponent) {
-    if (this.rage < 100 || this.ultCd > 0 || this.state === "hit" || this.state === "dizzy" || this.state === "ko") return;
-    const ult = this.charData.skills.ult;
-    this.rage = 0;
-    this.ultCd = ult.cd;
-    this.setState("ult", 1.2);
-    this.invulnerableTimer = 1.2;
-
-    // Trigger full screen cutin presentation
-    if (window.effectsEngine) {
-      window.effectsEngine.triggerCutin(this.charData.name, ult.name, this.charData.themeColor, 1.2);
-      window.effectsEngine.spawnBeam({
-        startX: 0,
-        startY: this.y - 45,
-        endX: 1400,
-        width: 80,
-        color: this.charData.themeColor,
-        innerColor: "#ffffff",
-        life: 1.0,
-        damage: Math.round(this.atk * 3.0)
-      });
-    }
-
-    if (opponent) {
-      const damage = Math.round(this.atk * 3.2);
-      setTimeout(() => {
-        if (opponent && opponent.hp > 0) {
-          opponent.takeDamage(damage, this, true, true);
-          if (window.effectsEngine) {
-            window.effectsEngine.createExplosion(opponent.x, opponent.y - 40, this.charData.themeColor, 35, 2.5);
-            window.effectsEngine.shake(18, 0.5);
-          }
-        }
-      }, 500);
-    }
-  }
-
-  useBurst(opponent) {
-    if (this.rage < 50 || this.state === "ko") return;
-    this.rage -= 50;
-    this.setState("burst", 0.4);
-    this.invulnerableTimer = 0.8;
-    this.vx = 0;
-    this.vy = 0;
-
-    if (window.soundEngine) window.soundEngine.playBurst();
-    if (window.effectsEngine) {
-      window.effectsEngine.addParticle({
-        x: this.x,
-        y: this.y - 40,
-        size: 20,
-        growth: 8,
-        color: "#facc15",
-        maxLife: 0.35,
-        shape: "ring",
-        glow: true
-      });
-      window.effectsEngine.addFloatingText("BURST BREAK!", this.x, this.y - 60, "#facc15", true);
-      window.effectsEngine.shake(12, 0.3);
-    }
-
-    if (opponent) {
-      const dist = Math.abs(this.x - opponent.x);
-      if (dist < 180) {
-        opponent.vx = (opponent.x > this.x ? 1 : -1) * 16;
-        opponent.vy = -6;
-        opponent.setState("dizzy", 1.0);
-        opponent.takeDamage(Math.round(this.atk * 0.3), this, true, false);
-      }
-    }
-  }
-
-  useGadget() {
-    if (this.gadgetUses <= 0 || this.level < 20 || this.state === "ko") return;
-    this.gadgetUses--;
-
-    const healAmt = Math.round(this.maxHp * 0.35);
-    this.hp = Math.min(this.maxHp, this.hp + healAmt);
-    if (window.effectsEngine) {
-      window.effectsEngine.addFloatingText(`+${healAmt} HP (GADGET)`, this.x, this.y - 50, "#22c55e", true);
-      window.effectsEngine.createExplosion(this.x, this.y - 30, "#22c55e", 15, 1.0);
-    }
-    if (window.soundEngine) window.soundEngine.playLevelUp();
-  }
-
-  takeDamage(amount, attacker, isGuardBreak = false, isHeavy = false, isGrab = false) {
-    if (this.invulnerableTimer > 0 || this.spawnShieldTimer > 0 || this.state === "ko") return;
-
-    let finalDamage = amount;
-
-    // Guard defense (80% damage reduction)
-    if (this.state === "guard" && !isGuardBreak && !isGrab) {
-      finalDamage = Math.round(amount * 0.2);
-      this.guardMeter -= 25;
-      if (window.soundEngine) window.soundEngine.playGuard();
-
-      if (this.guardMeter <= 0) {
-        // Guard Break!
-        this.guardMeter = 0;
-        this.setState("dizzy", 1.5);
-        if (window.soundEngine) window.soundEngine.playHit("guard_break");
-        if (window.effectsEngine) {
-          window.effectsEngine.addFloatingText("GUARD BROKEN!", this.x, this.y - 60, "#a855f7", true);
-          window.effectsEngine.createHitSpark(this.x, this.y - 40, "#a855f7", 20, true);
-        }
-      }
-    } else {
-      // Normal or heavy hit
-      this.setState(isHeavy ? "dizzy" : "hit", isHeavy ? 0.45 : 0.22);
-      this.vx = (attacker ? attacker.facing : -1) * (isHeavy ? 7 : 3);
-      if (window.soundEngine) window.soundEngine.playHit(isHeavy ? "heavy" : "light");
-      if (window.effectsEngine) {
-        window.effectsEngine.createHitSpark(this.x, this.y - 40, isHeavy ? "#ef4444" : "#facc15", 14, isHeavy);
-      }
-    }
-
-    // Apply Damage
-    this.hp -= finalDamage;
-    this.gainRage(Math.round(finalDamage * 0.12));
-
-    // Floating damage text
-    if (window.effectsEngine) {
-      window.effectsEngine.addFloatingText(`-${finalDamage}`, this.x, this.y - 40, isHeavy ? "#ef4444" : "#fbbf24", isHeavy);
-      window.effectsEngine.shake(isHeavy ? 10 : 4, isHeavy ? 0.2 : 0.1);
-    }
-
-    // Passive & Gear: Senzu Bean Emergency Revival Check
-    const hasSenzu = this.equippedGear.some(g => g && g.id === "senzu_pouch");
-    if (this.hp <= 0 && hasSenzu && !this.senzuUsed) {
-      this.senzuUsed = true;
-      this.hp = Math.round(this.maxHp * 0.2);
-      this.invulnerableTimer = 1.5;
-      if (window.effectsEngine) {
-        window.effectsEngine.addFloatingText("仙豆保命復活!", this.x, this.y - 60, "#10b981", true);
-        window.effectsEngine.createExplosion(this.x, this.y - 40, "#10b981", 30, 2.0);
-      }
-      if (window.soundEngine) window.soundEngine.playVictory();
-      return;
-    }
-
-    // KO Check
-    if (this.hp <= 0) {
-      this.hp = 0;
-      this.setState("ko");
-      if (window.soundEngine) window.soundEngine.playKO();
-      if (window.effectsEngine) {
-        window.effectsEngine.createExplosion(this.x, this.y - 40, "#ef4444", 30, 2.0);
-        window.effectsEngine.addFloatingText("K.O.!", this.x, this.y - 70, "#ef4444", true);
-        window.effectsEngine.freeze(15);
-      }
-    }
-  }
-
-  gainRage(amt) {
-    this.rage = Math.min(this.maxRage, this.rage + amt);
-  }
-}
-
-// ─── KOF 輪替淘汰賽與對戰管理器 ───
-class MatchEngine {
+export class CombatEngine {
   constructor() {
-    this.team1Roster = []; // Player team queue
-    this.team2Roster = []; // CPU / Opponent team queue
-    this.p1Current = null; // Active fighter 1
-    this.p2Current = null; // Active fighter 2
-    this.p1Index = 0;
-    this.p2Index = 0;
-    this.matchState = "standby"; // standby, fighting, p1_win_round, p2_win_round, match_over
-    this.roundTransitionTimer = 0;
-    this.mode = "kof"; // kof, ranked, boss_rush, practice
-    this.isRanked = false; // When true, standardized to Lv100
-    this.assistCooldown = 0;
-    this.assistActiveFighter = null;
-    this.assistTimer = 0;
-    this.p1Streak = 0; // Tracks 1-vs-many streak
-    this.totalDamageDealt = 0;
-    this.onMatchEnd = null;
-    this.cameraX = 0;
-    this.cameraY = 0;
+    this.arenaWidth = 1000;
+    this.floorY = 380;
+    this.p1 = null;
+    this.p2 = null;
+    this.projectiles = [];
+    this.shockwaves = [];
+    this.floatingTexts = [];
+    this.roundTime = 99;
+    this.timerAcc = 0;
+    this.isOver = false;
+    this.winner = null;
+    this.isTraining = false;
+
+    // 訓練營專屬狀態
+    this.trainingSettings = {
+      dummyStance: 'stand', // 'stand', 'crouch', 'jump'
+      dummyGuard: 'none',   // 'none', 'stand_guard', 'crouch_guard', 'after_first_hit'
+      dummyReversal: false, // 甦醒第一幀升龍
+      instantCd: false      // 技能即時無冷卻
+    };
+
+    // 震動回饋開關
+    this.enableHaptics = true;
   }
 
-  startMatch(p1Roster, p2Roster, mode = "kof", isRanked = false) {
-    this.mode = mode;
-    this.isRanked = isRanked;
-    this.team1Roster = p1Roster.map(char => new Fighter(char, isRanked ? 100 : (char.userLevel || 1), char.equippedGear || [], true));
-    this.team2Roster = p2Roster.map(char => new Fighter(char, isRanked ? 100 : (char.userLevel || 1), char.equippedGear || [], false));
-    this.p1Index = 0;
-    this.p2Index = 0;
-    this.p1Current = this.team1Roster[0];
-    this.p2Current = this.team2Roster[0];
-    this.p1Current.x = 350;
-    this.p2Current.x = 1050;
-    this.p1Current.facing = 1;
-    this.p2Current.facing = -1;
-    this.matchState = "fighting";
-    this.roundTransitionTimer = 0;
-    this.assistCooldown = 0;
-    this.p1Streak = 0;
-    this.totalDamageDealt = 0;
+  initMatch(p1Data, p2Data, isTraining = false, trainingOpts = {}) {
+    this.isTraining = isTraining;
+    this.isOver = false;
+    this.winner = null;
+    this.roundTime = 99;
+    this.timerAcc = 0;
+    this.projectiles = [];
+    this.shockwaves = [];
+    this.floatingTexts = [];
 
-    if (window.soundEngine) {
-      window.soundEngine.startBgm();
+    if (isTraining && trainingOpts) {
+      this.trainingSettings = { ...this.trainingSettings, ...trainingOpts };
     }
+
+    this.p1 = this._createFighter(1, 260, p1Data);
+    this.p2 = this._createFighter(2, 740, p2Data);
+    this.p1.facing = 1;
+    this.p2.facing = -1;
   }
 
-  callAssist() {
-    if (this.assistCooldown > 0 || this.assistActiveFighter || this.matchState !== "fighting") return;
-    const nextFighterData = this.team1Roster[this.p1Index + 1];
-    if (!nextFighterData || nextFighterData.hp <= 0) return;
+  _createFighter(id, x, data) {
+    const skillList = (data.loadout && data.loadout.length === 3)
+      ? data.loadout.map(sid => SKILLS.find(s => s.id === sid) || SKILLS[0])
+      : [SKILLS[0], SKILLS[1], SKILLS[8]];
 
-    this.assistCooldown = 20; // 20s CD
-    this.assistActiveFighter = nextFighterData;
-    this.assistActiveFighter.x = this.p1Current.x - this.p1Current.facing * 60;
-    this.assistActiveFighter.y = this.p1Current.y;
-    this.assistActiveFighter.facing = this.p1Current.facing;
-    this.assistTimer = 1.0;
+    return {
+      id,
+      name: data.name || (id === 1 ? 'Player 1' : 'Player 2'),
+      skin: data.skin,
+      x,
+      y: this.floorY,
+      vx: 0,
+      vy: 0,
+      facing: id === 1 ? 1 : -1,
+      isGrounded: true,
+      maxHp: 1000,
+      hp: 1000,
+      state: 'idle', // idle, walk_fwd, walk_back, jump, crouch, high_guard, low_guard, light_punch, heavy_kick, skill, hit_stun, knockdown, wakeup
+      stateTime: 0,
+      stateDuration: 0,
+      currentAction: null,
+      isGuarding: false,
+      guardStance: 'high', // 'high' 或 'low'
+      invincibleTimer: 0,
 
-    if (window.effectsEngine) {
-      window.effectsEngine.addFloatingText(`ASSIST: ${this.assistActiveFighter.charData.name}!`, this.assistActiveFighter.x, this.assistActiveFighter.y - 60, "#38bdf8", true);
-      window.effectsEngine.createSlashWave(this.assistActiveFighter.x, this.assistActiveFighter.y - 30, this.assistActiveFighter.facing, "#38bdf8", 1.5);
-    }
-    if (window.soundEngine) window.soundEngine.playHit("heavy");
+      // 量子逆轉爆發 (Burst)
+      burstMeter: 500, // 滿 500 點可施展
+      burstMax: 500,
+      burstAvailable: true,
 
-    // Assist striker attacks opponent
-    if (this.p2Current) {
-      const damage = Math.round(this.assistActiveFighter.atk * 1.1);
-      this.p2Current.takeDamage(damage, this.assistActiveFighter, false, true);
-    }
+      // 3 大自選技能
+      skills: skillList,
+      cooldowns: [0, 0, 0],
+
+      // 連段統計
+      comboCount: 0,
+      comboDamage: 0,
+      comboResetTimer: 0,
+      frameAdvantage: 0 // 幀數優劣勢 (+有利 / -不利)
+    };
   }
 
-  update(dt) {
-    if (this.matchState === "standby") return;
+  /**
+   * 60 FPS 物理推進核心
+   */
+  update(inputsP1, inputsP2) {
+    if (this.isOver) return;
 
-    if (this.assistCooldown > 0) {
-      this.assistCooldown = Math.max(0, this.assistCooldown - dt);
+    // 1. 訓練營即時無冷卻維護
+    if (this.isTraining && this.trainingSettings.instantCd) {
+      this.p1.cooldowns = [0, 0, 0];
+      this.p2.cooldowns = [0, 0, 0];
     }
 
-    if (this.assistTimer > 0) {
-      this.assistTimer -= dt;
-      if (this.assistTimer <= 0) {
-        this.assistActiveFighter = null;
-      }
-    }
-
-    // Camera follow center between active fighters
-    if (this.p1Current && this.p2Current) {
-      const midX = (this.p1Current.x + this.p2Current.x) / 2;
-      const targetCamX = midX - 450; // Viewport center
-      this.cameraX += (targetCamX - this.cameraX) * 0.08;
-      this.cameraX = Math.max(0, Math.min(500, this.cameraX));
-    }
-
-    // Update active fighters
-    if (this.p1Current && this.p2Current && this.matchState === "fighting") {
-      this.p1Current.update(dt, this.p2Current, this);
-      this.p2Current.update(dt, this.p1Current, this);
-
-      // Check KO
-      if (this.p1Current.hp <= 0) {
-        this.matchState = "p2_win_round";
-        this.roundTransitionTimer = 3.0; // 3s countdown before next spawn
-      } else if (this.p2Current.hp <= 0) {
-        this.matchState = "p1_win_round";
-        this.p1Streak++;
-        this.roundTransitionTimer = 3.0;
-      }
-    }
-
-    // Round transition handling (KOF Relay 勝者留場)
-    if (this.matchState === "p1_win_round" || this.matchState === "p2_win_round") {
-      this.roundTransitionTimer -= dt;
-
-      if (this.roundTransitionTimer <= 0) {
-        if (this.matchState === "p1_win_round") {
-          // P2 next fighter
-          this.p2Index++;
-          if (this.p2Index < this.team2Roster.length) {
-            this.p2Current = this.team2Roster[this.p2Index];
-            this.p2Current.x = 1050;
-            this.p2Current.facing = -1;
-            this.p2Current.spawnShieldTimer = 2.0; // 2s spawn protection
-            // Winner stays with retained HP & rage + 2s invulnerability
-            this.p1Current.invulnerableTimer = 2.0;
-            this.matchState = "fighting";
-          } else {
-            // Team 1 wins match!
-            this.finishMatch(true);
-          }
-        } else if (this.matchState === "p2_win_round") {
-          // P1 next fighter
-          this.p1Index++;
-          if (this.p1Index < this.team1Roster.length) {
-            this.p1Current = this.team1Roster[this.p1Index];
-            this.p1Current.x = 350;
-            this.p1Current.facing = 1;
-            this.p1Current.spawnShieldTimer = 2.0;
-            this.p2Current.invulnerableTimer = 2.0;
-            this.matchState = "fighting";
-          } else {
-            // Team 2 wins match!
-            this.finishMatch(false);
-          }
+    // 2. 計時器更新 (訓練營無限時間)
+    if (!this.isTraining) {
+      this.timerAcc++;
+      if (this.timerAcc >= 60) {
+        this.timerAcc = 0;
+        this.roundTime--;
+        if (this.roundTime <= 0) {
+          this.roundTime = 0;
+          this._handleTimeOver();
         }
       }
     }
+
+    // 3. 處理雙方冷卻與輸入
+    this._updateFighter(this.p1, this.p2, inputsP1);
+    this._updateFighter(this.p2, this.p1, inputsP2);
+
+    // 4. 更新飛行道具與衝擊波
+    this._updateProjectiles();
+    this._updateShockwaves();
+    this._updateFloatingTexts();
+
+    // 5. 兩人間距與面向校正
+    this._resolvePositions();
+
+    // 6. 勝負判定
+    if (!this.isTraining && !this.isOver) {
+      if (this.p1.hp <= 0 && this.p2.hp <= 0) {
+        this.isOver = true;
+        this.winner = 0; // 平局
+        soundEngine.playHit('ko');
+      } else if (this.p1.hp <= 0) {
+        this.isOver = true;
+        this.winner = 2;
+        soundEngine.playHit('ko');
+      } else if (this.p2.hp <= 0) {
+        this.isOver = true;
+        this.winner = 1;
+        soundEngine.playHit('ko');
+      }
+    }
   }
 
-  finishMatch(isPlayerWinner) {
-    this.matchState = "match_over";
-    if (window.soundEngine) {
-      if (isPlayerWinner) window.soundEngine.playVictory();
-      else window.soundEngine.playKO();
+  _updateFighter(char, opp, input) {
+    char.stateTime++;
+    if (char.invincibleTimer > 0) char.invincibleTimer--;
+
+    // 冷卻倒數 (秒數轉幀數)
+    for (let i = 0; i < char.cooldowns.length; i++) {
+      if (char.cooldowns[i] > 0) {
+        char.cooldowns[i] = Math.max(0, char.cooldowns[i] - 1 / 60);
+      }
     }
 
-    // Calculate rewards
-    const isSweep = this.p1Index === 0 && this.team2Roster.length >= 3;
-    let rewardGold = isPlayerWinner ? (this.mode === "boss_rush" ? 1500 : 800) : 200;
-    if (isSweep) rewardGold *= 2; // Double reward for 1v3 or 1v5 sweep!
+    // 連段重置計時
+    if (char.comboResetTimer > 0) {
+      char.comboResetTimer--;
+      if (char.comboResetTimer <= 0) {
+        char.comboCount = 0;
+        char.comboDamage = 0;
+      }
+    }
 
-    if (this.onMatchEnd) {
-      this.onMatchEnd({
-        winner: isPlayerWinner ? "player" : "opponent",
-        isSweep,
-        gold: rewardGold,
-        p1DefeatedCount: this.p2Index,
-        p2DefeatedCount: this.p1Index
+    // 重力物理運算
+    if (!char.isGrounded) {
+      char.vy += 0.85; // 重力加速度
+      char.x += char.vx;
+      char.y += char.vy;
+      if (char.y >= this.floorY) {
+        char.y = this.floorY;
+        char.vy = 0;
+        char.vx = 0;
+        char.isGrounded = true;
+        if (char.state === 'jump') {
+          char.state = 'idle';
+          char.stateTime = 0;
+        }
+      }
+    } else {
+      char.x += char.vx;
+      char.vx *= 0.8; // 地面摩擦力
+    }
+
+    // 邊界限制
+    char.x = Math.max(50, Math.min(this.arenaWidth - 50, char.x));
+
+    // ─── 檢查量子逆轉爆發 (Quantum Burst) ───
+    // 在受擊硬直 (hit_stun) 中可消耗能量進行緊急脫身
+    const tryBurst = input && (input.burst || (input.punch && input.kick));
+    if (tryBurst && char.state === 'hit_stun' && char.burstMeter >= char.burstMax && char.burstAvailable) {
+      this._executeBurst(char, opp);
+      return;
+    }
+
+    // 狀態機處理
+    switch (char.state) {
+      case 'idle':
+      case 'walk_fwd':
+      case 'walk_back':
+      case 'crouch':
+      case 'high_guard':
+      case 'low_guard':
+        this._handleNormalInputs(char, opp, input);
+        break;
+
+      case 'jump':
+        // 空中可施展跳躍攻擊
+        if (input && (input.punch || input.kick) && char.currentAction !== 'air_attack') {
+          char.currentAction = 'air_attack';
+          this._executeAirAttack(char, opp, input.kick ? 'kick' : 'punch');
+        }
+        break;
+
+      case 'light_punch':
+      case 'heavy_kick':
+      case 'skill':
+        this._updateAttackAction(char, opp);
+        break;
+
+      case 'hit_stun':
+        if (char.stateTime >= char.stateDuration) {
+          char.state = 'idle';
+          char.stateTime = 0;
+          char.currentAction = null;
+        }
+        break;
+
+      case 'knockdown':
+        if (char.stateTime >= 40) { // 平躺 40 幀
+          char.state = 'wakeup';
+          char.stateTime = 0;
+          char.invincibleTimer = 15; // 起身無敵 15 幀
+          soundEngine.playHit('slide');
+        }
+        break;
+
+      case 'wakeup':
+        if (char.stateTime >= 15) {
+          char.state = 'idle';
+          char.stateTime = 0;
+          char.currentAction = null;
+        }
+        break;
+    }
+  }
+
+  _handleNormalInputs(char, opp, input) {
+    if (!input) {
+      char.state = 'idle';
+      char.isGuarding = false;
+      return;
+    }
+
+    // 面向自動校正 (在地面可動時)
+    if (char.isGrounded) {
+      char.facing = char.x < opp.x ? 1 : -1;
+    }
+
+    // 1. 技能觸發 (優先級最高)
+    if (input.skill1 && char.cooldowns[0] <= 0) {
+      this._executeSkill(char, opp, 0);
+      return;
+    }
+    if (input.skill2 && char.cooldowns[1] <= 0) {
+      this._executeSkill(char, opp, 1);
+      return;
+    }
+    if (input.skill3 && char.cooldowns[2] <= 0) {
+      this._executeSkill(char, opp, 2);
+      return;
+    }
+
+    // 2. 基礎攻擊
+    if (input.punch) {
+      this._executeLightPunch(char, opp);
+      return;
+    }
+    if (input.kick) {
+      this._executeHeavyKick(char, opp);
+      return;
+    }
+
+    // 3. 移動、起跳與格擋
+    const moveX = input.x || 0;
+    const moveY = input.y || 0;
+
+    // 起跳
+    if (moveY < -0.4 && char.isGrounded) {
+      char.isGrounded = false;
+      char.vy = -17;
+      char.vx = moveX * 4.5;
+      char.state = 'jump';
+      char.stateTime = 0;
+      char.isGuarding = false;
+      soundEngine.playHit('dp');
+      return;
+    }
+
+    // 下蹲
+    if (moveY > 0.4 && char.isGrounded) {
+      // 蹲姿時若同時向後拉，進入下段格擋 (Low Guard)
+      const isPullingBack = (char.facing === 1 && moveX < -0.2) || (char.facing === -1 && moveX > 0.2);
+      if (isPullingBack) {
+        char.state = 'low_guard';
+        char.guardStance = 'low';
+        char.isGuarding = true;
+      } else {
+        char.state = 'crouch';
+        char.isGuarding = false;
+      }
+      return;
+    }
+
+    // 橫向移動
+    if (Math.abs(moveX) > 0.2) {
+      const isMovingFwd = (char.facing === 1 && moveX > 0) || (char.facing === -1 && moveX < 0);
+      if (isMovingFwd) {
+        char.x += char.facing * 4.2;
+        char.state = 'walk_fwd';
+        char.isGuarding = false;
+      } else {
+        // 後撤防守步：上身微仰收緊，自動高段格擋 (High Guard)
+        char.x -= char.facing * 3.2;
+        char.state = 'walk_back';
+        char.guardStance = 'high';
+        char.isGuarding = true;
+      }
+      return;
+    }
+
+    // 無方向操作，恢復待機
+    char.state = 'idle';
+    char.isGuarding = false;
+  }
+
+  // ─── 量子逆轉爆發系統 (Quantum Burst) ───
+  _executeBurst(char, opp) {
+    char.burstMeter = 0;
+    char.burstAvailable = false; // 每回合限用 1 次
+    char.state = 'idle';
+    char.stateTime = 0;
+    char.invincibleTimer = 10; // 前 10 幀全身無敵
+
+    soundEngine.playHit('burst');
+    this._triggerHaptic(80);
+
+    // 爆發直徑 300 像素金色環形氣浪
+    this.shockwaves.push({
+      x: char.x,
+      y: char.y - 70,
+      radius: 10,
+      maxRadius: 150,
+      color: '#ffd700',
+      duration: 20
+    });
+
+    // 將近身對手推開至 3 個身位 (約 240px)，打斷其連招
+    const dist = Math.abs(char.x - opp.x);
+    if (dist < 260) {
+      opp.vx = char.facing * 18;
+      opp.state = 'hit_stun';
+      opp.stateTime = 0;
+      opp.stateDuration = 20; // 造成對手短暫 20 幀推擠硬直
+      opp.hp = Math.max(1, opp.hp - 40); // 造成 40 點微量衝擊反傷
+      this.floatingTexts.push({
+        text: 'QUANTUM BURST!',
+        x: char.x,
+        y: char.y - 120,
+        color: '#ffd700',
+        life: 45
       });
     }
   }
+
+  // ─── 普攻打擊 ───
+  _executeLightPunch(char, opp) {
+    char.state = 'light_punch';
+    char.stateTime = 0;
+    char.stateDuration = 14;
+    char.currentAction = {
+      name: '刺拳打擊',
+      startup: 5,
+      active: 4,
+      recovery: 5,
+      damage: 40,
+      guardType: 'all',
+      hitChecked: false
+    };
+    soundEngine.playHit('punch');
+  }
+
+  _executeHeavyKick(char, opp) {
+    char.state = 'heavy_kick';
+    char.stateTime = 0;
+    char.stateDuration = 20;
+    char.currentAction = {
+      name: '重力猛踢',
+      startup: 8,
+      active: 5,
+      recovery: 7,
+      damage: 80,
+      guardType: 'all',
+      hitChecked: false
+    };
+    soundEngine.playHit('kick');
+  }
+
+  _executeAirAttack(char, opp, type) {
+    char.currentAction = {
+      name: type === 'kick' ? '躍空重踢' : '跳躍刺拳',
+      startup: 4,
+      active: 8,
+      recovery: 6,
+      damage: type === 'kick' ? 90 : 50,
+      guardType: 'stand_only', // 空中打擊視為中段，不可蹲防
+      hitChecked: false
+    };
+    soundEngine.playHit(type === 'kick' ? 'kick' : 'punch');
+  }
+
+  // ─── 10 大核心技能執行 ───
+  _executeSkill(char, opp, slotIdx) {
+    const skill = char.skills[slotIdx];
+    if (!skill) return;
+
+    // 設定冷卻
+    char.cooldowns[slotIdx] = skill.cd;
+    char.state = 'skill';
+    char.stateTime = 0;
+    char.stateDuration = skill.startup + skill.active + skill.recovery;
+    char.currentAction = {
+      ...skill,
+      hitChecked: false
+    };
+
+    // 招式前搖特效與音效
+    switch (skill.id) {
+      case 'SK-01': // 能量脈衝彈
+        soundEngine.playHit('laser');
+        break;
+
+      case 'SK-02': // 升龍衝天擊
+        char.invincibleTimer = skill.invincibleFrames || 4;
+        char.isGrounded = false;
+        char.vy = -15;
+        char.vx = char.facing * 4;
+        soundEngine.playHit('dp');
+        break;
+
+      case 'SK-03': // 音速滑踢
+        char.vx = char.facing * 16;
+        soundEngine.playHit('slide');
+        break;
+
+      case 'SK-04': // 躍空震地砸
+        char.isGrounded = false;
+        char.vy = -12;
+        char.vx = char.facing * 6;
+        soundEngine.playHit('dp');
+        break;
+
+      case 'SK-05': // 幻影反擊壁 (架招)
+        soundEngine.playHit('guard');
+        break;
+
+      case 'SK-06': // 虛空折躍斬 (瞬移穿透)
+        soundEngine.playHit('teleport');
+        break;
+
+      case 'SK-07': // 百裂連擊衝
+        char.vx = char.facing * 8;
+        soundEngine.playHit('punch');
+        break;
+
+      case 'SK-08': // 磁暴重摔投 (霸體)
+        char.invincibleTimer = 8;
+        soundEngine.playHit('punch');
+        break;
+
+      case 'SK-09': // 奈米震波罩
+        soundEngine.playHit('burst');
+        break;
+
+      case 'SK-10': // 超載終結砲
+        soundEngine.playHit('beam');
+        break;
+    }
+  }
+
+  _updateAttackAction(char, opp) {
+    const action = char.currentAction;
+    if (!action) return;
+
+    const t = char.stateTime;
+    const hitStart = action.startup;
+    const hitEnd = action.startup + action.active;
+
+    // 虛空折躍斬：瞬移判定
+    if (action.id === 'SK-06' && t === action.startup) {
+      char.x = opp.x + (opp.facing * -50); // 瞬移至對手正背後
+      char.facing = char.x < opp.x ? 1 : -1;
+    }
+
+    // 招式命中幀檢查
+    if (t >= hitStart && t <= hitEnd && !action.hitChecked) {
+      this._checkHitbox(char, opp, action);
+    }
+
+    // 動作結束，恢復正常
+    if (t >= char.stateDuration) {
+      char.state = 'idle';
+      char.stateTime = 0;
+      char.currentAction = null;
+    }
+  }
+
+  // ─── 判定盒 (Hitbox / Hurtbox) 檢定與攻防三段三擇 ───
+  _checkHitbox(char, opp, action) {
+    if (opp.invincibleTimer > 0) return;
+
+    // 飛行道具單獨生成實體
+    if (action.id === 'SK-01') {
+      action.hitChecked = true;
+      this.projectiles.push({
+        ownerId: char.id,
+        x: char.x + char.facing * 40,
+        y: char.y - 74,
+        vx: char.facing * 12,
+        damage: action.damage,
+        skin: char.skin,
+        life: 70
+      });
+      return;
+    }
+
+    // 奈米震波罩 (SK-09)：全方位圓形判定
+    if (action.id === 'SK-09') {
+      action.hitChecked = true;
+      this.shockwaves.push({
+        x: char.x,
+        y: char.y - 70,
+        radius: 10,
+        maxRadius: 180,
+        color: char.skin.themeColor,
+        duration: 14
+      });
+      const dist = Math.abs(char.x - opp.x);
+      if (dist < 190) {
+        this._applyHit(char, opp, action);
+      }
+      return;
+    }
+
+    // 超載終結砲 (SK-10)：全螢幕巨光束
+    if (action.id === 'SK-10') {
+      action.hitChecked = true;
+      this.shockwaves.push({
+        x: char.x + char.facing * 500,
+        y: char.y - 74,
+        width: 1000,
+        height: 50,
+        isBeam: true,
+        color: char.skin.themeColor,
+        duration: 16
+      });
+      // 判定對手是否在前方
+      const isInFront = (char.facing === 1 && opp.x > char.x) || (char.facing === -1 && opp.x < char.x);
+      if (isInFront && opp.y >= this.floorY - 120) {
+        this._applyHit(char, opp, action);
+      }
+      return;
+    }
+
+    // 常規近戰範圍判定
+    const hitReach = action.id === 'SK-03' ? 120 : (action.id === 'SK-08' ? 90 : 80);
+    const inRange = Math.abs(char.x - opp.x) <= hitReach && Math.abs(char.y - opp.y) <= 80;
+    const isFacingOpp = (char.facing === 1 && opp.x >= char.x - 20) || (char.facing === -1 && opp.x <= char.x + 20);
+
+    if (inRange && isFacingOpp) {
+      action.hitChecked = true;
+
+      // 幻影反擊壁 (SK-05) 檢驗：若對手正處於反擊姿態，且非投技，對手架招成功反打！
+      if (opp.currentAction && opp.currentAction.id === 'SK-05' && action.guardType !== 'unblockable') {
+        this._triggerParryCounter(opp, char);
+        return;
+      }
+
+      this._applyHit(char, opp, action);
+    }
+  }
+
+  // ─── 傷害計算與攻防三段三擇 ───
+  _applyHit(char, opp, action) {
+    let damage = action.damage || 50;
+    let isBlocked = false;
+
+    // 攻防三段核心規則：
+    // 1. 指令摔 (unblockable)：不可防禦！
+    if (action.guardType === 'unblockable') {
+      isBlocked = false;
+    }
+    // 2. 中段破防 (stand_only)：蹲防強制破除！
+    else if (action.guardType === 'stand_only') {
+      if (opp.isGuarding && opp.guardStance === 'high') {
+        isBlocked = true;
+      } else {
+        isBlocked = false; // 蹲防被破
+      }
+    }
+    // 3. 下段突進 (crouch_only)：站防強制破除！
+    else if (action.guardType === 'crouch_only') {
+      if (opp.isGuarding && opp.guardStance === 'low') {
+        isBlocked = true;
+      } else {
+        isBlocked = false; // 站防被破
+      }
+    }
+    // 4. 常規攻擊 (all)：站防/蹲防皆可防
+    else if (opp.isGuarding) {
+      isBlocked = true;
+    }
+
+    // 格擋減傷與削血機制
+    if (isBlocked) {
+      damage = Math.round(damage * (action.chipRatio || 0.15)); // 減免 85%，扣 15% 削血
+      opp.hp = Math.max(0, opp.hp - damage);
+      soundEngine.playHit('guard');
+      this._triggerHaptic(20);
+
+      // 訓練營幀數指示：防禦不利幀 (攻擊方 -4f ~ -6f)
+      char.frameAdvantage = -4;
+
+      this.floatingTexts.push({
+        text: `GUARD -${damage}`,
+        x: opp.x,
+        y: opp.y - 80,
+        color: '#38bdf8',
+        life: 30
+      });
+      return;
+    }
+
+    // 命中打擊！
+    opp.hp = Math.max(0, opp.hp - damage);
+
+    // 充能挨打方的量子爆發計量槽
+    opp.burstMeter = Math.min(opp.burstMax, opp.burstMeter + Math.round(damage * 0.9));
+
+    // 連段累加
+    char.comboCount++;
+    char.comboDamage += damage;
+    char.comboResetTimer = 45; // 45 幀內再次命中算連段
+    char.frameAdvantage = 4;   // 攻擊命中享有有利幀 (+4f)
+
+    // 音效與觸覺震動
+    if (action.knockdown || damage >= 150) {
+      soundEngine.playHit('slam');
+      this._triggerHaptic(80);
+    } else {
+      soundEngine.playHit(action.name.includes('踢') ? 'kick' : 'punch');
+      this._triggerHaptic(action.damage > 80 ? 50 : 15);
+    }
+
+    // 擊退與硬直 / 擊倒受身
+    if (action.knockdown) {
+      opp.state = 'knockdown';
+      opp.stateTime = 0;
+      opp.vx = char.facing * 12;
+      opp.vy = -6;
+      opp.isGrounded = false;
+    } else {
+      opp.state = 'hit_stun';
+      opp.stateTime = 0;
+      opp.stateDuration = 16; // 輕受擊硬直 16 幀
+      opp.vx = char.facing * 6;
+    }
+
+    this.floatingTexts.push({
+      text: `HIT! -${damage}`,
+      x: opp.x,
+      y: opp.y - 90,
+      color: '#ff007f',
+      life: 35
+    });
+  }
+
+  _triggerParryCounter(parryChar, attacker) {
+    parryChar.currentAction.hitChecked = true;
+    soundEngine.playHit('parry_trigger');
+    this._triggerHaptic(60);
+
+    // 架招成功，反彈擊暈對手並給予反擊傷害
+    attacker.state = 'hit_stun';
+    attacker.stateTime = 0;
+    attacker.stateDuration = 35; // 擊暈 35 幀
+    attacker.hp = Math.max(0, attacker.hp - 190);
+
+    this.floatingTexts.push({
+      text: 'PARRY COUNTER! -190',
+      x: parryChar.x,
+      y: parryChar.y - 110,
+      color: '#00ff66',
+      life: 45
+    });
+  }
+
+  _updateProjectiles() {
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const p = this.projectiles[i];
+      p.x += p.vx;
+      p.life--;
+
+      // 檢查是否命中對手
+      const target = p.ownerId === 1 ? this.p2 : this.p1;
+      const dist = Math.abs(p.x - target.x);
+      if (dist < 40 && target.y >= this.floorY - 90 && target.invincibleTimer <= 0) {
+        this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+          name: '能量脈衝彈',
+          damage: p.damage,
+          guardType: 'all',
+          chipRatio: 0.15
+        });
+        this.projectiles.splice(i, 1);
+        continue;
+      }
+
+      // 超出邊界或生命耗盡
+      if (p.life <= 0 || p.x < 20 || p.x > this.arenaWidth - 20) {
+        this.projectiles.splice(i, 1);
+      }
+    }
+  }
+
+  _updateShockwaves() {
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const s = this.shockwaves[i];
+      s.duration--;
+      if (s.radius !== undefined) {
+        s.radius += (s.maxRadius - s.radius) * 0.2;
+      }
+      if (s.duration <= 0) {
+        this.shockwaves.splice(i, 1);
+      }
+    }
+  }
+
+  _updateFloatingTexts() {
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const t = this.floatingTexts[i];
+      t.y -= 0.8;
+      t.life--;
+      if (t.life <= 0) {
+        this.floatingTexts.splice(i, 1);
+      }
+    }
+  }
+
+  _resolvePositions() {
+    // 防止兩人重疊穿透
+    const minDistance = 50;
+    const dx = this.p2.x - this.p1.x;
+    if (Math.abs(dx) < minDistance) {
+      const push = (minDistance - Math.abs(dx)) / 2;
+      if (dx >= 0) {
+        this.p1.x = Math.max(50, this.p1.x - push);
+        this.p2.x = Math.min(this.arenaWidth - 50, this.p2.x + push);
+      } else {
+        this.p1.x = Math.min(this.arenaWidth - 50, this.p1.x + push);
+        this.p2.x = Math.max(50, this.p2.x - push);
+      }
+    }
+  }
+
+  _handleTimeOver() {
+    this.isOver = true;
+    if (this.p1.hp > this.p2.hp) this.winner = 1;
+    else if (this.p2.hp > this.p1.hp) this.winner = 2;
+    else this.winner = 0;
+    soundEngine.playHit('ko');
+  }
+
+  _triggerHaptic(durationMs) {
+    if (this.enableHaptics && typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate(durationMs);
+      } catch (e) {
+        // Silent catch for browsers restricting vibration without user gesture
+      }
+    }
+  }
 }
 
-if (typeof window !== "undefined") {
-  window.Fighter = Fighter;
-  window.MatchEngine = MatchEngine;
-  window.matchEngine = new MatchEngine();
-}
+export const combatEngine = new CombatEngine();
