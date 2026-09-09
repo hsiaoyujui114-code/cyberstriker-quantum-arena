@@ -1899,9 +1899,17 @@
      */
     update(inputsP1, inputsP2) {
       if (this.isOver) return;
-      if (this.isTraining && this.trainingSettings.instantCd) {
-        this.p1.cooldowns = [0, 0, 0];
-        this.p2.cooldowns = [0, 0, 0];
+      if (this.isTraining) {
+        if (this.trainingSettings.instantCd) {
+          this.p1.cooldowns = [0, 0, 0];
+          this.p2.cooldowns = [0, 0, 0];
+        }
+        if (this.p2.hp <= 150 || this.p2.hp < this.p2.maxHp && this.p2.comboCount === 0 && this.p2.state === "idle") {
+          this.p2.hp = Math.min(this.p2.maxHp, this.p2.hp + 12);
+        }
+        if (this.p1.hp <= 100) {
+          this.p1.hp = this.p1.maxHp;
+        }
       }
       if (!this.isTraining) {
         this.timerAcc++;
@@ -3599,7 +3607,8 @@
       ctx.lineTo(p1.x + 7, p1HeadY - 9);
       ctx.closePath();
       ctx.fill();
-      const badgeW1 = 156;
+      const p1Hp = Math.max(0, Math.round(p1.hp));
+      const badgeW1 = 186;
       const badgeH1 = 28;
       const badgeX1 = p1.x - badgeW1 / 2;
       const badgeY1 = p1HeadY - 9 - badgeH1;
@@ -3618,7 +3627,7 @@
       ctx.fillStyle = "#00f3ff";
       ctx.shadowColor = "#00f3ff";
       ctx.shadowBlur = 10;
-      ctx.fillText("\u2605 \u9019\u662F\u73A9\u5BB6\u7684\u89D2\u8272", p1.x, badgeY1 + badgeH1 / 2);
+      ctx.fillText(`\u2605 \u9019\u662F\u73A9\u5BB6\u7684\u89D2\u8272 [${p1Hp} HP]`, p1.x, badgeY1 + badgeH1 / 2);
       ctx.restore();
       const p2HeadY = p2.y - 170 - bounce;
       ctx.save();
@@ -3633,7 +3642,9 @@
       ctx.lineTo(p2.x + 7, p2HeadY - 9);
       ctx.closePath();
       ctx.fill();
-      const badgeW2 = 136;
+      const p2Hp = Math.max(0, Math.round(p2.hp));
+      const p2Label = this.matchMode === "local_2p" ? "2P \u5C0D\u624B" : this.matchMode === "training" ? "\u8A13\u7DF4\u6728\u6A01" : "\u96FB\u8166\u5C0D\u624B (AI)";
+      const badgeW2 = 168;
       const badgeH2 = 28;
       const badgeX2 = p2.x - badgeW2 / 2;
       const badgeY2 = p2HeadY - 9 - badgeH2;
@@ -3648,21 +3659,30 @@
       }
       ctx.fill();
       ctx.stroke();
-      const p2Label = this.matchMode === "local_2p" ? "2P \u5C0D\u624B" : this.matchMode === "training" ? "\u8A13\u7DF4\u6728\u6A01" : "\u96FB\u8166\u5C0D\u624B (AI)";
       ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
       ctx.fillStyle = "#ff007f";
       ctx.shadowColor = "#ff007f";
       ctx.shadowBlur = 10;
-      ctx.fillText(p2Label, p2.x, badgeY2 + badgeH2 / 2);
+      ctx.fillText(`${p2Label} [${p2Hp} HP]`, p2.x, badgeY2 + badgeH2 / 2);
       ctx.restore();
     }
     _updateBattleHUD() {
       const hp1El = document.getElementById("p1HpFill");
       const hp2El = document.getElementById("p2HpFill");
-      if (hp1El) hp1El.style.width = `${Math.max(0, combatEngine.p1.hp / combatEngine.p1.maxHp * 100)}%`;
-      if (hp2El) hp2El.style.width = `${Math.max(0, combatEngine.p2.hp / combatEngine.p2.maxHp * 100)}%`;
+      const hp1Text = document.getElementById("p1HpText");
+      const hp2Text = document.getElementById("p2HpText");
+      const p1Hp = Math.max(0, Math.round(combatEngine.p1.hp));
+      const p1Max = combatEngine.p1.maxHp;
+      const p2Hp = Math.max(0, Math.round(combatEngine.p2.hp));
+      const p2Max = combatEngine.p2.maxHp;
+      if (hp1El) hp1El.style.width = `${p1Hp / p1Max * 100}%`;
+      if (hp2El) hp2El.style.width = `${p2Hp / p2Max * 100}%`;
+      if (hp1Text) hp1Text.textContent = `${p1Hp} / ${p1Max}`;
+      if (hp2Text) hp2Text.textContent = `${p2Hp} / ${p2Max}`;
       const timerEl = document.getElementById("roundTimerText");
-      if (timerEl) timerEl.textContent = combatEngine.roundTime;
+      if (timerEl) {
+        timerEl.textContent = combatEngine.isTraining ? "\u221E" : combatEngine.roundTime;
+      }
       const burst1El = document.getElementById("p1BurstFill");
       if (burst1El) burst1El.style.width = `${combatEngine.p1.burstMeter / combatEngine.p1.burstMax * 100}%`;
       combatEngine.p1.cooldowns.forEach((cd, idx) => {
@@ -3708,11 +3728,14 @@
     }
     exitBattleToLobby() {
       this.isFighting = false;
+      combatEngine.isOver = true;
       soundEngine.stopBgm();
       const battleScreen = document.getElementById("battleScreen");
       if (battleScreen) battleScreen.classList.remove("active");
       const endModal = document.getElementById("matchEndModal");
       if (endModal) endModal.classList.remove("active");
+      const trainingBar = document.getElementById("trainingToolbar");
+      if (trainingBar) trainingBar.style.display = "none";
       this.updateUserHUD();
     }
     // ─── 事件綁定 ───
@@ -3848,9 +3871,42 @@
       if (backLobbyBtn) {
         backLobbyBtn.onclick = () => this.exitBattleToLobby();
       }
+      const cornerExitBtn = document.getElementById("battleCornerExitBtn");
+      if (cornerExitBtn) {
+        cornerExitBtn.onclick = () => this.exitBattleToLobby();
+      }
+      const hudExitBtn = document.getElementById("battleHudExitBtn");
+      if (hudExitBtn) {
+        hudExitBtn.onclick = () => this.exitBattleToLobby();
+      }
       const exitTrainingBtn = document.getElementById("exitTrainingBtn");
       if (exitTrainingBtn) {
         exitTrainingBtn.onclick = () => this.exitBattleToLobby();
+      }
+      const resetTrainingBtn = document.getElementById("resetTrainingBtn");
+      if (resetTrainingBtn) {
+        resetTrainingBtn.onclick = () => {
+          combatEngine.p1.hp = combatEngine.p1.maxHp;
+          combatEngine.p2.hp = combatEngine.p2.maxHp;
+          combatEngine.p1.x = 200;
+          combatEngine.p2.x = 800;
+          combatEngine.p1.vx = 0;
+          combatEngine.p1.vy = 0;
+          combatEngine.p2.vx = 0;
+          combatEngine.p2.vy = 0;
+          combatEngine.p1.state = "idle";
+          combatEngine.p2.state = "idle";
+          combatEngine.p1.cooldowns = [0, 0, 0];
+          combatEngine.p2.cooldowns = [0, 0, 0];
+          combatEngine.floatingTexts.push({
+            text: "RESET COMPLETED!",
+            x: 500,
+            y: 260,
+            color: "#ffd700",
+            life: 40
+          });
+          soundEngine.playUI("click");
+        };
       }
       const workshopBtn = document.getElementById("workshopOpenBtn");
       if (workshopBtn) {
@@ -3891,6 +3947,13 @@
     _bindKeyboardEvents() {
       window.addEventListener("keydown", (e) => {
         this.keys[e.code] = true;
+        if (e.key === "Escape") {
+          if (this.isFighting) {
+            this.exitBattleToLobby();
+          } else {
+            document.querySelectorAll(".modal-overlay.active").forEach((m) => m.classList.remove("active"));
+          }
+        }
       });
       window.addEventListener("keyup", (e) => {
         this.keys[e.code] = false;

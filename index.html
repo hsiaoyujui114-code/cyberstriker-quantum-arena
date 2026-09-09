@@ -376,6 +376,11 @@
   <div id="battleScreen">
     <canvas id="gameCanvas"></canvas>
 
+    <!-- 常駐戰鬥返回/退出按鈕 (左上角) -->
+    <button class="battle-corner-exit-btn" id="battleCornerExitBtn" title="退出對戰 / 返回大廳 (按 ESC 鍵亦可退出)">
+      <i class="fa-solid fa-arrow-left"></i> 退出 (ESC)
+    </button>
+
     <!-- 頂部 HUD (血條、計時、爆發槽) -->
     <div class="battle-hud-top">
       <!-- 1P HUD (玩家) -->
@@ -388,14 +393,20 @@
         </div>
         <div class="hp-bar-outer">
           <div class="hp-bar-fill" id="p1HpFill"></div>
+          <div class="hp-text-val" id="p1HpText">1000 / 1000</div>
         </div>
         <div class="burst-meter-box" style="left: 0;">
           <div class="burst-meter-fill" id="p1BurstFill"></div>
         </div>
       </div>
 
-      <!-- 中央 99s 倒數計時 -->
-      <div class="round-timer-box" id="roundTimerText">99</div>
+      <!-- 中央 99s 倒數計時與中置退出按鈕 -->
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: auto;">
+        <div class="round-timer-box" id="roundTimerText">99</div>
+        <button class="battle-hud-exit-btn" id="battleHudExitBtn" title="退出對戰 / 返回大廳 (ESC)">
+          <i class="fa-solid fa-door-open"></i> 退出對戰
+        </button>
+      </div>
 
       <!-- 2P HUD (對手) -->
       <div class="fighter-hud-box p2">
@@ -407,15 +418,19 @@
         </div>
         <div class="hp-bar-outer">
           <div class="hp-bar-fill" id="p2HpFill" style="background: linear-gradient(270deg, #ff007f, #ffd700);"></div>
+          <div class="hp-text-val" id="p2HpText">1000 / 1000</div>
         </div>
       </div>
     </div>
 
     <!-- 訓練營控制工具列 (僅訓練模式顯示) -->
-    <div id="trainingToolbar" style="position: absolute; top: 90px; left: 50%; transform: translateX(-50%); display: none; gap: 8px; background: rgba(11,17,32,0.9); border: 1px solid var(--border-tech); padding: 8px 16px; border-radius: 8px; z-index: 60; align-items: center;">
-      <span id="frameAdvantageIndicator" style="font-weight: 800; font-size: 13px;">均勢 0 幀</span>
-      <button class="nav-tab-btn" id="exitTrainingBtn" style="padding: 4px 10px; font-size: 12px; border-color: #ff007f; color: #ff007f;">
-        退出訓練營
+    <div id="trainingToolbar" style="position: absolute; top: 112px; left: 50%; transform: translateX(-50%); display: none; gap: 10px; background: rgba(11, 17, 32, 0.95); border: 1.5px solid var(--primary-cyan); padding: 8px 18px; border-radius: 8px; z-index: 85; align-items: center; box-shadow: 0 0 20px rgba(0, 243, 255, 0.3); pointer-events: auto;">
+      <span id="frameAdvantageIndicator" style="font-weight: 800; font-size: 13px; color: #00ff66;">均勢 0 幀</span>
+      <button class="nav-tab-btn" id="resetTrainingBtn" style="padding: 6px 14px; font-size: 12px; border-color: #ffd700; color: #ffd700; pointer-events: auto;">
+        <i class="fa-solid fa-rotate"></i> 重置木樁
+      </button>
+      <button class="nav-tab-btn" id="exitTrainingBtn" style="padding: 6px 14px; font-size: 12px; border-color: #ff007f; color: #ff007f; font-weight: 800; pointer-events: auto; background: rgba(255, 0, 127, 0.15);">
+        <i class="fa-solid fa-door-open"></i> 退出練習賽 (ESC)
       </button>
     </div>
 

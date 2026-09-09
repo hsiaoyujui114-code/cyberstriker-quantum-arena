@@ -104,10 +104,18 @@ export class CombatEngine {
   update(inputsP1, inputsP2) {
     if (this.isOver) return;
 
-    // 1. 訓練營即時無冷卻維護
-    if (this.isTraining && this.trainingSettings.instantCd) {
-      this.p1.cooldowns = [0, 0, 0];
-      this.p2.cooldowns = [0, 0, 0];
+    // 1. 訓練營專屬維護 (即時無冷卻與木樁血量自動回滿)
+    if (this.isTraining) {
+      if (this.trainingSettings.instantCd) {
+        this.p1.cooldowns = [0, 0, 0];
+        this.p2.cooldowns = [0, 0, 0];
+      }
+      if (this.p2.hp <= 150 || (this.p2.hp < this.p2.maxHp && this.p2.comboCount === 0 && this.p2.state === 'idle')) {
+        this.p2.hp = Math.min(this.p2.maxHp, this.p2.hp + 12);
+      }
+      if (this.p1.hp <= 100) {
+        this.p1.hp = this.p1.maxHp;
+      }
     }
 
     // 2. 計時器更新 (訓練營無限時間)

@@ -812,8 +812,9 @@ class CyberStrikerApp {
     ctx.closePath();
     ctx.fill();
 
-    // 1P 科技毛玻璃標籤底框
-    const badgeW1 = 156;
+    // 1P 科技毛玻璃標籤底框 (含血量顯示)
+    const p1Hp = Math.max(0, Math.round(p1.hp));
+    const badgeW1 = 186;
     const badgeH1 = 28;
     const badgeX1 = p1.x - badgeW1 / 2;
     const badgeY1 = p1HeadY - 9 - badgeH1;
@@ -830,12 +831,12 @@ class CyberStrikerApp {
     ctx.fill();
     ctx.stroke();
 
-    // 1P 文字: ★ 這是玩家的角色
+    // 1P 文字: ★ 這是玩家的角色 [HP]
     ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
     ctx.fillStyle = '#00f3ff';
     ctx.shadowColor = '#00f3ff';
     ctx.shadowBlur = 10;
-    ctx.fillText('★ 這是玩家的角色', p1.x, badgeY1 + badgeH1 / 2);
+    ctx.fillText(`★ 這是玩家的角色 [${p1Hp} HP]`, p1.x, badgeY1 + badgeH1 / 2);
     ctx.restore();
 
     // ─── 對手 2P 頭頂標記 ───
@@ -855,8 +856,10 @@ class CyberStrikerApp {
     ctx.closePath();
     ctx.fill();
 
-    // 2P 底框
-    const badgeW2 = 136;
+    // 2P 底框 (含血量顯示)
+    const p2Hp = Math.max(0, Math.round(p2.hp));
+    const p2Label = this.matchMode === 'local_2p' ? '2P 對手' : (this.matchMode === 'training' ? '訓練木樁' : '電腦對手 (AI)');
+    const badgeW2 = 168;
     const badgeH2 = 28;
     const badgeX2 = p2.x - badgeW2 / 2;
     const badgeY2 = p2HeadY - 9 - badgeH2;
@@ -874,25 +877,36 @@ class CyberStrikerApp {
     ctx.stroke();
 
     // 2P 文字
-    const p2Label = this.matchMode === 'local_2p' ? '2P 對手' : (this.matchMode === 'training' ? '訓練木樁' : '電腦對手 (AI)');
     ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
     ctx.fillStyle = '#ff007f';
     ctx.shadowColor = '#ff007f';
     ctx.shadowBlur = 10;
-    ctx.fillText(p2Label, p2.x, badgeY2 + badgeH2 / 2);
+    ctx.fillText(`${p2Label} [${p2Hp} HP]`, p2.x, badgeY2 + badgeH2 / 2);
     ctx.restore();
   }
 
   _updateBattleHUD() {
-    // 1. 生命值
+    // 1. 生命值與數值百分比顯示
     const hp1El = document.getElementById('p1HpFill');
     const hp2El = document.getElementById('p2HpFill');
-    if (hp1El) hp1El.style.width = `${Math.max(0, (combatEngine.p1.hp / combatEngine.p1.maxHp) * 100)}%`;
-    if (hp2El) hp2El.style.width = `${Math.max(0, (combatEngine.p2.hp / combatEngine.p2.maxHp) * 100)}%`;
+    const hp1Text = document.getElementById('p1HpText');
+    const hp2Text = document.getElementById('p2HpText');
 
-    // 2. 倒數計時
+    const p1Hp = Math.max(0, Math.round(combatEngine.p1.hp));
+    const p1Max = combatEngine.p1.maxHp;
+    const p2Hp = Math.max(0, Math.round(combatEngine.p2.hp));
+    const p2Max = combatEngine.p2.maxHp;
+
+    if (hp1El) hp1El.style.width = `${(p1Hp / p1Max) * 100}%`;
+    if (hp2El) hp2El.style.width = `${(p2Hp / p2Max) * 100}%`;
+    if (hp1Text) hp1Text.textContent = `${p1Hp} / ${p1Max}`;
+    if (hp2Text) hp2Text.textContent = `${p2Hp} / ${p2Max}`;
+
+    // 2. 倒數計時 (訓練模式顯示 ∞)
     const timerEl = document.getElementById('roundTimerText');
-    if (timerEl) timerEl.textContent = combatEngine.roundTime;
+    if (timerEl) {
+      timerEl.textContent = combatEngine.isTraining ? '∞' : combatEngine.roundTime;
+    }
 
     // 3. 量子爆發計量槽
     const burst1El = document.getElementById('p1BurstFill');
@@ -953,11 +967,14 @@ class CyberStrikerApp {
 
   exitBattleToLobby() {
     this.isFighting = false;
+    combatEngine.isOver = true;
     soundEngine.stopBgm();
     const battleScreen = document.getElementById('battleScreen');
     if (battleScreen) battleScreen.classList.remove('active');
     const endModal = document.getElementById('matchEndModal');
     if (endModal) endModal.classList.remove('active');
+    const trainingBar = document.getElementById('trainingToolbar');
+    if (trainingBar) trainingBar.style.display = 'none';
     this.updateUserHUD();
   }
 
@@ -1118,15 +1135,55 @@ class CyberStrikerApp {
       };
     }
 
-    // 回到大廳按鈕
+    // 回到大廳按鈕與常駐戰鬥退出按鈕
     const backLobbyBtn = document.getElementById('matchBackLobbyBtn');
     if (backLobbyBtn) {
       backLobbyBtn.onclick = () => this.exitBattleToLobby();
     }
 
+    // 左上角常駐退出鈕
+    const cornerExitBtn = document.getElementById('battleCornerExitBtn');
+    if (cornerExitBtn) {
+      cornerExitBtn.onclick = () => this.exitBattleToLobby();
+    }
+
+    // HUD 中央計時器下方退出鈕
+    const hudExitBtn = document.getElementById('battleHudExitBtn');
+    if (hudExitBtn) {
+      hudExitBtn.onclick = () => this.exitBattleToLobby();
+    }
+
+    // 自由訓練營退出按鈕
     const exitTrainingBtn = document.getElementById('exitTrainingBtn');
     if (exitTrainingBtn) {
       exitTrainingBtn.onclick = () => this.exitBattleToLobby();
+    }
+
+    // 自由訓練營重置按鈕
+    const resetTrainingBtn = document.getElementById('resetTrainingBtn');
+    if (resetTrainingBtn) {
+      resetTrainingBtn.onclick = () => {
+        combatEngine.p1.hp = combatEngine.p1.maxHp;
+        combatEngine.p2.hp = combatEngine.p2.maxHp;
+        combatEngine.p1.x = 200;
+        combatEngine.p2.x = 800;
+        combatEngine.p1.vx = 0;
+        combatEngine.p1.vy = 0;
+        combatEngine.p2.vx = 0;
+        combatEngine.p2.vy = 0;
+        combatEngine.p1.state = 'idle';
+        combatEngine.p2.state = 'idle';
+        combatEngine.p1.cooldowns = [0, 0, 0];
+        combatEngine.p2.cooldowns = [0, 0, 0];
+        combatEngine.floatingTexts.push({
+          text: 'RESET COMPLETED!',
+          x: 500,
+          y: 260,
+          color: '#ffd700',
+          life: 40
+        });
+        soundEngine.playUI('click');
+      };
     }
 
     // 社群外觀工作坊彈窗
@@ -1176,6 +1233,13 @@ class CyberStrikerApp {
   _bindKeyboardEvents() {
     window.addEventListener('keydown', (e) => {
       this.keys[e.code] = true;
+      if (e.key === 'Escape') {
+        if (this.isFighting) {
+          this.exitBattleToLobby();
+        } else {
+          document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        }
+      }
     });
     window.addEventListener('keyup', (e) => {
       this.keys[e.code] = false;
