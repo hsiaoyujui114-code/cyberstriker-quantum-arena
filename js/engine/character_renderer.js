@@ -390,34 +390,208 @@ export class CharacterRenderer {
     ctx.restore();
   }
 
+  _hexToRgb(hex) {
+    if (!hex || typeof hex !== 'string' || !hex.startsWith('#')) return '0, 243, 255';
+    let c = hex.substring(1);
+    if (c.length === 3) {
+      c = c.split('').map(x => x + x).join('');
+    }
+    const num = parseInt(c, 16);
+    if (isNaN(num)) return '0, 243, 255';
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `${r}, ${g}, ${b}`;
+  }
+
+  /**
+   * 繪製高科技賽博頭部與機械仿生雙眼 (High-Tech Cyber Head with Dual Optic Eyes & HUD)
+   */
   drawHead(ctx, head, skin) {
     ctx.save();
     ctx.translate(head.x, head.y);
     ctx.rotate(head.angle);
 
-    // 頭盔外廓
-    ctx.fillStyle = skin.armorColor || '#0f172a';
-    ctx.strokeStyle = skin.accentColor || skin.themeColor;
-    ctx.lineWidth = 2;
+    const themeColor = skin.themeColor || '#00f3ff';
+    const visorColor = skin.visorColor || themeColor;
+    const accentColor = skin.accentColor || themeColor;
+    const armorColor = skin.armorColor || '#0f172a';
+    const t = Date.now() / 250;
+    const rgbVisor = this._hexToRgb(visorColor);
+    const rgbTheme = this._hexToRgb(themeColor);
+
+    // ── 1. 高科技機甲頭盔外輪廓 (Mecha Helmet Chassis) ──
+    ctx.fillStyle = armorColor;
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 1.8;
 
     ctx.beginPath();
-    ctx.arc(0, 0, 16, 0, Math.PI * 2);
+    // 後腦勺圓弧至頭頂空氣動力導流脊
+    ctx.moveTo(-12, 10);
+    ctx.quadraticCurveTo(-18, 0, -15, -10);
+    ctx.quadraticCurveTo(-10, -18, 2, -18);
+    // 前額眉甲稜角延伸至面部
+    ctx.lineTo(12, -12);
+    ctx.lineTo(15, -4);
+    // 下顎戰術面甲與導流線
+    ctx.lineTo(13, 6);
+    ctx.lineTo(6, 15);
+    ctx.lineTo(-6, 14);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // 面部發光科技目鏡 (Visor)
-    ctx.save();
-    ctx.shadowColor = skin.visorColor || skin.themeColor;
-    ctx.shadowBlur = 10;
-    ctx.fillStyle = skin.visorColor || skin.themeColor;
+    // ── 2. 額頭戰術眉甲與全息電路刻線 (Forehead Crest & Circuit Trace) ──
+    ctx.strokeStyle = themeColor;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.roundRect(0, -4, 14, 7, 3);
+    ctx.moveTo(-6, -17);
+    ctx.lineTo(6, -16);
+    ctx.lineTo(11, -11);
+    ctx.stroke();
+
+    // 額頭中央量子光學處理晶片 (Quantum Optical Node)
+    ctx.fillStyle = themeColor;
+    ctx.beginPath();
+    ctx.moveTo(3, -15);
+    ctx.lineTo(6, -13);
+    ctx.lineTo(3, -11);
+    ctx.lineTo(0, -13);
+    ctx.closePath();
     ctx.fill();
 
-    // 目鏡高光
+    // ── 3. 側邊戰術通訊耳部模組 (Comms Beacon & Neural Link) ──
+    ctx.fillStyle = '#090d16';
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(-8, 1, 6.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // 耳機狀態微脈衝指示燈 (Status LED)
+    const ledPulse = Math.sin(t * 1.5) * 0.3 + 0.7;
+    ctx.fillStyle = visorColor;
+    ctx.shadowColor = visorColor;
+    ctx.shadowBlur = 6 * ledPulse;
+    ctx.beginPath();
+    ctx.arc(-8, 1, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // 太陽穴接駁光纖導線 (Neural Fiber Line)
+    ctx.strokeStyle = `rgba(${rgbTheme}, 0.65)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-5, 0);
+    ctx.lineTo(0, -2);
+    ctx.lineTo(3, -3);
+    ctx.stroke();
+
+    // ── 4. 戰術深黑眼眶基座 (Tactical Eye Socket Faceplate) ──
+    ctx.fillStyle = 'rgba(2, 6, 18, 0.92)';
+    ctx.strokeStyle = `rgba(${rgbTheme}, 0.4)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    // 銳利幾何眼眶
+    ctx.moveTo(2, -7);
+    ctx.lineTo(15, -4);
+    ctx.lineTo(14, 3);
+    ctx.lineTo(3, 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // ── 5. 高科技賽博機械仿生雙眼 (Dual Cyber-Optic Eyes with HUD) ──
+
+    // (A) 後側立體眼角光學節點 (Far Eye Node) - 呈現 3/4 視角雙眼立體感
+    ctx.save();
+    ctx.shadowColor = visorColor;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = visorColor;
+    ctx.beginPath();
+    ctx.ellipse(3.2, -2, 2.2, 3.2, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+    // 後眼瞳孔極光核
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(2, -3, 8, 2);
+    ctx.beginPath();
+    ctx.arc(3.2, -2, 1, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
+
+    // (B) 前側主光學感測眼 (Main Cyber-Optic Eye) - 銳利科技戰神神韻
+    ctx.save();
+    ctx.shadowColor = visorColor;
+    ctx.shadowBlur = 14;
+
+    // 賽博眼白發光基底 (Glowing Cyber Sclera)
+    ctx.fillStyle = `rgba(${rgbVisor}, 0.4)`;
+    ctx.beginPath();
+    ctx.moveTo(6, -4.5);
+    ctx.lineTo(14, -3.2);
+    ctx.lineTo(13, 2);
+    ctx.lineTo(6.5, 1.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // 銳利高科技霓虹虹膜 (Angular Neon Iris)
+    ctx.fillStyle = visorColor;
+    ctx.beginPath();
+    ctx.moveTo(7, -3.8);
+    ctx.lineTo(13.2, -2.8);
+    ctx.lineTo(12, 1.2);
+    ctx.lineTo(7.5, 0.8);
+    ctx.closePath();
+    ctx.fill();
+
+    // 數位光學聚焦瞳孔 (Digital Reticle Core)
+    const pupilPulse = Math.sin(t * 2) * 0.3 + 1.2;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(10, -1, 1.8 * pupilPulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 瞳孔十字瞄準準星 (Crosshair Targeting Reticle)
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(10 - 3.5, -1);
+    ctx.lineTo(10 + 3.5, -1);
+    ctx.moveTo(10, -1 - 3.5);
+    ctx.lineTo(10, -1 + 3.5);
+    ctx.stroke();
+
+    // 全息瞄準射線 (Holographic HUD Aiming Laser)
+    const laserAlpha = Math.sin(t * 3) * 0.25 + 0.65;
+    ctx.strokeStyle = `rgba(${rgbVisor}, ${laserAlpha})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(14, -2);
+    ctx.lineTo(25, -2);
+    ctx.stroke();
+
+    // 激光微端戰術瞄準方括號 HUD [ ] (Targeting Bracket)
+    ctx.beginPath();
+    ctx.moveTo(22, -5);
+    ctx.lineTo(25, -2);
+    ctx.lineTo(22, 1);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // ── 6. 戰術下顎呼吸濾嘴與面甲刻線 (Jawline Filter & Cyberpanel Seams) ──
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(6, 6);
+    ctx.lineTo(12, 5);
+    ctx.moveTo(5, 9);
+    ctx.lineTo(10, 8);
+    ctx.stroke();
+
+    // 呼吸排氣微格柵
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(8, 9, 3, 2);
 
     ctx.restore();
   }
