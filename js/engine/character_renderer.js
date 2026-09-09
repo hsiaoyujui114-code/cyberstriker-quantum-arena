@@ -290,6 +290,55 @@ export class CharacterRenderer {
         return defaultPose;
       }
 
+      case 'victory': {
+        // 勝利慶祝姿態：胸部反應爐耀眼高亮，單拳高舉指天，另一手叉腰，身姿挺拔自信，散發金色勝利光輝
+        const vCycle = Math.sin(t * 0.08) * 2;
+        defaultPose.torso.y = -76 + vCycle;
+        defaultPose.head.y = -100 + vCycle;
+        defaultPose.torso.angle = -0.06; // 昂首挺胸微後仰
+        defaultPose.head.angle = -0.15; // 仰頭瞻望天空
+
+        // 前手高高舉起指向天空 (勝利冠軍拳)
+        defaultPose.frontArm.upperAngle = -2.3; // 垂直指天
+        defaultPose.frontArm.foreAngle = 0.3;  // 前臂握拳
+        
+        // 後手叉腰
+        defaultPose.backArm.upperAngle = 0.8;
+        defaultPose.backArm.foreAngle = 1.9;   // 肘部向外手掌抵腰
+
+        // 雙腿自信跨立穩如泰山
+        defaultPose.frontLeg.thighAngle = 0.28;
+        defaultPose.frontLeg.shinAngle = 0.08;
+        defaultPose.backLeg.thighAngle = -0.28;
+        defaultPose.backLeg.shinAngle = 0.08;
+
+        defaultPose.vfx = {
+          type: 'victory_aura',
+          color: char.skin && char.skin.themeColor ? char.skin.themeColor : '#ffd700',
+          x: 0,
+          y: -74,
+          time: t
+        };
+        return defaultPose;
+      }
+
+      case 'defeat': {
+        // 戰敗單膝跪地垂頭姿態
+        defaultPose.torso.y = -42;
+        defaultPose.torso.angle = 0.35; // 前傾垂頭
+        defaultPose.head.y = -62;
+        defaultPose.head.angle = 0.55;  // 垂頭喪氣
+        defaultPose.frontLeg.thighAngle = -1.4;
+        defaultPose.frontLeg.shinAngle = 2.2;
+        defaultPose.backLeg.thighAngle = -1.6;
+        defaultPose.backLeg.shinAngle = 1.9;
+        defaultPose.frontArm.upperAngle = 0.6;
+        defaultPose.frontArm.foreAngle = 0.5; // 單手垂地
+        defaultPose.backArm.upperAngle = 0.4;
+        defaultPose.backArm.foreAngle = 0.4;
+        return defaultPose;
+      }
+
       default:
         return defaultPose;
     }
@@ -575,6 +624,45 @@ export class CharacterRenderer {
         ctx.fillStyle = skin.themeColor;
         ctx.fillRect(Math.cos(ang) * 16, vfx.y + Math.sin(ang) * 16, 4, 4);
       }
+    } else if (vfx.type === 'victory_aura') {
+      // 冠軍勝利光環與指天星芒 (Victory Aura & Cosmic Star)
+      const time = vfx.time || 0;
+      const themeCol = skin.themeColor || '#ffd700';
+
+      ctx.save();
+      ctx.shadowColor = themeCol;
+      ctx.shadowBlur = 18;
+
+      // 1. 旋轉升騰勝利光環粒子
+      for (let i = 0; i < 6; i++) {
+        const angle = (time * 0.05 + i * (Math.PI / 3));
+        const rad = 24 + Math.sin(time * 0.1 + i) * 6;
+        const py = -30 - ((time * 2 + i * 18) % 85);
+        ctx.fillStyle = i % 2 === 0 ? '#ffd700' : themeCol;
+        ctx.beginPath();
+        ctx.arc(Math.cos(angle) * rad, py, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 2. 指天拳頭頂部耀眼冠軍星芒 (Victory Star)
+      const starX = 4;
+      const starY = -132;
+      const pulse = 6 + Math.sin(time * 0.2) * 3;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(starX - pulse * 2, starY);
+      ctx.lineTo(starX + pulse * 2, starY);
+      ctx.moveTo(starX, starY - pulse * 2);
+      ctx.lineTo(starX, starY + pulse * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.arc(starX, starY, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
     }
 
     ctx.restore();

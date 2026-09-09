@@ -49,9 +49,11 @@ export class CombatEngine {
       this.trainingSettings = { ...this.trainingSettings, ...trainingOpts };
     }
 
-    // 玩家 P1 始終位於左側 (200)，對手 P2 始終位於右側 (800)
-    this.p1 = this._createFighter(1, 200, p1Data);
-    this.p2 = this._createFighter(2, 800, p2Data);
+    // 玩家 P1 位於左側 25%，對手 P2 位於右側 75% (全場景比例自適應)
+    const p1StartX = Math.max(160, Math.round(this.arenaWidth * 0.25));
+    const p2StartX = Math.min(this.arenaWidth - 160, Math.round(this.arenaWidth * 0.75));
+    this.p1 = this._createFighter(1, p1StartX, p1Data);
+    this.p2 = this._createFighter(2, p2StartX, p2Data);
     this.p1.facing = 1;
     this.p2.facing = -1;
   }
@@ -102,7 +104,13 @@ export class CombatEngine {
    * 60 FPS 物理推進核心
    */
   update(inputsP1, inputsP2) {
-    if (this.isOver) return;
+    if (this.isOver) {
+      // 戰鬥結束時：持續推進勝者慶祝勝利姿態動畫與浮動文字
+      if (this.p1) this.p1.stateTime++;
+      if (this.p2) this.p2.stateTime++;
+      this._updateFloatingTexts();
+      return;
+    }
 
     // 1. 訓練營專屬維護 (即時無冷卻與木樁血量自動回滿)
     if (this.isTraining) {
@@ -143,21 +151,62 @@ export class CombatEngine {
     // 5. 兩人間距與面向校正
     this._resolvePositions();
 
-    // 6. 勝負判定
+    // 6. 勝負判定與觸發勝利姿態
     if (!this.isTraining && !this.isOver) {
       if (this.p1.hp <= 0 && this.p2.hp <= 0) {
         this.isOver = true;
         this.winner = 0; // 平局
         soundEngine.playHit('ko');
+        this._triggerMatchEndStates();
       } else if (this.p1.hp <= 0) {
         this.isOver = true;
         this.winner = 2;
         soundEngine.playHit('ko');
+        this._triggerMatchEndStates();
       } else if (this.p2.hp <= 0) {
         this.isOver = true;
         this.winner = 1;
         soundEngine.playHit('ko');
+        this._triggerMatchEndStates();
       }
+    }
+  }
+
+  _triggerMatchEndStates() {
+    if (this.winner === 1) {
+      this.p1.state = 'victory';
+      this.p1.stateTime = 0;
+      this.p1.vx = 0;
+      this.p1.vy = 0;
+      if (this.p2.state !== 'knockdown') {
+        this.p2.state = 'defeat';
+        this.p2.stateTime = 0;
+        this.p2.vx = 0;
+      }
+      this.floatingTexts.push({
+        text: 'VICTORY!',
+        x: this.p1.x,
+        y: this.p1.y - 145,
+        color: '#ffd700',
+        life: 180
+      });
+    } else if (this.winner === 2) {
+      this.p2.state = 'victory';
+      this.p2.stateTime = 0;
+      this.p2.vx = 0;
+      this.p2.vy = 0;
+      if (this.p1.state !== 'knockdown') {
+        this.p1.state = 'defeat';
+        this.p1.stateTime = 0;
+        this.p1.vx = 0;
+      }
+      this.floatingTexts.push({
+        text: 'VICTORY!',
+        x: this.p2.x,
+        y: this.p2.y - 145,
+        color: '#ff007f',
+        life: 180
+      });
     }
   }
 
@@ -872,9 +921,9 @@ export class CombatEngine {
       p1.x = 110;
     }
 
-    // 6. 邊界最終限制
-    p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
-    p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
+    // 6. 邊界最終限制 (完全開放至擂台邊緣)
+    p1.x = Math.max(45, Math.min(this.arenaWidth - 45, p1.x));
+    p2.x = Math.max(45, Math.min(this.arenaWidth - 45, p2.x));
   }
 
   _handleTimeOver() {
@@ -883,6 +932,7 @@ export class CombatEngine {
     else if (this.p2.hp > this.p1.hp) this.winner = 2;
     else this.winner = 0;
     soundEngine.playHit('ko');
+    this._triggerMatchEndStates();
   }
 
   _triggerHaptic(durationMs) {

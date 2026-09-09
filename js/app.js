@@ -83,6 +83,13 @@ class CyberStrikerApp {
     if (!this.canvas) return;
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
+    // 戰鬥擂台寬度與高度全面自適應螢幕，無任何被擋住的不可抵達區域
+    combatEngine.arenaWidth = window.innerWidth;
+    const newFloorY = Math.max(380, Math.round(window.innerHeight - 130));
+    combatEngine.floorY = newFloorY;
+
+    if (combatEngine.p1 && combatEngine.p1.isGrounded) combatEngine.p1.y = newFloorY;
+    if (combatEngine.p2 && combatEngine.p2.isGrounded) combatEngine.p2.y = newFloorY;
   }
 
   // ─── 開場前置載入動畫 ───
@@ -531,6 +538,10 @@ class CyberStrikerApp {
       loadout: ['SK-01', 'SK-02', 'SK-09']
     };
 
+    // 戰鬥前確保畫布尺寸與擂台邊界自適應當前螢幕
+    this._resizeCanvas();
+    this.matchEndTimer = 0;
+
     combatEngine.initMatch(p1Data, p2Data, this.matchMode === 'training');
 
     // 啟動重播記錄器
@@ -586,19 +597,25 @@ class CyberStrikerApp {
   _runBattleLoop() {
     if (!this.isFighting) return;
 
-    // 1. 採集 1P 輸入
-    const inputP1 = this._gatherInputsP1();
+    // 1. 採集 1P 輸入 (對局結束時停止採集，勝者保持勝利姿態)
+    const inputP1 = combatEngine.isOver
+      ? { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false }
+      : this._gatherInputsP1();
 
     // 2. 採集 2P / AI 輸入
     let inputP2 = null;
-    if (this.matchMode === 'local_2p') {
+    if (combatEngine.isOver) {
+      inputP2 = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+    } else if (this.matchMode === 'local_2p') {
       inputP2 = this._gatherInputsP2();
     } else {
       inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
     }
 
     // 3. 記錄到確定性重播系統
-    replaySystem.recordFrame(inputP1, inputP2);
+    if (!combatEngine.isOver) {
+      replaySystem.recordFrame(inputP1, inputP2);
+    }
 
     // 4. 戰鬥物理推進 1 幀
     combatEngine.update(inputP1, inputP2);
@@ -609,10 +626,18 @@ class CyberStrikerApp {
     // 6. 更新戰鬥 HUD
     this._updateBattleHUD();
 
-    // 7. 檢查對局結算
+    // 7. 檢查對局結算與勝利姿態慶祝展示
     if (combatEngine.isOver && !combatEngine.isTraining) {
-      this._handleMatchEnd();
-      return;
+      if (!this.matchEndTimer) {
+        this.matchEndTimer = 1;
+      } else {
+        this.matchEndTimer++;
+      }
+
+      // 勝利慶祝展示 110 幀 (~1.8 秒) 後彈出結算對話框，背景姿態動畫持續播放
+      if (this.matchEndTimer === 110) {
+        this._showMatchEndModal();
+      }
     }
 
     requestAnimationFrame(() => this._runBattleLoop());
@@ -750,6 +775,68 @@ class CyberStrikerApp {
       ctx.fillText(t.text, t.x - 40, t.y);
       ctx.restore();
     });
+
+    // 9. 戰鬥結束勝利橫幅與冠軍慶祝 (Victory Celebration Banner)
+    if (combatEngine.isOver && !combatEngine.isTraining) {
+      this._drawVictoryBanner(ctx, w, h);
+    }
+  }
+
+  _drawVictoryBanner(ctx, w, h) {
+    const isP1Win = combatEngine.winner === 1;
+    const isP2Win = combatEngine.winner === 2;
+    if (!isP1Win && !isP2Win) return;
+
+    const winner = isP1Win ? combatEngine.p1 : combatEngine.p2;
+    const winTitle = isP1Win ? 'VICTORY 戰鬥勝利' : 'K.O. 戰鬥結束';
+    const subTitle = isP1Win ? '★ 恭喜獲勝！漂亮擊倒對手奪下冠軍 ★' : `${winner.name} 贏得了本場對決！`;
+    const themeColor = isP1Win ? '#ffd700' : '#ff007f';
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // 背景慶祝暗幕
+    ctx.fillStyle = 'rgba(5, 8, 20, 0.45)';
+    ctx.fillRect(0, 0, w, h);
+
+    // 冠軍光芒主橫幅
+    const cy = Math.max(160, h * 0.28);
+    const bannerW = Math.min(w * 0.88, 560);
+    const bannerH = 76;
+    const bx = w / 2 - bannerW / 2;
+    const by = cy - bannerH / 2;
+
+    ctx.fillStyle = 'rgba(11, 17, 32, 0.9)';
+    ctx.strokeStyle = themeColor;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = themeColor;
+    ctx.shadowBlur = 24;
+
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(bx, by, bannerW, bannerH, 12);
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      ctx.fillRect(bx, by, bannerW, bannerH);
+      ctx.strokeRect(bx, by, bannerW, bannerH);
+    }
+
+    // 主標題文字
+    ctx.font = '900 32px "Orbitron", "Noto Sans TC", sans-serif';
+    ctx.fillStyle = themeColor;
+    ctx.shadowColor = themeColor;
+    ctx.shadowBlur = 16;
+    ctx.fillText(winTitle, w / 2, cy - 10);
+
+    // 副標題文字
+    ctx.font = '700 13px "Noto Sans TC", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 6;
+    ctx.fillText(subTitle, w / 2, cy + 20);
+
+    ctx.restore();
   }
 
   _drawFighterFloorRings(ctx, groundY) {
@@ -936,9 +1023,8 @@ class CyberStrikerApp {
     }
   }
 
-  // ─── 對決結束與結算 ───
-  _handleMatchEnd() {
-    this.isFighting = false;
+  // ─── 對決結束與結算面板彈出 ───
+  _showMatchEndModal() {
     soundEngine.stopBgm();
 
     const won = combatEngine.winner === 1;
@@ -948,7 +1034,7 @@ class CyberStrikerApp {
     // 停止重播錄製並生成短碼
     const shortcode = replaySystem.stopRecording();
 
-    // 彈出結算面板
+    // 彈出結算面板 (背後擂台持續播放冠軍慶祝姿態)
     const endModal = document.getElementById('matchEndModal');
     const resultTitle = document.getElementById('matchResultTitle');
     const creditsReward = document.getElementById('matchRewardAmount');
@@ -967,6 +1053,7 @@ class CyberStrikerApp {
 
   exitBattleToLobby() {
     this.isFighting = false;
+    this.matchEndTimer = 0;
     combatEngine.isOver = true;
     soundEngine.stopBgm();
     const battleScreen = document.getElementById('battleScreen');

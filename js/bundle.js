@@ -1535,6 +1535,44 @@
           defaultPose.vfx = { type: "slide_dust", x: 30, y: -5 };
           return defaultPose;
         }
+        case "victory": {
+          const vCycle = Math.sin(t * 0.08) * 2;
+          defaultPose.torso.y = -76 + vCycle;
+          defaultPose.head.y = -100 + vCycle;
+          defaultPose.torso.angle = -0.06;
+          defaultPose.head.angle = -0.15;
+          defaultPose.frontArm.upperAngle = -2.3;
+          defaultPose.frontArm.foreAngle = 0.3;
+          defaultPose.backArm.upperAngle = 0.8;
+          defaultPose.backArm.foreAngle = 1.9;
+          defaultPose.frontLeg.thighAngle = 0.28;
+          defaultPose.frontLeg.shinAngle = 0.08;
+          defaultPose.backLeg.thighAngle = -0.28;
+          defaultPose.backLeg.shinAngle = 0.08;
+          defaultPose.vfx = {
+            type: "victory_aura",
+            color: char.skin && char.skin.themeColor ? char.skin.themeColor : "#ffd700",
+            x: 0,
+            y: -74,
+            time: t
+          };
+          return defaultPose;
+        }
+        case "defeat": {
+          defaultPose.torso.y = -42;
+          defaultPose.torso.angle = 0.35;
+          defaultPose.head.y = -62;
+          defaultPose.head.angle = 0.55;
+          defaultPose.frontLeg.thighAngle = -1.4;
+          defaultPose.frontLeg.shinAngle = 2.2;
+          defaultPose.backLeg.thighAngle = -1.6;
+          defaultPose.backLeg.shinAngle = 1.9;
+          defaultPose.frontArm.upperAngle = 0.6;
+          defaultPose.frontArm.foreAngle = 0.5;
+          defaultPose.backArm.upperAngle = 0.4;
+          defaultPose.backArm.foreAngle = 0.4;
+          return defaultPose;
+        }
         default:
           return defaultPose;
       }
@@ -1762,6 +1800,37 @@
           ctx.fillStyle = skin.themeColor;
           ctx.fillRect(Math.cos(ang) * 16, vfx.y + Math.sin(ang) * 16, 4, 4);
         }
+      } else if (vfx.type === "victory_aura") {
+        const time = vfx.time || 0;
+        const themeCol = skin.themeColor || "#ffd700";
+        ctx.save();
+        ctx.shadowColor = themeCol;
+        ctx.shadowBlur = 18;
+        for (let i = 0; i < 6; i++) {
+          const angle = time * 0.05 + i * (Math.PI / 3);
+          const rad = 24 + Math.sin(time * 0.1 + i) * 6;
+          const py = -30 - (time * 2 + i * 18) % 85;
+          ctx.fillStyle = i % 2 === 0 ? "#ffd700" : themeCol;
+          ctx.beginPath();
+          ctx.arc(Math.cos(angle) * rad, py, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        const starX = 4;
+        const starY = -132;
+        const pulse = 6 + Math.sin(time * 0.2) * 3;
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(starX - pulse * 2, starY);
+        ctx.lineTo(starX + pulse * 2, starY);
+        ctx.moveTo(starX, starY - pulse * 2);
+        ctx.lineTo(starX, starY + pulse * 2);
+        ctx.stroke();
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath();
+        ctx.arc(starX, starY, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
       ctx.restore();
     }
@@ -1850,8 +1919,10 @@
       if (isTraining && trainingOpts) {
         this.trainingSettings = { ...this.trainingSettings, ...trainingOpts };
       }
-      this.p1 = this._createFighter(1, 200, p1Data);
-      this.p2 = this._createFighter(2, 800, p2Data);
+      const p1StartX = Math.max(160, Math.round(this.arenaWidth * 0.25));
+      const p2StartX = Math.min(this.arenaWidth - 160, Math.round(this.arenaWidth * 0.75));
+      this.p1 = this._createFighter(1, p1StartX, p1Data);
+      this.p2 = this._createFighter(2, p2StartX, p2Data);
       this.p1.facing = 1;
       this.p2.facing = -1;
     }
@@ -1898,7 +1969,12 @@
      * 60 FPS 物理推進核心
      */
     update(inputsP1, inputsP2) {
-      if (this.isOver) return;
+      if (this.isOver) {
+        if (this.p1) this.p1.stateTime++;
+        if (this.p2) this.p2.stateTime++;
+        this._updateFloatingTexts();
+        return;
+      }
       if (this.isTraining) {
         if (this.trainingSettings.instantCd) {
           this.p1.cooldowns = [0, 0, 0];
@@ -1933,15 +2009,55 @@
           this.isOver = true;
           this.winner = 0;
           soundEngine.playHit("ko");
+          this._triggerMatchEndStates();
         } else if (this.p1.hp <= 0) {
           this.isOver = true;
           this.winner = 2;
           soundEngine.playHit("ko");
+          this._triggerMatchEndStates();
         } else if (this.p2.hp <= 0) {
           this.isOver = true;
           this.winner = 1;
           soundEngine.playHit("ko");
+          this._triggerMatchEndStates();
         }
+      }
+    }
+    _triggerMatchEndStates() {
+      if (this.winner === 1) {
+        this.p1.state = "victory";
+        this.p1.stateTime = 0;
+        this.p1.vx = 0;
+        this.p1.vy = 0;
+        if (this.p2.state !== "knockdown") {
+          this.p2.state = "defeat";
+          this.p2.stateTime = 0;
+          this.p2.vx = 0;
+        }
+        this.floatingTexts.push({
+          text: "VICTORY!",
+          x: this.p1.x,
+          y: this.p1.y - 145,
+          color: "#ffd700",
+          life: 180
+        });
+      } else if (this.winner === 2) {
+        this.p2.state = "victory";
+        this.p2.stateTime = 0;
+        this.p2.vx = 0;
+        this.p2.vy = 0;
+        if (this.p1.state !== "knockdown") {
+          this.p1.state = "defeat";
+          this.p1.stateTime = 0;
+          this.p1.vx = 0;
+        }
+        this.floatingTexts.push({
+          text: "VICTORY!",
+          x: this.p2.x,
+          y: this.p2.y - 145,
+          color: "#ff007f",
+          life: 180
+        });
       }
     }
     _updateFighter(char, opp, input) {
@@ -2516,8 +2632,8 @@
       } else if (p2.x < 65 && p1.x < 110) {
         p1.x = 110;
       }
-      p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
-      p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
+      p1.x = Math.max(45, Math.min(this.arenaWidth - 45, p1.x));
+      p2.x = Math.max(45, Math.min(this.arenaWidth - 45, p2.x));
     }
     _handleTimeOver() {
       this.isOver = true;
@@ -2525,6 +2641,7 @@
       else if (this.p2.hp > this.p1.hp) this.winner = 2;
       else this.winner = 0;
       soundEngine.playHit("ko");
+      this._triggerMatchEndStates();
     }
     _triggerHaptic(durationMs) {
       if (this.enableHaptics && typeof navigator !== "undefined" && navigator.vibrate) {
@@ -3011,6 +3128,11 @@
       if (!this.canvas) return;
       this.canvas.width = window.innerWidth;
       this.canvas.height = window.innerHeight;
+      combatEngine.arenaWidth = window.innerWidth;
+      const newFloorY = Math.max(380, Math.round(window.innerHeight - 130));
+      combatEngine.floorY = newFloorY;
+      if (combatEngine.p1 && combatEngine.p1.isGrounded) combatEngine.p1.y = newFloorY;
+      if (combatEngine.p2 && combatEngine.p2.isGrounded) combatEngine.p2.y = newFloorY;
     }
     // ─── 開場前置載入動畫 ───
     _startLoadingFlow() {
@@ -3393,6 +3515,8 @@
         skin: p2Skin,
         loadout: ["SK-01", "SK-02", "SK-09"]
       };
+      this._resizeCanvas();
+      this.matchEndTimer = 0;
       combatEngine.initMatch(p1Data, p2Data, this.matchMode === "training");
       replaySystem.startRecording(12345, p1Data, p2Data, this.matchMode);
       this.isFighting = true;
@@ -3435,20 +3559,30 @@
     }
     _runBattleLoop() {
       if (!this.isFighting) return;
-      const inputP1 = this._gatherInputsP1();
+      const inputP1 = combatEngine.isOver ? { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false } : this._gatherInputsP1();
       let inputP2 = null;
-      if (this.matchMode === "local_2p") {
+      if (combatEngine.isOver) {
+        inputP2 = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+      } else if (this.matchMode === "local_2p") {
         inputP2 = this._gatherInputsP2();
       } else {
         inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
       }
-      replaySystem.recordFrame(inputP1, inputP2);
+      if (!combatEngine.isOver) {
+        replaySystem.recordFrame(inputP1, inputP2);
+      }
       combatEngine.update(inputP1, inputP2);
       this._renderBattleFrame();
       this._updateBattleHUD();
       if (combatEngine.isOver && !combatEngine.isTraining) {
-        this._handleMatchEnd();
-        return;
+        if (!this.matchEndTimer) {
+          this.matchEndTimer = 1;
+        } else {
+          this.matchEndTimer++;
+        }
+        if (this.matchEndTimer === 110) {
+          this._showMatchEndModal();
+        }
       }
       requestAnimationFrame(() => this._runBattleLoop());
     }
@@ -3556,6 +3690,52 @@
         ctx.fillText(t.text, t.x - 40, t.y);
         ctx.restore();
       });
+      if (combatEngine.isOver && !combatEngine.isTraining) {
+        this._drawVictoryBanner(ctx, w, h);
+      }
+    }
+    _drawVictoryBanner(ctx, w, h) {
+      const isP1Win = combatEngine.winner === 1;
+      const isP2Win = combatEngine.winner === 2;
+      if (!isP1Win && !isP2Win) return;
+      const winner = isP1Win ? combatEngine.p1 : combatEngine.p2;
+      const winTitle = isP1Win ? "VICTORY \u6230\u9B25\u52DD\u5229" : "K.O. \u6230\u9B25\u7D50\u675F";
+      const subTitle = isP1Win ? "\u2605 \u606D\u559C\u7372\u52DD\uFF01\u6F02\u4EAE\u64CA\u5012\u5C0D\u624B\u596A\u4E0B\u51A0\u8ECD \u2605" : `${winner.name} \u8D0F\u5F97\u4E86\u672C\u5834\u5C0D\u6C7A\uFF01`;
+      const themeColor = isP1Win ? "#ffd700" : "#ff007f";
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(5, 8, 20, 0.45)";
+      ctx.fillRect(0, 0, w, h);
+      const cy = Math.max(160, h * 0.28);
+      const bannerW = Math.min(w * 0.88, 560);
+      const bannerH = 76;
+      const bx = w / 2 - bannerW / 2;
+      const by = cy - bannerH / 2;
+      ctx.fillStyle = "rgba(11, 17, 32, 0.9)";
+      ctx.strokeStyle = themeColor;
+      ctx.lineWidth = 3;
+      ctx.shadowColor = themeColor;
+      ctx.shadowBlur = 24;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(bx, by, bannerW, bannerH, 12);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(bx, by, bannerW, bannerH);
+        ctx.strokeRect(bx, by, bannerW, bannerH);
+      }
+      ctx.font = '900 32px "Orbitron", "Noto Sans TC", sans-serif';
+      ctx.fillStyle = themeColor;
+      ctx.shadowColor = themeColor;
+      ctx.shadowBlur = 16;
+      ctx.fillText(winTitle, w / 2, cy - 10);
+      ctx.font = '700 13px "Noto Sans TC", sans-serif';
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowBlur = 6;
+      ctx.fillText(subTitle, w / 2, cy + 20);
+      ctx.restore();
     }
     _drawFighterFloorRings(ctx, groundY) {
       const p1 = combatEngine.p1;
@@ -3705,9 +3885,8 @@
         }
       }
     }
-    // ─── 對決結束與結算 ───
-    _handleMatchEnd() {
-      this.isFighting = false;
+    // ─── 對決結束與結算面板彈出 ───
+    _showMatchEndModal() {
       soundEngine.stopBgm();
       const won = combatEngine.winner === 1;
       const isAi = this.matchMode === "ai";
@@ -3728,6 +3907,7 @@
     }
     exitBattleToLobby() {
       this.isFighting = false;
+      this.matchEndTimer = 0;
       combatEngine.isOver = true;
       soundEngine.stopBgm();
       const battleScreen = document.getElementById("battleScreen");
