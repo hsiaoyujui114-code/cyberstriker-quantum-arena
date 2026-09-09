@@ -815,6 +815,32 @@ body {
   box-shadow: 0 0 16px rgba(255, 215, 0, 0.6);
 }
 
+.guard-hud-card {
+  width: 64px;
+  height: 64px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid #38bdf8;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.12s ease;
+}
+
+.guard-hud-card:hover, .guard-hud-card.active {
+  background: rgba(56, 189, 248, 0.35);
+  border-color: #00f3ff;
+  box-shadow: 0 0 22px rgba(0, 243, 255, 0.85);
+  transform: translateY(-2px);
+}
+
 /* ─── 行動裝置觸控層 (Mobile HUD) ─── */
 .mobile-controls-layer {
   position: absolute;
@@ -863,6 +889,12 @@ body {
   align-items: center;
   justify-content: center;
   box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.mobile-touch-btn.active, .mobile-touch-btn:active {
+  background: rgba(56, 189, 248, 0.45) !important;
+  box-shadow: 0 0 20px #00f3ff !important;
+  transform: scale(0.92);
 }
 
 /* ─── 響應式適配 ─── */

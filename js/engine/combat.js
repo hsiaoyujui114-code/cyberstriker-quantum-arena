@@ -355,11 +355,25 @@ export class CombatEngine {
       return;
     }
 
-    // 3. 移動、起跳與格擋
-    const moveX = input.x || 0;
-    const moveY = input.y || 0;
+    // 3. 專屬按鍵主動召喚量子防護罩 (Dedicated Guard Key: L / Shift / 觸控盾牌)
+    // 只有在按下防禦鍵時才會召喚防護罩；單純向後走位後退絕不觸發防護罩
+    if (input.guard && char.isGrounded) {
+      const wasGuarding = char.isGuarding;
+      char.isGuarding = true;
+      if (moveY > 0.4) {
+        char.state = 'low_guard';
+        char.guardStance = 'low';
+      } else {
+        char.state = 'high_guard';
+        char.guardStance = 'high';
+      }
+      if (!wasGuarding) {
+        soundEngine.playHit('shield_up');
+      }
+      return;
+    }
 
-    // 起跳 (更敏捷爆發)
+    // 4. 起跳 (更敏捷爆發)
     if (moveY < -0.4 && char.isGrounded) {
       char.isGrounded = false;
       char.vy = -18.5; // 俐落起跳
@@ -371,34 +385,25 @@ export class CombatEngine {
       return;
     }
 
-    // 下蹲
+    // 5. 下蹲 (無防禦按鍵時為純下蹲，不召喚防護罩)
     if (moveY > 0.4 && char.isGrounded) {
-      // 蹲姿時若同時向後拉，進入下段格擋 (Low Guard)
-      const isPullingBack = (char.facing === 1 && moveX < -0.2) || (char.facing === -1 && moveX > 0.2);
-      if (isPullingBack) {
-        char.state = 'low_guard';
-        char.guardStance = 'low';
-        char.isGuarding = true;
-      } else {
-        char.state = 'crouch';
-        char.isGuarding = false;
-      }
+      char.state = 'crouch';
+      char.isGuarding = false;
       return;
     }
 
-    // 橫向移動 (移動速度大幅加速，動作更靈敏)
+    // 6. 橫向移動 (移動速度大幅加速，動作更靈敏)
     if (Math.abs(moveX) > 0.2) {
       const isMovingFwd = (char.facing === 1 && moveX > 0) || (char.facing === -1 && moveX < 0);
       if (isMovingFwd) {
-        char.x += char.facing * 7.5; // 由 4.2 加速至 7.5
+        char.x += char.facing * 7.5; // 前進走位
         char.state = 'walk_fwd';
         char.isGuarding = false;
       } else {
-        // 後撤防守步：上身微仰收緊，自動高段格擋 (High Guard)
-        char.x -= char.facing * 5.6; // 由 3.2 加速至 5.6
+        // 後撤走位：純粹向後退走位，不召喚防護罩 (由專屬防護罩按鍵召喚)
+        char.x -= char.facing * 5.6; // 後退走位
         char.state = 'walk_back';
-        char.guardStance = 'high';
-        char.isGuarding = true;
+        char.isGuarding = false;
       }
       return;
     }
@@ -449,6 +454,7 @@ export class CombatEngine {
 
   // ─── 普攻打擊 (大幅縮短前搖與硬直，極致靈敏) ───
   _executeLightPunch(char, opp) {
+    char.isGuarding = false;
     char.state = 'light_punch';
     char.stateTime = 0;
     char.stateDuration = 9; // 9 幀極速出拳收招
@@ -465,6 +471,7 @@ export class CombatEngine {
   }
 
   _executeHeavyKick(char, opp) {
+    char.isGuarding = false;
     char.state = 'heavy_kick';
     char.stateTime = 0;
     char.stateDuration = 13; // 13 幀破空重踢
@@ -481,6 +488,7 @@ export class CombatEngine {
   }
 
   _executeAirAttack(char, opp, type) {
+    char.isGuarding = false;
     char.currentAction = {
       name: type === 'kick' ? '躍空重踢' : '跳躍刺拳',
       startup: 2, // 2 幀瞬發
@@ -498,6 +506,7 @@ export class CombatEngine {
     const skill = char.skills[slotIdx];
     if (!skill) return;
 
+    char.isGuarding = false;
     // 設定冷卻
     char.cooldowns[slotIdx] = skill.cd;
     char.state = 'skill';

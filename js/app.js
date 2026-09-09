@@ -33,7 +33,7 @@ class CyberStrikerApp {
 
     // 按鍵映射
     this.keys = {};
-    this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+    this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
 
     // 畫布
     this.canvas = null;
@@ -581,11 +581,25 @@ class CyberStrikerApp {
         </div>
       `;
     }).join('') + `
+      <div class="guard-hud-card" id="guardHudBtn" title="按住召喚量子防護罩 (快捷鍵: L / Shift)">
+        <i class="fa-solid fa-shield-halved" style="font-size: 20px; color: #38bdf8;"></i>
+        <span style="font-size: 10px; font-weight: 900; color: #38bdf8;">[L] 護盾</span>
+      </div>
       <div class="burst-hud-card" id="burstHudBtn">
         <span style="font-size: 11px;">BURST</span>
         <span style="font-size: 9px; opacity: 0.8;">[B]</span>
       </div>
     `;
+
+    // 綁定防護罩 HUD 按鈕點擊/按住事件
+    const guardBtn = document.getElementById('guardHudBtn');
+    if (guardBtn) {
+      guardBtn.onmousedown = (e) => { e.preventDefault(); this.keys['KeyL'] = true; };
+      guardBtn.onmouseup = (e) => { e.preventDefault(); this.keys['KeyL'] = false; };
+      guardBtn.onmouseleave = () => { this.keys['KeyL'] = false; };
+      guardBtn.ontouchstart = (e) => { e.preventDefault(); this.mobileInputs.guard = true; };
+      guardBtn.ontouchend = (e) => { e.preventDefault(); this.mobileInputs.guard = false; };
+    }
 
     // 訓練營控制工具列
     const trainingBar = document.getElementById('trainingToolbar');
@@ -599,13 +613,13 @@ class CyberStrikerApp {
 
     // 1. 採集 1P 輸入 (對局結束時停止採集，勝者保持勝利姿態)
     const inputP1 = combatEngine.isOver
-      ? { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false }
+      ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false }
       : this._gatherInputsP1();
 
     // 2. 採集 2P / AI 輸入
     let inputP2 = null;
     if (combatEngine.isOver) {
-      inputP2 = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+      inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
     } else if (this.matchMode === 'local_2p') {
       inputP2 = this._gatherInputsP2();
     } else {
@@ -663,6 +677,7 @@ class CyberStrikerApp {
       y,
       punch: !!(k['KeyJ'] || m.punch),
       kick: !!(k['KeyK'] || m.kick),
+      guard: !!(k['KeyL'] || k['KeyH'] || k['ShiftLeft'] || k['ShiftRight'] || m.guard),
       skill1: !!(k['KeyU'] || m.skill1),
       skill2: !!(k['KeyI'] || m.skill2),
       skill3: !!(k['KeyO'] || m.skill3),
@@ -671,7 +686,7 @@ class CyberStrikerApp {
   }
 
   _gatherInputsP2() {
-    // 本地雙人同機對決 2P 鍵位 (方向鍵 + 數字鍵盤 1/2/4/5/6)
+    // 本地雙人同機對決 2P 鍵位 (方向鍵 + 數字鍵盤 1/2/3/4/5/6)
     const k = this.keys;
     let x = 0;
     let y = 0;
@@ -685,6 +700,7 @@ class CyberStrikerApp {
       y,
       punch: !!(k['Numpad1'] || k['Digit1']),
       kick: !!(k['Numpad2'] || k['Digit2']),
+      guard: !!(k['Numpad3'] || k['Digit3'] || k['NumpadDecimal']),
       skill1: !!(k['Numpad4'] || k['Digit4']),
       skill2: !!(k['Numpad5'] || k['Digit5']),
       skill3: !!(k['Numpad6'] || k['Digit6']),
@@ -1019,6 +1035,24 @@ class CyberStrikerApp {
         frameEl.innerHTML = `<span style="color: #ff007f;">不利 ${adv} 幀</span>`;
       } else {
         frameEl.innerHTML = `<span style="color: #94a3b8;">均勢 0 幀</span>`;
+      }
+    }
+
+    // 6. 防護罩召喚按鈕即時高亮反饋
+    const guardHudBtn = document.getElementById('guardHudBtn');
+    if (guardHudBtn) {
+      if (combatEngine.p1.isGuarding) {
+        guardHudBtn.classList.add('active');
+      } else {
+        guardHudBtn.classList.remove('active');
+      }
+    }
+    const touchGuardBtn = document.getElementById('touchGuardBtn');
+    if (touchGuardBtn) {
+      if (combatEngine.p1.isGuarding) {
+        touchGuardBtn.classList.add('active');
+      } else {
+        touchGuardBtn.classList.remove('active');
       }
     }
   }
@@ -1373,6 +1407,7 @@ class CyberStrikerApp {
 
     bindTouchBtn('touchPunchBtn', 'punch');
     bindTouchBtn('touchKickBtn', 'kick');
+    bindTouchBtn('touchGuardBtn', 'guard');
     bindTouchBtn('touchSkill1Btn', 'skill1');
     bindTouchBtn('touchSkill2Btn', 'skill2');
     bindTouchBtn('touchSkill3Btn', 'skill3');

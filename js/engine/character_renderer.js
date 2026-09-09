@@ -130,16 +130,16 @@ export class CharacterRenderer {
       }
 
       case 'walk_back': {
-        // 後撤防守步，上身微仰收緊，自動高防
+        // 後撤敏捷走位步 (純走位移動，自然戰備擺臂，無防護罩)
         const cycle = Math.sin(t * 0.16);
-        defaultPose.torso.angle = -0.08; // 軀幹微後仰
-        defaultPose.frontArm.upperAngle = 0.9;
-        defaultPose.frontArm.foreAngle = 1.6; // 前手緊收防禦
-        defaultPose.backArm.upperAngle = 0.7;
-        defaultPose.backArm.foreAngle = 1.4;
+        defaultPose.torso.angle = -0.04;
+        defaultPose.frontArm.upperAngle = -cycle * 0.4 + 0.4;
+        defaultPose.frontArm.foreAngle = 0.9;
+        defaultPose.backArm.upperAngle = cycle * 0.4 + 0.3;
+        defaultPose.backArm.foreAngle = 0.9;
 
-        defaultPose.frontLeg.thighAngle = -cycle * 0.4;
-        defaultPose.backLeg.thighAngle = cycle * 0.4;
+        defaultPose.frontLeg.thighAngle = -cycle * 0.45;
+        defaultPose.backLeg.thighAngle = cycle * 0.45;
         return defaultPose;
       }
 

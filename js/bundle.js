@@ -1025,6 +1025,20 @@
           osc2.stop(t + 0.14);
           break;
         }
+        case "shield_up": {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(380, t);
+          osc.frequency.exponentialRampToValueAtTime(760, t + 0.11);
+          gain.gain.setValueAtTime(0.45, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.11);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.11);
+          break;
+        }
         case "burst": {
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
@@ -1399,13 +1413,13 @@
         }
         case "walk_back": {
           const cycle = Math.sin(t * 0.16);
-          defaultPose.torso.angle = -0.08;
-          defaultPose.frontArm.upperAngle = 0.9;
-          defaultPose.frontArm.foreAngle = 1.6;
-          defaultPose.backArm.upperAngle = 0.7;
-          defaultPose.backArm.foreAngle = 1.4;
-          defaultPose.frontLeg.thighAngle = -cycle * 0.4;
-          defaultPose.backLeg.thighAngle = cycle * 0.4;
+          defaultPose.torso.angle = -0.04;
+          defaultPose.frontArm.upperAngle = -cycle * 0.4 + 0.4;
+          defaultPose.frontArm.foreAngle = 0.9;
+          defaultPose.backArm.upperAngle = cycle * 0.4 + 0.3;
+          defaultPose.backArm.foreAngle = 0.9;
+          defaultPose.frontLeg.thighAngle = -cycle * 0.45;
+          defaultPose.backLeg.thighAngle = cycle * 0.45;
           return defaultPose;
         }
         case "jump":
@@ -2313,8 +2327,21 @@
         this._executeHeavyKick(char, opp);
         return;
       }
-      const moveX = input.x || 0;
-      const moveY = input.y || 0;
+      if (input.guard && char.isGrounded) {
+        const wasGuarding = char.isGuarding;
+        char.isGuarding = true;
+        if (moveY > 0.4) {
+          char.state = "low_guard";
+          char.guardStance = "low";
+        } else {
+          char.state = "high_guard";
+          char.guardStance = "high";
+        }
+        if (!wasGuarding) {
+          soundEngine.playHit("shield_up");
+        }
+        return;
+      }
       if (moveY < -0.4 && char.isGrounded) {
         char.isGrounded = false;
         char.vy = -18.5;
@@ -2326,15 +2353,8 @@
         return;
       }
       if (moveY > 0.4 && char.isGrounded) {
-        const isPullingBack = char.facing === 1 && moveX < -0.2 || char.facing === -1 && moveX > 0.2;
-        if (isPullingBack) {
-          char.state = "low_guard";
-          char.guardStance = "low";
-          char.isGuarding = true;
-        } else {
-          char.state = "crouch";
-          char.isGuarding = false;
-        }
+        char.state = "crouch";
+        char.isGuarding = false;
         return;
       }
       if (Math.abs(moveX) > 0.2) {
@@ -2346,8 +2366,7 @@
         } else {
           char.x -= char.facing * 5.6;
           char.state = "walk_back";
-          char.guardStance = "high";
-          char.isGuarding = true;
+          char.isGuarding = false;
         }
         return;
       }
@@ -2389,6 +2408,7 @@
     }
     // ─── 普攻打擊 (大幅縮短前搖與硬直，極致靈敏) ───
     _executeLightPunch(char, opp) {
+      char.isGuarding = false;
       char.state = "light_punch";
       char.stateTime = 0;
       char.stateDuration = 9;
@@ -2405,6 +2425,7 @@
       soundEngine.playHit("punch");
     }
     _executeHeavyKick(char, opp) {
+      char.isGuarding = false;
       char.state = "heavy_kick";
       char.stateTime = 0;
       char.stateDuration = 13;
@@ -2421,6 +2442,7 @@
       soundEngine.playHit("kick");
     }
     _executeAirAttack(char, opp, type) {
+      char.isGuarding = false;
       char.currentAction = {
         name: type === "kick" ? "\u8E8D\u7A7A\u91CD\u8E22" : "\u8DF3\u8E8D\u523A\u62F3",
         startup: 2,
@@ -2438,6 +2460,7 @@
     _executeSkill(char, opp, slotIdx) {
       const skill = char.skills[slotIdx];
       if (!skill) return;
+      char.isGuarding = false;
       char.cooldowns[slotIdx] = skill.cd;
       char.state = "skill";
       char.stateTime = 0;
@@ -2796,7 +2819,7 @@
       this.difficulty = difficulty;
       this.reactionDelay = 20;
       this.currentDelay = 0;
-      this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+      this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
     }
     setDifficulty(diff) {
       this.difficulty = diff;
@@ -2822,7 +2845,7 @@
       return this.bufferedDecision;
     }
     _makeDecision(ai, player, engine) {
-      const input = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       const dist = Math.abs(ai.x - player.x);
       const facingPlayer = (ai.x < player.x ? 1 : -1) === ai.facing;
       const playerInAir = !player.isGrounded;
@@ -2848,11 +2871,11 @@
             return input;
           }
           if (player.currentAction && player.currentAction.guardType === "crouch_only") {
-            input.x = ai.facing * -1;
+            input.guard = true;
             input.y = 1;
             return input;
           } else {
-            input.x = ai.facing * -1;
+            input.guard = true;
             return input;
           }
         }
@@ -2888,7 +2911,7 @@
           return input;
         }
         if (playerAttacking && dist < 100) {
-          input.x = ai.facing * -1;
+          input.guard = true;
           return input;
         }
         if (dist > 180) {
@@ -2913,7 +2936,8 @@
           }
         } else {
           if (playerAttacking && Math.random() < 0.5) {
-            input.x = ai.facing * -1;
+            input.guard = true;
+            return input;
           } else {
             const r = Math.random();
             if (r < 0.4) input.punch = true;
@@ -2935,7 +2959,7 @@
      * 自由格鬥訓練營假人行為控制
      */
     _decideTrainingDummy(dummy, player, settings) {
-      const input = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       if (settings.dummyReversal && dummy.state === "wakeup" && dummy.stateTime >= 13) {
         input.skill2 = true;
         return input;
@@ -2946,13 +2970,13 @@
         input.y = 1;
       }
       if (settings.dummyGuard === "stand_guard") {
-        input.x = dummy.facing * -1;
+        input.guard = true;
       } else if (settings.dummyGuard === "crouch_guard") {
-        input.x = dummy.facing * -1;
+        input.guard = true;
         input.y = 1;
       } else if (settings.dummyGuard === "after_first_hit") {
         if (player.comboCount >= 1) {
-          input.x = dummy.facing * -1;
+          input.guard = true;
         }
       }
       return input;
@@ -2998,7 +3022,7 @@
     }
     // ─── 按鍵輸入位元編碼 ───
     // bit 0: Left, bit 1: Right, bit 2: Up, bit 3: Down
-    // bit 4: Punch, bit 5: Kick, bit 6: Skill1, bit 7: Skill2, bit 8: Skill3, bit 9: Burst
+    // bit 4: Punch, bit 5: Kick, bit 6: Skill1, bit 7: Skill2, bit 8: Skill3, bit 9: Burst, bit 10: Guard
     _encodeInput(inp) {
       if (!inp) return 0;
       let b = 0;
@@ -3012,6 +3036,7 @@
       if (inp.skill2) b |= 128;
       if (inp.skill3) b |= 256;
       if (inp.burst) b |= 512;
+      if (inp.guard) b |= 1024;
       return b;
     }
     _decodeInput(bits) {
@@ -3023,7 +3048,8 @@
         skill1: !!(bits & 64),
         skill2: !!(bits & 128),
         skill3: !!(bits & 256),
-        burst: !!(bits & 512)
+        burst: !!(bits & 512),
+        guard: !!(bits & 1024)
       };
     }
     // ─── 產生 CY-REP-XXXXXX 戰鬥重播短碼 ───
@@ -3230,7 +3256,7 @@
       this.loadoutTimer = 15;
       this.loadoutInterval = null;
       this.keys = {};
-      this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+      this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       this.canvas = null;
       this.ctx = null;
       this.pedestalCanvas = null;
@@ -3683,11 +3709,37 @@
         </div>
       `;
       }).join("") + `
+      <div class="guard-hud-card" id="guardHudBtn" title="\u6309\u4F4F\u53EC\u559A\u91CF\u5B50\u9632\u8B77\u7F69 (\u5FEB\u6377\u9375: L / Shift)">
+        <i class="fa-solid fa-shield-halved" style="font-size: 20px; color: #38bdf8;"></i>
+        <span style="font-size: 10px; font-weight: 900; color: #38bdf8;">[L] \u8B77\u76FE</span>
+      </div>
       <div class="burst-hud-card" id="burstHudBtn">
         <span style="font-size: 11px;">BURST</span>
         <span style="font-size: 9px; opacity: 0.8;">[B]</span>
       </div>
     `;
+      const guardBtn = document.getElementById("guardHudBtn");
+      if (guardBtn) {
+        guardBtn.onmousedown = (e) => {
+          e.preventDefault();
+          this.keys["KeyL"] = true;
+        };
+        guardBtn.onmouseup = (e) => {
+          e.preventDefault();
+          this.keys["KeyL"] = false;
+        };
+        guardBtn.onmouseleave = () => {
+          this.keys["KeyL"] = false;
+        };
+        guardBtn.ontouchstart = (e) => {
+          e.preventDefault();
+          this.mobileInputs.guard = true;
+        };
+        guardBtn.ontouchend = (e) => {
+          e.preventDefault();
+          this.mobileInputs.guard = false;
+        };
+      }
       const trainingBar = document.getElementById("trainingToolbar");
       if (trainingBar) {
         trainingBar.style.display = this.matchMode === "training" ? "flex" : "none";
@@ -3695,10 +3747,10 @@
     }
     _runBattleLoop() {
       if (!this.isFighting) return;
-      const inputP1 = combatEngine.isOver ? { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false } : this._gatherInputsP1();
+      const inputP1 = combatEngine.isOver ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false } : this._gatherInputsP1();
       let inputP2 = null;
       if (combatEngine.isOver) {
-        inputP2 = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+        inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       } else if (this.matchMode === "local_2p") {
         inputP2 = this._gatherInputsP2();
       } else {
@@ -3738,6 +3790,7 @@
         y,
         punch: !!(k["KeyJ"] || m.punch),
         kick: !!(k["KeyK"] || m.kick),
+        guard: !!(k["KeyL"] || k["KeyH"] || k["ShiftLeft"] || k["ShiftRight"] || m.guard),
         skill1: !!(k["KeyU"] || m.skill1),
         skill2: !!(k["KeyI"] || m.skill2),
         skill3: !!(k["KeyO"] || m.skill3),
@@ -3757,6 +3810,7 @@
         y,
         punch: !!(k["Numpad1"] || k["Digit1"]),
         kick: !!(k["Numpad2"] || k["Digit2"]),
+        guard: !!(k["Numpad3"] || k["Digit3"] || k["NumpadDecimal"]),
         skill1: !!(k["Numpad4"] || k["Digit4"]),
         skill2: !!(k["Numpad5"] || k["Digit5"]),
         skill3: !!(k["Numpad6"] || k["Digit6"]),
@@ -4018,6 +4072,22 @@
           frameEl.innerHTML = `<span style="color: #ff007f;">\u4E0D\u5229 ${adv} \u5E40</span>`;
         } else {
           frameEl.innerHTML = `<span style="color: #94a3b8;">\u5747\u52E2 0 \u5E40</span>`;
+        }
+      }
+      const guardHudBtn = document.getElementById("guardHudBtn");
+      if (guardHudBtn) {
+        if (combatEngine.p1.isGuarding) {
+          guardHudBtn.classList.add("active");
+        } else {
+          guardHudBtn.classList.remove("active");
+        }
+      }
+      const touchGuardBtn = document.getElementById("touchGuardBtn");
+      if (touchGuardBtn) {
+        if (combatEngine.p1.isGuarding) {
+          touchGuardBtn.classList.add("active");
+        } else {
+          touchGuardBtn.classList.remove("active");
         }
       }
     }
@@ -4311,6 +4381,7 @@
       };
       bindTouchBtn("touchPunchBtn", "punch");
       bindTouchBtn("touchKickBtn", "kick");
+      bindTouchBtn("touchGuardBtn", "guard");
       bindTouchBtn("touchSkill1Btn", "skill1");
       bindTouchBtn("touchSkill2Btn", "skill2");
       bindTouchBtn("touchSkill3Btn", "skill3");

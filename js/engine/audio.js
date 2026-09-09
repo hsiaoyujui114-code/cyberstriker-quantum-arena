@@ -146,6 +146,22 @@ class SoundEngine {
         break;
       }
 
+      case 'shield_up': {
+        // 召喚量子力場防護罩展開音效 (柔和科技共振開罩)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(380, t);
+        osc.frequency.exponentialRampToValueAtTime(760, t + 0.11);
+        gain.gain.setValueAtTime(0.45, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.11);
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.11);
+        break;
+      }
+
       case 'burst': {
         // 量子逆轉爆發衝擊力場 (震波轟鳴)
         const osc = this.ctx.createOscillator();

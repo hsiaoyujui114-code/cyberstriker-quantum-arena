@@ -10,7 +10,7 @@ export class AiController {
     this.difficulty = difficulty; // 'easy', 'normal', 'hard', 'nightmare'
     this.reactionDelay = 20; // 延遲幀數計數
     this.currentDelay = 0;
-    this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+    this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
   }
 
   setDifficulty(diff) {
@@ -44,7 +44,7 @@ export class AiController {
   }
 
   _makeDecision(ai, player, engine) {
-    const input = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+    const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
     const dist = Math.abs(ai.x - player.x);
     const facingPlayer = (ai.x < player.x ? 1 : -1) === ai.facing;
     const playerInAir = !player.isGrounded;
@@ -76,13 +76,13 @@ export class AiController {
           input.skill1 = true; // 幻影反擊壁
           return input;
         }
-        // 智能辨識玩家招式段位防守
+        // 智能辨識玩家招式段位，召喚對應段位防護罩防守
         if (player.currentAction && player.currentAction.guardType === 'crouch_only') {
-          input.x = ai.facing * -1;
-          input.y = 1; // 下蹲防守
+          input.guard = true;
+          input.y = 1; // 召喚防護罩下蹲防守
           return input;
         } else {
-          input.x = ai.facing * -1; // 站立後撤防守
+          input.guard = true; // 召喚防護罩站立高段防守
           return input;
         }
       }
@@ -126,9 +126,9 @@ export class AiController {
         return input;
       }
 
-      // 玩家出招且處於後搖硬直：確反處罰
+      // 玩家出招且處於後搖硬直：按鍵召喚防護罩防禦
       if (playerAttacking && dist < 100) {
-        input.x = ai.facing * -1; // 防禦
+        input.guard = true;
         return input;
       }
 
@@ -142,7 +142,7 @@ export class AiController {
       } else {
         if (Math.random() < 0.5) input.punch = true;
         else if (Math.random() < 0.8) input.kick = true;
-        else input.x = ai.facing * -1; // 後拉調整立回
+        else input.x = ai.facing * -1; // 後拉調整立回 (純後退走位，無防護罩)
       }
       return input;
     }
@@ -157,7 +157,8 @@ export class AiController {
         }
       } else {
         if (playerAttacking && Math.random() < 0.5) {
-          input.x = ai.facing * -1; // 50% 機率防守
+          input.guard = true; // 50% 機率按鍵召喚防護罩防守
+          return input;
         } else {
           const r = Math.random();
           if (r < 0.4) input.punch = true;
@@ -182,7 +183,7 @@ export class AiController {
    * 自由格鬥訓練營假人行為控制
    */
   _decideTrainingDummy(dummy, player, settings) {
-    const input = { x: 0, y: 0, punch: false, kick: false, skill1: false, skill2: false, skill3: false, burst: false };
+    const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
 
     // 1. 起身第一幀升龍反凹 (Reversal DP)
     if (settings.dummyReversal && dummy.state === 'wakeup' && dummy.stateTime >= 13) {
@@ -197,16 +198,16 @@ export class AiController {
       input.y = 1;  // 持續下蹲
     }
 
-    // 3. 防守狀態設定 (Guard)
+    // 3. 防守狀態設定 (Guard - 依按鍵召喚防護罩)
     if (settings.dummyGuard === 'stand_guard') {
-      input.x = dummy.facing * -1; // 站立後撤防禦
+      input.guard = true; // 召喚防護罩站立防禦
     } else if (settings.dummyGuard === 'crouch_guard') {
-      input.x = dummy.facing * -1;
-      input.y = 1; // 下蹲防禦
+      input.guard = true;
+      input.y = 1; // 召喚防護罩下蹲防禦
     } else if (settings.dummyGuard === 'after_first_hit') {
-      // 受擊一次後立即防禦 (檢驗連段真實性)
+      // 受擊一次後立即召喚防護罩防禦 (檢驗連段真實性)
       if (player.comboCount >= 1) {
-        input.x = dummy.facing * -1;
+        input.guard = true;
       }
     }
 
