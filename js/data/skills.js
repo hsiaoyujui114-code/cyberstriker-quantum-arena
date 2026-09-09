@@ -10,11 +10,11 @@ export const SKILLS = [
     name: '能量脈衝彈',
     type: 'projectile',
     typeName: '飛行道具',
-    cd: 3.0,
+    cd: 1.5, // 冷卻減半：超快壓制
     damage: 120,
-    startup: 12,
+    startup: 6, // 前搖減半：極致靈敏
     active: 60, // projectile lifespan
-    recovery: 18,
+    recovery: 8,
     guardType: 'all', // 站防/蹲防皆可防
     chipRatio: 0.15,
     description: '掌心聚能射出直線高速波導彈，具備優異的遠程壓制與逼跳能力。',
@@ -27,15 +27,15 @@ export const SKILLS = [
     name: '升龍衝天擊',
     type: 'anti_air',
     typeName: '對空突進',
-    cd: 4.0,
+    cd: 2.0, // 冷卻減半
     damage: 160,
-    startup: 4, // 前 4 幀全身無敵
+    startup: 3, // 前 3 幀全身無敵，秒出升龍
     active: 12,
-    recovery: 24,
+    recovery: 12,
     invincibleFrames: 4,
     guardType: 'all',
     chipRatio: 0.15,
-    description: '前 4 幀全身無敵，斜上方高高躍起旋轉昇龍打擊，極致防空與解圍神技。',
+    description: '前 3 幀全身無敵，斜上方高高躍起旋轉昇龍打擊，極致防空與解圍神技。',
     counterGuide: '前搖無敵難以搶攻；若對方落空後搖極長，著地時可進行滿額確反處罰。',
     icon: 'fa-solid fa-dragon',
     color: '#38bdf8'
@@ -45,11 +45,11 @@ export const SKILLS = [
     name: '音速滑踢',
     type: 'low',
     typeName: '下段突進',
-    cd: 3.5,
+    cd: 1.8, // 冷卻縮短
     damage: 130,
-    startup: 10,
+    startup: 5, // 靈敏啟動
     active: 14,
-    recovery: 16,
+    recovery: 8,
     guardType: 'crouch_only', // 站防強制破防！必須蹲防
     chipRatio: 0.15,
     knockdown: true,
@@ -63,11 +63,11 @@ export const SKILLS = [
     name: '躍空震地砸',
     type: 'overhead',
     typeName: '中段破防',
-    cd: 5.0,
+    cd: 2.5, // 冷卻縮短
     damage: 170,
-    startup: 20,
+    startup: 10, // 靈敏起跳下砸
     active: 10,
-    recovery: 18,
+    recovery: 10,
     guardType: 'stand_only', // 蹲防強制破防！必須站防
     chipRatio: 0.15,
     knockdown: true,
@@ -81,11 +81,11 @@ export const SKILLS = [
     name: '幻影反擊壁',
     type: 'parry',
     typeName: '架招反制',
-    cd: 6.0,
+    cd: 3.0, // 冷卻縮短
     damage: 190,
-    startup: 2,
+    startup: 1, // 1 幀極限瞬發架招
     active: 22, // 22 幀架招判定力場
-    recovery: 16,
+    recovery: 8,
     guardType: 'none',
     description: '展開 22 幀的反擊力場。受近身肉搏時直接吸收傷害並反擊擊暈對手。',
     counterGuide: '看見架招力場切勿出拳，直接使用指令摔技（SK-08）或後撤等待收招。',
@@ -97,11 +97,11 @@ export const SKILLS = [
     name: '虛空折躍斬',
     type: 'teleport',
     typeName: '位移奇襲',
-    cd: 7.0,
+    cd: 3.5, // 冷卻縮短
     damage: 150,
-    startup: 14,
+    startup: 6, // 瞬發背刺
     active: 8,
-    recovery: 18,
+    recovery: 10,
     guardType: 'all',
     chipRatio: 0.15,
     description: '化作殘影直接瞬移至對手正背後劃出橫斬，能穿透一切波導與飛行道具。',
@@ -114,15 +114,15 @@ export const SKILLS = [
     name: '百裂連擊衝',
     type: 'rush',
     typeName: '高段壓制',
-    cd: 4.5,
+    cd: 2.2, // 冷卻縮短
     damage: 180,
-    startup: 8,
-    active: 30, // 5連段密集打擊
-    recovery: 16,
+    startup: 4, // 快速前突
+    active: 24, // 5連段快速打擊
+    recovery: 8,
     guardType: 'all',
     chipRatio: 0.25, // 較高削防
     description: '前跨快速打出 5 連段密集體術，最後一掌擊退對手，削防量與壓迫感極高。',
-    counterGuide: '保持連續格擋，等待其打完 5 段進入收招硬直（16 幀）時果斷出拳確反。',
+    counterGuide: '保持連續格擋，等待其打完 5 段進入收招硬直時果斷出拳確反。',
     icon: 'fa-solid fa-meteor',
     color: '#10b981'
   },
@@ -131,11 +131,11 @@ export const SKILLS = [
     name: '磁暴重摔投',
     type: 'command_grab',
     typeName: '指令摔技',
-    cd: 6.0,
+    cd: 3.0, // 冷卻縮短
     damage: 210,
-    startup: 8,
+    startup: 4, // 快速抓取
     active: 6,
-    recovery: 20,
+    recovery: 10,
     armor: true, // 前搖帶有霸體
     guardType: 'unblockable', // 完全無視防禦
     knockdown: true,
@@ -149,11 +149,11 @@ export const SKILLS = [
     name: '奈米震波罩',
     type: 'radial_blast',
     typeName: '擊退防護',
-    cd: 8.0,
+    cd: 3.5, // 冷卻縮短
     damage: 100,
-    startup: 6,
+    startup: 3, // 快速解圍
     active: 10,
-    recovery: 14,
+    recovery: 8,
     guardType: 'all',
     chipRatio: 0.1,
     knockback: 280,
@@ -167,16 +167,16 @@ export const SKILLS = [
     name: '超載終結砲',
     type: 'ultimate_beam',
     typeName: '終極巨砲',
-    cd: 12.0,
+    cd: 5.0, // 冷卻大幅縮短至 5 秒
     damage: 260,
-    startup: 24,
+    startup: 12, // 蓄能加快
     active: 16,
-    recovery: 36,
+    recovery: 16,
     guardType: 'all',
     chipRatio: 0.35, // 即使被擋也造成極高削防
     knockdown: true,
     description: '胸部反應爐超載聚能，射出貫穿全螢幕之離子巨砲，具備毀滅級打擊力。',
-    counterGuide: '前搖蓄能明顯（24 幀），看準光芒及時起跳躍過或使用折躍斬奇襲。',
+    counterGuide: '前搖蓄能明顯，看準光芒及時起跳越過或使用折躍斬奇襲。',
     icon: 'fa-solid fa-sun',
     color: '#f97316'
   }

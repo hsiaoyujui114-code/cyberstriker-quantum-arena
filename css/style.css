@@ -631,13 +631,14 @@ body {
 
 .fighter-hud-box {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  position: relative;
+  gap: 6px;
   width: 42%;
 }
 
 .fighter-hud-box.p2 {
-  flex-direction: row-reverse;
+  align-items: stretch;
 }
 
 .hp-bar-outer {
@@ -676,7 +677,8 @@ body {
 /* 量子逆轉爆發計量槽 */
 .burst-meter-box {
   position: absolute;
-  top: 80px;
+  top: calc(100% + 6px);
+  left: 0;
   width: 220px;
   height: 10px;
   background: rgba(0, 0, 0, 0.6);

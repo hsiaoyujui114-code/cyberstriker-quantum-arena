@@ -540,7 +540,16 @@ class CyberStrikerApp {
     soundEngine.playUI('fight');
     soundEngine.startBgm();
 
-    // 更新技能快捷鍵 HUD 圖標
+    // 更新技能快捷鍵 HUD 圖標與頂部角色標籤
+    const p1NameEl = document.getElementById('p1NameDisplay');
+    const p2NameEl = document.getElementById('p2NameDisplay');
+    const p2RoleTag = document.getElementById('p2RoleTag');
+    if (p1NameEl) p1NameEl.textContent = p1Data.name;
+    if (p2NameEl) p2NameEl.textContent = p2Data.name;
+    if (p2RoleTag) {
+      const p2Text = this.matchMode === 'local_2p' ? '2P 對手' : (this.matchMode === 'training' ? '訓練木樁' : '電腦對手 / AI');
+      p2RoleTag.innerHTML = `<i class="fa-solid fa-robot"></i> ${p2Text}`;
+    }
     this._updateSkillActionBar();
 
     // 進入 60 FPS 戰鬥主循環
@@ -683,11 +692,17 @@ class CyberStrikerApp {
     ctx.fillStyle = 'rgba(0, 243, 255, 0.6)';
     ctx.fillRect(0, groundY, w, 3);
 
-    // 3. 繪製雙方角色
+    // 3. 繪製角色腳底發光光環 (地面定位圈)
+    this._drawFighterFloorRings(ctx, groundY);
+
+    // 4. 繪製雙方角色
     characterRenderer.draw(ctx, combatEngine.p1);
     characterRenderer.draw(ctx, combatEngine.p2);
 
-    // 4. 繪製飛行道具 (Projectiles)
+    // 5. 繪製角色頭頂醒目標籤 (標示「這是玩家的角色」與「電腦對手」)
+    this._drawFighterOverheadBadges(ctx);
+
+    // 6. 繪製飛行道具 (Projectiles)
     combatEngine.projectiles.forEach(p => {
       ctx.save();
       ctx.shadowColor = p.skin.themeColor;
@@ -707,7 +722,7 @@ class CyberStrikerApp {
       ctx.restore();
     });
 
-    // 5. 繪製衝擊波與巨砲 (Shockwaves & Beams)
+    // 7. 繪製衝擊波與巨砲 (Shockwaves & Beams)
     combatEngine.shockwaves.forEach(s => {
       ctx.save();
       ctx.strokeStyle = s.color || '#00f3ff';
@@ -725,7 +740,7 @@ class CyberStrikerApp {
       ctx.restore();
     });
 
-    // 6. 繪製浮動傷害與提示文字 (Floating Texts)
+    // 8. 繪製浮動傷害與提示文字 (Floating Texts)
     combatEngine.floatingTexts.forEach(t => {
       ctx.save();
       ctx.font = 'bold 18px Orbitron, sans-serif';
@@ -735,6 +750,137 @@ class CyberStrikerApp {
       ctx.fillText(t.text, t.x - 40, t.y);
       ctx.restore();
     });
+  }
+
+  _drawFighterFloorRings(ctx, groundY) {
+    const p1 = combatEngine.p1;
+    const p2 = combatEngine.p2;
+    if (!p1 || !p2) return;
+    const time = Date.now() / 250;
+
+    // 1P (玩家) 腳底賽博藍光環
+    ctx.save();
+    ctx.translate(p1.x, groundY);
+    ctx.scale(1, 0.3);
+    ctx.beginPath();
+    ctx.arc(0, 0, 46 + Math.sin(time) * 4, 0, Math.PI * 2);
+    ctx.strokeStyle = '#00f3ff';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#00f3ff';
+    ctx.shadowBlur = 18;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(0, 243, 255, 0.2)';
+    ctx.fill();
+    ctx.restore();
+
+    // 2P (對手) 腳底粉紅光環
+    ctx.save();
+    ctx.translate(p2.x, groundY);
+    ctx.scale(1, 0.3);
+    ctx.beginPath();
+    ctx.arc(0, 0, 46 + Math.sin(time + 1.5) * 4, 0, Math.PI * 2);
+    ctx.strokeStyle = '#ff007f';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#ff007f';
+    ctx.shadowBlur = 18;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255, 0, 127, 0.2)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  _drawFighterOverheadBadges(ctx) {
+    const p1 = combatEngine.p1;
+    const p2 = combatEngine.p2;
+    if (!p1 || !p2) return;
+    const bounce = Math.sin(Date.now() / 180) * 4;
+
+    // ─── 玩家 1P 頭頂標記 (這是玩家的角色) ───
+    const p1HeadY = p1.y - 170 + bounce;
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // 1P 下指立體發光箭頭
+    ctx.fillStyle = '#00f3ff';
+    ctx.shadowColor = '#00f3ff';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1HeadY);
+    ctx.lineTo(p1.x - 7, p1HeadY - 9);
+    ctx.lineTo(p1.x + 7, p1HeadY - 9);
+    ctx.closePath();
+    ctx.fill();
+
+    // 1P 科技毛玻璃標籤底框
+    const badgeW1 = 156;
+    const badgeH1 = 28;
+    const badgeX1 = p1.x - badgeW1 / 2;
+    const badgeY1 = p1HeadY - 9 - badgeH1;
+
+    ctx.fillStyle = 'rgba(5, 15, 30, 0.9)';
+    ctx.strokeStyle = '#00f3ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(badgeX1, badgeY1, badgeW1, badgeH1, 6);
+    } else {
+      ctx.rect(badgeX1, badgeY1, badgeW1, badgeH1);
+    }
+    ctx.fill();
+    ctx.stroke();
+
+    // 1P 文字: ★ 這是玩家的角色
+    ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
+    ctx.fillStyle = '#00f3ff';
+    ctx.shadowColor = '#00f3ff';
+    ctx.shadowBlur = 10;
+    ctx.fillText('★ 這是玩家的角色', p1.x, badgeY1 + badgeH1 / 2);
+    ctx.restore();
+
+    // ─── 對手 2P 頭頂標記 ───
+    const p2HeadY = p2.y - 170 - bounce;
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // 2P 下指箭頭
+    ctx.fillStyle = '#ff007f';
+    ctx.shadowColor = '#ff007f';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.moveTo(p2.x, p2HeadY);
+    ctx.lineTo(p2.x - 7, p2HeadY - 9);
+    ctx.lineTo(p2.x + 7, p2HeadY - 9);
+    ctx.closePath();
+    ctx.fill();
+
+    // 2P 底框
+    const badgeW2 = 136;
+    const badgeH2 = 28;
+    const badgeX2 = p2.x - badgeW2 / 2;
+    const badgeY2 = p2HeadY - 9 - badgeH2;
+
+    ctx.fillStyle = 'rgba(25, 5, 15, 0.9)';
+    ctx.strokeStyle = '#ff007f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(badgeX2, badgeY2, badgeW2, badgeH2, 6);
+    } else {
+      ctx.rect(badgeX2, badgeY2, badgeW2, badgeH2);
+    }
+    ctx.fill();
+    ctx.stroke();
+
+    // 2P 文字
+    const p2Label = this.matchMode === 'local_2p' ? '2P 對手' : (this.matchMode === 'training' ? '訓練木樁' : '電腦對手 (AI)');
+    ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
+    ctx.fillStyle = '#ff007f';
+    ctx.shadowColor = '#ff007f';
+    ctx.shadowBlur = 10;
+    ctx.fillText(p2Label, p2.x, badgeY2 + badgeH2 / 2);
+    ctx.restore();
   }
 
   _updateBattleHUD() {

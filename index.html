@@ -378,8 +378,14 @@
 
     <!-- 頂部 HUD (血條、計時、爆發槽) -->
     <div class="battle-hud-top">
-      <!-- 1P HUD -->
+      <!-- 1P HUD (玩家) -->
       <div class="fighter-hud-box">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 2px;">
+          <span class="hud-role-badge player-role" style="background: rgba(0, 243, 255, 0.25); border: 1.5px solid #00f3ff; color: #00f3ff; font-weight: 900; font-size: 13px; padding: 2px 10px; border-radius: 4px; box-shadow: 0 0 12px rgba(0, 243, 255, 0.6); letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-user-check"></i> 這是玩家的角色 (YOU)
+          </span>
+          <span id="p1NameDisplay" style="font-size: 11px; color: #cbd5e1; font-family: 'Orbitron', sans-serif; font-weight: 700;">1P</span>
+        </div>
         <div class="hp-bar-outer">
           <div class="hp-bar-fill" id="p1HpFill"></div>
         </div>
@@ -391,8 +397,14 @@
       <!-- 中央 99s 倒數計時 -->
       <div class="round-timer-box" id="roundTimerText">99</div>
 
-      <!-- 2P HUD -->
+      <!-- 2P HUD (對手) -->
       <div class="fighter-hud-box p2">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 2px;">
+          <span id="p2NameDisplay" style="font-size: 11px; color: #cbd5e1; font-family: 'Orbitron', sans-serif; font-weight: 700;">2P</span>
+          <span class="hud-role-badge enemy-role" id="p2RoleTag" style="background: rgba(255, 0, 127, 0.25); border: 1.5px solid #ff007f; color: #ff007f; font-weight: 900; font-size: 13px; padding: 2px 10px; border-radius: 4px; box-shadow: 0 0 12px rgba(255, 0, 127, 0.6); letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-robot"></i> 電腦對手 / 2P
+          </span>
+        </div>
         <div class="hp-bar-outer">
           <div class="hp-bar-fill" id="p2HpFill" style="background: linear-gradient(270deg, #ff007f, #ffd700);"></div>
         </div>

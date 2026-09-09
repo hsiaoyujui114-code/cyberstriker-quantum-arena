@@ -49,8 +49,9 @@ export class CombatEngine {
       this.trainingSettings = { ...this.trainingSettings, ...trainingOpts };
     }
 
-    this.p1 = this._createFighter(1, 260, p1Data);
-    this.p2 = this._createFighter(2, 740, p2Data);
+    // 玩家 P1 始終位於左側 (200)，對手 P2 始終位於右側 (800)
+    this.p1 = this._createFighter(1, 200, p1Data);
+    this.p2 = this._createFighter(2, 800, p2Data);
     this.p1.facing = 1;
     this.p2.facing = -1;
   }
@@ -172,9 +173,9 @@ export class CombatEngine {
       }
     }
 
-    // 重力物理運算
+    // 重力物理運算 (更敏捷、起落更俐落)
     if (!char.isGrounded) {
-      char.vy += 0.85; // 重力加速度
+      char.vy += 1.05; // 俐落重力
       char.x += char.vx;
       char.y += char.vy;
       if (char.y >= this.floorY) {
@@ -189,7 +190,7 @@ export class CombatEngine {
       }
     } else {
       char.x += char.vx;
-      char.vx *= 0.8; // 地面摩擦力
+      char.vx *= 0.75; // 地面摩擦力快速剎車
     }
 
     // 邊界限制
@@ -295,11 +296,11 @@ export class CombatEngine {
     const moveX = input.x || 0;
     const moveY = input.y || 0;
 
-    // 起跳
+    // 起跳 (更敏捷爆發)
     if (moveY < -0.4 && char.isGrounded) {
       char.isGrounded = false;
-      char.vy = -17;
-      char.vx = moveX * 4.5;
+      char.vy = -18.5; // 俐落起跳
+      char.vx = moveX * 6.8; // 躍進加速
       char.state = 'jump';
       char.stateTime = 0;
       char.isGuarding = false;
@@ -322,16 +323,16 @@ export class CombatEngine {
       return;
     }
 
-    // 橫向移動
+    // 橫向移動 (移動速度大幅加速，動作更靈敏)
     if (Math.abs(moveX) > 0.2) {
       const isMovingFwd = (char.facing === 1 && moveX > 0) || (char.facing === -1 && moveX < 0);
       if (isMovingFwd) {
-        char.x += char.facing * 4.2;
+        char.x += char.facing * 7.5; // 由 4.2 加速至 7.5
         char.state = 'walk_fwd';
         char.isGuarding = false;
       } else {
         // 後撤防守步：上身微仰收緊，自動高段格擋 (High Guard)
-        char.x -= char.facing * 3.2;
+        char.x -= char.facing * 5.6; // 由 3.2 加速至 5.6
         char.state = 'walk_back';
         char.guardStance = 'high';
         char.isGuarding = true;
@@ -383,16 +384,16 @@ export class CombatEngine {
     }
   }
 
-  // ─── 普攻打擊 ───
+  // ─── 普攻打擊 (大幅縮短前搖與硬直，極致靈敏) ───
   _executeLightPunch(char, opp) {
     char.state = 'light_punch';
     char.stateTime = 0;
-    char.stateDuration = 14;
+    char.stateDuration = 9; // 9 幀極速出拳收招
     char.currentAction = {
       name: '刺拳打擊',
-      startup: 5,
-      active: 4,
-      recovery: 5,
+      startup: 3, // 3 幀秒出
+      active: 3,
+      recovery: 3,
       damage: 40,
       guardType: 'all',
       hitChecked: false
@@ -403,12 +404,12 @@ export class CombatEngine {
   _executeHeavyKick(char, opp) {
     char.state = 'heavy_kick';
     char.stateTime = 0;
-    char.stateDuration = 20;
+    char.stateDuration = 13; // 13 幀破空重踢
     char.currentAction = {
       name: '重力猛踢',
-      startup: 8,
-      active: 5,
-      recovery: 7,
+      startup: 5, // 5 幀迅猛出踢
+      active: 4,
+      recovery: 4,
       damage: 80,
       guardType: 'all',
       hitChecked: false
@@ -419,9 +420,9 @@ export class CombatEngine {
   _executeAirAttack(char, opp, type) {
     char.currentAction = {
       name: type === 'kick' ? '躍空重踢' : '跳躍刺拳',
-      startup: 4,
-      active: 8,
-      recovery: 6,
+      startup: 2, // 2 幀瞬發
+      active: 6,
+      recovery: 3,
       damage: type === 'kick' ? 90 : 50,
       guardType: 'stand_only', // 空中打擊視為中段，不可蹲防
       hitChecked: false
@@ -453,20 +454,20 @@ export class CombatEngine {
       case 'SK-02': // 升龍衝天擊
         char.invincibleTimer = skill.invincibleFrames || 4;
         char.isGrounded = false;
-        char.vy = -15;
-        char.vx = char.facing * 4;
+        char.vy = -17; // 迅猛升空
+        char.vx = char.facing * 5;
         soundEngine.playHit('dp');
         break;
 
       case 'SK-03': // 音速滑踢
-        char.vx = char.facing * 16;
+        char.vx = char.facing * 24; // 貼地疾衝
         soundEngine.playHit('slide');
         break;
 
       case 'SK-04': // 躍空震地砸
         char.isGrounded = false;
-        char.vy = -12;
-        char.vx = char.facing * 6;
+        char.vy = -14;
+        char.vx = char.facing * 8;
         soundEngine.playHit('dp');
         break;
 
@@ -479,7 +480,7 @@ export class CombatEngine {
         break;
 
       case 'SK-07': // 百裂連擊衝
-        char.vx = char.facing * 8;
+        char.vx = char.facing * 12; // 敏捷突進
         soundEngine.playHit('punch');
         break;
 

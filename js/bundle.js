@@ -6,12 +6,14 @@
       name: "\u80FD\u91CF\u8108\u885D\u5F48",
       type: "projectile",
       typeName: "\u98DB\u884C\u9053\u5177",
-      cd: 3,
+      cd: 1.5,
+      // 冷卻減半：超快壓制
       damage: 120,
-      startup: 12,
+      startup: 6,
+      // 前搖減半：極致靈敏
       active: 60,
       // projectile lifespan
-      recovery: 18,
+      recovery: 8,
       guardType: "all",
       // 站防/蹲防皆可防
       chipRatio: 0.15,
@@ -25,16 +27,17 @@
       name: "\u5347\u9F8D\u885D\u5929\u64CA",
       type: "anti_air",
       typeName: "\u5C0D\u7A7A\u7A81\u9032",
-      cd: 4,
+      cd: 2,
+      // 冷卻減半
       damage: 160,
-      startup: 4,
-      // 前 4 幀全身無敵
+      startup: 3,
+      // 前 3 幀全身無敵，秒出升龍
       active: 12,
-      recovery: 24,
+      recovery: 12,
       invincibleFrames: 4,
       guardType: "all",
       chipRatio: 0.15,
-      description: "\u524D 4 \u5E40\u5168\u8EAB\u7121\u6575\uFF0C\u659C\u4E0A\u65B9\u9AD8\u9AD8\u8E8D\u8D77\u65CB\u8F49\u6607\u9F8D\u6253\u64CA\uFF0C\u6975\u81F4\u9632\u7A7A\u8207\u89E3\u570D\u795E\u6280\u3002",
+      description: "\u524D 3 \u5E40\u5168\u8EAB\u7121\u6575\uFF0C\u659C\u4E0A\u65B9\u9AD8\u9AD8\u8E8D\u8D77\u65CB\u8F49\u6607\u9F8D\u6253\u64CA\uFF0C\u6975\u81F4\u9632\u7A7A\u8207\u89E3\u570D\u795E\u6280\u3002",
       counterGuide: "\u524D\u6416\u7121\u6575\u96E3\u4EE5\u6436\u653B\uFF1B\u82E5\u5C0D\u65B9\u843D\u7A7A\u5F8C\u6416\u6975\u9577\uFF0C\u8457\u5730\u6642\u53EF\u9032\u884C\u6EFF\u984D\u78BA\u53CD\u8655\u7F70\u3002",
       icon: "fa-solid fa-dragon",
       color: "#38bdf8"
@@ -44,11 +47,13 @@
       name: "\u97F3\u901F\u6ED1\u8E22",
       type: "low",
       typeName: "\u4E0B\u6BB5\u7A81\u9032",
-      cd: 3.5,
+      cd: 1.8,
+      // 冷卻縮短
       damage: 130,
-      startup: 10,
+      startup: 5,
+      // 靈敏啟動
       active: 14,
-      recovery: 16,
+      recovery: 8,
       guardType: "crouch_only",
       // 站防強制破防！必須蹲防
       chipRatio: 0.15,
@@ -63,11 +68,13 @@
       name: "\u8E8D\u7A7A\u9707\u5730\u7838",
       type: "overhead",
       typeName: "\u4E2D\u6BB5\u7834\u9632",
-      cd: 5,
+      cd: 2.5,
+      // 冷卻縮短
       damage: 170,
-      startup: 20,
+      startup: 10,
+      // 靈敏起跳下砸
       active: 10,
-      recovery: 18,
+      recovery: 10,
       guardType: "stand_only",
       // 蹲防強制破防！必須站防
       chipRatio: 0.15,
@@ -82,12 +89,14 @@
       name: "\u5E7B\u5F71\u53CD\u64CA\u58C1",
       type: "parry",
       typeName: "\u67B6\u62DB\u53CD\u5236",
-      cd: 6,
+      cd: 3,
+      // 冷卻縮短
       damage: 190,
-      startup: 2,
+      startup: 1,
+      // 1 幀極限瞬發架招
       active: 22,
       // 22 幀架招判定力場
-      recovery: 16,
+      recovery: 8,
       guardType: "none",
       description: "\u5C55\u958B 22 \u5E40\u7684\u53CD\u64CA\u529B\u5834\u3002\u53D7\u8FD1\u8EAB\u8089\u640F\u6642\u76F4\u63A5\u5438\u6536\u50B7\u5BB3\u4E26\u53CD\u64CA\u64CA\u6688\u5C0D\u624B\u3002",
       counterGuide: "\u770B\u898B\u67B6\u62DB\u529B\u5834\u5207\u52FF\u51FA\u62F3\uFF0C\u76F4\u63A5\u4F7F\u7528\u6307\u4EE4\u6454\u6280\uFF08SK-08\uFF09\u6216\u5F8C\u64A4\u7B49\u5F85\u6536\u62DB\u3002",
@@ -99,11 +108,13 @@
       name: "\u865B\u7A7A\u6298\u8E8D\u65AC",
       type: "teleport",
       typeName: "\u4F4D\u79FB\u5947\u8972",
-      cd: 7,
+      cd: 3.5,
+      // 冷卻縮短
       damage: 150,
-      startup: 14,
+      startup: 6,
+      // 瞬發背刺
       active: 8,
-      recovery: 18,
+      recovery: 10,
       guardType: "all",
       chipRatio: 0.15,
       description: "\u5316\u4F5C\u6B98\u5F71\u76F4\u63A5\u77AC\u79FB\u81F3\u5C0D\u624B\u6B63\u80CC\u5F8C\u5283\u51FA\u6A6B\u65AC\uFF0C\u80FD\u7A7F\u900F\u4E00\u5207\u6CE2\u5C0E\u8207\u98DB\u884C\u9053\u5177\u3002",
@@ -116,17 +127,19 @@
       name: "\u767E\u88C2\u9023\u64CA\u885D",
       type: "rush",
       typeName: "\u9AD8\u6BB5\u58D3\u5236",
-      cd: 4.5,
+      cd: 2.2,
+      // 冷卻縮短
       damage: 180,
-      startup: 8,
-      active: 30,
-      // 5連段密集打擊
-      recovery: 16,
+      startup: 4,
+      // 快速前突
+      active: 24,
+      // 5連段快速打擊
+      recovery: 8,
       guardType: "all",
       chipRatio: 0.25,
       // 較高削防
       description: "\u524D\u8DE8\u5FEB\u901F\u6253\u51FA 5 \u9023\u6BB5\u5BC6\u96C6\u9AD4\u8853\uFF0C\u6700\u5F8C\u4E00\u638C\u64CA\u9000\u5C0D\u624B\uFF0C\u524A\u9632\u91CF\u8207\u58D3\u8FEB\u611F\u6975\u9AD8\u3002",
-      counterGuide: "\u4FDD\u6301\u9023\u7E8C\u683C\u64CB\uFF0C\u7B49\u5F85\u5176\u6253\u5B8C 5 \u6BB5\u9032\u5165\u6536\u62DB\u786C\u76F4\uFF0816 \u5E40\uFF09\u6642\u679C\u65B7\u51FA\u62F3\u78BA\u53CD\u3002",
+      counterGuide: "\u4FDD\u6301\u9023\u7E8C\u683C\u64CB\uFF0C\u7B49\u5F85\u5176\u6253\u5B8C 5 \u6BB5\u9032\u5165\u6536\u62DB\u786C\u76F4\u6642\u679C\u65B7\u51FA\u62F3\u78BA\u53CD\u3002",
       icon: "fa-solid fa-meteor",
       color: "#10b981"
     },
@@ -135,11 +148,13 @@
       name: "\u78C1\u66B4\u91CD\u6454\u6295",
       type: "command_grab",
       typeName: "\u6307\u4EE4\u6454\u6280",
-      cd: 6,
+      cd: 3,
+      // 冷卻縮短
       damage: 210,
-      startup: 8,
+      startup: 4,
+      // 快速抓取
       active: 6,
-      recovery: 20,
+      recovery: 10,
       armor: true,
       // 前搖帶有霸體
       guardType: "unblockable",
@@ -155,11 +170,13 @@
       name: "\u5948\u7C73\u9707\u6CE2\u7F69",
       type: "radial_blast",
       typeName: "\u64CA\u9000\u9632\u8B77",
-      cd: 8,
+      cd: 3.5,
+      // 冷卻縮短
       damage: 100,
-      startup: 6,
+      startup: 3,
+      // 快速解圍
       active: 10,
-      recovery: 14,
+      recovery: 8,
       guardType: "all",
       chipRatio: 0.1,
       knockback: 280,
@@ -173,17 +190,19 @@
       name: "\u8D85\u8F09\u7D42\u7D50\u7832",
       type: "ultimate_beam",
       typeName: "\u7D42\u6975\u5DE8\u7832",
-      cd: 12,
+      cd: 5,
+      // 冷卻大幅縮短至 5 秒
       damage: 260,
-      startup: 24,
+      startup: 12,
+      // 蓄能加快
       active: 16,
-      recovery: 36,
+      recovery: 16,
       guardType: "all",
       chipRatio: 0.35,
       // 即使被擋也造成極高削防
       knockdown: true,
       description: "\u80F8\u90E8\u53CD\u61C9\u7210\u8D85\u8F09\u805A\u80FD\uFF0C\u5C04\u51FA\u8CAB\u7A7F\u5168\u87A2\u5E55\u4E4B\u96E2\u5B50\u5DE8\u7832\uFF0C\u5177\u5099\u6BC0\u6EC5\u7D1A\u6253\u64CA\u529B\u3002",
-      counterGuide: "\u524D\u6416\u84C4\u80FD\u660E\u986F\uFF0824 \u5E40\uFF09\uFF0C\u770B\u6E96\u5149\u8292\u53CA\u6642\u8D77\u8DF3\u8E8D\u904E\u6216\u4F7F\u7528\u6298\u8E8D\u65AC\u5947\u8972\u3002",
+      counterGuide: "\u524D\u6416\u84C4\u80FD\u660E\u986F\uFF0C\u770B\u6E96\u5149\u8292\u53CA\u6642\u8D77\u8DF3\u8D8A\u904E\u6216\u4F7F\u7528\u6298\u8E8D\u65AC\u5947\u8972\u3002",
       icon: "fa-solid fa-sun",
       color: "#f97316"
     }
@@ -1831,8 +1850,8 @@
       if (isTraining && trainingOpts) {
         this.trainingSettings = { ...this.trainingSettings, ...trainingOpts };
       }
-      this.p1 = this._createFighter(1, 260, p1Data);
-      this.p2 = this._createFighter(2, 740, p2Data);
+      this.p1 = this._createFighter(1, 200, p1Data);
+      this.p2 = this._createFighter(2, 800, p2Data);
       this.p1.facing = 1;
       this.p2.facing = -1;
     }
@@ -1933,7 +1952,7 @@
         }
       }
       if (!char.isGrounded) {
-        char.vy += 0.85;
+        char.vy += 1.05;
         char.x += char.vx;
         char.y += char.vy;
         if (char.y >= this.floorY) {
@@ -1948,7 +1967,7 @@
         }
       } else {
         char.x += char.vx;
-        char.vx *= 0.8;
+        char.vx *= 0.75;
       }
       char.x = Math.max(50, Math.min(this.arenaWidth - 50, char.x));
       const tryBurst = input && (input.burst || input.punch && input.kick);
@@ -2033,8 +2052,8 @@
       const moveY = input.y || 0;
       if (moveY < -0.4 && char.isGrounded) {
         char.isGrounded = false;
-        char.vy = -17;
-        char.vx = moveX * 4.5;
+        char.vy = -18.5;
+        char.vx = moveX * 6.8;
         char.state = "jump";
         char.stateTime = 0;
         char.isGuarding = false;
@@ -2056,11 +2075,11 @@
       if (Math.abs(moveX) > 0.2) {
         const isMovingFwd = char.facing === 1 && moveX > 0 || char.facing === -1 && moveX < 0;
         if (isMovingFwd) {
-          char.x += char.facing * 4.2;
+          char.x += char.facing * 7.5;
           char.state = "walk_fwd";
           char.isGuarding = false;
         } else {
-          char.x -= char.facing * 3.2;
+          char.x -= char.facing * 5.6;
           char.state = "walk_back";
           char.guardStance = "high";
           char.isGuarding = true;
@@ -2103,16 +2122,17 @@
         });
       }
     }
-    // ─── 普攻打擊 ───
+    // ─── 普攻打擊 (大幅縮短前搖與硬直，極致靈敏) ───
     _executeLightPunch(char, opp) {
       char.state = "light_punch";
       char.stateTime = 0;
-      char.stateDuration = 14;
+      char.stateDuration = 9;
       char.currentAction = {
         name: "\u523A\u62F3\u6253\u64CA",
-        startup: 5,
-        active: 4,
-        recovery: 5,
+        startup: 3,
+        // 3 幀秒出
+        active: 3,
+        recovery: 3,
         damage: 40,
         guardType: "all",
         hitChecked: false
@@ -2122,12 +2142,13 @@
     _executeHeavyKick(char, opp) {
       char.state = "heavy_kick";
       char.stateTime = 0;
-      char.stateDuration = 20;
+      char.stateDuration = 13;
       char.currentAction = {
         name: "\u91CD\u529B\u731B\u8E22",
-        startup: 8,
-        active: 5,
-        recovery: 7,
+        startup: 5,
+        // 5 幀迅猛出踢
+        active: 4,
+        recovery: 4,
         damage: 80,
         guardType: "all",
         hitChecked: false
@@ -2137,9 +2158,10 @@
     _executeAirAttack(char, opp, type) {
       char.currentAction = {
         name: type === "kick" ? "\u8E8D\u7A7A\u91CD\u8E22" : "\u8DF3\u8E8D\u523A\u62F3",
-        startup: 4,
-        active: 8,
-        recovery: 6,
+        startup: 2,
+        // 2 幀瞬發
+        active: 6,
+        recovery: 3,
         damage: type === "kick" ? 90 : 50,
         guardType: "stand_only",
         // 空中打擊視為中段，不可蹲防
@@ -2166,18 +2188,18 @@
         case "SK-02":
           char.invincibleTimer = skill.invincibleFrames || 4;
           char.isGrounded = false;
-          char.vy = -15;
-          char.vx = char.facing * 4;
+          char.vy = -17;
+          char.vx = char.facing * 5;
           soundEngine.playHit("dp");
           break;
         case "SK-03":
-          char.vx = char.facing * 16;
+          char.vx = char.facing * 24;
           soundEngine.playHit("slide");
           break;
         case "SK-04":
           char.isGrounded = false;
-          char.vy = -12;
-          char.vx = char.facing * 6;
+          char.vy = -14;
+          char.vx = char.facing * 8;
           soundEngine.playHit("dp");
           break;
         case "SK-05":
@@ -2187,7 +2209,7 @@
           soundEngine.playHit("teleport");
           break;
         case "SK-07":
-          char.vx = char.facing * 8;
+          char.vx = char.facing * 12;
           soundEngine.playHit("punch");
           break;
         case "SK-08":
@@ -3304,6 +3326,15 @@
       this.isFighting = true;
       soundEngine.playUI("fight");
       soundEngine.startBgm();
+      const p1NameEl = document.getElementById("p1NameDisplay");
+      const p2NameEl = document.getElementById("p2NameDisplay");
+      const p2RoleTag = document.getElementById("p2RoleTag");
+      if (p1NameEl) p1NameEl.textContent = p1Data.name;
+      if (p2NameEl) p2NameEl.textContent = p2Data.name;
+      if (p2RoleTag) {
+        const p2Text = this.matchMode === "local_2p" ? "2P \u5C0D\u624B" : this.matchMode === "training" ? "\u8A13\u7DF4\u6728\u6A01" : "\u96FB\u8166\u5C0D\u624B / AI";
+        p2RoleTag.innerHTML = `<i class="fa-solid fa-robot"></i> ${p2Text}`;
+      }
       this._updateSkillActionBar();
       this._runBattleLoop();
     }
@@ -3408,8 +3439,10 @@
       }
       ctx.fillStyle = "rgba(0, 243, 255, 0.6)";
       ctx.fillRect(0, groundY, w, 3);
+      this._drawFighterFloorRings(ctx, groundY);
       characterRenderer.draw(ctx, combatEngine.p1);
       characterRenderer.draw(ctx, combatEngine.p2);
+      this._drawFighterOverheadBadges(ctx);
       combatEngine.projectiles.forEach((p) => {
         ctx.save();
         ctx.shadowColor = p.skin.themeColor;
@@ -3451,6 +3484,113 @@
         ctx.fillText(t.text, t.x - 40, t.y);
         ctx.restore();
       });
+    }
+    _drawFighterFloorRings(ctx, groundY) {
+      const p1 = combatEngine.p1;
+      const p2 = combatEngine.p2;
+      if (!p1 || !p2) return;
+      const time = Date.now() / 250;
+      ctx.save();
+      ctx.translate(p1.x, groundY);
+      ctx.scale(1, 0.3);
+      ctx.beginPath();
+      ctx.arc(0, 0, 46 + Math.sin(time) * 4, 0, Math.PI * 2);
+      ctx.strokeStyle = "#00f3ff";
+      ctx.lineWidth = 3;
+      ctx.shadowColor = "#00f3ff";
+      ctx.shadowBlur = 18;
+      ctx.stroke();
+      ctx.fillStyle = "rgba(0, 243, 255, 0.2)";
+      ctx.fill();
+      ctx.restore();
+      ctx.save();
+      ctx.translate(p2.x, groundY);
+      ctx.scale(1, 0.3);
+      ctx.beginPath();
+      ctx.arc(0, 0, 46 + Math.sin(time + 1.5) * 4, 0, Math.PI * 2);
+      ctx.strokeStyle = "#ff007f";
+      ctx.lineWidth = 3;
+      ctx.shadowColor = "#ff007f";
+      ctx.shadowBlur = 18;
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255, 0, 127, 0.2)";
+      ctx.fill();
+      ctx.restore();
+    }
+    _drawFighterOverheadBadges(ctx) {
+      const p1 = combatEngine.p1;
+      const p2 = combatEngine.p2;
+      if (!p1 || !p2) return;
+      const bounce = Math.sin(Date.now() / 180) * 4;
+      const p1HeadY = p1.y - 170 + bounce;
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#00f3ff";
+      ctx.shadowColor = "#00f3ff";
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1HeadY);
+      ctx.lineTo(p1.x - 7, p1HeadY - 9);
+      ctx.lineTo(p1.x + 7, p1HeadY - 9);
+      ctx.closePath();
+      ctx.fill();
+      const badgeW1 = 156;
+      const badgeH1 = 28;
+      const badgeX1 = p1.x - badgeW1 / 2;
+      const badgeY1 = p1HeadY - 9 - badgeH1;
+      ctx.fillStyle = "rgba(5, 15, 30, 0.9)";
+      ctx.strokeStyle = "#00f3ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(badgeX1, badgeY1, badgeW1, badgeH1, 6);
+      } else {
+        ctx.rect(badgeX1, badgeY1, badgeW1, badgeH1);
+      }
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
+      ctx.fillStyle = "#00f3ff";
+      ctx.shadowColor = "#00f3ff";
+      ctx.shadowBlur = 10;
+      ctx.fillText("\u2605 \u9019\u662F\u73A9\u5BB6\u7684\u89D2\u8272", p1.x, badgeY1 + badgeH1 / 2);
+      ctx.restore();
+      const p2HeadY = p2.y - 170 - bounce;
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#ff007f";
+      ctx.shadowColor = "#ff007f";
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.moveTo(p2.x, p2HeadY);
+      ctx.lineTo(p2.x - 7, p2HeadY - 9);
+      ctx.lineTo(p2.x + 7, p2HeadY - 9);
+      ctx.closePath();
+      ctx.fill();
+      const badgeW2 = 136;
+      const badgeH2 = 28;
+      const badgeX2 = p2.x - badgeW2 / 2;
+      const badgeY2 = p2HeadY - 9 - badgeH2;
+      ctx.fillStyle = "rgba(25, 5, 15, 0.9)";
+      ctx.strokeStyle = "#ff007f";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(badgeX2, badgeY2, badgeW2, badgeH2, 6);
+      } else {
+        ctx.rect(badgeX2, badgeY2, badgeW2, badgeH2);
+      }
+      ctx.fill();
+      ctx.stroke();
+      const p2Label = this.matchMode === "local_2p" ? "2P \u5C0D\u624B" : this.matchMode === "training" ? "\u8A13\u7DF4\u6728\u6A01" : "\u96FB\u8166\u5C0D\u624B (AI)";
+      ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
+      ctx.fillStyle = "#ff007f";
+      ctx.shadowColor = "#ff007f";
+      ctx.shadowBlur = 10;
+      ctx.fillText(p2Label, p2.x, badgeY2 + badgeH2 / 2);
+      ctx.restore();
     }
     _updateBattleHUD() {
       const hp1El = document.getElementById("p1HpFill");
