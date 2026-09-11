@@ -11,7 +11,6 @@ import { soundEngine } from './engine/audio.js';
 import { characterRenderer } from './engine/character_renderer.js';
 import { combatEngine } from './engine/combat.js';
 import { aiController } from './engine/ai.js';
-import { replaySystem } from './engine/replay.js';
 import { p2pNetwork } from './network/p2p.js';
 
 class CyberStrikerApp {
@@ -90,9 +89,12 @@ class CyberStrikerApp {
     combatEngine.arenaWidth = window.innerWidth;
     const newFloorY = Math.max(380, Math.round(window.innerHeight - 130));
     combatEngine.floorY = newFloorY;
+    if (combatEngine.updatePlatforms) {
+      combatEngine.updatePlatforms(window.innerWidth, newFloorY);
+    }
 
-    if (combatEngine.p1 && combatEngine.p1.isGrounded) combatEngine.p1.y = newFloorY;
-    if (combatEngine.p2 && combatEngine.p2.isGrounded) combatEngine.p2.y = newFloorY;
+    if (combatEngine.p1 && combatEngine.p1.isGrounded && !combatEngine.p1.currentPlatform) combatEngine.p1.y = newFloorY;
+    if (combatEngine.p2 && combatEngine.p2.isGrounded && !combatEngine.p2.currentPlatform) combatEngine.p2.y = newFloorY;
   }
 
   // ─── 開場前置載入動畫 ───
@@ -124,10 +126,8 @@ class CyberStrikerApp {
           splash.style.opacity = '0';
           setTimeout(() => {
             splash.style.display = 'none';
-            // 若為首次或尚未確定身分，呼叫量子授權儀
-            if (!saveSystem.currentUser || saveSystem.isGuest) {
-              this.openAuthModal();
-            }
+            // 進入遊戲後的第一個畫面：登入 Google 帳號授權儀
+            this.openAuthModal();
           }, 500);
         }, 300);
       }
@@ -281,7 +281,7 @@ class CyberStrikerApp {
     return SKINS.find(s => s.id === skinId) || SKINS[0];
   }
 
-  // ─── 分頁一：我的外觀渲染 ───
+  // ─── 分頁一：我的外觀渲染 (只會出現玩家擁有的外觀) ───
   renderSkinsInventory() {
     const container = document.getElementById('skinsGrid');
     if (!container) return;
@@ -290,17 +290,27 @@ class CyberStrikerApp {
     const owned = u ? u.skins : ['skin_cyber_warrior'];
     const equipped = u ? u.equippedSkin : 'skin_cyber_warrior';
 
-    container.innerHTML = SKINS.map(s => {
-      const isOwned = owned.includes(s.id);
+    // 嚴格篩選：只顯示玩家當前已擁有的造型
+    const myOwnedSkins = SKINS.filter(s => owned.includes(s.id));
+
+    if (myOwnedSkins.length === 0) {
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
+          <i class="fa-solid fa-box-open" style="font-size: 36px; margin-bottom: 12px; color: #00f3ff;"></i>
+          <div>目前無解鎖外觀，請前往商店解鎖！</div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = myOwnedSkins.map(s => {
       const isEquipped = equipped === s.id;
 
       let btnHtml = '';
       if (isEquipped) {
-        btnHtml = `<button class="nav-tab-btn" style="border-color: #00ff66; color: #00ff66; width: 100%; justify-content: center;"><i class="fa-solid fa-check"></i> 戰鬥裝備中</button>`;
-      } else if (isOwned) {
-        btnHtml = `<button class="nav-tab-btn equip-skin-btn" data-id="${s.id}" style="background: rgba(0, 243, 255, 0.15); color: #00f3ff; width: 100%; justify-content: center;"><i class="fa-solid fa-shield"></i> 裝備此造型</button>`;
+        btnHtml = `<button class="nav-tab-btn" style="border-color: #00ff66; color: #00ff66; width: 100%; justify-content: center; font-weight: 800;"><i class="fa-solid fa-check"></i> 戰鬥裝備中</button>`;
       } else {
-        btnHtml = `<button class="nav-tab-btn goto-shop-btn" data-id="${s.id}" style="border-color: rgba(255,255,255,0.15); color: #94a3b8; width: 100%; justify-content: center;"><i class="fa-solid fa-lock"></i> 未解鎖（前往商店）</button>`;
+        btnHtml = `<button class="nav-tab-btn equip-skin-btn" data-id="${s.id}" style="background: rgba(0, 243, 255, 0.18); border-color: #00f3ff; color: #00f3ff; width: 100%; justify-content: center; font-weight: 800;"><i class="fa-solid fa-shield"></i> 裝備此造型</button>`;
       }
 
       return `
@@ -310,7 +320,7 @@ class CyberStrikerApp {
               <div class="skin-name" style="color: ${s.themeColor}">${s.name}</div>
               <div style="font-size: 11px; color: #94a3b8;">${s.title}</div>
             </div>
-            <span class="skin-tag" style="border: 1px solid ${s.themeColor}; color: ${s.themeColor}">${s.isDefault ? '初始預設' : (s.category === 'shop' ? '商城造型' : '活動限定')}</span>
+            <span class="skin-tag" style="border: 1px solid ${s.themeColor}; color: ${s.themeColor}">${s.isDefault ? '初始預設' : (s.category === 'shop' ? '已擁有' : '限定外觀')}</span>
           </div>
           <div class="skin-desc">${s.desc}</div>
           <div class="skin-vfx-box">
@@ -343,13 +353,6 @@ class CyberStrikerApp {
         soundEngine.playUI('equip');
         this.renderSkinsInventory();
         this.updateUserHUD();
-      });
-    });
-
-    container.querySelectorAll('.goto-shop-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.switchTab('shop');
       });
     });
   }
@@ -612,9 +615,6 @@ class CyberStrikerApp {
 
     combatEngine.initMatch(p1Data, p2Data, this.matchMode === 'training');
 
-    // 啟動重播記錄器
-    replaySystem.startRecording(12345, p1Data, p2Data, this.matchMode);
-
     this.isFighting = true;
     soundEngine.playUI('fight');
     soundEngine.startBgm();
@@ -694,15 +694,10 @@ class CyberStrikerApp {
       inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
     }
 
-    // 3. 記錄到確定性重播系統
-    if (!combatEngine.isOver) {
-      replaySystem.recordFrame(inputP1, inputP2);
-    }
-
-    // 4. 戰鬥物理推進 1 幀
+    // 3. 戰鬥物理推進 1 幀
     combatEngine.update(inputP1, inputP2);
 
-    // 5. 渲染戰鬥畫面
+    // 4. 渲染戰鬥畫面
     this._renderBattleFrame();
 
     // 6. 更新戰鬥 HUD
@@ -800,6 +795,9 @@ class CyberStrikerApp {
     // 地面反光發光條
     ctx.fillStyle = 'rgba(0, 243, 255, 0.6)';
     ctx.fillRect(0, groundY, w, 3);
+
+    // 瑪利歐風格高低懸浮空中戰鬥平台
+    this._drawPlatforms(ctx);
 
     // 3. 繪製角色腳底發光光環 (地面定位圈)
     this._drawFighterFloorRings(ctx, groundY);
@@ -923,15 +921,136 @@ class CyberStrikerApp {
     ctx.restore();
   }
 
+  // ─── 瑪利歐風格空中高低平台繪製 (Mario Style Floating Platforms) ───
+  _drawPlatforms(ctx) {
+    if (!combatEngine.platforms || combatEngine.platforms.length === 0) return;
+    const time = Date.now() / 400;
+
+    combatEngine.platforms.forEach(plat => {
+      const { x, y, width, height, color, id } = plat;
+
+      ctx.save();
+
+      // 1. 底部反重力離子噴射流 (Anti-gravity Hover Jets)
+      const thrusterOffsets = [width * 0.22, width * 0.78];
+      thrusterOffsets.forEach(ox => {
+        const tx = x + ox;
+        const ty = y + height;
+        const flameH = 10 + Math.sin(time * 3 + ox) * 4;
+
+        // 噴口基座金屬塊
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(tx - 6, ty, 12, 3);
+
+        // 離子火焰漸變
+        const grad = ctx.createLinearGradient(tx, ty + 3, tx, ty + 3 + flameH);
+        grad.addColorStop(0, color);
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(tx - 5, ty + 3);
+        ctx.lineTo(tx + 5, ty + 3);
+        ctx.lineTo(tx, ty + 3 + flameH);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      // 2. 平台本體外發光與高科技金屬磚塊底色
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 12;
+
+      const gradBody = ctx.createLinearGradient(x, y, x, y + height);
+      gradBody.addColorStop(0, '#1a2333');
+      gradBody.addColorStop(0.5, '#0f172a');
+      gradBody.addColorStop(1, '#080d1a');
+      ctx.fillStyle = gradBody;
+      ctx.fillRect(x, y, width, height);
+
+      // 外框與高亮站立導軌
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, width, height);
+
+      // 頂部實體著陸能量線 (清楚標示角色站立面)
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, 3);
+
+      // 3. 瑪利歐風格經典磚塊交錯接縫 (Mario Cyber Brick Pattern)
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.lineWidth = 1.5;
+
+      const midY = y + height / 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 2, midY);
+      ctx.lineTo(x + width - 2, midY);
+      ctx.stroke();
+
+      const brickCount = 5;
+      const brickW = width / brickCount;
+      // 上層磚塊垂直縫
+      for (let i = 1; i < brickCount; i++) {
+        const bx = x + i * brickW;
+        ctx.beginPath();
+        ctx.moveTo(bx, y + 3);
+        ctx.lineTo(bx, midY);
+        ctx.stroke();
+      }
+      // 下層交錯垂直縫 (位移半個磚長)
+      for (let i = 0; i < brickCount; i++) {
+        const bx = x + (i + 0.5) * brickW;
+        if (bx > x + 4 && bx < x + width - 4) {
+          ctx.beginPath();
+          ctx.moveTo(bx, midY);
+          ctx.lineTo(bx, y + height - 1);
+          ctx.stroke();
+        }
+      }
+
+      // 4. 四角加固鉚釘
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      const rivets = [
+        [x + 4, y + 5],
+        [x + width - 4, y + 5],
+        [x + 4, y + height - 5],
+        [x + width - 4, y + height - 5]
+      ];
+      rivets.forEach(([rx, ry]) => {
+        ctx.beginPath();
+        ctx.arc(rx, ry, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 5. 中央高台具有象徵瑪利歐神秘問號磚的金色問號徽記 [ ? ]
+      if (id === 'plat_center') {
+        ctx.save();
+        ctx.font = 'bold 13px "Orbitron", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 10;
+        ctx.fillText('?', x + width / 2, y + height / 2);
+        ctx.restore();
+      }
+
+      ctx.restore();
+    });
+  }
+
   _drawFighterFloorRings(ctx, groundY) {
     const p1 = combatEngine.p1;
     const p2 = combatEngine.p2;
     if (!p1 || !p2) return;
     const time = Date.now() / 250;
 
+    // 當角色著陸在空中平台或地面時，光環精準貼合站立面 (p.y)
+    const p1Floor = p1.isGrounded ? p1.y : groundY;
+    const p2Floor = p2.isGrounded ? p2.y : groundY;
+
     // 1P (玩家) 腳底賽博藍光環
     ctx.save();
-    ctx.translate(p1.x, groundY);
+    ctx.translate(p1.x, p1Floor);
     ctx.scale(1, 0.3);
     ctx.beginPath();
     ctx.arc(0, 0, 46 + Math.sin(time) * 4, 0, Math.PI * 2);
@@ -946,7 +1065,7 @@ class CyberStrikerApp {
 
     // 2P (對手) 腳底粉紅光環
     ctx.save();
-    ctx.translate(p2.x, groundY);
+    ctx.translate(p2.x, p2Floor);
     ctx.scale(1, 0.3);
     ctx.beginPath();
     ctx.arc(0, 0, 46 + Math.sin(time + 1.5) * 4, 0, Math.PI * 2);
@@ -1073,6 +1192,11 @@ class CyberStrikerApp {
     if (hp1Text) hp1Text.textContent = `${p1Hp} / ${p1Max}`;
     if (hp2Text) hp2Text.textContent = `${p2Hp} / ${p2Max}`;
 
+    const p1HpBig = document.getElementById('p1HpBigText');
+    const p2HpBig = document.getElementById('p2HpBigText');
+    if (p1HpBig) p1HpBig.textContent = `${p1Hp} / ${p1Max}`;
+    if (p2HpBig) p2HpBig.textContent = `${p2Hp} / ${p2Max}`;
+
     // 2. 倒數計時 (訓練模式顯示 ∞)
     const timerEl = document.getElementById('roundTimerText');
     if (timerEl) {
@@ -1133,21 +1257,16 @@ class CyberStrikerApp {
     const isAi = this.matchMode === 'ai';
     const reward = saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
 
-    // 停止重播錄製並生成短碼
-    const shortcode = replaySystem.stopRecording();
-
     // 彈出結算面板 (背後擂台持續播放冠軍慶祝姿態)
     const endModal = document.getElementById('matchEndModal');
     const resultTitle = document.getElementById('matchResultTitle');
     const creditsReward = document.getElementById('matchRewardAmount');
-    const shortcodeDisplay = document.getElementById('matchReplayCode');
 
     if (resultTitle) {
       resultTitle.textContent = won ? 'VICTORY 戰鬥勝利' : 'DEFEAT 戰鬥落敗';
       resultTitle.style.color = won ? '#00f3ff' : '#ff007f';
     }
     if (creditsReward) creditsReward.textContent = `+${reward.gained} 能量幣`;
-    if (shortcodeDisplay) shortcodeDisplay.textContent = shortcode;
     if (endModal) endModal.classList.add('active');
 
     this.updateUserHUD();
@@ -1398,16 +1517,6 @@ class CyberStrikerApp {
         soundEngine.playUI('equip');
         alert(`✅ 感謝您的反饋！工單已成功派發：【${ticketCode}】\n系統已自動打包您的 UID、Gmail 與效能幀數數據。`);
         bugForm.reset();
-      };
-    }
-
-    // 重播短碼複製與載入
-    const copyReplayBtn = document.getElementById('copyReplayCodeBtn');
-    if (copyReplayBtn) {
-      copyReplayBtn.onclick = () => {
-        const code = document.getElementById('matchReplayCode').textContent;
-        navigator.clipboard.writeText(code);
-        alert(`📋 重播代碼【${code}】已複製到剪貼簿！可直接分享給社群好友。`);
       };
     }
 

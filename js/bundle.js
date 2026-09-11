@@ -6,17 +6,14 @@
       name: "\u80FD\u91CF\u8108\u885D\u5F48",
       type: "projectile",
       typeName: "\u98DB\u884C\u9053\u5177",
-      cd: 1.5,
-      // 冷卻減半：超快壓制
+      cd: 0.8,
+      // 快速冷卻：迅捷壓制
       damage: 120,
-      startup: 6,
-      // 前搖減半：極致靈敏
+      startup: 5,
       active: 60,
-      // projectile lifespan
-      recovery: 8,
+      recovery: 6,
       guardType: "all",
-      // 站防/蹲防皆可防
-      chipRatio: 0.15,
+      chipRatio: 0.5,
       description: "\u638C\u5FC3\u805A\u80FD\u5C04\u51FA\u76F4\u7DDA\u9AD8\u901F\u6CE2\u5C0E\u5F48\uFF0C\u5177\u5099\u512A\u7570\u7684\u9060\u7A0B\u58D3\u5236\u8207\u903C\u8DF3\u80FD\u529B\u3002",
       counterGuide: "\u53EF\u7AD9\u7ACB\u683C\u64CB\u3001\u4E0B\u8E72\u683C\u64CB\uFF0C\u6216\u6293\u6E96\u8D77\u8DF3\u6642\u6A5F\u7FFB\u8D8A\u8EB2\u907F\u3002",
       icon: "fa-solid fa-bolt",
@@ -27,16 +24,15 @@
       name: "\u5347\u9F8D\u885D\u5929\u64CA",
       type: "anti_air",
       typeName: "\u5C0D\u7A7A\u7A81\u9032",
-      cd: 2,
-      // 冷卻減半
+      cd: 1.2,
+      // 快速冷卻
       damage: 160,
       startup: 3,
-      // 前 3 幀全身無敵，秒出升龍
       active: 12,
-      recovery: 12,
+      recovery: 10,
       invincibleFrames: 4,
       guardType: "all",
-      chipRatio: 0.15,
+      chipRatio: 0.5,
       description: "\u524D 3 \u5E40\u5168\u8EAB\u7121\u6575\uFF0C\u659C\u4E0A\u65B9\u9AD8\u9AD8\u8E8D\u8D77\u65CB\u8F49\u6607\u9F8D\u6253\u64CA\uFF0C\u6975\u81F4\u9632\u7A7A\u8207\u89E3\u570D\u795E\u6280\u3002",
       counterGuide: "\u524D\u6416\u7121\u6575\u96E3\u4EE5\u6436\u653B\uFF1B\u82E5\u5C0D\u65B9\u843D\u7A7A\u5F8C\u6416\u6975\u9577\uFF0C\u8457\u5730\u6642\u53EF\u9032\u884C\u6EFF\u984D\u78BA\u53CD\u8655\u7F70\u3002",
       icon: "fa-solid fa-dragon",
@@ -47,16 +43,14 @@
       name: "\u97F3\u901F\u6ED1\u8E22",
       type: "low",
       typeName: "\u4E0B\u6BB5\u7A81\u9032",
-      cd: 1.8,
-      // 冷卻縮短
+      cd: 1,
+      // 快速冷卻
       damage: 130,
-      startup: 5,
-      // 靈敏啟動
+      startup: 4,
       active: 14,
-      recovery: 8,
+      recovery: 6,
       guardType: "crouch_only",
-      // 站防強制破防！必須蹲防
-      chipRatio: 0.15,
+      chipRatio: 0.5,
       knockdown: true,
       description: "\u8CBC\u5730\u75BE\u885D\u6ED1\u93DF\uFF0C\u547D\u4E2D\u5FC5\u5B9A\u9020\u6210\u5C0D\u624B\u4E0B\u76E4\u5931\u8861\u64CA\u5012\u3002\u7AD9\u7ACB\u9632\u79A6\u7121\u6548\uFF01",
       counterGuide: "\u4E0D\u53EF\u7AD9\u7ACB\u9632\u79A6\uFF0C\u5FC5\u9808\u8FC5\u901F\u5207\u63DB\u70BA\u4E0B\u8E72\u9632\u79A6\u65B9\u53EF\u5316\u89E3\u3002",
@@ -68,16 +62,14 @@
       name: "\u8E8D\u7A7A\u9707\u5730\u7838",
       type: "overhead",
       typeName: "\u4E2D\u6BB5\u7834\u9632",
-      cd: 2.5,
-      // 冷卻縮短
+      cd: 1.3,
+      // 快速冷卻
       damage: 170,
-      startup: 10,
-      // 靈敏起跳下砸
+      startup: 8,
       active: 10,
-      recovery: 10,
+      recovery: 8,
       guardType: "stand_only",
-      // 蹲防強制破防！必須站防
-      chipRatio: 0.15,
+      chipRatio: 0.5,
       knockdown: true,
       description: "\u7E31\u8EAB\u8E8D\u4E0A\u534A\u7A7A\u96D9\u62F3\u5408\u9318\u91CD\u64CA\u5730\u9762\uFF0C\u7834\u9664\u5C0D\u624B\u4E0B\u8E72\u9F9C\u7E2E\u3002\u4E0B\u8E72\u9632\u79A6\u7121\u6548\uFF01",
       counterGuide: "\u4E0D\u53EF\u8E72\u9632\uFF01\u770B\u898B\u89D2\u8272\u8E8D\u8D77\u524D\u6416\u6642\u5FC5\u9808\u7ACB\u5373\u5207\u63DB\u70BA\u7AD9\u7ACB\u683C\u64CB\u3002",
@@ -89,15 +81,14 @@
       name: "\u5E7B\u5F71\u53CD\u64CA\u58C1",
       type: "parry",
       typeName: "\u67B6\u62DB\u53CD\u5236",
-      cd: 3,
-      // 冷卻縮短
+      cd: 1.5,
+      // 快速冷卻
       damage: 190,
       startup: 1,
-      // 1 幀極限瞬發架招
       active: 22,
-      // 22 幀架招判定力場
-      recovery: 8,
+      recovery: 6,
       guardType: "none",
+      chipRatio: 0.5,
       description: "\u5C55\u958B 22 \u5E40\u7684\u53CD\u64CA\u529B\u5834\u3002\u53D7\u8FD1\u8EAB\u8089\u640F\u6642\u76F4\u63A5\u5438\u6536\u50B7\u5BB3\u4E26\u53CD\u64CA\u64CA\u6688\u5C0D\u624B\u3002",
       counterGuide: "\u770B\u898B\u67B6\u62DB\u529B\u5834\u5207\u52FF\u51FA\u62F3\uFF0C\u76F4\u63A5\u4F7F\u7528\u6307\u4EE4\u6454\u6280\uFF08SK-08\uFF09\u6216\u5F8C\u64A4\u7B49\u5F85\u6536\u62DB\u3002",
       icon: "fa-solid fa-shield-halved",
@@ -108,15 +99,14 @@
       name: "\u865B\u7A7A\u6298\u8E8D\u65AC",
       type: "teleport",
       typeName: "\u4F4D\u79FB\u5947\u8972",
-      cd: 3.5,
-      // 冷卻縮短
+      cd: 1.8,
+      // 快速冷卻
       damage: 150,
-      startup: 6,
-      // 瞬發背刺
+      startup: 5,
       active: 8,
-      recovery: 10,
+      recovery: 8,
       guardType: "all",
-      chipRatio: 0.15,
+      chipRatio: 0.5,
       description: "\u5316\u4F5C\u6B98\u5F71\u76F4\u63A5\u77AC\u79FB\u81F3\u5C0D\u624B\u6B63\u80CC\u5F8C\u5283\u51FA\u6A6B\u65AC\uFF0C\u80FD\u7A7F\u900F\u4E00\u5207\u6CE2\u5C0E\u8207\u98DB\u884C\u9053\u5177\u3002",
       counterGuide: "\u5C0D\u624B\u77AC\u79FB\u6D88\u5931\u77AC\u9593\uFF0C\u9700\u7ACB\u523B\u8F49\u8EAB\u62C9\u5411\u53CD\u65B9\u5411\u7DAD\u6301\u9632\u5B88\u59FF\u614B\u3002",
       icon: "fa-solid fa-wand-magic-sparkles",
@@ -127,17 +117,14 @@
       name: "\u767E\u88C2\u9023\u64CA\u885D",
       type: "rush",
       typeName: "\u9AD8\u6BB5\u58D3\u5236",
-      cd: 2.2,
-      // 冷卻縮短
+      cd: 1.2,
+      // 快速冷卻
       damage: 180,
       startup: 4,
-      // 快速前突
-      active: 24,
-      // 5連段快速打擊
-      recovery: 8,
+      active: 20,
+      recovery: 6,
       guardType: "all",
-      chipRatio: 0.25,
-      // 較高削防
+      chipRatio: 0.5,
       description: "\u524D\u8DE8\u5FEB\u901F\u6253\u51FA 5 \u9023\u6BB5\u5BC6\u96C6\u9AD4\u8853\uFF0C\u6700\u5F8C\u4E00\u638C\u64CA\u9000\u5C0D\u624B\uFF0C\u524A\u9632\u91CF\u8207\u58D3\u8FEB\u611F\u6975\u9AD8\u3002",
       counterGuide: "\u4FDD\u6301\u9023\u7E8C\u683C\u64CB\uFF0C\u7B49\u5F85\u5176\u6253\u5B8C 5 \u6BB5\u9032\u5165\u6536\u62DB\u786C\u76F4\u6642\u679C\u65B7\u51FA\u62F3\u78BA\u53CD\u3002",
       icon: "fa-solid fa-meteor",
@@ -148,17 +135,15 @@
       name: "\u78C1\u66B4\u91CD\u6454\u6295",
       type: "command_grab",
       typeName: "\u6307\u4EE4\u6454\u6280",
-      cd: 3,
-      // 冷卻縮短
+      cd: 1.6,
+      // 快速冷卻
       damage: 210,
       startup: 4,
-      // 快速抓取
       active: 6,
-      recovery: 10,
+      recovery: 8,
       armor: true,
-      // 前搖帶有霸體
       guardType: "unblockable",
-      // 完全無視防禦
+      chipRatio: 0.5,
       knockdown: true,
       description: "\u524D\u6416\u9644\u5E36\u9738\u9AD4\uFF0C\u5411\u524D\u5F37\u6293\u5C0D\u624B\u72E0\u72E0\u8CAB\u5165\u5730\u9762\uFF0C\u5B8C\u5168\u7121\u8996\u9632\u79A6\u529B\u5834\uFF01",
       counterGuide: "\u7121\u6CD5\u9632\u79A6\uFF01\u4E0D\u53EF\u9F9C\u7E2E\u9632\u5B88\uFF0C\u5FC5\u9808\u5728\u8DDD\u96E2\u5916\u8D77\u8DF3\u8EB2\u907F\u6216\u6436\u5148\u51FA\u523A\u62F3\u6253\u65B7\u3002",
@@ -170,15 +155,14 @@
       name: "\u5948\u7C73\u9707\u6CE2\u7F69",
       type: "radial_blast",
       typeName: "\u64CA\u9000\u9632\u8B77",
-      cd: 3.5,
-      // 冷卻縮短
+      cd: 1.8,
+      // 快速冷卻
       damage: 100,
       startup: 3,
-      // 快速解圍
       active: 10,
-      recovery: 8,
+      recovery: 6,
       guardType: "all",
-      chipRatio: 0.1,
+      chipRatio: 0.5,
       knockback: 280,
       description: "\u5468\u8EAB\u5411\u5916\u8FF8\u767C\u74B0\u5F62\u8108\u885D\u885D\u64CA\u6CE2\uFF0C\u5F37\u884C\u63A8\u958B\u8CBC\u8EAB\u5C0D\u624B\uFF0C\u5316\u89E3\u7248\u908A\u58D3\u5236\u5371\u6A5F\u3002",
       counterGuide: "\u50B7\u5BB3\u8F03\u4F4E\u4F46\u64CA\u9000\u8DDD\u96E2\u6975\u9060\uFF0C\u907F\u514D\u8CBC\u8EAB\u8CAA\u5200\uFF0C\u4FDD\u6301\u4E2D\u8DDD\u96E2\u62C9\u626F\u3002",
@@ -190,16 +174,14 @@
       name: "\u8D85\u8F09\u7D42\u7D50\u7832",
       type: "ultimate_beam",
       typeName: "\u7D42\u6975\u5DE8\u7832",
-      cd: 5,
-      // 冷卻大幅縮短至 5 秒
+      cd: 2.5,
+      // 快速冷卻
       damage: 260,
-      startup: 12,
-      // 蓄能加快
+      startup: 10,
       active: 16,
-      recovery: 16,
+      recovery: 12,
       guardType: "all",
-      chipRatio: 0.35,
-      // 即使被擋也造成極高削防
+      chipRatio: 0.5,
       knockdown: true,
       description: "\u80F8\u90E8\u53CD\u61C9\u7210\u8D85\u8F09\u805A\u80FD\uFF0C\u5C04\u51FA\u8CAB\u7A7F\u5168\u87A2\u5E55\u4E4B\u96E2\u5B50\u5DE8\u7832\uFF0C\u5177\u5099\u6BC0\u6EC5\u7D1A\u6253\u64CA\u529B\u3002",
       counterGuide: "\u524D\u6416\u84C4\u80FD\u660E\u986F\uFF0C\u770B\u6E96\u5149\u8292\u53CA\u6642\u8D77\u8DF3\u8D8A\u904E\u6216\u4F7F\u7528\u6298\u8E8D\u65AC\u5947\u8972\u3002",
@@ -2360,6 +2342,8 @@
     constructor() {
       this.arenaWidth = 1e3;
       this.floorY = 380;
+      this.platforms = [];
+      this.updatePlatforms(this.arenaWidth, this.floorY);
       this.p1 = null;
       this.p2 = null;
       this.projectiles = [];
@@ -2381,6 +2365,21 @@
         // 技能即時無冷卻
       };
       this.enableHaptics = true;
+    }
+    updatePlatforms(arenaWidth = this.arenaWidth, floorY = this.floorY) {
+      this.arenaWidth = arenaWidth;
+      this.floorY = floorY;
+      const w = Math.min(260, Math.max(180, Math.round(arenaWidth * 0.22)));
+      const leftX = Math.round(arenaWidth * 0.14);
+      const rightX = Math.round(arenaWidth * 0.86 - w);
+      const centerX = Math.round((arenaWidth - w) / 2);
+      const lowerY = Math.round(floorY - 145);
+      const upperY = Math.round(floorY - 265);
+      this.platforms = [
+        { id: "plat_left", x: leftX, y: lowerY, width: w, height: 18, color: "#00f3ff" },
+        { id: "plat_right", x: rightX, y: lowerY, width: w, height: 18, color: "#ff007f" },
+        { id: "plat_center", x: centerX, y: upperY, width: w, height: 18, color: "#ffd700" }
+      ];
     }
     initMatch(p1Data, p2Data, isTraining = false, trainingOpts = {}) {
       this.isTraining = isTraining;
@@ -2413,6 +2412,7 @@
         vy: 0,
         facing: id === 1 ? 1 : -1,
         isGrounded: true,
+        currentPlatform: null,
         maxHp: 1e3,
         hp: 1e3,
         state: "idle",
@@ -2550,22 +2550,64 @@
           char.comboDamage = 0;
         }
       }
+      const moveY = input ? input.y || 0 : 0;
+      if (char.isGrounded && char.currentPlatform && moveY > 0.55) {
+        char.isGrounded = false;
+        char.y += 6;
+        char.vy = 2;
+        char.currentPlatform = null;
+      }
+      const prevY = char.y;
       if (!char.isGrounded) {
         char.vy += 1.05;
+        if (input && Math.abs(input.x || 0) > 0.1) {
+          char.vx += (input.x || 0) * 1.1;
+          char.vx = Math.max(-9.5, Math.min(9.5, char.vx));
+        }
         char.x += char.vx;
         char.y += char.vy;
-        if (char.y >= this.floorY) {
+        let landedOnPlatform = false;
+        if (char.vy >= 0) {
+          for (const plat of this.platforms) {
+            const inX = char.x >= plat.x - 12 && char.x <= plat.x + plat.width + 12;
+            if (inX && prevY <= plat.y + 4 && char.y >= plat.y) {
+              char.y = plat.y;
+              char.vy = 0;
+              char.vx *= 0.6;
+              char.isGrounded = true;
+              char.currentPlatform = plat;
+              char.facing = char.x < opp.x ? 1 : -1;
+              if (char.state === "jump") {
+                char.state = "idle";
+                char.stateTime = 0;
+                char.currentAction = null;
+              }
+              landedOnPlatform = true;
+              break;
+            }
+          }
+        }
+        if (!landedOnPlatform && char.y >= this.floorY) {
           char.y = this.floorY;
           char.vy = 0;
           char.vx = 0;
           char.isGrounded = true;
+          char.currentPlatform = null;
           char.facing = char.x < opp.x ? 1 : -1;
           if (char.state === "jump") {
             char.state = "idle";
             char.stateTime = 0;
+            char.currentAction = null;
           }
         }
       } else {
+        if (char.currentPlatform) {
+          const plat = char.currentPlatform;
+          if (char.x < plat.x - 16 || char.x > plat.x + plat.width + 16) {
+            char.isGrounded = false;
+            char.currentPlatform = null;
+          }
+        }
         char.x += char.vx;
         char.vx *= 0.75;
       }
@@ -2585,12 +2627,27 @@
           this._handleNormalInputs(char, opp, input);
           break;
         case "jump":
-          if (char.currentAction !== "air_attack") {
+          if (!char.currentAction) {
             char.facing = char.x < opp.x ? 1 : -1;
           }
-          if (input && (input.punch || input.kick) && char.currentAction !== "air_attack") {
+          if (input) {
+            if (input.skill1 && char.cooldowns[0] <= 0) {
+              this._executeSkill(char, opp, 0);
+              break;
+            }
+            if (input.skill2 && char.cooldowns[1] <= 0) {
+              this._executeSkill(char, opp, 1);
+              break;
+            }
+            if (input.skill3 && char.cooldowns[2] <= 0) {
+              this._executeSkill(char, opp, 2);
+              break;
+            }
+          }
+          if (char.currentAction) {
+            this._updateAttackAction(char, opp);
+          } else if (input && (input.punch || input.kick)) {
             char.facing = char.x < opp.x ? 1 : -1;
-            char.currentAction = "air_attack";
             this._executeAirAttack(char, opp, input.kick ? "kick" : "punch");
           }
           break;
@@ -2669,29 +2726,30 @@
         }
         return;
       }
-      if (moveY < -0.4 && char.isGrounded) {
+      if (moveY < -0.35 && char.isGrounded) {
         char.isGrounded = false;
+        char.currentPlatform = null;
         char.vy = -18.5;
-        char.vx = moveX * 6.8;
+        char.vx = moveX * 9.2;
         char.state = "jump";
         char.stateTime = 0;
         char.isGuarding = false;
         soundEngine.playHit("dp");
         return;
       }
-      if (moveY > 0.4 && char.isGrounded) {
+      if (moveY > 0.35 && char.isGrounded) {
         char.state = "crouch";
         char.isGuarding = false;
         return;
       }
-      if (Math.abs(moveX) > 0.2) {
+      if (Math.abs(moveX) > 0.15) {
         const isMovingFwd = char.facing === 1 && moveX > 0 || char.facing === -1 && moveX < 0;
         if (isMovingFwd) {
-          char.x += char.facing * 7.5;
+          char.x += char.facing * 9.6;
           char.state = "walk_fwd";
           char.isGuarding = false;
         } else {
-          char.x -= char.facing * 5.6;
+          char.x -= char.facing * 8.2;
           char.state = "walk_back";
           char.isGuarding = false;
         }
@@ -2770,11 +2828,14 @@
     }
     _executeAirAttack(char, opp, type) {
       char.isGuarding = false;
+      char.state = "jump";
+      char.stateTime = 0;
+      char.stateDuration = 9;
       char.currentAction = {
         name: type === "kick" ? "\u8E8D\u7A7A\u91CD\u8E22" : "\u8DF3\u8E8D\u523A\u62F3",
         startup: 2,
         // 2 幀瞬發
-        active: 6,
+        active: 4,
         recovery: 3,
         damage: type === "kick" ? 90 : 50,
         guardType: "stand_only",
@@ -2853,7 +2914,7 @@
         this._checkHitbox(char, opp, action);
       }
       if (t >= char.stateDuration) {
-        char.state = "idle";
+        char.state = char.isGrounded ? "idle" : "jump";
         char.stateTime = 0;
         char.currentAction = null;
       }
@@ -2907,8 +2968,8 @@
         }
         return;
       }
-      const hitReach = action.id === "SK-03" ? 120 : action.id === "SK-08" ? 90 : 80;
-      const inRange = Math.abs(char.x - opp.x) <= hitReach && Math.abs(char.y - opp.y) <= 80;
+      const hitReach = action.id === "SK-03" ? 130 : action.id === "SK-08" ? 100 : 90;
+      const inRange = Math.abs(char.x - opp.x) <= hitReach && Math.abs(char.y - opp.y) <= 125;
       const isFacingOpp = char.facing === 1 && opp.x >= char.x - 20 || char.facing === -1 && opp.x <= char.x + 20;
       if (inRange && isFacingOpp) {
         action.hitChecked = true;
@@ -2941,17 +3002,18 @@
         isBlocked = true;
       }
       if (isBlocked) {
-        damage = Math.round(damage * (action.chipRatio || 0.15));
+        damage = Math.max(12, Math.round(damage * 0.5));
         opp.hp = Math.max(0, opp.hp - damage);
         soundEngine.playHit("guard");
-        this._triggerHaptic(20);
+        this._triggerHaptic(25);
+        opp.vx = char.facing * 4.5;
         char.frameAdvantage = -4;
         this.floatingTexts.push({
-          text: `GUARD -${damage}`,
+          text: `SHIELD -${damage}`,
           x: opp.x,
           y: opp.y - 80,
           color: "#38bdf8",
-          life: 30
+          life: 32
         });
         return;
       }
@@ -3011,12 +3073,13 @@
         p.life--;
         const target = p.ownerId === 1 ? this.p2 : this.p1;
         const dist = Math.abs(p.x - target.x);
-        if (dist < 40 && target.y >= this.floorY - 90 && target.invincibleTimer <= 0) {
+        const dy = Math.abs(p.y - (target.y - 45));
+        if (dist < 45 && dy < 65 && target.invincibleTimer <= 0) {
           this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
             name: "\u80FD\u91CF\u8108\u885D\u5F48",
             damage: p.damage,
             guardType: "all",
-            chipRatio: 0.15
+            chipRatio: 0.5
           });
           this.projectiles.splice(i, 1);
           continue;
@@ -3107,16 +3170,6 @@
             p2.x -= push;
           }
         }
-      }
-      if (p1.x > this.arenaWidth - 65 && p2.x > this.arenaWidth - 110) {
-        p2.x = this.arenaWidth - 110;
-      } else if (p1.x < 65 && p2.x < 110) {
-        p2.x = 110;
-      }
-      if (p2.x > this.arenaWidth - 65 && p1.x > this.arenaWidth - 110) {
-        p1.x = this.arenaWidth - 110;
-      } else if (p2.x < 65 && p1.x < 110) {
-        p1.x = 110;
       }
       p1.x = Math.max(45, Math.min(this.arenaWidth - 45, p1.x));
       p2.x = Math.max(45, Math.min(this.arenaWidth - 45, p2.x));
@@ -3311,142 +3364,6 @@
   };
   var aiController = new AiController("normal");
 
-  // js/engine/replay.js
-  var ReplaySystem = class {
-    constructor() {
-      this.isRecording = false;
-      this.isPlaying = false;
-      this.currentSeed = 12345;
-      this.meta = null;
-      this.frames = [];
-      this.playIndex = 0;
-      this.playbackSpeed = 1;
-      this.isPaused = false;
-      this.shortcodeMap = {};
-    }
-    startRecording(seed, p1Data, p2Data, mode = "ai") {
-      this.isRecording = true;
-      this.isPlaying = false;
-      this.currentSeed = seed || Math.floor(Math.random() * 1e5);
-      this.meta = {
-        version: "1.0",
-        timestamp: Date.now(),
-        mode,
-        p1: { name: p1Data.name, skin: p1Data.skin.id, loadout: p1Data.loadout },
-        p2: { name: p2Data.name, skin: p2Data.skin.id, loadout: p2Data.loadout }
-      };
-      this.frames = [];
-    }
-    recordFrame(inputP1, inputP2) {
-      if (!this.isRecording) return;
-      const p1Bits = this._encodeInput(inputP1);
-      const p2Bits = this._encodeInput(inputP2);
-      this.frames.push([p1Bits, p2Bits]);
-    }
-    stopRecording() {
-      this.isRecording = false;
-      return this.generateShortcode();
-    }
-    // ─── 按鍵輸入位元編碼 ───
-    // bit 0: Left, bit 1: Right, bit 2: Up, bit 3: Down
-    // bit 4: Punch, bit 5: Kick, bit 6: Skill1, bit 7: Skill2, bit 8: Skill3, bit 9: Burst, bit 10: Guard
-    _encodeInput(inp) {
-      if (!inp) return 0;
-      let b = 0;
-      if (inp.x < -0.2) b |= 1;
-      if (inp.x > 0.2) b |= 2;
-      if (inp.y < -0.4) b |= 4;
-      if (inp.y > 0.4) b |= 8;
-      if (inp.punch) b |= 16;
-      if (inp.kick) b |= 32;
-      if (inp.skill1) b |= 64;
-      if (inp.skill2) b |= 128;
-      if (inp.skill3) b |= 256;
-      if (inp.burst) b |= 512;
-      if (inp.guard) b |= 1024;
-      return b;
-    }
-    _decodeInput(bits) {
-      return {
-        x: (bits & 1 ? -1 : 0) + (bits & 2 ? 1 : 0),
-        y: (bits & 4 ? -1 : 0) + (bits & 8 ? 1 : 0),
-        punch: !!(bits & 16),
-        kick: !!(bits & 32),
-        skill1: !!(bits & 64),
-        skill2: !!(bits & 128),
-        skill3: !!(bits & 256),
-        burst: !!(bits & 512),
-        guard: !!(bits & 1024)
-      };
-    }
-    // ─── 產生 CY-REP-XXXXXX 戰鬥重播短碼 ───
-    generateShortcode() {
-      const code = "CY-REP-" + Math.floor(1e5 + Math.random() * 9e5);
-      const replayPackage = {
-        meta: this.meta,
-        seed: this.currentSeed,
-        frames: this.frames
-      };
-      this.shortcodeMap[code] = replayPackage;
-      try {
-        localStorage.setItem("cyber_replay_" + code, JSON.stringify(replayPackage));
-      } catch (e) {
-        console.warn("Replay storage quota exceeded:", e);
-      }
-      return code;
-    }
-    getReplayPackage(code) {
-      if (this.shortcodeMap[code]) return this.shortcodeMap[code];
-      try {
-        const raw = localStorage.getItem("cyber_replay_" + code);
-        if (raw) return JSON.parse(raw);
-      } catch (e) {
-        console.warn("Failed to load replay for", code, e);
-      }
-      return null;
-    }
-    startPlayback(replayPackage) {
-      this.isRecording = false;
-      this.isPlaying = true;
-      this.isPaused = false;
-      this.playbackSpeed = 1;
-      this.playIndex = 0;
-      this.currentReplay = replayPackage;
-      return replayPackage.meta;
-    }
-    getNextFrameInputs() {
-      if (!this.isPlaying || !this.currentReplay) return null;
-      if (this.playIndex >= this.currentReplay.frames.length) {
-        this.isPlaying = false;
-        return null;
-      }
-      const [b1, b2] = this.currentReplay.frames[this.playIndex];
-      this.playIndex++;
-      return {
-        p1: this._decodeInput(b1),
-        p2: this._decodeInput(b2),
-        progress: this.playIndex / this.currentReplay.frames.length
-      };
-    }
-    togglePause() {
-      this.isPaused = !this.isPaused;
-      return this.isPaused;
-    }
-    stepForward() {
-      if (!this.currentReplay || this.playIndex >= this.currentReplay.frames.length) return null;
-      const [b1, b2] = this.currentReplay.frames[this.playIndex];
-      this.playIndex++;
-      return {
-        p1: this._decodeInput(b1),
-        p2: this._decodeInput(b2)
-      };
-    }
-    setSpeed(speed) {
-      this.playbackSpeed = speed;
-    }
-  };
-  var replaySystem = new ReplaySystem();
-
   // js/network/p2p.js
   var P2PNetwork = class {
     constructor() {
@@ -3623,8 +3540,11 @@
       combatEngine.arenaWidth = window.innerWidth;
       const newFloorY = Math.max(380, Math.round(window.innerHeight - 130));
       combatEngine.floorY = newFloorY;
-      if (combatEngine.p1 && combatEngine.p1.isGrounded) combatEngine.p1.y = newFloorY;
-      if (combatEngine.p2 && combatEngine.p2.isGrounded) combatEngine.p2.y = newFloorY;
+      if (combatEngine.updatePlatforms) {
+        combatEngine.updatePlatforms(window.innerWidth, newFloorY);
+      }
+      if (combatEngine.p1 && combatEngine.p1.isGrounded && !combatEngine.p1.currentPlatform) combatEngine.p1.y = newFloorY;
+      if (combatEngine.p2 && combatEngine.p2.isGrounded && !combatEngine.p2.currentPlatform) combatEngine.p2.y = newFloorY;
     }
     // ─── 開場前置載入動畫 ───
     _startLoadingFlow() {
@@ -3651,9 +3571,7 @@
             splash.style.opacity = "0";
             setTimeout(() => {
               splash.style.display = "none";
-              if (!saveSystem.currentUser || saveSystem.isGuest) {
-                this.openAuthModal();
-              }
+              this.openAuthModal();
             }, 500);
           }, 300);
         }
@@ -3785,23 +3703,30 @@
       const skinId = u ? u.equippedSkin : "skin_cyber_warrior";
       return SKINS.find((s) => s.id === skinId) || SKINS[0];
     }
-    // ─── 分頁一：我的外觀渲染 ───
+    // ─── 分頁一：我的外觀渲染 (只會出現玩家擁有的外觀) ───
     renderSkinsInventory() {
       const container = document.getElementById("skinsGrid");
       if (!container) return;
       const u = saveSystem.currentUser;
       const owned = u ? u.skins : ["skin_cyber_warrior"];
       const equipped = u ? u.equippedSkin : "skin_cyber_warrior";
-      container.innerHTML = SKINS.map((s) => {
-        const isOwned = owned.includes(s.id);
+      const myOwnedSkins = SKINS.filter((s) => owned.includes(s.id));
+      if (myOwnedSkins.length === 0) {
+        container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
+          <i class="fa-solid fa-box-open" style="font-size: 36px; margin-bottom: 12px; color: #00f3ff;"></i>
+          <div>\u76EE\u524D\u7121\u89E3\u9396\u5916\u89C0\uFF0C\u8ACB\u524D\u5F80\u5546\u5E97\u89E3\u9396\uFF01</div>
+        </div>
+      `;
+        return;
+      }
+      container.innerHTML = myOwnedSkins.map((s) => {
         const isEquipped = equipped === s.id;
         let btnHtml = "";
         if (isEquipped) {
-          btnHtml = `<button class="nav-tab-btn" style="border-color: #00ff66; color: #00ff66; width: 100%; justify-content: center;"><i class="fa-solid fa-check"></i> \u6230\u9B25\u88DD\u5099\u4E2D</button>`;
-        } else if (isOwned) {
-          btnHtml = `<button class="nav-tab-btn equip-skin-btn" data-id="${s.id}" style="background: rgba(0, 243, 255, 0.15); color: #00f3ff; width: 100%; justify-content: center;"><i class="fa-solid fa-shield"></i> \u88DD\u5099\u6B64\u9020\u578B</button>`;
+          btnHtml = `<button class="nav-tab-btn" style="border-color: #00ff66; color: #00ff66; width: 100%; justify-content: center; font-weight: 800;"><i class="fa-solid fa-check"></i> \u6230\u9B25\u88DD\u5099\u4E2D</button>`;
         } else {
-          btnHtml = `<button class="nav-tab-btn goto-shop-btn" data-id="${s.id}" style="border-color: rgba(255,255,255,0.15); color: #94a3b8; width: 100%; justify-content: center;"><i class="fa-solid fa-lock"></i> \u672A\u89E3\u9396\uFF08\u524D\u5F80\u5546\u5E97\uFF09</button>`;
+          btnHtml = `<button class="nav-tab-btn equip-skin-btn" data-id="${s.id}" style="background: rgba(0, 243, 255, 0.18); border-color: #00f3ff; color: #00f3ff; width: 100%; justify-content: center; font-weight: 800;"><i class="fa-solid fa-shield"></i> \u88DD\u5099\u6B64\u9020\u578B</button>`;
         }
         return `
         <div class="skin-card ${isEquipped ? "equipped" : ""}" data-id="${s.id}" style="cursor: pointer;">
@@ -3810,7 +3735,7 @@
               <div class="skin-name" style="color: ${s.themeColor}">${s.name}</div>
               <div style="font-size: 11px; color: #94a3b8;">${s.title}</div>
             </div>
-            <span class="skin-tag" style="border: 1px solid ${s.themeColor}; color: ${s.themeColor}">${s.isDefault ? "\u521D\u59CB\u9810\u8A2D" : s.category === "shop" ? "\u5546\u57CE\u9020\u578B" : "\u6D3B\u52D5\u9650\u5B9A"}</span>
+            <span class="skin-tag" style="border: 1px solid ${s.themeColor}; color: ${s.themeColor}">${s.isDefault ? "\u521D\u59CB\u9810\u8A2D" : s.category === "shop" ? "\u5DF2\u64C1\u6709" : "\u9650\u5B9A\u5916\u89C0"}</span>
           </div>
           <div class="skin-desc">${s.desc}</div>
           <div class="skin-vfx-box">
@@ -3840,12 +3765,6 @@
           soundEngine.playUI("equip");
           this.renderSkinsInventory();
           this.updateUserHUD();
-        });
-      });
-      container.querySelectorAll(".goto-shop-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.switchTab("shop");
         });
       });
     }
@@ -4070,7 +3989,6 @@
       this._resizeCanvas();
       this.matchEndTimer = 0;
       combatEngine.initMatch(p1Data, p2Data, this.matchMode === "training");
-      replaySystem.startRecording(12345, p1Data, p2Data, this.matchMode);
       this.isFighting = true;
       soundEngine.playUI("fight");
       soundEngine.startBgm();
@@ -4145,9 +4063,6 @@
         inputP2 = this._gatherInputsP2();
       } else {
         inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
-      }
-      if (!combatEngine.isOver) {
-        replaySystem.recordFrame(inputP1, inputP2);
       }
       combatEngine.update(inputP1, inputP2);
       this._renderBattleFrame();
@@ -4225,6 +4140,7 @@
       }
       ctx.fillStyle = "rgba(0, 243, 255, 0.6)";
       ctx.fillRect(0, groundY, w, 3);
+      this._drawPlatforms(ctx);
       this._drawFighterFloorRings(ctx, groundY);
       characterRenderer.draw(ctx, combatEngine.p1);
       characterRenderer.draw(ctx, combatEngine.p2);
@@ -4317,13 +4233,105 @@
       ctx.fillText(subTitle, w / 2, cy + 20);
       ctx.restore();
     }
+    // ─── 瑪利歐風格空中高低平台繪製 (Mario Style Floating Platforms) ───
+    _drawPlatforms(ctx) {
+      if (!combatEngine.platforms || combatEngine.platforms.length === 0) return;
+      const time = Date.now() / 400;
+      combatEngine.platforms.forEach((plat) => {
+        const { x, y, width, height, color, id } = plat;
+        ctx.save();
+        const thrusterOffsets = [width * 0.22, width * 0.78];
+        thrusterOffsets.forEach((ox) => {
+          const tx = x + ox;
+          const ty = y + height;
+          const flameH = 10 + Math.sin(time * 3 + ox) * 4;
+          ctx.fillStyle = "#1e293b";
+          ctx.fillRect(tx - 6, ty, 12, 3);
+          const grad = ctx.createLinearGradient(tx, ty + 3, tx, ty + 3 + flameH);
+          grad.addColorStop(0, color);
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.moveTo(tx - 5, ty + 3);
+          ctx.lineTo(tx + 5, ty + 3);
+          ctx.lineTo(tx, ty + 3 + flameH);
+          ctx.closePath();
+          ctx.fill();
+        });
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 12;
+        const gradBody = ctx.createLinearGradient(x, y, x, y + height);
+        gradBody.addColorStop(0, "#1a2333");
+        gradBody.addColorStop(0.5, "#0f172a");
+        gradBody.addColorStop(1, "#080d1a");
+        ctx.fillStyle = gradBody;
+        ctx.fillRect(x, y, width, height);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, width, height);
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, width, 3);
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+        ctx.lineWidth = 1.5;
+        const midY = y + height / 2;
+        ctx.beginPath();
+        ctx.moveTo(x + 2, midY);
+        ctx.lineTo(x + width - 2, midY);
+        ctx.stroke();
+        const brickCount = 5;
+        const brickW = width / brickCount;
+        for (let i = 1; i < brickCount; i++) {
+          const bx = x + i * brickW;
+          ctx.beginPath();
+          ctx.moveTo(bx, y + 3);
+          ctx.lineTo(bx, midY);
+          ctx.stroke();
+        }
+        for (let i = 0; i < brickCount; i++) {
+          const bx = x + (i + 0.5) * brickW;
+          if (bx > x + 4 && bx < x + width - 4) {
+            ctx.beginPath();
+            ctx.moveTo(bx, midY);
+            ctx.lineTo(bx, y + height - 1);
+            ctx.stroke();
+          }
+        }
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        const rivets = [
+          [x + 4, y + 5],
+          [x + width - 4, y + 5],
+          [x + 4, y + height - 5],
+          [x + width - 4, y + height - 5]
+        ];
+        rivets.forEach(([rx, ry]) => {
+          ctx.beginPath();
+          ctx.arc(rx, ry, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        if (id === "plat_center") {
+          ctx.save();
+          ctx.font = 'bold 13px "Orbitron", sans-serif';
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "#ffd700";
+          ctx.shadowColor = "#ffd700";
+          ctx.shadowBlur = 10;
+          ctx.fillText("?", x + width / 2, y + height / 2);
+          ctx.restore();
+        }
+        ctx.restore();
+      });
+    }
     _drawFighterFloorRings(ctx, groundY) {
       const p1 = combatEngine.p1;
       const p2 = combatEngine.p2;
       if (!p1 || !p2) return;
       const time = Date.now() / 250;
+      const p1Floor = p1.isGrounded ? p1.y : groundY;
+      const p2Floor = p2.isGrounded ? p2.y : groundY;
       ctx.save();
-      ctx.translate(p1.x, groundY);
+      ctx.translate(p1.x, p1Floor);
       ctx.scale(1, 0.3);
       ctx.beginPath();
       ctx.arc(0, 0, 46 + Math.sin(time) * 4, 0, Math.PI * 2);
@@ -4336,7 +4344,7 @@
       ctx.fill();
       ctx.restore();
       ctx.save();
-      ctx.translate(p2.x, groundY);
+      ctx.translate(p2.x, p2Floor);
       ctx.scale(1, 0.3);
       ctx.beginPath();
       ctx.arc(0, 0, 46 + Math.sin(time + 1.5) * 4, 0, Math.PI * 2);
@@ -4439,6 +4447,10 @@
       if (hp2El) hp2El.style.width = `${p2Hp / p2Max * 100}%`;
       if (hp1Text) hp1Text.textContent = `${p1Hp} / ${p1Max}`;
       if (hp2Text) hp2Text.textContent = `${p2Hp} / ${p2Max}`;
+      const p1HpBig = document.getElementById("p1HpBigText");
+      const p2HpBig = document.getElementById("p2HpBigText");
+      if (p1HpBig) p1HpBig.textContent = `${p1Hp} / ${p1Max}`;
+      if (p2HpBig) p2HpBig.textContent = `${p2Hp} / ${p2Max}`;
       const timerEl = document.getElementById("roundTimerText");
       if (timerEl) {
         timerEl.textContent = combatEngine.isTraining ? "\u221E" : combatEngine.roundTime;
@@ -4487,17 +4499,14 @@
       const won = combatEngine.winner === 1;
       const isAi = this.matchMode === "ai";
       const reward = saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
-      const shortcode = replaySystem.stopRecording();
       const endModal = document.getElementById("matchEndModal");
       const resultTitle = document.getElementById("matchResultTitle");
       const creditsReward = document.getElementById("matchRewardAmount");
-      const shortcodeDisplay = document.getElementById("matchReplayCode");
       if (resultTitle) {
         resultTitle.textContent = won ? "VICTORY \u6230\u9B25\u52DD\u5229" : "DEFEAT \u6230\u9B25\u843D\u6557";
         resultTitle.style.color = won ? "#00f3ff" : "#ff007f";
       }
       if (creditsReward) creditsReward.textContent = `+${reward.gained} \u80FD\u91CF\u5E63`;
-      if (shortcodeDisplay) shortcodeDisplay.textContent = shortcode;
       if (endModal) endModal.classList.add("active");
       this.updateUserHUD();
     }
@@ -4720,14 +4729,6 @@
           alert(`\u2705 \u611F\u8B1D\u60A8\u7684\u53CD\u994B\uFF01\u5DE5\u55AE\u5DF2\u6210\u529F\u6D3E\u767C\uFF1A\u3010${ticketCode}\u3011
 \u7CFB\u7D71\u5DF2\u81EA\u52D5\u6253\u5305\u60A8\u7684 UID\u3001Gmail \u8207\u6548\u80FD\u5E40\u6578\u6578\u64DA\u3002`);
           bugForm.reset();
-        };
-      }
-      const copyReplayBtn = document.getElementById("copyReplayCodeBtn");
-      if (copyReplayBtn) {
-        copyReplayBtn.onclick = () => {
-          const code = document.getElementById("matchReplayCode").textContent;
-          navigator.clipboard.writeText(code);
-          alert(`\u{1F4CB} \u91CD\u64AD\u4EE3\u78BC\u3010${code}\u3011\u5DF2\u8907\u88FD\u5230\u526A\u8CBC\u7C3F\uFF01\u53EF\u76F4\u63A5\u5206\u4EAB\u7D66\u793E\u7FA4\u597D\u53CB\u3002`);
         };
       }
       const muteBtn = document.getElementById("muteToggleBtn");

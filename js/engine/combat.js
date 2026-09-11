@@ -12,6 +12,9 @@ export class CombatEngine {
   constructor() {
     this.arenaWidth = 1000;
     this.floorY = 380;
+    // 瑪利歐風格高低懸浮空中戰鬥平台 (Airborne Floating Platforms)
+    this.platforms = [];
+    this.updatePlatforms(this.arenaWidth, this.floorY);
     this.p1 = null;
     this.p2 = null;
     this.projectiles = [];
@@ -33,6 +36,23 @@ export class CombatEngine {
 
     // 震動回饋開關
     this.enableHaptics = true;
+  }
+
+  updatePlatforms(arenaWidth = this.arenaWidth, floorY = this.floorY) {
+    this.arenaWidth = arenaWidth;
+    this.floorY = floorY;
+    const w = Math.min(260, Math.max(180, Math.round(arenaWidth * 0.22)));
+    const leftX = Math.round(arenaWidth * 0.14);
+    const rightX = Math.round(arenaWidth * 0.86 - w);
+    const centerX = Math.round((arenaWidth - w) / 2);
+    const lowerY = Math.round(floorY - 145);
+    const upperY = Math.round(floorY - 265);
+
+    this.platforms = [
+      { id: 'plat_left', x: leftX, y: lowerY, width: w, height: 18, color: '#00f3ff' },
+      { id: 'plat_right', x: rightX, y: lowerY, width: w, height: 18, color: '#ff007f' },
+      { id: 'plat_center', x: centerX, y: upperY, width: w, height: 18, color: '#ffd700' }
+    ];
   }
 
   initMatch(p1Data, p2Data, isTraining = false, trainingOpts = {}) {
@@ -73,6 +93,7 @@ export class CombatEngine {
       vy: 0,
       facing: id === 1 ? 1 : -1,
       isGrounded: true,
+      currentPlatform: null,
       maxHp: 1000,
       hp: 1000,
       state: 'idle', // idle, walk_fwd, walk_back, jump, crouch, high_guard, low_guard, light_punch, heavy_kick, skill, hit_stun, knockdown, wakeup
@@ -230,23 +251,75 @@ export class CombatEngine {
       }
     }
 
-    // 重力物理運算 (更敏捷、起落更俐落)
+    // 平台下跳判定 (在平台上按住下 + 跳躍或下鍵可穿透跳下)
+    const moveY = input ? (input.y || 0) : 0;
+    if (char.isGrounded && char.currentPlatform && moveY > 0.55) {
+      char.isGrounded = false;
+      char.y += 6;
+      char.vy = 2;
+      char.currentPlatform = null;
+    }
+
+    const prevY = char.y;
+
+    // 重力與空中運動物理 (大幅提高空中敏捷性與操控性)
     if (!char.isGrounded) {
       char.vy += 1.05; // 俐落重力
+      // 空中水平操縱轉向 (Air Control)
+      if (input && Math.abs(input.x || 0) > 0.1) {
+        char.vx += (input.x || 0) * 1.1;
+        char.vx = Math.max(-9.5, Math.min(9.5, char.vx));
+      }
       char.x += char.vx;
       char.y += char.vy;
-      if (char.y >= this.floorY) {
+
+      // 1. 懸浮空中平台著陸檢測 (下落時 vy >= 0)
+      let landedOnPlatform = false;
+      if (char.vy >= 0) {
+        for (const plat of this.platforms) {
+          const inX = char.x >= plat.x - 12 && char.x <= plat.x + plat.width + 12;
+          if (inX && prevY <= plat.y + 4 && char.y >= plat.y) {
+            char.y = plat.y;
+            char.vy = 0;
+            char.vx *= 0.6;
+            char.isGrounded = true;
+            char.currentPlatform = plat;
+            char.facing = char.x < opp.x ? 1 : -1;
+            if (char.state === 'jump') {
+              char.state = 'idle';
+              char.stateTime = 0;
+              char.currentAction = null;
+            }
+            landedOnPlatform = true;
+            break;
+          }
+        }
+      }
+
+      // 2. 地面著陸檢測
+      if (!landedOnPlatform && char.y >= this.floorY) {
         char.y = this.floorY;
         char.vy = 0;
         char.vx = 0;
         char.isGrounded = true;
+        char.currentPlatform = null;
         char.facing = char.x < opp.x ? 1 : -1; // 落地確保面向對手
         if (char.state === 'jump') {
           char.state = 'idle';
           char.stateTime = 0;
+          char.currentAction = null;
         }
       }
     } else {
+      // 在地面或平台上：
+      if (char.currentPlatform) {
+        const plat = char.currentPlatform;
+        // 走出平台邊緣，進入下落
+        if (char.x < plat.x - 16 || char.x > plat.x + plat.width + 16) {
+          char.isGrounded = false;
+          char.currentPlatform = null;
+        }
+      }
       char.x += char.vx;
       char.vx *= 0.75; // 地面摩擦力快速剎車
     }
@@ -274,14 +347,32 @@ export class CombatEngine {
         break;
 
       case 'jump':
-        // 空中越頂自動校正面向（若越過對手，且尚未出招，自動朝向對手）
-        if (char.currentAction !== 'air_attack') {
+        // 空中自動朝向對手（若無正在出招）
+        if (!char.currentAction) {
           char.facing = char.x < opp.x ? 1 : -1;
         }
-        // 空中可施展跳躍攻擊 (逆向 Cross-up 打擊)
-        if (input && (input.punch || input.kick) && char.currentAction !== 'air_attack') {
-          char.facing = char.x < opp.x ? 1 : -1; // 出招時面向對手
-          char.currentAction = 'air_attack';
+
+        // 1. 在空中發動技能 (Air Skill Trigger!)
+        if (input) {
+          if (input.skill1 && char.cooldowns[0] <= 0) {
+            this._executeSkill(char, opp, 0);
+            break;
+          }
+          if (input.skill2 && char.cooldowns[1] <= 0) {
+            this._executeSkill(char, opp, 1);
+            break;
+          }
+          if (input.skill3 && char.cooldowns[2] <= 0) {
+            this._executeSkill(char, opp, 2);
+            break;
+          }
+        }
+
+        // 2. 空中攻擊打擊判定與出招 (Air Punch & Kick)
+        if (char.currentAction) {
+          this._updateAttackAction(char, opp);
+        } else if (input && (input.punch || input.kick)) {
+          char.facing = char.x < opp.x ? 1 : -1;
           this._executeAirAttack(char, opp, input.kick ? 'kick' : 'punch');
         }
         break;
@@ -377,10 +468,11 @@ export class CombatEngine {
     }
 
     // 4. 起跳 (更敏捷爆發)
-    if (moveY < -0.4 && char.isGrounded) {
+    if (moveY < -0.35 && char.isGrounded) {
       char.isGrounded = false;
+      char.currentPlatform = null;
       char.vy = -18.5; // 俐落起跳
-      char.vx = moveX * 6.8; // 躍進加速
+      char.vx = moveX * 9.2; // 躍進加速 (靈敏起飛)
       char.state = 'jump';
       char.stateTime = 0;
       char.isGuarding = false;
@@ -389,22 +481,22 @@ export class CombatEngine {
     }
 
     // 5. 下蹲 (無防禦按鍵時為純下蹲，不召喚防護罩)
-    if (moveY > 0.4 && char.isGrounded) {
+    if (moveY > 0.35 && char.isGrounded) {
       char.state = 'crouch';
       char.isGuarding = false;
       return;
     }
 
-    // 6. 橫向移動 (移動速度大幅加速，動作更靈敏)
-    if (Math.abs(moveX) > 0.2) {
+    // 6. 橫向移動 (移動速度大幅加速，靈敏度全面調高，流暢無卡頓)
+    if (Math.abs(moveX) > 0.15) {
       const isMovingFwd = (char.facing === 1 && moveX > 0) || (char.facing === -1 && moveX < 0);
       if (isMovingFwd) {
-        char.x += char.facing * 7.5; // 前進走位
+        char.x += char.facing * 9.6; // 靈敏前進走位 (調高靈敏度)
         char.state = 'walk_fwd';
         char.isGuarding = false;
       } else {
         // 後撤走位：純粹向後退走位，不召喚防護罩 (由專屬防護罩按鍵召喚)
-        char.x -= char.facing * 5.6; // 後退走位
+        char.x -= char.facing * 8.2; // 靈敏後撤走位 (調高靈敏度)
         char.state = 'walk_back';
         char.isGuarding = false;
       }
@@ -492,10 +584,13 @@ export class CombatEngine {
 
   _executeAirAttack(char, opp, type) {
     char.isGuarding = false;
+    char.state = 'jump';
+    char.stateTime = 0;
+    char.stateDuration = 9; // 9 幀超敏捷空中打擊 (靈敏瞬出)
     char.currentAction = {
       name: type === 'kick' ? '躍空重踢' : '跳躍刺拳',
       startup: 2, // 2 幀瞬發
-      active: 6,
+      active: 4,
       recovery: 3,
       damage: type === 'kick' ? 90 : 50,
       guardType: 'stand_only', // 空中打擊視為中段，不可蹲防
@@ -593,9 +688,9 @@ export class CombatEngine {
       this._checkHitbox(char, opp, action);
     }
 
-    // 動作結束，恢復正常
+    // 動作結束，恢復正常（若仍在空中則無縫切回跳躍姿態，可連續在空中出招或下落）
     if (t >= char.stateDuration) {
-      char.state = 'idle';
+      char.state = char.isGrounded ? 'idle' : 'jump';
       char.stateTime = 0;
       char.currentAction = null;
     }
@@ -658,9 +753,9 @@ export class CombatEngine {
       return;
     }
 
-    // 常規近戰範圍判定
-    const hitReach = action.id === 'SK-03' ? 120 : (action.id === 'SK-08' ? 90 : 80);
-    const inRange = Math.abs(char.x - opp.x) <= hitReach && Math.abs(char.y - opp.y) <= 80;
+    // 常規近戰範圍判定 (擴大垂直 Y 軸判定，使空中跳躍與平台對戰順暢命中)
+    const hitReach = action.id === 'SK-03' ? 130 : (action.id === 'SK-08' ? 100 : 90);
+    const inRange = Math.abs(char.x - opp.x) <= hitReach && Math.abs(char.y - opp.y) <= 125;
     const isFacingOpp = (char.facing === 1 && opp.x >= char.x - 20) || (char.facing === -1 && opp.x <= char.x + 20);
 
     if (inRange && isFacingOpp) {
@@ -707,22 +802,24 @@ export class CombatEngine {
       isBlocked = true;
     }
 
-    // 格擋減傷與削血機制
+    // 格擋減傷機制：防護罩只能減少攻擊傷害，不能擋下所有傷害！
     if (isBlocked) {
-      damage = Math.round(damage * (action.chipRatio || 0.15)); // 減免 85%，扣 15% 削血
+      // 50% 傷害穿透防護罩，實質扣除血量
+      damage = Math.max(12, Math.round(damage * 0.5));
       opp.hp = Math.max(0, opp.hp - damage);
       soundEngine.playHit('guard');
-      this._triggerHaptic(20);
+      this._triggerHaptic(25);
 
-      // 訓練營幀數指示：防禦不利幀 (攻擊方 -4f ~ -6f)
+      // 受擊格擋擊退
+      opp.vx = char.facing * 4.5;
       char.frameAdvantage = -4;
 
       this.floatingTexts.push({
-        text: `GUARD -${damage}`,
+        text: `SHIELD -${damage}`,
         x: opp.x,
         y: opp.y - 80,
         color: '#38bdf8',
-        life: 30
+        life: 32
       });
       return;
     }
@@ -797,15 +894,16 @@ export class CombatEngine {
       p.x += p.vx;
       p.life--;
 
-      // 檢查是否命中對手
+      // 檢查是否命中對手 (支援地面、空中與平台上之精確 2D 碰撞)
       const target = p.ownerId === 1 ? this.p2 : this.p1;
       const dist = Math.abs(p.x - target.x);
-      if (dist < 40 && target.y >= this.floorY - 90 && target.invincibleTimer <= 0) {
+      const dy = Math.abs(p.y - (target.y - 45));
+      if (dist < 45 && dy < 65 && target.invincibleTimer <= 0) {
         this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
           name: '能量脈衝彈',
           damage: p.damage,
           guardType: 'all',
-          chipRatio: 0.15
+          chipRatio: 0.5
         });
         this.projectiles.splice(i, 1);
         continue;
@@ -921,19 +1019,7 @@ export class CombatEngine {
       }
     }
 
-    // 5. 擂台角落換邊防夾死保護 (Corner Cross-up Safeguard)
-    if (p1.x > this.arenaWidth - 65 && p2.x > this.arenaWidth - 110) {
-      p2.x = this.arenaWidth - 110;
-    } else if (p1.x < 65 && p2.x < 110) {
-      p2.x = 110;
-    }
-    if (p2.x > this.arenaWidth - 65 && p1.x > this.arenaWidth - 110) {
-      p1.x = this.arenaWidth - 110;
-    } else if (p2.x < 65 && p1.x < 110) {
-      p1.x = 110;
-    }
-
-    // 6. 邊界最終限制 (完全開放至擂台邊緣)
+    // 5. 邊界最終平滑限制 (完全開放至擂台邊緣，防止任何卡頓抽搐)
     p1.x = Math.max(45, Math.min(this.arenaWidth - 45, p1.x));
     p2.x = Math.max(45, Math.min(this.arenaWidth - 45, p2.x));
   }
