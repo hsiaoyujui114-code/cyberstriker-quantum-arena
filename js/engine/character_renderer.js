@@ -83,6 +83,93 @@ export class CharacterRenderer {
   }
 
   /**
+   * 計算高度仿生、流暢真實的人類雙足行走步態 (Human Bipedal Walking Gait)
+   * 具備完整人體運動學特性：
+   * 1. 觸地腳跟著地 (Heel-Strike) -> 負重吸收 (Cushioning) -> 垂直支撐 (Mid-Stance) -> 前掌蹬地 (Push-Off)
+   * 2. 擺動腿高提膝避障 (Knee Clearance) -> 鐘擺前伸迎向著地 (Terminal Extension)
+   * 3. 骨盆與重心自然雙頻平滑起伏 (Pelvic Vertical Sinusoidal Bobbing)
+   * 4. 軀幹微幅自然前傾與頭部視線平穩水平補償 (Gaze Stabilization)
+   * 5. 雙臂與腿部對稱反向擺動，手肘自然屈伸 (Reciprocal Arm Swing)
+   * 6. 腳踝與戰靴自然踩踏滾動 (Ankle Dorsiflexion & Plantarflexion)
+   */
+  _calculateHumanWalkPose(t, isBackward = false) {
+    const speed = isBackward ? 0.105 : 0.12;
+    const phase = t * speed * (isBackward ? -1 : 1);
+
+    const normPhase = (p) => ((p % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+    const getHumanLegJoints = (phi) => {
+      const p = normPhase(phi);
+      // 大腿前後擺動 (Forward-and-backward thigh swing)
+      const thigh = -Math.cos(p) * 0.36 - 0.04;
+
+      let shin = 0;
+      let foot = 0;
+
+      if (p < Math.PI) {
+        // 支撐相 (Stance phase, 0 ~ PI)
+        const sp = p / Math.PI;
+        // 腳跟著地緩衝微屈 (Shock absorption)
+        const shock = 0.12 * Math.sin(sp * Math.PI * 2) * (sp < 0.45 ? 1 : 0);
+        // 蹬地前膝關節蓄力微曲 (Pre-swing push flexion)
+        const push = 0.34 * Math.pow(Math.max(0, sp - 0.45) / 0.55, 2);
+        shin = 0.06 + shock + push;
+
+        // 腳踝滾動：腳跟著地 (-0.16) -> 踩平 (0.08) -> 蹬地前腳掌滾動 (-0.28)
+        if (sp < 0.22) {
+          foot = -0.16 + (sp / 0.22) * 0.24;
+        } else if (sp < 0.58) {
+          foot = 0.08 - ((sp - 0.22) / 0.36) * 0.12;
+        } else {
+          foot = -0.04 - ((sp - 0.58) / 0.42) * 0.26;
+        }
+      } else {
+        // 擺動相 (Swing phase, PI ~ 2*PI)
+        const swp = (p - Math.PI) / Math.PI;
+        // 擺動中高提膝防拖地，隨後鐘擺前伸迎向著地
+        shin = 0.38 + 0.38 * Math.sin(swp * Math.PI) - 0.30 * Math.pow(swp, 2);
+        // 踝部放鬆微挑，避免踢蹭地面
+        foot = -0.04 + 0.12 * Math.sin(swp * Math.PI);
+      }
+
+      // 膝關節永遠向後曲折 (0.04 ~ 1.05 rad，絕不向前反曲)
+      shin = Math.max(0.04, Math.min(1.05, shin));
+      return { thigh, shin, foot };
+    };
+
+    // 前腿與後腿 (反相 180 度)
+    const frontL = getHumanLegJoints(phase);
+    const backL = getHumanLegJoints(phase + Math.PI);
+
+    // 骨盆/重心上下微幅平滑起伏：每個步態週期 2 次波峰 (單腿支撐最高，雙腿分立著地最低)
+    const verticalBob = -Math.cos(phase * 2) * 2.8;
+
+    // 軀幹自然微前傾 (~3度)，隨步伐節奏微微自然呼吸
+    const torsoAngle = (isBackward ? -0.02 : 0.045) + Math.sin(phase * 2) * 0.012;
+    // 頭部視線穩定補償 (保持雙眼與水平線平齊)
+    const headAngle = -torsoAngle * 0.75;
+
+    // 手臂反向自然交替擺動 (與同側腿相反，維持平衡)
+    const armSwing = Math.cos(phase) * 0.34;
+    const frontArmUpper = isBackward ? (-armSwing * 0.6 + 0.22) : (armSwing + 0.10);
+    const backArmUpper = isBackward ? (armSwing * 0.6 + 0.22) : (-armSwing + 0.10);
+
+    // 前臂手肘微曲自然隨動：向前擺時手肘屈度增加，向後擺時自然放鬆
+    const frontArmFore = 0.45 + Math.max(0, frontArmUpper) * 0.32;
+    const backArmFore = 0.45 + Math.max(0, backArmUpper) * 0.32;
+
+    return {
+      torso: { x: 0, y: -74 + verticalBob, angle: torsoAngle },
+      head: { x: 0, y: -98 + verticalBob, angle: headAngle },
+      frontLeg: { hipX: 6, hipY: -42 + verticalBob, thighAngle: frontL.thigh, shinAngle: frontL.shin, footAngle: frontL.foot },
+      backLeg: { hipX: -6, hipY: -42 + verticalBob, thighAngle: backL.thigh, shinAngle: backL.shin, footAngle: backL.foot },
+      frontArm: { shoulderX: 8, shoulderY: -86 + verticalBob, upperAngle: frontArmUpper, foreAngle: frontArmFore },
+      backArm: { shoulderX: -8, shoulderY: -86 + verticalBob, upperAngle: backArmUpper, foreAngle: backArmFore },
+      vfx: null
+    };
+  }
+
+  /**
    * 計算 12 種武打姿態下的關節角度與位移
    */
   calculatePose(state, t, char) {
@@ -110,37 +197,13 @@ export class CharacterRenderer {
       }
 
       case 'walk_fwd': {
-        // 向前大步邁進，軀幹前傾約 7 度
-        const cycle = Math.sin(t * 0.2);
-        const cycleCos = Math.cos(t * 0.2);
-        defaultPose.torso.angle = 0.12; // 約 7 度前傾
-        defaultPose.torso.y = -74 + Math.abs(cycle) * 4;
-        defaultPose.head.y = -98 + Math.abs(cycle) * 4;
-
-        defaultPose.frontLeg.thighAngle = cycle * 0.7;
-        defaultPose.frontLeg.shinAngle = Math.max(0, -cycle * 0.6);
-        defaultPose.backLeg.thighAngle = -cycle * 0.7;
-        defaultPose.backLeg.shinAngle = Math.max(0, cycle * 0.6);
-
-        defaultPose.frontArm.upperAngle = -cycle * 0.6 + 0.3;
-        defaultPose.frontArm.foreAngle = 0.8;
-        defaultPose.backArm.upperAngle = cycle * 0.6 + 0.3;
-        defaultPose.backArm.foreAngle = 0.8;
-        return defaultPose;
+        // 真實人類向前行走步態
+        return this._calculateHumanWalkPose(t, false);
       }
 
       case 'walk_back': {
-        // 後撤敏捷走位步 (純走位移動，自然戰備擺臂，無防護罩)
-        const cycle = Math.sin(t * 0.16);
-        defaultPose.torso.angle = -0.04;
-        defaultPose.frontArm.upperAngle = -cycle * 0.4 + 0.4;
-        defaultPose.frontArm.foreAngle = 0.9;
-        defaultPose.backArm.upperAngle = cycle * 0.4 + 0.3;
-        defaultPose.backArm.foreAngle = 0.9;
-
-        defaultPose.frontLeg.thighAngle = -cycle * 0.45;
-        defaultPose.backLeg.thighAngle = cycle * 0.45;
-        return defaultPose;
+        // 真實人類後退走位步態
+        return this._calculateHumanWalkPose(t, true);
       }
 
       case 'jump':
@@ -649,7 +712,7 @@ export class CharacterRenderer {
     ctx.fill();
     ctx.stroke();
 
-    // 2. 小腿與戰靴
+    // 2. 小腿護甲
     ctx.translate(0, 24);
     ctx.rotate(leg.shinAngle);
 
@@ -659,9 +722,13 @@ export class CharacterRenderer {
     ctx.fill();
     ctx.stroke();
 
-    // 戰靴底部噴射裝甲
+    // 3. 戰靴與腳踝關節 (支援自然步態腳踝旋轉)
+    ctx.translate(0, 24);
+    if (leg.footAngle) {
+      ctx.rotate(leg.footAngle);
+    }
     ctx.fillStyle = skin.themeColor;
-    ctx.fillRect(-4, 24, 15, 6);
+    ctx.fillRect(-4, 0, 15, 6);
 
     ctx.restore();
   }
