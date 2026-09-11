@@ -615,11 +615,60 @@
   // js/save_system.js
   var STORAGE_KEY_CURRENT = "cyberstriker_current_session";
   var STORAGE_KEY_ACCOUNTS = "cyberstriker_cloud_accounts";
+  var CLOUD_KV_ENDPOINT = "https://kvdb.io/LjcEsRKfWahraYeimuojjQ/";
+  function utf8ToBase64(str) {
+    try {
+      if (typeof btoa === "function") {
+        return btoa(unescape(encodeURIComponent(str)));
+      }
+      return Buffer.from(str, "utf8").toString("base64");
+    } catch (e) {
+      return btoa(str);
+    }
+  }
+  function base64ToUtf8(b64) {
+    try {
+      if (typeof atob === "function") {
+        return decodeURIComponent(escape(atob(b64)));
+      }
+      return Buffer.from(b64, "base64").toString("utf8");
+    } catch (e) {
+      return atob(b64);
+    }
+  }
+  function emailToCloudKey(email) {
+    const clean = email.trim().toLowerCase();
+    const safeB64 = utf8ToBase64(clean).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+    return "cs_u_" + safeB64;
+  }
   var SaveSystem = class {
     constructor() {
       this.currentUser = null;
       this.isGuest = false;
       this.accounts = this._loadAccountsFromStorage();
+      this.cloudEndpoint = CLOUD_KV_ENDPOINT;
+      this.syncListeners = [];
+      this.syncState = "idle";
+      this.lastSyncMessage = "\u96F2\u7AEF\u5C31\u7DD2";
+    }
+    /**
+     * 註冊雲端同步狀態變更監聽器
+     */
+    onSyncChange(fn) {
+      if (typeof fn === "function") {
+        this.syncListeners.push(fn);
+      }
+    }
+    _setSyncState(state, message = "") {
+      this.syncState = state;
+      this.lastSyncMessage = message;
+      this.syncListeners.forEach((fn) => {
+        try {
+          fn(this.syncState, this.lastSyncMessage);
+        } catch (e) {
+          console.error("Error in sync listener:", e);
+        }
+      });
     }
     _loadAccountsFromStorage() {
       try {
@@ -671,7 +720,7 @@
       }
     }
     /**
-     * 初始化系統與自動嘗試恢復前次登入
+     * 初始化系統：自動嘗試恢復前次登入，並在背景向雲端驗證有無最新資料
      */
     init() {
       try {
@@ -685,32 +734,217 @@
             this.currentUser = this.accounts[sessionData.email];
             this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
             this._saveAccountsToStorage();
+            this.syncWithCloud(sessionData.email).catch((err) => {
+              console.warn("Background sync on init:", err);
+            });
             return;
           }
         }
       } catch (e) {
-        console.warn("Session resume failed, defaulting to guest:", e);
+        console.warn("Session resume failed, defaulting to first or guest:", e);
       }
       const firstEmail = Object.keys(this.accounts)[0];
-      if (firstEmail) {
-        this.loginWithEmail(firstEmail);
+      if (firstEmail && this.accounts[firstEmail]) {
+        this.currentUser = this.accounts[firstEmail];
+        this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
+        this.isGuest = false;
+        this._persistSession();
+        this.syncWithCloud(firstEmail).catch(console.warn);
       } else {
         this.loginAsGuest();
       }
     }
     /**
-     * 途徑一：手動輸入 Gmail 信箱
+     * 雲端存檔讀取 (GET from kvdb.io)
      */
-    loginWithEmail(email, customNickname = "") {
+    async fetchFromCloud(email) {
+      if (!email || email.includes("offline.local")) return null;
+      const key = emailToCloudKey(email);
+      const url = this.cloudEndpoint + key;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 6e3);
+      try {
+        const res = await fetch(url, {
+          method: "GET",
+          headers: { "Accept": "application/json" },
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+        if (res.status === 200) {
+          const data = await res.json();
+          return data;
+        } else if (res.status === 404) {
+          return null;
+        } else {
+          console.warn("Cloud fetch returned status " + res.status);
+          return null;
+        }
+      } catch (e) {
+        clearTimeout(timer);
+        console.warn("Cloud fetch failed or timed out:", e.message);
+        return null;
+      }
+    }
+    /**
+     * 雲端存檔寫入 (POST to kvdb.io)
+     */
+    async saveToCloud(userData) {
+      if (!userData || !userData.email || userData.email.includes("offline.local")) {
+        return false;
+      }
+      this._setSyncState("syncing", "\u6B63\u5728\u4E0A\u50B3\u5B58\u6A94\u81F3\u5168\u7403\u96F2\u7AEF...");
+      const key = emailToCloudKey(userData.email);
+      const url = this.cloudEndpoint + key;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 6e3);
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData),
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+        if (res.ok) {
+          this._setSyncState("synced", "\u5DF2\u65BC " + (/* @__PURE__ */ new Date()).toLocaleTimeString() + " \u6210\u529F\u540C\u6B65\u81F3\u96F2\u7AEF");
+          return true;
+        } else {
+          console.warn("Cloud save status " + res.status);
+          this._setSyncState("error", "\u96F2\u7AEF\u540C\u6B65\u56DE\u61C9\u7570\u5E38\uFF0C\u5DF2\u4FDD\u5B58\u65BC\u672C\u6A5F");
+          return false;
+        }
+      } catch (e) {
+        clearTimeout(timer);
+        console.warn("Cloud save failed:", e.message);
+        this._setSyncState("error", "\u7DB2\u8DEF\u9023\u7DDA\u53D7\u9650\uFF0C\u5B58\u6A94\u66AB\u5B58\u65BC\u672C\u6A5F");
+        return false;
+      }
+    }
+    /**
+     * 智能合併演算法：確保任何裝置解鎖的造型與最高能量幣永遠不遺失
+     */
+    _mergeAccounts(cloud, local) {
+      if (!cloud) return local;
+      if (!local) return cloud;
+      const cloudTime = new Date(cloud.updatedAt || 0).getTime();
+      const localTime = new Date(local.updatedAt || 0).getTime();
+      const allSkins = Array.from(/* @__PURE__ */ new Set([
+        ...Array.isArray(cloud.skins) ? cloud.skins : [],
+        ...Array.isArray(local.skins) ? local.skins : []
+      ]));
+      const newerAcc = cloudTime >= localTime ? cloud : local;
+      let equipped = newerAcc.equippedSkin;
+      if (!allSkins.includes(equipped)) {
+        equipped = allSkins[0] || "skin_cyber_warrior";
+      }
+      const credits = Math.max(0, Number(newerAcc.credits) || 0);
+      const eventTokens = Math.max(0, Number(newerAcc.eventTokens) || 0);
+      const stats = {
+        total: Math.max(cloud.stats?.total || 0, local.stats?.total || 0),
+        wins: Math.max(cloud.stats?.wins || 0, local.stats?.wins || 0),
+        losses: Math.max(cloud.stats?.losses || 0, local.stats?.losses || 0),
+        aiBeaten: {
+          easy: !!(cloud.stats?.aiBeaten?.easy || local.stats?.aiBeaten?.easy),
+          normal: !!(cloud.stats?.aiBeaten?.normal || local.stats?.aiBeaten?.normal),
+          hard: !!(cloud.stats?.aiBeaten?.hard || local.stats?.aiBeaten?.hard),
+          nightmare: !!(cloud.stats?.aiBeaten?.nightmare || local.stats?.aiBeaten?.nightmare)
+        }
+      };
+      return {
+        uid: cloud.uid || local.uid || "CY-UID-" + Math.floor(1e5 + Math.random() * 9e5),
+        email: local.email || cloud.email,
+        nickname: local.nickname && local.nickname !== "\u91CF\u5B50\u5148\u92D2" ? local.nickname : cloud.nickname || local.nickname || "\u91CF\u5B50\u6230\u58EB",
+        avatar: cloud.avatar || local.avatar,
+        credits,
+        eventTokens,
+        skins: allSkins,
+        equippedSkin: equipped,
+        loadout: Array.isArray(newerAcc.loadout) && newerAcc.loadout.length === 3 ? newerAcc.loadout : local.loadout || ["SK-01", "SK-02", "SK-09"],
+        stats,
+        preferences: { ...cloud.preferences || {}, ...local.preferences || {} },
+        lastLogin: (/* @__PURE__ */ new Date()).toISOString(),
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+      };
+    }
+    /**
+     * 手動或定時強制向雲端進行雙向同步
+     */
+    async syncWithCloud(targetEmail = null) {
+      const email = targetEmail || (this.currentUser ? this.currentUser.email : null);
+      if (!email || email.includes("offline.local")) {
+        return { success: false, reason: "\u8A2A\u5BA2\u5E33\u865F\u7121\u6CD5\u9032\u884C\u96F2\u7AEF\u540C\u6B65" };
+      }
+      this._setSyncState("syncing", "\u6B63\u5728\u9023\u63A5\u5168\u7403\u96F2\u7AEF\u8CC7\u6599\u5EAB...");
+      try {
+        const cloudData = await this.fetchFromCloud(email);
+        const localData = this.accounts[email] || this.currentUser;
+        let merged;
+        if (cloudData && localData) {
+          merged = this._mergeAccounts(cloudData, localData);
+        } else if (cloudData) {
+          merged = cloudData;
+        } else if (localData) {
+          merged = localData;
+        } else {
+          return { success: false, reason: "\u627E\u4E0D\u5230\u5E33\u865F\u8CC7\u6599" };
+        }
+        merged.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+        this.accounts[email] = merged;
+        if (this.currentUser && this.currentUser.email === email) {
+          this.currentUser = merged;
+        }
+        this._saveAccountsToStorage();
+        this._persistSession();
+        await this.saveToCloud(merged);
+        this._setSyncState("synced", "\u5DF2\u5B8C\u6210\u8DE8\u96FB\u8166\u96D9\u5411\u540C\u6B65 (" + (/* @__PURE__ */ new Date()).toLocaleTimeString() + ")");
+        return { success: true, user: merged };
+      } catch (e) {
+        console.error("syncWithCloud error:", e);
+        this._setSyncState("error", "\u96F2\u7AEF\u540C\u6B65\u5931\u6557\uFF0C\u5DF2\u7DAD\u6301\u672C\u6A5F\u9032\u5EA6");
+        return { success: false, error: e.message };
+      }
+    }
+    /**
+     * 途徑一：手動輸入 Gmail 信箱（非同步雲端查找與漫遊恢復）
+     */
+    async loginWithEmail(email, customNickname = "") {
       email = email.trim().toLowerCase();
-      const isNewUser = !this.accounts[email];
-      if (isNewUser) {
+      this._setSyncState("syncing", "\u6B63\u5728\u6AA2\u7D22\u96F2\u7AEF\u4F3A\u670D\u5668\u5B58\u6A94...");
+      const localData = this.accounts[email] || null;
+      let cloudData = null;
+      let isNewUser = false;
+      let restoreSource = "local";
+      try {
+        cloudData = await this.fetchFromCloud(email);
+      } catch (e) {
+        console.warn("Failed to query cloud on login:", e);
+      }
+      if (cloudData) {
+        restoreSource = "cloud";
+        isNewUser = false;
+        this.currentUser = this._mergeAccounts(cloudData, localData);
+        if (customNickname && customNickname.trim()) {
+          this.currentUser.nickname = customNickname.trim().slice(0, 12);
+        }
+        this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
+        this.accounts[email] = this.currentUser;
+      } else if (localData) {
+        restoreSource = "local";
+        isNewUser = false;
+        this.currentUser = localData;
+        if (customNickname && customNickname.trim()) {
+          this.currentUser.nickname = customNickname.trim().slice(0, 12);
+        }
+        this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
+      } else {
+        isNewUser = true;
+        restoreSource = "new";
         const defaultNick = customNickname.trim() || email.split("@")[0];
         const newAccount = {
           uid: "CY-UID-" + Math.floor(1e5 + Math.random() * 9e5),
           email,
           nickname: defaultNick.slice(0, 12),
-          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
+          avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=" + encodeURIComponent(email),
           credits: 1200,
           eventTokens: 0,
           skins: ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"],
@@ -723,28 +957,26 @@
         };
         this.accounts[email] = newAccount;
         this.currentUser = newAccount;
-      } else {
-        this.currentUser = this.accounts[email];
-        if (customNickname && customNickname.trim()) {
-          this.currentUser.nickname = customNickname.trim().slice(0, 12);
-        }
-        this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
       }
       this.isGuest = false;
       this._persistSession();
       this._saveAccountsToStorage();
-      return { user: this.currentUser, isNewUser };
+      this.saveToCloud(this.currentUser).catch((err) => {
+        console.warn("Initial cloud push failed:", err);
+      });
+      return { user: this.currentUser, isNewUser, restoreSource };
     }
     /**
      * 途徑二：選擇電腦現有 Google 帳號清單一鍵切換
      */
-    switchAccount(email) {
+    async switchAccount(email) {
       if (this.accounts[email]) {
         this.currentUser = this.accounts[email];
         this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
         this.isGuest = false;
         this._persistSession();
         this._saveAccountsToStorage();
+        this.syncWithCloud(email).catch((e) => console.warn("Switch sync error:", e));
         return this.currentUser;
       }
       return null;
@@ -769,13 +1001,14 @@
         lastLogin: (/* @__PURE__ */ new Date()).toISOString(),
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
       };
+      this._setSyncState("idle", "\u96E2\u7DDA\u8A2A\u5BA2\u6A21\u5F0F");
       this._persistSession();
       return this.currentUser;
     }
     /**
-     * 將訪客帳號綁定至真實 Gmail (資料無痛轉移)
+     * 將訪客帳號綁定至真實 Gmail (資料無痛轉移並上傳雲端)
      */
-    bindGuestToEmail(email, nickname = "") {
+    async bindGuestToEmail(email, nickname = "") {
       email = email.trim().toLowerCase();
       const isNew = !this.accounts[email];
       if (isNew) {
@@ -794,6 +1027,7 @@
       this.isGuest = false;
       this._persistSession();
       this._saveAccountsToStorage();
+      await this.saveToCloud(this.currentUser);
       return this.currentUser;
     }
     /**
@@ -811,7 +1045,6 @@
     }
     /**
      * 戰鬥獲勝/落敗經濟收益結算
-     * 勝場 +350, 敗場 +120, 困難/惡夢 +200
      */
     recordBattleResult(won, difficulty = "normal", isAi = true) {
       if (!this.currentUser) return { gained: 0, total: 0 };
@@ -837,6 +1070,7 @@
       if (!this.currentUser) return false;
       if (!this.currentUser.skins.includes(skinId)) return false;
       this.currentUser.equippedSkin = skinId;
+      this.currentUser.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
       this._saveCurrent();
       return true;
     }
@@ -851,6 +1085,7 @@
       this.currentUser.credits -= price;
       this.currentUser.skins.push(skinId);
       this.currentUser.equippedSkin = skinId;
+      this.currentUser.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
       this._saveCurrent();
       return { success: true, remaining: this.currentUser.credits };
     }
@@ -858,18 +1093,26 @@
       if (!this.currentUser) return;
       if (Array.isArray(skillsArray) && skillsArray.length === 3) {
         this.currentUser.loadout = [...skillsArray];
+        this.currentUser.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
         this._saveCurrent();
       }
     }
     savePreferences(prefs) {
       if (!this.currentUser) return;
       this.currentUser.preferences = { ...this.currentUser.preferences, ...prefs };
+      this.currentUser.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
       this._saveCurrent();
     }
+    /**
+     * 存檔核心：先寫入本機 localStorage，並在背景非同步上傳至全球雲端
+     */
     _saveCurrent() {
       if (!this.isGuest && this.currentUser && this.currentUser.email) {
         this.accounts[this.currentUser.email] = { ...this.currentUser, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
         this._saveAccountsToStorage();
+        this.saveToCloud(this.currentUser).catch((err) => {
+          console.warn("Auto cloud sync failed:", err);
+        });
       }
       this._persistSession();
     }
@@ -884,25 +1127,65 @@
         console.error("Session write failed:", e);
       }
     }
-    // 跨裝置匯出存檔 JSON (支援一鍵同步到手機或另一台電腦)
+    /**
+     * 匯出萬用量子存檔代碼 (CY-SAVE-...)
+     */
+    exportSaveToken() {
+      if (!this.currentUser) return "";
+      try {
+        const payload = JSON.stringify(this.currentUser);
+        const b64 = utf8ToBase64(payload);
+        return "CY-SAVE-" + b64;
+      } catch (e) {
+        console.error("Failed to export save token:", e);
+        return "";
+      }
+    }
+    /**
+     * 導入萬用量子存檔代碼 (CY-SAVE-...)
+     */
+    async importSaveToken(tokenStr) {
+      if (!tokenStr || !tokenStr.startsWith("CY-SAVE-")) {
+        return { success: false, reason: "\u4EE3\u78BC\u683C\u5F0F\u7121\u6548\uFF0C\u5FC5\u9808\u4EE5 CY-SAVE- \u958B\u982D" };
+      }
+      try {
+        const b64 = tokenStr.slice("CY-SAVE-".length).trim();
+        const json = base64ToUtf8(b64);
+        const imported = JSON.parse(json);
+        if (!imported.email || !imported.skins) {
+          return { success: false, reason: "\u4EE3\u78BC\u5167\u5BB9\u7F3A\u5C11\u5FC5\u8981\u904A\u6232\u6B04\u4F4D" };
+        }
+        const email = imported.email.toLowerCase();
+        const existing = this.accounts[email] || null;
+        const merged = this._mergeAccounts(imported, existing);
+        this.accounts[email] = merged;
+        this.currentUser = merged;
+        this.isGuest = false;
+        this._saveAccountsToStorage();
+        this._persistSession();
+        await this.saveToCloud(merged);
+        return { success: true, user: merged };
+      } catch (e) {
+        console.error("Failed to parse save token:", e);
+        return { success: false, reason: "\u5B58\u6A94\u4EE3\u78BC\u89E3\u6790\u5931\u6557\uFF1A" + e.message };
+      }
+    }
     exportDataJson() {
       return JSON.stringify(this.currentUser, null, 2);
     }
-    // 跨裝置匯入存檔 JSON (時間戳記智能合併)
     importDataJson(jsonString) {
       try {
         const imported = JSON.parse(jsonString);
         if (!imported.email || !imported.uid) return false;
         const existing = this.accounts[imported.email];
-        if (!existing || new Date(imported.updatedAt) > new Date(existing.updatedAt)) {
-          this.accounts[imported.email] = imported;
-          this.currentUser = imported;
-          this.isGuest = false;
-          this._saveAccountsToStorage();
-          this._persistSession();
-          return true;
-        }
-        return false;
+        const merged = this._mergeAccounts(imported, existing);
+        this.accounts[imported.email] = merged;
+        this.currentUser = merged;
+        this.isGuest = false;
+        this._saveAccountsToStorage();
+        this._persistSession();
+        this.saveToCloud(merged).catch(console.warn);
+        return true;
       } catch (e) {
         console.error("Failed to import data:", e);
         return false;
@@ -3308,6 +3591,9 @@
     }
     init() {
       saveSystem.init();
+      saveSystem.onSyncChange((state, msg) => {
+        this.updateCloudSyncUI(state, msg);
+      });
       this.pedestalSkin = this.getEquippedSkin();
       this.canvas = document.getElementById("gameCanvas");
       if (this.canvas) {
@@ -3434,10 +3720,64 @@
       if (credEl) credEl.textContent = u.credits.toLocaleString();
       if (avatarEl) avatarEl.src = u.avatar;
       if (guestBadge) guestBadge.style.display = saveSystem.isGuest ? "inline-block" : "none";
+      this.updateCloudSyncUI(saveSystem.syncState, saveSystem.lastSyncMessage);
       if (u.preferences) {
         soundEngine.setBgmVolume(u.preferences.bgmVol || 0.4);
         soundEngine.setSfxVolume(u.preferences.sfxVol || 0.8);
         combatEngine.enableHaptics = u.preferences.haptics !== false;
+      }
+    }
+    updateCloudSyncUI(state, message = "") {
+      const headerBadge = document.getElementById("cloudSyncHeaderBadge");
+      if (headerBadge) {
+        if (saveSystem.isGuest) {
+          headerBadge.style.display = "none";
+        } else {
+          headerBadge.style.display = "inline-flex";
+          if (state === "syncing") {
+            headerBadge.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color: #ffd700;"></i> <span style="color: #ffd700;">\u540C\u6B65\u4E2D...</span>';
+            headerBadge.title = message || "\u6B63\u5728\u8207\u5168\u7403\u96F2\u7AEF\u540C\u6B65\u5B58\u6A94";
+          } else if (state === "synced") {
+            headerBadge.innerHTML = '<i class="fa-solid fa-cloud" style="color: #00f3ff;"></i> <span style="color: #00f3ff;">\u96F2\u7AEF\u540C\u6B65</span>';
+            headerBadge.title = message || "\u5DF2\u9023\u7DDA\u81F3\u5168\u7403\u96F2\u7AEF\u4F3A\u670D\u5668 (\u9032\u5EA6\u8DE8\u96FB\u8166\u540C\u6B65\u4E2D)";
+          } else if (state === "error") {
+            headerBadge.innerHTML = '<i class="fa-solid fa-cloud-slash" style="color: #ff007f;"></i> <span style="color: #ff007f;">\u672C\u6A5F\u5FEB\u53D6</span>';
+            headerBadge.title = message || "\u96F2\u7AEF\u9023\u7DDA\u53D7\u9650\uFF0C\u9032\u5EA6\u66AB\u5B58\u65BC\u672C\u6A5F";
+          } else {
+            headerBadge.innerHTML = '<i class="fa-solid fa-cloud" style="color: #94a3b8;"></i> <span>\u96F2\u7AEF\u5B58\u6A94</span>';
+          }
+        }
+      }
+      const modalIcon = document.getElementById("cloudSyncModalIcon");
+      const modalTitle = document.getElementById("cloudSyncModalTitle");
+      const modalDesc = document.getElementById("cloudSyncModalDesc");
+      if (modalTitle) {
+        if (saveSystem.isGuest) {
+          if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-user-ninja" style="color: #ffd700;"></i>';
+          modalTitle.textContent = "\u8A2A\u5BA2\u6A21\u5F0F\uFF1A\u9032\u5EA6\u50C5\u5132\u5B58\u65BC\u672C\u6A5F";
+          modalTitle.style.color = "#ffd700";
+          if (modalDesc) modalDesc.textContent = "\u8F38\u5165\u4E0B\u65B9 Gmail \u4FE1\u7BB1\u5373\u53EF\u5347\u7D1A\u70BA\u5168\u7403\u96F2\u7AEF\u5E33\u865F\uFF0C\u8DE8\u96FB\u8166\u6C38\u4E0D\u4E1F\u5931\uFF01";
+        } else if (state === "syncing") {
+          if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color: #ffd700;"></i>';
+          modalTitle.textContent = "\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\uFF1A\u6B63\u5728\u96D9\u5411\u540C\u6B65\u8CC7\u6599...";
+          modalTitle.style.color = "#ffd700";
+          if (modalDesc) modalDesc.textContent = message || "\u6B63\u5728\u9A57\u8B49\u8DE8\u96FB\u8166\u9032\u5EA6\u4E26\u5408\u4F75\u6700\u65B0\u5916\u89C0\u8207\u91D1\u5E63";
+        } else if (state === "synced") {
+          if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud-check" style="color: #00f3ff;"></i>';
+          modalTitle.textContent = "\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u670D\u52D9\uFF1A\u5DF2\u540C\u6B65\u6700\u65B0\u7D00\u9304 \u{1F7E2}";
+          modalTitle.style.color = "#00f3ff";
+          if (modalDesc) modalDesc.textContent = message || "\u5728\u4EFB\u4F55\u96FB\u8166\u767B\u5165\u6B64\u5E33\u865F\uFF0C\u7686\u80FD\u81EA\u52D5\u63A5\u7E8C\u904A\u73A9\uFF01";
+        } else if (state === "error") {
+          if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud-slash" style="color: #ff007f;"></i>';
+          modalTitle.textContent = "\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u670D\u52D9\uFF1A\u9023\u7DDA\u66AB\u6642\u53D7\u9650 \u{1F7E1}";
+          modalTitle.style.color = "#ff007f";
+          if (modalDesc) modalDesc.textContent = message || "\u5DF2\u5148\u5132\u5B58\u81F3\u672C\u6A5F\uFF0C\u7DB2\u8DEF\u6062\u5FA9\u6642\u5C07\u81EA\u52D5\u88DC\u63A8\u81F3\u96F2\u7AEF\u3002";
+        } else {
+          if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud" style="color: #00f3ff;"></i>';
+          modalTitle.textContent = "\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u670D\u52D9\uFF1A\u5DF2\u5C31\u7DD2";
+          modalTitle.style.color = "#00f3ff";
+          if (modalDesc) modalDesc.textContent = "\u767B\u5165\u540C\u4E00\u500B Email \u5373\u53EF\u5728\u4EFB\u4F55\u96FB\u8166\u81EA\u52D5\u540C\u6B65\u91D1\u5E63\u3001\u9020\u578B\u8207\u6230\u7E3E";
+        }
       }
     }
     getEquippedSkin() {
@@ -3587,6 +3927,10 @@
       const modal = document.getElementById("authModal");
       if (!modal) return;
       modal.classList.add("active");
+      this.renderRegisteredAccounts();
+      this.updateCloudSyncUI(saveSystem.syncState, saveSystem.lastSyncMessage);
+    }
+    renderRegisteredAccounts() {
       const listContainer = document.getElementById("googleAccountsList");
       if (listContainer) {
         const accounts = saveSystem.getRegisteredAccountsList();
@@ -3605,9 +3949,11 @@
         </div>
       `).join("");
         listContainer.querySelectorAll(".switch-acc-btn").forEach((btn) => {
-          btn.addEventListener("click", () => {
+          btn.addEventListener("click", async () => {
             const email = btn.dataset.email;
-            saveSystem.switchAccount(email);
+            btn.disabled = true;
+            btn.textContent = "\u5207\u63DB\u4E2D...";
+            await saveSystem.switchAccount(email);
             this.updateUserHUD();
             this.renderSkinsInventory();
             this.renderShopCatalog();
@@ -4243,23 +4589,117 @@
       }
       const emailForm = document.getElementById("manualEmailForm");
       if (emailForm) {
-        emailForm.onsubmit = (e) => {
+        emailForm.onsubmit = async (e) => {
           e.preventDefault();
           const emailInput = document.getElementById("authEmailInput");
           const nickInput = document.getElementById("authNicknameInput");
+          const submitBtn = document.getElementById("authSubmitBtn");
           const email = emailInput ? emailInput.value.trim() : "";
           const nick = nickInput ? nickInput.value.trim() : "";
           if (!email.includes("@") || !email.includes(".")) {
             alert("\u8ACB\u8F38\u5165\u6709\u6548\u7684 Gmail \u4FE1\u7BB1\u683C\u5F0F\uFF01");
             return;
           }
-          const res = saveSystem.loginWithEmail(email, nick);
-          soundEngine.playUI("equip");
-          alert(res.isNewUser ? `\u{1F389} \u6B61\u8FCE\u65B0\u6230\u58EB\uFF01\u5DF2\u767C\u653E 1,200 \u80FD\u91CF\u5E63\u8207 3 \u5957\u9810\u8A2D\u9020\u578B\u3002` : `\u2705 \u6B61\u8FCE\u56DE\u4F86\uFF01\u5DF2\u81EA\u96F2\u7AEF\u6210\u529F\u9084\u539F\u6240\u6709\u9032\u5EA6\u3002`);
-          this.updateUserHUD();
-          this.renderSkinsInventory();
-          this.renderShopCatalog();
-          this.closeAuthModal();
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> \u6B63\u5728\u6AA2\u7D22\u96F2\u7AEF\u5B58\u6A94...';
+          }
+          try {
+            const res = await saveSystem.loginWithEmail(email, nick);
+            soundEngine.playUI("equip");
+            if (res.restoreSource === "cloud") {
+              alert(`\u2601\uFE0F \u8DE8\u96FB\u8166\u96F2\u7AEF\u5B58\u6A94\u9084\u539F\u6210\u529F\uFF01
+\u6B61\u8FCE\u56DE\u4F86\uFF0C${res.user.nickname}\uFF01
+\u5DF2\u6210\u529F\u81EA\u5168\u7403\u96F2\u7AEF\u540C\u6B65\u60A8\u4E0A\u6B21\u904A\u73A9\u4E4B\u80FD\u91CF\u5E63 (${res.user.credits.toLocaleString()}) \u8207\u6240\u6709\u5916\u89C0\u3002`);
+            } else if (res.isNewUser) {
+              alert(`\u{1F389} \u6B61\u8FCE\u65B0\u6230\u58EB\uFF01\u5DF2\u767C\u653E 1,200 \u80FD\u91CF\u5E63\u8207 3 \u5957\u9810\u8A2D\u9020\u578B\uFF0C\u4E26\u5EFA\u7ACB\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u3002`);
+            } else {
+              alert(`\u2705 \u6B61\u8FCE\u56DE\u4F86\uFF01\u5DF2\u8F09\u5165\u9032\u5EA6\u4E26\u540C\u6B65\u81F3\u5168\u7403\u96F2\u7AEF\u3002`);
+            }
+            this.updateUserHUD();
+            this.renderSkinsInventory();
+            this.renderShopCatalog();
+            this.closeAuthModal();
+          } catch (err) {
+            console.error("Login error:", err);
+            alert("\u767B\u5165\u8655\u7406\u767C\u751F\u554F\u984C\uFF0C\u8ACB\u518D\u8A66\u4E00\u6B21\u3002");
+          } finally {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> \u78BA\u8A8D\u767B\u5165\u4E26\u81EA\u96F2\u7AEF\u9084\u539F\u9032\u5EA6';
+            }
+          }
+        };
+      }
+      const forceCloudSyncBtn = document.getElementById("forceCloudSyncBtn");
+      if (forceCloudSyncBtn) {
+        forceCloudSyncBtn.onclick = async () => {
+          if (saveSystem.isGuest) {
+            alert("\u8A2A\u5BA2\u8EAB\u5206\u7121\u6CD5\u540C\u6B65\u96F2\u7AEF\uFF0C\u8ACB\u5148\u5728\u4E0B\u65B9\u8F38\u5165 Gmail \u767B\u5165\uFF01");
+            return;
+          }
+          forceCloudSyncBtn.disabled = true;
+          forceCloudSyncBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> \u540C\u6B65\u4E2D...';
+          const res = await saveSystem.syncWithCloud();
+          forceCloudSyncBtn.disabled = false;
+          forceCloudSyncBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> \u7ACB\u5373\u540C\u6B65';
+          if (res.success) {
+            soundEngine.playUI("equip");
+            this.updateUserHUD();
+            this.renderSkinsInventory();
+            this.renderShopCatalog();
+            this.renderRegisteredAccounts();
+            alert(`\u2705 \u8DE8\u96FB\u8166\u96D9\u5411\u540C\u6B65\u6210\u529F\uFF01
+\u5DF2\u62C9\u53D6\u6700\u65B0\u96F2\u7AEF\u5B58\u6A94\u3002
+\u76EE\u524D\u5E33\u865F\uFF1A${res.user.email}
+\u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}`);
+          } else {
+            soundEngine.playHit("guard");
+            alert(`\u26A0\uFE0F \u540C\u6B65\u5931\u6557\uFF1A${res.reason || res.error || "\u7DB2\u8DEF\u7570\u5E38"}`);
+          }
+        };
+      }
+      const exportSaveTokenBtn = document.getElementById("exportSaveTokenBtn");
+      if (exportSaveTokenBtn) {
+        exportSaveTokenBtn.onclick = () => {
+          const token = saveSystem.exportSaveToken();
+          if (!token) {
+            alert("\u7576\u524D\u7121\u6709\u6548\u5E33\u865F\u5B58\u6A94\u53EF\u8907\u88FD\uFF01");
+            return;
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(token).then(() => {
+              soundEngine.playUI("equip");
+              alert("\u{1F4CB} \u842C\u7528\u5B58\u6A94\u4EE3\u78BC\u5DF2\u8907\u88FD\u5230\u526A\u8CBC\u7C3F\uFF01\n\u60A8\u53EF\u4EE5\u5728\u5176\u4ED6\u96FB\u8166\u6216\u700F\u89BD\u5668\u9EDE\u64CA\u300C\u5C0E\u5165\u5B58\u6A94\u4EE3\u78BC\u300D\u7ACB\u5373\u9084\u539F\uFF01");
+            }).catch(() => {
+              prompt("\u8ACB\u624B\u52D5\u8907\u88FD\u4E0B\u5217\u5B58\u6A94\u4EE3\u78BC\uFF1A", token);
+            });
+          } else {
+            prompt("\u8ACB\u624B\u52D5\u8907\u88FD\u4E0B\u5217\u5B58\u6A94\u4EE3\u78BC\uFF1A", token);
+          }
+        };
+      }
+      const importSaveTokenBtn = document.getElementById("importSaveTokenBtn");
+      if (importSaveTokenBtn) {
+        importSaveTokenBtn.onclick = async () => {
+          const token = prompt("\u8ACB\u8CBC\u4E0A\u4EE5 CY-SAVE- \u958B\u982D\u7684\u91CF\u5B50\u5B58\u6A94\u4EE3\u78BC\uFF1A");
+          if (!token || !token.trim()) return;
+          const res = await saveSystem.importSaveToken(token.trim());
+          if (res.success) {
+            soundEngine.playUI("equip");
+            this.updateUserHUD();
+            this.renderSkinsInventory();
+            this.renderShopCatalog();
+            this.renderRegisteredAccounts();
+            alert(`\u{1F389} \u5B58\u6A94\u4EE3\u78BC\u5C0E\u5165\u6210\u529F\uFF01
+\u5E33\u865F\uFF1A${res.user.email}
+\u66B1\u7A31\uFF1A${res.user.nickname}
+\u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
+\u5DF2\u81EA\u52D5\u540C\u6B65\u81F3\u5168\u7403\u96F2\u7AEF\uFF01`);
+          } else {
+            soundEngine.playHit("guard");
+            alert(`\u274C \u5B58\u6A94\u4EE3\u78BC\u5C0E\u5165\u5931\u6557\uFF1A${res.reason || "\u4EE3\u78BC\u7121\u6548"}`);
+          }
         };
       }
       const guestBtn = document.getElementById("authGuestBtn");

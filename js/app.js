@@ -45,6 +45,9 @@ class CyberStrikerApp {
   init() {
     // 1. 初始化存檔與音效
     saveSystem.init();
+    saveSystem.onSyncChange((state, msg) => {
+      this.updateCloudSyncUI(state, msg);
+    });
     this.pedestalSkin = this.getEquippedSkin();
 
     // 2. 畫布初始化
@@ -205,12 +208,70 @@ class CyberStrikerApp {
     if (credEl) credEl.textContent = u.credits.toLocaleString();
     if (avatarEl) avatarEl.src = u.avatar;
     if (guestBadge) guestBadge.style.display = saveSystem.isGuest ? 'inline-block' : 'none';
+    this.updateCloudSyncUI(saveSystem.syncState, saveSystem.lastSyncMessage);
 
     // 更新設定滑桿
     if (u.preferences) {
       soundEngine.setBgmVolume(u.preferences.bgmVol || 0.4);
       soundEngine.setSfxVolume(u.preferences.sfxVol || 0.8);
       combatEngine.enableHaptics = u.preferences.haptics !== false;
+    }
+  }
+
+  updateCloudSyncUI(state, message = '') {
+    // 頂部導航狀態標籤
+    const headerBadge = document.getElementById('cloudSyncHeaderBadge');
+    if (headerBadge) {
+      if (saveSystem.isGuest) {
+        headerBadge.style.display = 'none';
+      } else {
+        headerBadge.style.display = 'inline-flex';
+        if (state === 'syncing') {
+          headerBadge.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color: #ffd700;"></i> <span style="color: #ffd700;">同步中...</span>';
+          headerBadge.title = message || '正在與全球雲端同步存檔';
+        } else if (state === 'synced') {
+          headerBadge.innerHTML = '<i class="fa-solid fa-cloud" style="color: #00f3ff;"></i> <span style="color: #00f3ff;">雲端同步</span>';
+          headerBadge.title = message || '已連線至全球雲端伺服器 (進度跨電腦同步中)';
+        } else if (state === 'error') {
+          headerBadge.innerHTML = '<i class="fa-solid fa-cloud-slash" style="color: #ff007f;"></i> <span style="color: #ff007f;">本機快取</span>';
+          headerBadge.title = message || '雲端連線受限，進度暫存於本機';
+        } else {
+          headerBadge.innerHTML = '<i class="fa-solid fa-cloud" style="color: #94a3b8;"></i> <span>雲端存檔</span>';
+        }
+      }
+    }
+
+    // Modal 內的同步狀態面板
+    const modalIcon = document.getElementById('cloudSyncModalIcon');
+    const modalTitle = document.getElementById('cloudSyncModalTitle');
+    const modalDesc = document.getElementById('cloudSyncModalDesc');
+    if (modalTitle) {
+      if (saveSystem.isGuest) {
+        if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-user-ninja" style="color: #ffd700;"></i>';
+        modalTitle.textContent = '訪客模式：進度僅儲存於本機';
+        modalTitle.style.color = '#ffd700';
+        if (modalDesc) modalDesc.textContent = '輸入下方 Gmail 信箱即可升級為全球雲端帳號，跨電腦永不丟失！';
+      } else if (state === 'syncing') {
+        if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color: #ffd700;"></i>';
+        modalTitle.textContent = '全球雲端存檔：正在雙向同步資料...';
+        modalTitle.style.color = '#ffd700';
+        if (modalDesc) modalDesc.textContent = message || '正在驗證跨電腦進度並合併最新外觀與金幣';
+      } else if (state === 'synced') {
+        if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud-check" style="color: #00f3ff;"></i>';
+        modalTitle.textContent = '全球雲端存檔服務：已同步最新紀錄 🟢';
+        modalTitle.style.color = '#00f3ff';
+        if (modalDesc) modalDesc.textContent = message || '在任何電腦登入此帳號，皆能自動接續遊玩！';
+      } else if (state === 'error') {
+        if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud-slash" style="color: #ff007f;"></i>';
+        modalTitle.textContent = '全球雲端存檔服務：連線暫時受限 🟡';
+        modalTitle.style.color = '#ff007f';
+        if (modalDesc) modalDesc.textContent = message || '已先儲存至本機，網路恢復時將自動補推至雲端。';
+      } else {
+        if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud" style="color: #00f3ff;"></i>';
+        modalTitle.textContent = '全球雲端存檔服務：已就緒';
+        modalTitle.style.color = '#00f3ff';
+        if (modalDesc) modalDesc.textContent = '登入同一個 Email 即可在任何電腦自動同步金幣、造型與戰績';
+      }
     }
   }
 
@@ -378,6 +439,11 @@ class CyberStrikerApp {
     if (!modal) return;
     modal.classList.add('active');
 
+    this.renderRegisteredAccounts();
+    this.updateCloudSyncUI(saveSystem.syncState, saveSystem.lastSyncMessage);
+  }
+
+  renderRegisteredAccounts() {
     // 渲染本機已登記 Google 帳號清單 (多帳號切換體驗)
     const listContainer = document.getElementById('googleAccountsList');
     if (listContainer) {
@@ -398,9 +464,11 @@ class CyberStrikerApp {
       `).join('');
 
       listContainer.querySelectorAll('.switch-acc-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           const email = btn.dataset.email;
-          saveSystem.switchAccount(email);
+          btn.disabled = true;
+          btn.textContent = '切換中...';
+          await saveSystem.switchAccount(email);
           this.updateUserHUD();
           this.renderSkinsInventory();
           this.renderShopCatalog();
@@ -1189,13 +1257,14 @@ class CyberStrikerApp {
       };
     }
 
-    // 授權儀表單處理 (途徑一：手動 Gmail)
+    // 授權儀表單處理 (途徑一：手動 Gmail，跨電腦自動雲端還原)
     const emailForm = document.getElementById('manualEmailForm');
     if (emailForm) {
-      emailForm.onsubmit = (e) => {
+      emailForm.onsubmit = async (e) => {
         e.preventDefault();
         const emailInput = document.getElementById('authEmailInput');
         const nickInput = document.getElementById('authNicknameInput');
+        const submitBtn = document.getElementById('authSubmitBtn');
         const email = emailInput ? emailInput.value.trim() : '';
         const nick = nickInput ? nickInput.value.trim() : '';
 
@@ -1204,13 +1273,108 @@ class CyberStrikerApp {
           return;
         }
 
-        const res = saveSystem.loginWithEmail(email, nick);
-        soundEngine.playUI('equip');
-        alert(res.isNewUser ? `🎉 歡迎新戰士！已發放 1,200 能量幣與 3 套預設造型。` : `✅ 歡迎回來！已自雲端成功還原所有進度。`);
-        this.updateUserHUD();
-        this.renderSkinsInventory();
-        this.renderShopCatalog();
-        this.closeAuthModal();
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> 正在檢索雲端存檔...';
+        }
+
+        try {
+          const res = await saveSystem.loginWithEmail(email, nick);
+          soundEngine.playUI('equip');
+
+          if (res.restoreSource === 'cloud') {
+            alert(`☁️ 跨電腦雲端存檔還原成功！\n歡迎回來，${res.user.nickname}！\n已成功自全球雲端同步您上次遊玩之能量幣 (${res.user.credits.toLocaleString()}) 與所有外觀。`);
+          } else if (res.isNewUser) {
+            alert(`🎉 歡迎新戰士！已發放 1,200 能量幣與 3 套預設造型，並建立全球雲端存檔。`);
+          } else {
+            alert(`✅ 歡迎回來！已載入進度並同步至全球雲端。`);
+          }
+
+          this.updateUserHUD();
+          this.renderSkinsInventory();
+          this.renderShopCatalog();
+          this.closeAuthModal();
+        } catch (err) {
+          console.error('Login error:', err);
+          alert('登入處理發生問題，請再試一次。');
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> 確認登入並自雲端還原進度';
+          }
+        }
+      };
+    }
+
+    // 立即強制雲端雙向同步按鈕
+    const forceCloudSyncBtn = document.getElementById('forceCloudSyncBtn');
+    if (forceCloudSyncBtn) {
+      forceCloudSyncBtn.onclick = async () => {
+        if (saveSystem.isGuest) {
+          alert('訪客身分無法同步雲端，請先在下方輸入 Gmail 登入！');
+          return;
+        }
+        forceCloudSyncBtn.disabled = true;
+        forceCloudSyncBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> 同步中...';
+        const res = await saveSystem.syncWithCloud();
+        forceCloudSyncBtn.disabled = false;
+        forceCloudSyncBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> 立即同步';
+
+        if (res.success) {
+          soundEngine.playUI('equip');
+          this.updateUserHUD();
+          this.renderSkinsInventory();
+          this.renderShopCatalog();
+          this.renderRegisteredAccounts();
+          alert(`✅ 跨電腦雙向同步成功！\n已拉取最新雲端存檔。\n目前帳號：${res.user.email}\n能量幣：${res.user.credits.toLocaleString()}`);
+        } else {
+          soundEngine.playHit('guard');
+          alert(`⚠️ 同步失敗：${res.reason || res.error || '網路異常'}`);
+        }
+      };
+    }
+
+    // 複製備用量子存檔代碼
+    const exportSaveTokenBtn = document.getElementById('exportSaveTokenBtn');
+    if (exportSaveTokenBtn) {
+      exportSaveTokenBtn.onclick = () => {
+        const token = saveSystem.exportSaveToken();
+        if (!token) {
+          alert('當前無有效帳號存檔可複製！');
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(token).then(() => {
+            soundEngine.playUI('equip');
+            alert('📋 萬用存檔代碼已複製到剪貼簿！\n您可以在其他電腦或瀏覽器點擊「導入存檔代碼」立即還原！');
+          }).catch(() => {
+            prompt('請手動複製下列存檔代碼：', token);
+          });
+        } else {
+          prompt('請手動複製下列存檔代碼：', token);
+        }
+      };
+    }
+
+    // 導入備用量子存檔代碼
+    const importSaveTokenBtn = document.getElementById('importSaveTokenBtn');
+    if (importSaveTokenBtn) {
+      importSaveTokenBtn.onclick = async () => {
+        const token = prompt('請貼上以 CY-SAVE- 開頭的量子存檔代碼：');
+        if (!token || !token.trim()) return;
+
+        const res = await saveSystem.importSaveToken(token.trim());
+        if (res.success) {
+          soundEngine.playUI('equip');
+          this.updateUserHUD();
+          this.renderSkinsInventory();
+          this.renderShopCatalog();
+          this.renderRegisteredAccounts();
+          alert(`🎉 存檔代碼導入成功！\n帳號：${res.user.email}\n暱稱：${res.user.nickname}\n能量幣：${res.user.credits.toLocaleString()}\n已自動同步至全球雲端！`);
+        } else {
+          soundEngine.playHit('guard');
+          alert(`❌ 存檔代碼導入失敗：${res.reason || '代碼無效'}`);
+        }
       };
     }
 

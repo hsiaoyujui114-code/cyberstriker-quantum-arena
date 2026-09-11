@@ -88,11 +88,16 @@
         <i class="fa-brands fa-github"></i> 工作坊
       </button>
 
-      <div class="user-badge" id="userBadge" title="量子授權儀：點擊切換 Google 帳號或綁定 Gmail">
+      <div class="user-badge" id="userBadge" title="量子授權儀：點擊切換 Google 帳號、跨電腦同步或綁定 Gmail">
         <img src="https://api.dicebear.com/7.x/bottts/svg?seed=QuantumVanguard" id="userAvatarImg" class="user-avatar" alt="Avatar">
         <div style="display: flex; flex-direction: column;">
           <span class="user-name" id="userNickDisplay">量子先鋒</span>
-          <span id="guestStatusBadge" style="font-size: 9px; color: #ffd700; display: none;">訪客離線</span>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span id="guestStatusBadge" style="font-size: 9px; color: #ffd700; display: none;">訪客離線</span>
+            <span id="cloudSyncHeaderBadge" style="font-size: 9px; color: #00f3ff; display: inline-flex; align-items: center; gap: 3px;" title="全球雲端存檔服務">
+              <i class="fa-solid fa-cloud"></i> <span>雲端同步</span>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -483,13 +488,27 @@
         <i class="fa-solid fa-atom" style="color: var(--primary-cyan); font-size: 24px;"></i>
         <div>
           <h2 style="font-size: 18px; color: var(--primary-cyan);">量子身分授權儀 (Authentication Gateway)</h2>
-          <p style="font-size: 12px; color: var(--text-muted);">支援手動 Gmail 輸入與 Google 多帳號一鍵切換，進度永久雲端漫遊</p>
+          <p style="font-size: 12px; color: var(--text-muted);">跨電腦雲端存檔：登入同一個 Gmail，進度跨裝置即時自動還原</p>
         </div>
+      </div>
+
+      <!-- 全球雲端同步狀態面板 -->
+      <div style="background: rgba(0,243,255,0.06); border: 1px solid rgba(0,243,255,0.25); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="cloudSyncModalIcon" style="font-size: 18px; color: #00f3ff;"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+          <div>
+            <div id="cloudSyncModalTitle" style="font-size: 13px; font-weight: 800; color: #00f3ff;">全球雲端存檔服務：已就緒</div>
+            <div id="cloudSyncModalDesc" style="font-size: 11px; color: #94a3b8;">登入同一個 Email 即可在任何電腦自動同步金幣、造型與戰績</div>
+          </div>
+        </div>
+        <button type="button" class="nav-tab-btn" id="forceCloudSyncBtn" style="font-size: 11px; padding: 5px 10px; border-color: #00f3ff; color: #00f3ff; white-space: nowrap;">
+          <i class="fa-solid fa-arrows-rotate"></i> 立即同步
+        </button>
       </div>
 
       <!-- 途徑二：電腦現有 Google 帳號清單 (參考《條碼戰士》多帳號切換) -->
       <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
-        <div style="font-weight: 800; font-size: 13px; color: #ffd700; margin-bottom: 8px;"><i class="fa-brands fa-google"></i> 本機已記錄之 Google 帳號</div>
+        <div style="font-weight: 800; font-size: 13px; color: #ffd700; margin-bottom: 8px;"><i class="fa-brands fa-google"></i> 本機已記錄之 Google 帳號 (點擊一鍵切換)</div>
         <div id="googleAccountsList">
           <!-- 動態卡片清單 -->
         </div>
@@ -498,17 +517,32 @@
       <!-- 途徑一：手動輸入 Gmail 信箱 -->
       <form id="manualEmailForm" style="display: flex; flex-direction: column; gap: 10px;">
         <div class="form-group">
-          <label class="form-label">手動輸入 Gmail 信箱</label>
+          <label class="form-label">輸入 Gmail 信箱 (在任何電腦登入皆自動還原進度)</label>
           <input type="email" class="form-input" id="authEmailInput" placeholder="例如：player@gmail.com" required>
         </div>
         <div class="form-group">
           <label class="form-label">自訂戰將暱稱 (2~12 字元，選填)</label>
           <input type="text" class="form-input" id="authNicknameInput" placeholder="預設採用信箱前綴">
         </div>
-        <button type="submit" class="nav-tab-btn" style="background: linear-gradient(135deg, #00f3ff, #ff007f); color: #fff; justify-content: center; padding: 10px;">
-          確認登入並同步進度
+        <button type="submit" class="nav-tab-btn" id="authSubmitBtn" style="background: linear-gradient(135deg, #00f3ff, #ff007f); color: #fff; justify-content: center; padding: 10px; font-weight: 800;">
+          <i class="fa-solid fa-cloud-arrow-down"></i> 確認登入並自雲端還原進度
         </button>
       </form>
+
+      <!-- 雲端代碼備份與跨機遷移工具 -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="font-size: 11px; color: #cbd5e1; font-weight: 700;">
+          <i class="fa-solid fa-key"></i> 備用存檔代碼 (可在任何無網路/不同瀏覽器下一鍵還原)：
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="nav-tab-btn" id="exportSaveTokenBtn" style="flex: 1; font-size: 11px; padding: 6px; justify-content: center;">
+            <i class="fa-solid fa-copy"></i> 複製存檔代碼
+          </button>
+          <button type="button" class="nav-tab-btn" id="importSaveTokenBtn" style="flex: 1; font-size: 11px; padding: 6px; justify-content: center;">
+            <i class="fa-solid fa-file-import"></i> 導入存檔代碼
+          </button>
+        </div>
+      </div>
 
       <!-- 訪客體驗按鈕 -->
       <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
