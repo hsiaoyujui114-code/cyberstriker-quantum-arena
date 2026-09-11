@@ -290,6 +290,21 @@ export class CharacterRenderer {
         return defaultPose;
       }
 
+      case 'ranged_attack': {
+        // 遠程攻擊：雙臂前平舉凝聚能量或單臂瞄準射擊，身姿前傾
+        const rProgress = Math.min(1, t / 14);
+        const blastWave = Math.sin(rProgress * Math.PI);
+        defaultPose.torso.angle = 0.16 * blastWave;
+        defaultPose.frontArm.upperAngle = -0.15 - blastWave * 0.2; // 平舉前推發射
+        defaultPose.frontArm.foreAngle = 0.05; // 前臂筆直伸出
+        defaultPose.backArm.upperAngle = 0.35;
+        defaultPose.backArm.foreAngle = 0.85;
+        if (blastWave > 0.2) {
+          defaultPose.vfx = { type: 'plasma_muzzle', progress: blastWave, x: 48, y: -74 };
+        }
+        return defaultPose;
+      }
+
       case 'hit_stun': {
         // 受擊仰頭，目鏡閃爍，身形後仰滑行
         const hOffset = Math.sin(t * 0.4) * 4;
@@ -858,6 +873,18 @@ export class CharacterRenderer {
       ctx.strokeStyle = skin.themeColor;
       ctx.lineWidth = 3;
       ctx.strokeRect(vfx.x - 15, vfx.y, 30, 90);
+    } else if (vfx.type === 'plasma_muzzle') {
+      // 遠程射擊聚能發射口光環與衝擊火花
+      const rad = 10 + (vfx.progress || 0.5) * 14;
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, rad, 0, Math.PI * 2);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = skin.secondaryColor || '#ffffff';
+      ctx.stroke();
+      ctx.fillStyle = skin.themeColor;
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, rad * 0.45, 0, Math.PI * 2);
+      ctx.fill();
     } else if (vfx.type === 'hit_sparks') {
       // 受擊火花
       for (let i = 0; i < 4; i++) {

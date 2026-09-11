@@ -32,7 +32,7 @@ class CyberStrikerApp {
 
     // 按鍵映射
     this.keys = {};
-    this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+    this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
 
     // 畫布
     this.canvas = null;
@@ -179,7 +179,7 @@ class CyberStrikerApp {
   previewPedestalAction(action) {
     this.pedestalAction = action;
     this.pedestalActionTimer = action === 'jump' ? 35 : 20;
-    soundEngine.playHit(action === 'light_punch' ? 'punch' : (action === 'heavy_kick' ? 'kick' : (action === 'high_guard' ? 'guard' : 'dp')));
+    soundEngine.playHit(action === 'light_punch' ? 'punch' : (action === 'heavy_kick' ? 'kick' : (action === 'high_guard' ? 'guard' : (action === 'ranged_attack' ? 'projectile' : 'dp'))));
   }
 
   // ─── 畫面導航與分頁 ───
@@ -649,6 +649,10 @@ class CyberStrikerApp {
         </div>
       `;
     }).join('') + `
+      <div class="skill-hud-card" id="rangedHudBtn" style="border-color: #00f3ff; background: rgba(0, 243, 255, 0.12); cursor: pointer;" title="發射量子遠程光彈 (快捷鍵: H / P)">
+        <i class="fa-solid fa-crosshairs" style="font-size: 18px; color: #00f3ff;"></i>
+        <span style="font-size: 10px; font-weight: 900; color: #00f3ff;">[H] 遠程</span>
+      </div>
       <div class="guard-hud-card" id="guardHudBtn" title="按住召喚量子防護罩 (快捷鍵: L / Shift)">
         <i class="fa-solid fa-shield-halved" style="font-size: 20px; color: #38bdf8;"></i>
         <span style="font-size: 10px; font-weight: 900; color: #38bdf8;">[L] 護盾</span>
@@ -658,6 +662,16 @@ class CyberStrikerApp {
         <span style="font-size: 9px; opacity: 0.8;">[B]</span>
       </div>
     `;
+
+    // 綁定遠程攻擊 HUD 按鈕點擊/觸控事件
+    const rangedBtn = document.getElementById('rangedHudBtn');
+    if (rangedBtn) {
+      rangedBtn.onmousedown = (e) => { e.preventDefault(); this.keys['KeyH'] = true; };
+      rangedBtn.onmouseup = (e) => { e.preventDefault(); this.keys['KeyH'] = false; };
+      rangedBtn.onmouseleave = () => { this.keys['KeyH'] = false; };
+      rangedBtn.ontouchstart = (e) => { e.preventDefault(); this.mobileInputs.ranged = true; };
+      rangedBtn.ontouchend = (e) => { e.preventDefault(); this.mobileInputs.ranged = false; };
+    }
 
     // 綁定防護罩 HUD 按鈕點擊/按住事件
     const guardBtn = document.getElementById('guardHudBtn');
@@ -740,7 +754,8 @@ class CyberStrikerApp {
       y,
       punch: !!(k['KeyJ'] || m.punch),
       kick: !!(k['KeyK'] || m.kick),
-      guard: !!(k['KeyL'] || k['KeyH'] || k['ShiftLeft'] || k['ShiftRight'] || m.guard),
+      ranged: !!(k['KeyH'] || k['KeyP'] || k['KeyY'] || m.ranged),
+      guard: !!(k['KeyL'] || k['ShiftLeft'] || k['ShiftRight'] || m.guard),
       skill1: !!(k['KeyU'] || m.skill1),
       skill2: !!(k['KeyI'] || m.skill2),
       skill3: !!(k['KeyO'] || m.skill3),
@@ -763,11 +778,12 @@ class CyberStrikerApp {
       y,
       punch: !!(k['Numpad1'] || k['Digit1']),
       kick: !!(k['Numpad2'] || k['Digit2']),
-      guard: !!(k['Numpad3'] || k['Digit3'] || k['NumpadDecimal']),
+      ranged: !!(k['Numpad3'] || k['Digit3']),
+      guard: !!(k['Numpad0'] || k['NumpadDecimal']),
       skill1: !!(k['Numpad4'] || k['Digit4']),
       skill2: !!(k['Numpad5'] || k['Digit5']),
       skill3: !!(k['Numpad6'] || k['Digit6']),
-      burst: !!(k['Numpad0'] || k['Digit0'])
+      burst: !!(k['NumpadPlus'] || k['NumpadEnter'] || k['Digit7'])
     };
   }
 
@@ -809,23 +825,37 @@ class CyberStrikerApp {
     // 5. 繪製角色頭頂醒目標籤 (標示「這是玩家的角色」與「電腦對手」)
     this._drawFighterOverheadBadges(ctx);
 
-    // 6. 繪製飛行道具 (Projectiles)
+    // 6. 繪製飛行道具 (Projectiles - 量子遠程光彈 & 技能飛行道具)
     combatEngine.projectiles.forEach(p => {
       ctx.save();
-      ctx.shadowColor = p.skin.themeColor;
-      ctx.shadowBlur = 16;
-      ctx.fillStyle = p.skin.themeColor;
+      const themeCol = p.skin && p.skin.themeColor ? p.skin.themeColor : '#00f3ff';
+      const secCol = p.skin && p.skin.secondaryColor ? p.skin.secondaryColor : '#ffffff';
+      const rad = p.radius || 10;
+
+      // 外發光光暈
+      ctx.shadowColor = themeCol;
+      ctx.shadowBlur = 18;
+
+      // 能量球體外層
+      ctx.fillStyle = themeCol;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
       ctx.fill();
 
-      // 拖尾電流
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
+      // 亮白聚能核心
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rad * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 拖尾激光射線與粒子
+      ctx.strokeStyle = secCol;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
-      ctx.lineTo(p.x - p.vx * 3, p.y);
+      ctx.lineTo(p.x - p.vx * 3, p.y - (p.vy || 0) * 3);
       ctx.stroke();
+
       ctx.restore();
     });
 
@@ -1299,14 +1329,16 @@ class CyberStrikerApp {
       userBadge.addEventListener('click', () => this.openAuthModal());
     }
 
-    // 展示台 4 大動作按鈕
+    // 展示台 5 大動作按鈕
     const pPunch = document.getElementById('pedestalPunchBtn');
     const pKick = document.getElementById('pedestalKickBtn');
+    const pRanged = document.getElementById('pedestalRangedBtn');
     const pJump = document.getElementById('pedestalJumpBtn');
     const pGuard = document.getElementById('pedestalGuardBtn');
 
     if (pPunch) pPunch.onclick = () => this.previewPedestalAction('light_punch');
     if (pKick) pKick.onclick = () => this.previewPedestalAction('heavy_kick');
+    if (pRanged) pRanged.onclick = () => this.previewPedestalAction('ranged_attack');
     if (pJump) pJump.onclick = () => this.previewPedestalAction('jump');
     if (pGuard) pGuard.onclick = () => this.previewPedestalAction('high_guard');
 
@@ -1680,6 +1712,7 @@ class CyberStrikerApp {
 
     bindTouchBtn('touchPunchBtn', 'punch');
     bindTouchBtn('touchKickBtn', 'kick');
+    bindTouchBtn('touchRangedBtn', 'ranged');
     bindTouchBtn('touchGuardBtn', 'guard');
     bindTouchBtn('touchSkill1Btn', 'skill1');
     bindTouchBtn('touchSkill2Btn', 'skill2');

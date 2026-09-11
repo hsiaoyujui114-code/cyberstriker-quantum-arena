@@ -96,13 +96,14 @@ export class CombatEngine {
       currentPlatform: null,
       maxHp: 1000,
       hp: 1000,
-      state: 'idle', // idle, walk_fwd, walk_back, jump, crouch, high_guard, low_guard, light_punch, heavy_kick, skill, hit_stun, knockdown, wakeup
+      state: 'idle', // idle, walk_fwd, walk_back, jump, crouch, high_guard, low_guard, light_punch, heavy_kick, ranged_attack, skill, hit_stun, knockdown, wakeup
       stateTime: 0,
       stateDuration: 0,
       currentAction: null,
       isGuarding: false,
       guardStance: 'high', // 'high' 或 'low'
       invincibleTimer: 0,
+      rangedCooldown: 0,
 
       // 量子逆轉爆發 (Burst)
       burstMeter: 500, // 滿 500 點可施展
@@ -241,6 +242,7 @@ export class CombatEngine {
         char.cooldowns[i] = Math.max(0, char.cooldowns[i] - 1 / 60);
       }
     }
+    if (char.rangedCooldown > 0) char.rangedCooldown--;
 
     // 連段重置計時
     if (char.comboResetTimer > 0) {
@@ -368,9 +370,12 @@ export class CombatEngine {
           }
         }
 
-        // 2. 空中攻擊打擊判定與出招 (Air Punch & Kick)
+        // 2. 空中攻擊打擊判定與出招 (Air Punch, Kick & Ranged Blast)
         if (char.currentAction) {
           this._updateAttackAction(char, opp);
+        } else if (input && input.ranged && char.rangedCooldown <= 0) {
+          char.facing = char.x < opp.x ? 1 : -1;
+          this._executeAirRangedAttack(char, opp);
         } else if (input && (input.punch || input.kick)) {
           char.facing = char.x < opp.x ? 1 : -1;
           this._executeAirAttack(char, opp, input.kick ? 'kick' : 'punch');
@@ -379,6 +384,7 @@ export class CombatEngine {
 
       case 'light_punch':
       case 'heavy_kick':
+      case 'ranged_attack':
       case 'skill':
         this._updateAttackAction(char, opp);
         break;
@@ -437,6 +443,10 @@ export class CombatEngine {
     }
 
     // 2. 基礎攻擊
+    if (input.ranged && char.rangedCooldown <= 0) {
+      this._executeRangedAttack(char, opp);
+      return;
+    }
     if (input.punch) {
       this._executeLightPunch(char, opp);
       return;
@@ -597,6 +607,71 @@ export class CombatEngine {
       hitChecked: false
     };
     soundEngine.playHit(type === 'kick' ? 'kick' : 'punch');
+  }
+
+  // ─── 遠程攻擊：量子光彈 (地面發射與空中壓制) ───
+  _executeRangedAttack(char, opp) {
+    char.isGuarding = false;
+    char.state = 'ranged_attack';
+    char.stateTime = 0;
+    char.stateDuration = 12; // 12 幀利落發射與收招
+    char.rangedCooldown = 18; // ~0.3 秒節奏冷卻防刷屏
+    char.currentAction = {
+      name: '量子遠程光彈',
+      startup: 2,
+      active: 4,
+      recovery: 6,
+      damage: 55,
+      guardType: 'all',
+      isRanged: true,
+      hitChecked: true
+    };
+    soundEngine.playHit('projectile');
+
+    this.projectiles.push({
+      ownerId: char.id,
+      name: '量子遠程光彈',
+      x: char.x + char.facing * 42,
+      y: char.y - 74,
+      vx: char.facing * 14,
+      vy: 0,
+      radius: 9,
+      damage: 55,
+      skin: char.skin,
+      life: 80
+    });
+  }
+
+  _executeAirRangedAttack(char, opp) {
+    char.isGuarding = false;
+    char.state = 'jump';
+    char.stateTime = 0;
+    char.stateDuration = 10;
+    char.rangedCooldown = 18;
+    char.currentAction = {
+      name: '躍空遠程光彈',
+      startup: 2,
+      active: 4,
+      recovery: 4,
+      damage: 55,
+      guardType: 'all',
+      isRanged: true,
+      hitChecked: true
+    };
+    soundEngine.playHit('projectile');
+
+    this.projectiles.push({
+      ownerId: char.id,
+      name: '躍空遠程光彈',
+      x: char.x + char.facing * 42,
+      y: char.y - 50,
+      vx: char.facing * 14,
+      vy: 2.2,
+      radius: 9,
+      damage: 55,
+      skin: char.skin,
+      life: 80
+    });
   }
 
   // ─── 10 大核心技能執行 ───
@@ -892,6 +967,7 @@ export class CombatEngine {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
       p.x += p.vx;
+      if (p.vy) p.y += p.vy;
       p.life--;
 
       // 檢查是否命中對手 (支援地面、空中與平台上之精確 2D 碰撞)
@@ -900,7 +976,7 @@ export class CombatEngine {
       const dy = Math.abs(p.y - (target.y - 45));
       if (dist < 45 && dy < 65 && target.invincibleTimer <= 0) {
         this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
-          name: '能量脈衝彈',
+          name: p.name || '量子遠程光彈',
           damage: p.damage,
           guardType: 'all',
           chipRatio: 0.5
@@ -910,7 +986,7 @@ export class CombatEngine {
       }
 
       // 超出邊界或生命耗盡
-      if (p.life <= 0 || p.x < 20 || p.x > this.arenaWidth - 20) {
+      if (p.life <= 0 || p.x < 20 || p.x > this.arenaWidth - 20 || p.y > this.floorY + 30) {
         this.projectiles.splice(i, 1);
       }
     }

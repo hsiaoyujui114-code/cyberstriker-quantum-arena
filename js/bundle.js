@@ -1797,6 +1797,19 @@
           }
           return defaultPose;
         }
+        case "ranged_attack": {
+          const rProgress = Math.min(1, t / 14);
+          const blastWave = Math.sin(rProgress * Math.PI);
+          defaultPose.torso.angle = 0.16 * blastWave;
+          defaultPose.frontArm.upperAngle = -0.15 - blastWave * 0.2;
+          defaultPose.frontArm.foreAngle = 0.05;
+          defaultPose.backArm.upperAngle = 0.35;
+          defaultPose.backArm.foreAngle = 0.85;
+          if (blastWave > 0.2) {
+            defaultPose.vfx = { type: "plasma_muzzle", progress: blastWave, x: 48, y: -74 };
+          }
+          return defaultPose;
+        }
         case "hit_stun": {
           const hOffset = Math.sin(t * 0.4) * 4;
           defaultPose.torso.angle = -0.35;
@@ -2251,6 +2264,17 @@
         ctx.strokeStyle = skin.themeColor;
         ctx.lineWidth = 3;
         ctx.strokeRect(vfx.x - 15, vfx.y, 30, 90);
+      } else if (vfx.type === "plasma_muzzle") {
+        const rad = 10 + (vfx.progress || 0.5) * 14;
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, rad, 0, Math.PI * 2);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = skin.secondaryColor || "#ffffff";
+        ctx.stroke();
+        ctx.fillStyle = skin.themeColor;
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, rad * 0.45, 0, Math.PI * 2);
+        ctx.fill();
       } else if (vfx.type === "hit_sparks") {
         for (let i = 0; i < 4; i++) {
           const ang = Math.PI * 2 / 4 * i;
@@ -2416,7 +2440,7 @@
         maxHp: 1e3,
         hp: 1e3,
         state: "idle",
-        // idle, walk_fwd, walk_back, jump, crouch, high_guard, low_guard, light_punch, heavy_kick, skill, hit_stun, knockdown, wakeup
+        // idle, walk_fwd, walk_back, jump, crouch, high_guard, low_guard, light_punch, heavy_kick, ranged_attack, skill, hit_stun, knockdown, wakeup
         stateTime: 0,
         stateDuration: 0,
         currentAction: null,
@@ -2424,6 +2448,7 @@
         guardStance: "high",
         // 'high' 或 'low'
         invincibleTimer: 0,
+        rangedCooldown: 0,
         // 量子逆轉爆發 (Burst)
         burstMeter: 500,
         // 滿 500 點可施展
@@ -2543,6 +2568,7 @@
           char.cooldowns[i] = Math.max(0, char.cooldowns[i] - 1 / 60);
         }
       }
+      if (char.rangedCooldown > 0) char.rangedCooldown--;
       if (char.comboResetTimer > 0) {
         char.comboResetTimer--;
         if (char.comboResetTimer <= 0) {
@@ -2646,6 +2672,9 @@
           }
           if (char.currentAction) {
             this._updateAttackAction(char, opp);
+          } else if (input && input.ranged && char.rangedCooldown <= 0) {
+            char.facing = char.x < opp.x ? 1 : -1;
+            this._executeAirRangedAttack(char, opp);
           } else if (input && (input.punch || input.kick)) {
             char.facing = char.x < opp.x ? 1 : -1;
             this._executeAirAttack(char, opp, input.kick ? "kick" : "punch");
@@ -2653,6 +2682,7 @@
           break;
         case "light_punch":
         case "heavy_kick":
+        case "ranged_attack":
         case "skill":
           this._updateAttackAction(char, opp);
           break;
@@ -2699,6 +2729,10 @@
       }
       if (input.skill3 && char.cooldowns[2] <= 0) {
         this._executeSkill(char, opp, 2);
+        return;
+      }
+      if (input.ranged && char.rangedCooldown <= 0) {
+        this._executeRangedAttack(char, opp);
         return;
       }
       if (input.punch) {
@@ -2843,6 +2877,67 @@
         hitChecked: false
       };
       soundEngine.playHit(type === "kick" ? "kick" : "punch");
+    }
+    // ─── 遠程攻擊：量子光彈 (地面發射與空中壓制) ───
+    _executeRangedAttack(char, opp) {
+      char.isGuarding = false;
+      char.state = "ranged_attack";
+      char.stateTime = 0;
+      char.stateDuration = 12;
+      char.rangedCooldown = 18;
+      char.currentAction = {
+        name: "\u91CF\u5B50\u9060\u7A0B\u5149\u5F48",
+        startup: 2,
+        active: 4,
+        recovery: 6,
+        damage: 55,
+        guardType: "all",
+        isRanged: true,
+        hitChecked: true
+      };
+      soundEngine.playHit("projectile");
+      this.projectiles.push({
+        ownerId: char.id,
+        name: "\u91CF\u5B50\u9060\u7A0B\u5149\u5F48",
+        x: char.x + char.facing * 42,
+        y: char.y - 74,
+        vx: char.facing * 14,
+        vy: 0,
+        radius: 9,
+        damage: 55,
+        skin: char.skin,
+        life: 80
+      });
+    }
+    _executeAirRangedAttack(char, opp) {
+      char.isGuarding = false;
+      char.state = "jump";
+      char.stateTime = 0;
+      char.stateDuration = 10;
+      char.rangedCooldown = 18;
+      char.currentAction = {
+        name: "\u8E8D\u7A7A\u9060\u7A0B\u5149\u5F48",
+        startup: 2,
+        active: 4,
+        recovery: 4,
+        damage: 55,
+        guardType: "all",
+        isRanged: true,
+        hitChecked: true
+      };
+      soundEngine.playHit("projectile");
+      this.projectiles.push({
+        ownerId: char.id,
+        name: "\u8E8D\u7A7A\u9060\u7A0B\u5149\u5F48",
+        x: char.x + char.facing * 42,
+        y: char.y - 50,
+        vx: char.facing * 14,
+        vy: 2.2,
+        radius: 9,
+        damage: 55,
+        skin: char.skin,
+        life: 80
+      });
     }
     // ─── 10 大核心技能執行 ───
     _executeSkill(char, opp, slotIdx) {
@@ -3070,13 +3165,14 @@
       for (let i = this.projectiles.length - 1; i >= 0; i--) {
         const p = this.projectiles[i];
         p.x += p.vx;
+        if (p.vy) p.y += p.vy;
         p.life--;
         const target = p.ownerId === 1 ? this.p2 : this.p1;
         const dist = Math.abs(p.x - target.x);
         const dy = Math.abs(p.y - (target.y - 45));
         if (dist < 45 && dy < 65 && target.invincibleTimer <= 0) {
           this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
-            name: "\u80FD\u91CF\u8108\u885D\u5F48",
+            name: p.name || "\u91CF\u5B50\u9060\u7A0B\u5149\u5F48",
             damage: p.damage,
             guardType: "all",
             chipRatio: 0.5
@@ -3084,7 +3180,7 @@
           this.projectiles.splice(i, 1);
           continue;
         }
-        if (p.life <= 0 || p.x < 20 || p.x > this.arenaWidth - 20) {
+        if (p.life <= 0 || p.x < 20 || p.x > this.arenaWidth - 20 || p.y > this.floorY + 30) {
           this.projectiles.splice(i, 1);
         }
       }
@@ -3199,7 +3295,7 @@
       this.difficulty = difficulty;
       this.reactionDelay = 20;
       this.currentDelay = 0;
-      this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
     }
     setDifficulty(diff) {
       this.difficulty = diff;
@@ -3225,7 +3321,7 @@
       return this.bufferedDecision;
     }
     _makeDecision(ai, player, engine) {
-      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      const input = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       const dist = Math.abs(ai.x - player.x);
       const facingPlayer = (ai.x < player.x ? 1 : -1) === ai.facing;
       const playerInAir = !player.isGrounded;
@@ -3273,6 +3369,10 @@
             input.skill1 = true;
             return input;
           }
+          if (ai.rangedCooldown <= 0 && Math.random() < 0.6) {
+            input.ranged = true;
+            return input;
+          }
           input.x = ai.facing;
           return input;
         } else {
@@ -3298,6 +3398,9 @@
           if (ai.cooldowns[0] <= 0 && Math.random() < 0.7) {
             input.skill1 = true;
             return input;
+          } else if (ai.rangedCooldown <= 0 && Math.random() < 0.5) {
+            input.ranged = true;
+            return input;
           }
           input.x = ai.facing;
         } else {
@@ -3311,6 +3414,8 @@
         if (dist > 200) {
           if (ai.cooldowns[0] <= 0 && Math.random() < 0.4) {
             input.skill1 = true;
+          } else if (ai.rangedCooldown <= 0 && Math.random() < 0.4) {
+            input.ranged = true;
           } else {
             input.x = ai.facing;
           }
@@ -3339,7 +3444,7 @@
      * 自由格鬥訓練營假人行為控制
      */
     _decideTrainingDummy(dummy, player, settings) {
-      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      const input = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       if (settings.dummyReversal && dummy.state === "wakeup" && dummy.stateTime >= 13) {
         input.skill2 = true;
         return input;
@@ -3500,7 +3605,7 @@
       this.loadoutTimer = 15;
       this.loadoutInterval = null;
       this.keys = {};
-      this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       this.canvas = null;
       this.ctx = null;
       this.pedestalCanvas = null;
@@ -3614,7 +3719,7 @@
     previewPedestalAction(action) {
       this.pedestalAction = action;
       this.pedestalActionTimer = action === "jump" ? 35 : 20;
-      soundEngine.playHit(action === "light_punch" ? "punch" : action === "heavy_kick" ? "kick" : action === "high_guard" ? "guard" : "dp");
+      soundEngine.playHit(action === "light_punch" ? "punch" : action === "heavy_kick" ? "kick" : action === "high_guard" ? "guard" : action === "ranged_attack" ? "projectile" : "dp");
     }
     // ─── 畫面導航與分頁 ───
     switchTab(tabId) {
@@ -4017,6 +4122,10 @@
         </div>
       `;
       }).join("") + `
+      <div class="skill-hud-card" id="rangedHudBtn" style="border-color: #00f3ff; background: rgba(0, 243, 255, 0.12); cursor: pointer;" title="\u767C\u5C04\u91CF\u5B50\u9060\u7A0B\u5149\u5F48 (\u5FEB\u6377\u9375: H / P)">
+        <i class="fa-solid fa-crosshairs" style="font-size: 18px; color: #00f3ff;"></i>
+        <span style="font-size: 10px; font-weight: 900; color: #00f3ff;">[H] \u9060\u7A0B</span>
+      </div>
       <div class="guard-hud-card" id="guardHudBtn" title="\u6309\u4F4F\u53EC\u559A\u91CF\u5B50\u9632\u8B77\u7F69 (\u5FEB\u6377\u9375: L / Shift)">
         <i class="fa-solid fa-shield-halved" style="font-size: 20px; color: #38bdf8;"></i>
         <span style="font-size: 10px; font-weight: 900; color: #38bdf8;">[L] \u8B77\u76FE</span>
@@ -4026,6 +4135,28 @@
         <span style="font-size: 9px; opacity: 0.8;">[B]</span>
       </div>
     `;
+      const rangedBtn = document.getElementById("rangedHudBtn");
+      if (rangedBtn) {
+        rangedBtn.onmousedown = (e) => {
+          e.preventDefault();
+          this.keys["KeyH"] = true;
+        };
+        rangedBtn.onmouseup = (e) => {
+          e.preventDefault();
+          this.keys["KeyH"] = false;
+        };
+        rangedBtn.onmouseleave = () => {
+          this.keys["KeyH"] = false;
+        };
+        rangedBtn.ontouchstart = (e) => {
+          e.preventDefault();
+          this.mobileInputs.ranged = true;
+        };
+        rangedBtn.ontouchend = (e) => {
+          e.preventDefault();
+          this.mobileInputs.ranged = false;
+        };
+      }
       const guardBtn = document.getElementById("guardHudBtn");
       if (guardBtn) {
         guardBtn.onmousedown = (e) => {
@@ -4095,7 +4226,8 @@
         y,
         punch: !!(k["KeyJ"] || m.punch),
         kick: !!(k["KeyK"] || m.kick),
-        guard: !!(k["KeyL"] || k["KeyH"] || k["ShiftLeft"] || k["ShiftRight"] || m.guard),
+        ranged: !!(k["KeyH"] || k["KeyP"] || k["KeyY"] || m.ranged),
+        guard: !!(k["KeyL"] || k["ShiftLeft"] || k["ShiftRight"] || m.guard),
         skill1: !!(k["KeyU"] || m.skill1),
         skill2: !!(k["KeyI"] || m.skill2),
         skill3: !!(k["KeyO"] || m.skill3),
@@ -4115,11 +4247,12 @@
         y,
         punch: !!(k["Numpad1"] || k["Digit1"]),
         kick: !!(k["Numpad2"] || k["Digit2"]),
-        guard: !!(k["Numpad3"] || k["Digit3"] || k["NumpadDecimal"]),
+        ranged: !!(k["Numpad3"] || k["Digit3"]),
+        guard: !!(k["Numpad0"] || k["NumpadDecimal"]),
         skill1: !!(k["Numpad4"] || k["Digit4"]),
         skill2: !!(k["Numpad5"] || k["Digit5"]),
         skill3: !!(k["Numpad6"] || k["Digit6"]),
-        burst: !!(k["Numpad0"] || k["Digit0"])
+        burst: !!(k["NumpadPlus"] || k["NumpadEnter"] || k["Digit7"])
       };
     }
     _renderBattleFrame() {
@@ -4147,17 +4280,24 @@
       this._drawFighterOverheadBadges(ctx);
       combatEngine.projectiles.forEach((p) => {
         ctx.save();
-        ctx.shadowColor = p.skin.themeColor;
-        ctx.shadowBlur = 16;
-        ctx.fillStyle = p.skin.themeColor;
+        const themeCol = p.skin && p.skin.themeColor ? p.skin.themeColor : "#00f3ff";
+        const secCol = p.skin && p.skin.secondaryColor ? p.skin.secondaryColor : "#ffffff";
+        const rad = p.radius || 10;
+        ctx.shadowColor = themeCol;
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = themeCol;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 2;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = secCol;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x - p.vx * 3, p.y);
+        ctx.lineTo(p.x - p.vx * 3, p.y - (p.vy || 0) * 3);
         ctx.stroke();
         ctx.restore();
       });
@@ -4534,10 +4674,12 @@
       }
       const pPunch = document.getElementById("pedestalPunchBtn");
       const pKick = document.getElementById("pedestalKickBtn");
+      const pRanged = document.getElementById("pedestalRangedBtn");
       const pJump = document.getElementById("pedestalJumpBtn");
       const pGuard = document.getElementById("pedestalGuardBtn");
       if (pPunch) pPunch.onclick = () => this.previewPedestalAction("light_punch");
       if (pKick) pKick.onclick = () => this.previewPedestalAction("heavy_kick");
+      if (pRanged) pRanged.onclick = () => this.previewPedestalAction("ranged_attack");
       if (pJump) pJump.onclick = () => this.previewPedestalAction("jump");
       if (pGuard) pGuard.onclick = () => this.previewPedestalAction("high_guard");
       const fab = document.getElementById("fabStartBtn");
@@ -4866,6 +5008,7 @@
       };
       bindTouchBtn("touchPunchBtn", "punch");
       bindTouchBtn("touchKickBtn", "kick");
+      bindTouchBtn("touchRangedBtn", "ranged");
       bindTouchBtn("touchGuardBtn", "guard");
       bindTouchBtn("touchSkill1Btn", "skill1");
       bindTouchBtn("touchSkill2Btn", "skill2");

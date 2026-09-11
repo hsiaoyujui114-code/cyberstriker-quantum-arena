@@ -10,7 +10,7 @@ export class AiController {
     this.difficulty = difficulty; // 'easy', 'normal', 'hard', 'nightmare'
     this.reactionDelay = 20; // 延遲幀數計數
     this.currentDelay = 0;
-    this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+    this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
   }
 
   setDifficulty(diff) {
@@ -44,7 +44,7 @@ export class AiController {
   }
 
   _makeDecision(ai, player, engine) {
-    const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+    const input = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
     const dist = Math.abs(ai.x - player.x);
     const facingPlayer = (ai.x < player.x ? 1 : -1) === ai.facing;
     const playerInAir = !player.isGrounded;
@@ -98,10 +98,14 @@ export class AiController {
         }
       }
 
-      // 5. 攻勢壓迫：中距離發波，近身快速輕拳連打雙擇
+      // 5. 攻勢壓迫：中遠距離發波或遠程光彈，近身快速輕拳連打雙擇
       if (dist > 220) {
         if (ai.cooldowns[0] <= 0) {
           input.skill1 = true;
+          return input;
+        }
+        if (ai.rangedCooldown <= 0 && Math.random() < 0.6) {
+          input.ranged = true; // 發射量子遠程光彈
           return input;
         }
         input.x = ai.facing; // 前壓
@@ -132,10 +136,13 @@ export class AiController {
         return input;
       }
 
-      // 伺機進攻
+      // 伺機進攻 (中遠距離結合遠程光彈壓制)
       if (dist > 180) {
         if (ai.cooldowns[0] <= 0 && Math.random() < 0.7) {
           input.skill1 = true;
+          return input;
+        } else if (ai.rangedCooldown <= 0 && Math.random() < 0.5) {
+          input.ranged = true; // 遠程攻擊
           return input;
         }
         input.x = ai.facing;
@@ -152,6 +159,8 @@ export class AiController {
       if (dist > 200) {
         if (ai.cooldowns[0] <= 0 && Math.random() < 0.4) {
           input.skill1 = true;
+        } else if (ai.rangedCooldown <= 0 && Math.random() < 0.4) {
+          input.ranged = true; // 遠程攻擊
         } else {
           input.x = ai.facing;
         }
@@ -183,7 +192,7 @@ export class AiController {
    * 自由格鬥訓練營假人行為控制
    */
   _decideTrainingDummy(dummy, player, settings) {
-    const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+    const input = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
 
     // 1. 起身第一幀升龍反凹 (Reversal DP)
     if (settings.dummyReversal && dummy.state === 'wakeup' && dummy.stateTime >= 13) {
