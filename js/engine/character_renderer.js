@@ -208,6 +208,39 @@ export class CharacterRenderer {
 
       case 'jump':
       case 'jump_up': {
+        // 空中姿態判斷：是否正在空中發動刺拳或飛踢？
+        if (char && char.currentAction) {
+          const actName = char.currentAction.name || '';
+          if (actName.includes('踢')) {
+            // 空中下墜俯衝飛踢 (Dive Kick)
+            defaultPose.torso.y = -70;
+            defaultPose.torso.angle = -0.45; // 身體後仰
+            defaultPose.head.angle = 0.2;
+            defaultPose.frontLeg.thighAngle = -1.25; // 破空前斜下飛踢
+            defaultPose.frontLeg.shinAngle = 0.1;
+            defaultPose.backLeg.thighAngle = 0.4;
+            defaultPose.backLeg.shinAngle = 1.6;
+            defaultPose.frontArm.upperAngle = 0.7;
+            defaultPose.frontArm.foreAngle = 0.3;
+            defaultPose.backArm.upperAngle = 0.9;
+            defaultPose.backArm.foreAngle = 0.3;
+            defaultPose.vfx = { type: 'dive_kick', x: 50, y: -45 };
+            return defaultPose;
+          } else if (actName.includes('拳')) {
+            // 空中斜下刺拳 (Air Jab)
+            defaultPose.torso.y = -78;
+            defaultPose.torso.angle = 0.25; // 身體前傾俯衝
+            defaultPose.frontArm.upperAngle = -0.35; // 向前下方出拳
+            defaultPose.frontArm.foreAngle = 0.2;
+            defaultPose.frontLeg.thighAngle = -0.9;
+            defaultPose.frontLeg.shinAngle = 1.3;
+            defaultPose.backLeg.thighAngle = -0.6;
+            defaultPose.backLeg.shinAngle = 1.1;
+            defaultPose.vfx = { type: 'punch', x: 48, y: -65 };
+            return defaultPose;
+          }
+        }
+
         // 騰空躍起，膝部收斂
         defaultPose.torso.y = -82;
         defaultPose.head.y = -106;
@@ -235,6 +268,48 @@ export class CharacterRenderer {
         defaultPose.frontArm.foreAngle = 0.9;
         defaultPose.backArm.upperAngle = 0.6;
         defaultPose.backArm.foreAngle = 0.8;
+        return defaultPose;
+      }
+
+      case 'crouch_punch': {
+        // 下蹲刺拳 (2LP)：身體壓低避開上段，前手向前方低處刺出快速直拳
+        const pProgress = Math.min(1, t / 11);
+        const reach = Math.sin(pProgress * Math.PI);
+        defaultPose.torso.y = -48;
+        defaultPose.torso.angle = 0.35 * reach;
+        defaultPose.head.y = -72;
+        defaultPose.frontLeg.thighAngle = -1.4;
+        defaultPose.frontLeg.shinAngle = 2.1;
+        defaultPose.backLeg.thighAngle = -1.2;
+        defaultPose.backLeg.shinAngle = 2.0;
+        defaultPose.frontArm.upperAngle = 0.3 - reach * 0.7; // 向前低位刺出
+        defaultPose.frontArm.foreAngle = 1.2 - reach * 1.1;
+        defaultPose.backArm.upperAngle = 0.7;
+        defaultPose.backArm.foreAngle = 0.9;
+        if (reach > 0.25) {
+          defaultPose.vfx = { type: 'crouch_punch', progress: reach, x: 50, y: -50 };
+        }
+        return defaultPose;
+      }
+
+      case 'crouch_kick': {
+        // 下蹲掃堂腿 (2HK / Sweep)：重心極致貼地，雙手撐地，單腿破空低位旋掃
+        const sProgress = Math.min(1, t / 15);
+        const sweepWave = Math.sin(sProgress * Math.PI);
+        defaultPose.torso.y = -36;
+        defaultPose.torso.angle = -0.38 * sweepWave;
+        defaultPose.head.y = -60;
+        defaultPose.frontLeg.thighAngle = -1.55; // 貼地直線掃出
+        defaultPose.frontLeg.shinAngle = 0.05;
+        defaultPose.backLeg.thighAngle = 0.5;
+        defaultPose.backLeg.shinAngle = 1.8;
+        defaultPose.frontArm.upperAngle = 1.1; // 撐地手
+        defaultPose.frontArm.foreAngle = 0.2;
+        defaultPose.backArm.upperAngle = 0.9;
+        defaultPose.backArm.foreAngle = 0.4;
+        if (sweepWave > 0.2) {
+          defaultPose.vfx = { type: 'sweep', progress: sweepWave, x: 56, y: -12 };
+        }
         return defaultPose;
       }
 
@@ -885,6 +960,41 @@ export class CharacterRenderer {
       ctx.beginPath();
       ctx.arc(vfx.x, vfx.y, rad * 0.45, 0, Math.PI * 2);
       ctx.fill();
+    } else if (vfx.type === 'dive_kick') {
+      // 躍空俯衝飛踢破空衝擊光弧
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 30, vfx.y - 25);
+      ctx.lineTo(vfx.x + 12, vfx.y + 16);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = skin.themeColor;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 18, vfx.y - 14);
+      ctx.lineTo(vfx.x + 12, vfx.y + 16);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = skin.secondaryColor || '#ffffff';
+      ctx.stroke();
+    } else if (vfx.type === 'crouch_punch') {
+      // 下蹲低位刺拳鋒芒弧光
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 16, -Math.PI / 4, Math.PI / 4);
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = skin.secondaryColor || '#ffffff';
+      ctx.stroke();
+    } else if (vfx.type === 'sweep') {
+      // 下蹲掃堂腿貼地旋風與擦地光軌
+      ctx.beginPath();
+      ctx.ellipse(vfx.x - 8, vfx.y, 45, 12, 0, -Math.PI / 6, Math.PI);
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = skin.themeColor;
+      ctx.stroke();
+      if (skin.secondaryColor) {
+        ctx.beginPath();
+        ctx.ellipse(vfx.x - 8, vfx.y, 36, 9, 0, -Math.PI / 6, Math.PI);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = skin.secondaryColor;
+        ctx.stroke();
+      }
     } else if (vfx.type === 'hit_sparks') {
       // 受擊火花
       for (let i = 0; i < 4; i++) {

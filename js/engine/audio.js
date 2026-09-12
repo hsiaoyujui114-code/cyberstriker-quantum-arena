@@ -312,6 +312,48 @@ class SoundEngine {
         break;
       }
 
+      case 'counter': {
+        // 破招打康高音破脆金屬轟鳴 (Counter Hit)
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc1.type = 'triangle';
+        osc1.frequency.setValueAtTime(1750, t);
+        osc1.frequency.exponentialRampToValueAtTime(520, t + 0.18);
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(880, t);
+        osc2.frequency.exponentialRampToValueAtTime(120, t + 0.22);
+        gain.gain.setValueAtTime(0.95, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.22);
+        this._playNoise(t, 0.12, 1600, 0.8);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(this.sfxGain);
+        osc1.start(t);
+        osc2.start(t);
+        osc1.stop(t + 0.22);
+        osc2.stop(t + 0.22);
+        break;
+      }
+
+      case 'whiff_punch': {
+        // 刺拳揮空破風聲
+        this._playNoise(t, 0.05, 1400, 0.25);
+        break;
+      }
+
+      case 'whiff_kick': {
+        // 重踢破空風切聲
+        this._playNoise(t, 0.08, 600, 0.35);
+        break;
+      }
+
+      case 'sweep': {
+        // 掃堂腿地面風旋與摩擦聲
+        this._playNoise(t, 0.14, 500, 0.55);
+        break;
+      }
+
       case 'ko': {
         // K.O. 勝利號角與長音
         const chords = [220, 277.18, 329.63, 440];

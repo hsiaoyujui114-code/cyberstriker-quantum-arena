@@ -797,6 +797,14 @@ class CyberStrikerApp {
     ctx.fillStyle = '#050814';
     ctx.fillRect(0, 0, w, h);
 
+    // 儲存戰鬥世界視口 (World Matrix)
+    ctx.save();
+
+    // 畫面震動衝擊反饋 (Screen Shake) 作用於世界視口
+    if (combatEngine.screenShake && combatEngine.screenShake.intensity > 0.1) {
+      ctx.translate(combatEngine.screenShake.x, combatEngine.screenShake.y);
+    }
+
     // 2. 賽博擂台擂面格線與地面
     const groundY = combatEngine.floorY;
     ctx.strokeStyle = 'rgba(0, 243, 255, 0.15)';
@@ -822,7 +830,7 @@ class CyberStrikerApp {
     characterRenderer.draw(ctx, combatEngine.p1);
     characterRenderer.draw(ctx, combatEngine.p2);
 
-    // 5. 繪製角色頭頂醒目標籤 (標示「這是玩家的角色」與「電腦對手」)
+    // 5. 繪製角色頭頂醒目標籤與攻擊招式細節
     this._drawFighterOverheadBadges(ctx);
 
     // 6. 繪製飛行道具 (Projectiles - 量子遠程光彈 & 技能飛行道具)
@@ -877,7 +885,10 @@ class CyberStrikerApp {
       ctx.restore();
     });
 
-    // 8. 繪製浮動傷害與提示文字 (Floating Texts)
+    // 8. 繪製打擊爆裂火花與放射狀斬擊光芒 (Hit Sparks & Impact Rays)
+    this._drawHitSparks(ctx);
+
+    // 9. 繪製浮動傷害與提示文字 (Floating Texts)
     combatEngine.floatingTexts.forEach(t => {
       ctx.save();
       ctx.font = 'bold 18px Orbitron, sans-serif';
@@ -888,10 +899,134 @@ class CyberStrikerApp {
       ctx.restore();
     });
 
-    // 9. 戰鬥結束勝利橫幅與冠軍慶祝 (Victory Celebration Banner)
+    // 恢復世界視口（HUD 與 UI 不受世界震動偏移影響）
+    ctx.restore();
+
+    // 10. 繪製熱血連擊計數器 (Arcade Combo Counter HUD)
+    this._drawComboCounters(ctx, w, h);
+
+    // 11. 戰鬥結束勝利橫幅與冠軍慶祝 (Victory Celebration Banner)
     if (combatEngine.isOver && !combatEngine.isTraining) {
       this._drawVictoryBanner(ctx, w, h);
     }
+  }
+
+  // ─── 打擊爆裂火花與斬芒特效 (Hit Sparks & Impact Rays) ───
+  _drawHitSparks(ctx) {
+    if (!combatEngine.hitSparks || combatEngine.hitSparks.length === 0) return;
+
+    for (const spark of combatEngine.hitSparks) {
+      const alpha = Math.max(0, spark.life / spark.maxLife);
+      const progress = 1 - alpha;
+      ctx.save();
+
+      // 1. 核心衝擊擴散環 (Expanding Impact Ring)
+      const currentRadius = (spark.coreRadius || 20) * (0.4 + progress * 1.3);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = spark.color || '#ff007f';
+      ctx.lineWidth = Math.max(1, (1 - progress) * 4);
+      ctx.shadowColor = spark.color || '#ff007f';
+      ctx.shadowBlur = 16;
+      ctx.beginPath();
+      ctx.arc(spark.x, spark.y, currentRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 2. 核心白熾爆閃 (White Flash)
+      if (spark.life >= spark.maxLife - 4) {
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 24;
+        ctx.beginPath();
+        ctx.arc(spark.x, spark.y, (spark.coreRadius || 20) * 0.5 * (1 - progress), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 3. 破空放射狀斬擊光芒 (Directional Rays)
+      if (spark.rays && spark.rays.length > 0) {
+        ctx.strokeStyle = spark.color || '#ffd700';
+        ctx.lineWidth = Math.max(1, 2.8 * alpha);
+        ctx.shadowColor = spark.color || '#ffd700';
+        ctx.shadowBlur = 12;
+        for (const ray of spark.rays) {
+          const rayLen = ray.len * (0.6 + progress * 0.8);
+          const startDist = progress * 6;
+          const sx = spark.x + Math.cos(ray.angle) * startDist;
+          const sy = spark.y + Math.sin(ray.angle) * startDist;
+          const ex = spark.x + Math.cos(ray.angle) * (startDist + rayLen);
+          const ey = spark.y + Math.sin(ray.angle) * (startDist + rayLen);
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(ex, ey);
+          ctx.stroke();
+        }
+      }
+
+      // 4. 飛濺火花微粒 (Flying Spark Particles)
+      if (spark.particles) {
+        for (const p of spark.particles) {
+          if (p.life <= 0) continue;
+          const pAlpha = Math.max(0, p.life / p.maxLife);
+          ctx.globalAlpha = pAlpha;
+          ctx.fillStyle = p.color || spark.color;
+          ctx.shadowColor = p.color || spark.color;
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, (p.size || 2.5) * pAlpha, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // ─── 街機風格連擊計數器 (Arcade Combo Counter HUD) ───
+  _drawComboCounters(ctx, w, h) {
+    const p1 = combatEngine.p1;
+    const p2 = combatEngine.p2;
+
+    const renderCombo = (fighter, isLeft) => {
+      if (!fighter || fighter.comboCount < 2) return;
+
+      ctx.save();
+      const count = fighter.comboCount;
+      const damage = fighter.comboDamage;
+      const themeColor = isLeft ? '#00f3ff' : '#ff007f';
+      const secColor = isLeft ? '#ffd700' : '#ff9900';
+
+      // 依連擊數微幅脈衝縮放
+      const pulse = 1 + Math.min(0.2, (fighter.comboResetTimer / 45) * 0.15);
+      const posX = isLeft ? Math.max(80, w * 0.16) : Math.min(w - 80, w * 0.84);
+      const posY = Math.max(140, h * 0.35);
+
+      ctx.translate(posX, posY);
+      ctx.scale(pulse, pulse);
+      ctx.textAlign = isLeft ? 'left' : 'right';
+
+      // 1. 連擊數主文字 (Huge arcade combo number)
+      ctx.font = '900 42px "Orbitron", sans-serif';
+      ctx.fillStyle = themeColor;
+      ctx.shadowColor = themeColor;
+      ctx.shadowBlur = 18;
+      ctx.fillText(`${count} HITS!`, 0, 0);
+
+      // 2. 總傷害與連段評價 (Total damage & combo title)
+      ctx.font = 'bold 15px "Orbitron", "Noto Sans TC", sans-serif';
+      ctx.fillStyle = secColor;
+      ctx.shadowColor = secColor;
+      ctx.shadowBlur = 10;
+      let praise = 'GOOD COMBO';
+      if (count >= 7) praise = '★ QUANTUM MASTER! ★';
+      else if (count >= 5) praise = '★ AMAZING COMBO! ★';
+      else if (count >= 3) praise = 'GREAT COMBO!';
+
+      ctx.fillText(`DAMAGE: ${damage}  [${praise}]`, 0, 24);
+
+      ctx.restore();
+    };
+
+    renderCombo(p1, true);
+    renderCombo(p2, false);
   }
 
   _drawVictoryBanner(ctx, w, h) {
@@ -1157,6 +1292,61 @@ class CyberStrikerApp {
     ctx.shadowColor = '#00f3ff';
     ctx.shadowBlur = 10;
     ctx.fillText(`★ 這是玩家的角色 [${p1Hp} HP]`, p1.x, badgeY1 + badgeH1 / 2);
+
+    // 1P 攻擊動作細節與招式屬性標籤 (所有細節即時動態顯示)
+    if (p1.currentAction) {
+      const act = p1.currentAction;
+      let propText = '上段';
+      let propColor = '#00f3ff';
+      if (act.guardType === 'crouch_only') {
+        propText = '下段・掃倒';
+        propColor = '#ffaa00';
+      } else if (act.guardType === 'stand_only') {
+        propText = '中段・破蹲';
+        propColor = '#ff007f';
+      } else if (act.guardType === 'unblockable') {
+        propText = '投技・破防';
+        propColor = '#ffd700';
+      } else if (act.isRanged) {
+        propText = '遠程彈道';
+        propColor = '#38bdf8';
+      }
+
+      const actTagW = 200;
+      const actTagH = 22;
+      const actTagX = p1.x - actTagW / 2;
+      const actTagY = badgeY1 - actTagH - 4;
+      ctx.fillStyle = 'rgba(2, 10, 24, 0.95)';
+      ctx.strokeStyle = propColor;
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = propColor;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(actTagX, actTagY, actTagW, actTagH, 5);
+      else ctx.rect(actTagX, actTagY, actTagW, actTagH);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = 'bold 11px "Noto Sans TC", "Orbitron", sans-serif';
+      ctx.fillStyle = propColor;
+      ctx.fillText(`⚔️ ${act.name} [${propText}] ${act.damage}D`, p1.x, actTagY + actTagH / 2);
+    } else if (p1.isGuarding) {
+      const guardTagW = 160;
+      const guardTagH = 20;
+      const guardTagX = p1.x - guardTagW / 2;
+      const guardTagY = badgeY1 - guardTagH - 4;
+      ctx.fillStyle = 'rgba(2, 16, 32, 0.9)';
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(guardTagX, guardTagY, guardTagW, guardTagH, 4);
+      else ctx.rect(guardTagX, guardTagY, guardTagW, guardTagH);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = 'bold 10px "Noto Sans TC", sans-serif';
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText(`🛡️ 防護罩防禦 (50%減傷)`, p1.x, guardTagY + guardTagH / 2);
+    }
     ctx.restore();
 
     // ─── 對手 2P 頭頂標記 ───
@@ -1202,6 +1392,61 @@ class CyberStrikerApp {
     ctx.shadowColor = '#ff007f';
     ctx.shadowBlur = 10;
     ctx.fillText(`${p2Label} [${p2Hp} HP]`, p2.x, badgeY2 + badgeH2 / 2);
+
+    // 2P 攻擊動作細節與招式屬性標籤
+    if (p2.currentAction) {
+      const act = p2.currentAction;
+      let propText = '上段';
+      let propColor = '#ff007f';
+      if (act.guardType === 'crouch_only') {
+        propText = '下段・掃倒';
+        propColor = '#ffaa00';
+      } else if (act.guardType === 'stand_only') {
+        propText = '中段・破蹲';
+        propColor = '#ff007f';
+      } else if (act.guardType === 'unblockable') {
+        propText = '投技・破防';
+        propColor = '#ffd700';
+      } else if (act.isRanged) {
+        propText = '遠程彈道';
+        propColor = '#38bdf8';
+      }
+
+      const actTagW = 200;
+      const actTagH = 22;
+      const actTagX = p2.x - actTagW / 2;
+      const actTagY = badgeY2 - actTagH - 4;
+      ctx.fillStyle = 'rgba(25, 5, 15, 0.95)';
+      ctx.strokeStyle = propColor;
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = propColor;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(actTagX, actTagY, actTagW, actTagH, 5);
+      else ctx.rect(actTagX, actTagY, actTagW, actTagH);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = 'bold 11px "Noto Sans TC", "Orbitron", sans-serif';
+      ctx.fillStyle = propColor;
+      ctx.fillText(`⚔️ ${act.name} [${propText}] ${act.damage}D`, p2.x, actTagY + actTagH / 2);
+    } else if (p2.isGuarding) {
+      const guardTagW = 160;
+      const guardTagH = 20;
+      const guardTagX = p2.x - guardTagW / 2;
+      const guardTagY = badgeY2 - guardTagH - 4;
+      ctx.fillStyle = 'rgba(28, 5, 20, 0.9)';
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(guardTagX, guardTagY, guardTagW, guardTagH, 4);
+      else ctx.rect(guardTagX, guardTagY, guardTagW, guardTagH);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = 'bold 10px "Noto Sans TC", sans-serif';
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText(`🛡️ 防護罩防禦 (50%減傷)`, p2.x, guardTagY + guardTagH / 2);
+    }
     ctx.restore();
   }
 

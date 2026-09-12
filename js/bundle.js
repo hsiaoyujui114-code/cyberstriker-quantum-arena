@@ -1418,6 +1418,40 @@
           this._playNoise(t, 0.15, 300, 0.7);
           break;
         }
+        case "counter": {
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc1.type = "triangle";
+          osc1.frequency.setValueAtTime(1750, t);
+          osc1.frequency.exponentialRampToValueAtTime(520, t + 0.18);
+          osc2.type = "sawtooth";
+          osc2.frequency.setValueAtTime(880, t);
+          osc2.frequency.exponentialRampToValueAtTime(120, t + 0.22);
+          gain.gain.setValueAtTime(0.95, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.22);
+          this._playNoise(t, 0.12, 1600, 0.8);
+          osc1.connect(gain);
+          osc2.connect(gain);
+          gain.connect(this.sfxGain);
+          osc1.start(t);
+          osc2.start(t);
+          osc1.stop(t + 0.22);
+          osc2.stop(t + 0.22);
+          break;
+        }
+        case "whiff_punch": {
+          this._playNoise(t, 0.05, 1400, 0.25);
+          break;
+        }
+        case "whiff_kick": {
+          this._playNoise(t, 0.08, 600, 0.35);
+          break;
+        }
+        case "sweep": {
+          this._playNoise(t, 0.14, 500, 0.55);
+          break;
+        }
         case "ko": {
           const chords = [220, 277.18, 329.63, 440];
           chords.forEach((freq) => {
@@ -1727,6 +1761,35 @@
         }
         case "jump":
         case "jump_up": {
+          if (char && char.currentAction) {
+            const actName = char.currentAction.name || "";
+            if (actName.includes("\u8E22")) {
+              defaultPose.torso.y = -70;
+              defaultPose.torso.angle = -0.45;
+              defaultPose.head.angle = 0.2;
+              defaultPose.frontLeg.thighAngle = -1.25;
+              defaultPose.frontLeg.shinAngle = 0.1;
+              defaultPose.backLeg.thighAngle = 0.4;
+              defaultPose.backLeg.shinAngle = 1.6;
+              defaultPose.frontArm.upperAngle = 0.7;
+              defaultPose.frontArm.foreAngle = 0.3;
+              defaultPose.backArm.upperAngle = 0.9;
+              defaultPose.backArm.foreAngle = 0.3;
+              defaultPose.vfx = { type: "dive_kick", x: 50, y: -45 };
+              return defaultPose;
+            } else if (actName.includes("\u62F3")) {
+              defaultPose.torso.y = -78;
+              defaultPose.torso.angle = 0.25;
+              defaultPose.frontArm.upperAngle = -0.35;
+              defaultPose.frontArm.foreAngle = 0.2;
+              defaultPose.frontLeg.thighAngle = -0.9;
+              defaultPose.frontLeg.shinAngle = 1.3;
+              defaultPose.backLeg.thighAngle = -0.6;
+              defaultPose.backLeg.shinAngle = 1.1;
+              defaultPose.vfx = { type: "punch", x: 48, y: -65 };
+              return defaultPose;
+            }
+          }
           defaultPose.torso.y = -82;
           defaultPose.head.y = -106;
           defaultPose.frontLeg.thighAngle = -0.8;
@@ -1751,6 +1814,44 @@
           defaultPose.frontArm.foreAngle = 0.9;
           defaultPose.backArm.upperAngle = 0.6;
           defaultPose.backArm.foreAngle = 0.8;
+          return defaultPose;
+        }
+        case "crouch_punch": {
+          const pProgress = Math.min(1, t / 11);
+          const reach = Math.sin(pProgress * Math.PI);
+          defaultPose.torso.y = -48;
+          defaultPose.torso.angle = 0.35 * reach;
+          defaultPose.head.y = -72;
+          defaultPose.frontLeg.thighAngle = -1.4;
+          defaultPose.frontLeg.shinAngle = 2.1;
+          defaultPose.backLeg.thighAngle = -1.2;
+          defaultPose.backLeg.shinAngle = 2;
+          defaultPose.frontArm.upperAngle = 0.3 - reach * 0.7;
+          defaultPose.frontArm.foreAngle = 1.2 - reach * 1.1;
+          defaultPose.backArm.upperAngle = 0.7;
+          defaultPose.backArm.foreAngle = 0.9;
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: "crouch_punch", progress: reach, x: 50, y: -50 };
+          }
+          return defaultPose;
+        }
+        case "crouch_kick": {
+          const sProgress = Math.min(1, t / 15);
+          const sweepWave = Math.sin(sProgress * Math.PI);
+          defaultPose.torso.y = -36;
+          defaultPose.torso.angle = -0.38 * sweepWave;
+          defaultPose.head.y = -60;
+          defaultPose.frontLeg.thighAngle = -1.55;
+          defaultPose.frontLeg.shinAngle = 0.05;
+          defaultPose.backLeg.thighAngle = 0.5;
+          defaultPose.backLeg.shinAngle = 1.8;
+          defaultPose.frontArm.upperAngle = 1.1;
+          defaultPose.frontArm.foreAngle = 0.2;
+          defaultPose.backArm.upperAngle = 0.9;
+          defaultPose.backArm.foreAngle = 0.4;
+          if (sweepWave > 0.2) {
+            defaultPose.vfx = { type: "sweep", progress: sweepWave, x: 56, y: -12 };
+          }
           return defaultPose;
         }
         case "high_guard": {
@@ -2275,6 +2376,38 @@
         ctx.beginPath();
         ctx.arc(vfx.x, vfx.y, rad * 0.45, 0, Math.PI * 2);
         ctx.fill();
+      } else if (vfx.type === "dive_kick") {
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 30, vfx.y - 25);
+        ctx.lineTo(vfx.x + 12, vfx.y + 16);
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = skin.themeColor;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 18, vfx.y - 14);
+        ctx.lineTo(vfx.x + 12, vfx.y + 16);
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = skin.secondaryColor || "#ffffff";
+        ctx.stroke();
+      } else if (vfx.type === "crouch_punch") {
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 16, -Math.PI / 4, Math.PI / 4);
+        ctx.lineWidth = 3.5;
+        ctx.strokeStyle = skin.secondaryColor || "#ffffff";
+        ctx.stroke();
+      } else if (vfx.type === "sweep") {
+        ctx.beginPath();
+        ctx.ellipse(vfx.x - 8, vfx.y, 45, 12, 0, -Math.PI / 6, Math.PI);
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = skin.themeColor;
+        ctx.stroke();
+        if (skin.secondaryColor) {
+          ctx.beginPath();
+          ctx.ellipse(vfx.x - 8, vfx.y, 36, 9, 0, -Math.PI / 6, Math.PI);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = skin.secondaryColor;
+          ctx.stroke();
+        }
       } else if (vfx.type === "hit_sparks") {
         for (let i = 0; i < 4; i++) {
           const ang = Math.PI * 2 / 4 * i;
@@ -2373,6 +2506,9 @@
       this.projectiles = [];
       this.shockwaves = [];
       this.floatingTexts = [];
+      this.hitSparks = [];
+      this.hitStop = 0;
+      this.screenShake = { x: 0, y: 0, intensity: 0 };
       this.roundTime = 99;
       this.timerAcc = 0;
       this.isOver = false;
@@ -2389,6 +2525,9 @@
         // 技能即時無冷卻
       };
       this.enableHaptics = true;
+    }
+    triggerScreenShake(intensity = 4) {
+      this.screenShake.intensity = Math.max(this.screenShake.intensity, intensity);
     }
     updatePlatforms(arenaWidth = this.arenaWidth, floorY = this.floorY) {
       this.arenaWidth = arenaWidth;
@@ -2414,6 +2553,9 @@
       this.projectiles = [];
       this.shockwaves = [];
       this.floatingTexts = [];
+      this.hitSparks = [];
+      this.hitStop = 0;
+      this.screenShake = { x: 0, y: 0, intensity: 0 };
       if (isTraining && trainingOpts) {
         this.trainingSettings = { ...this.trainingSettings, ...trainingOpts };
       }
@@ -2497,6 +2639,20 @@
             this._handleTimeOver();
           }
         }
+      }
+      if (this.screenShake.intensity > 0.15) {
+        this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity * 2.2;
+        this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity * 2.2;
+        this.screenShake.intensity *= 0.82;
+      } else {
+        this.screenShake.x = 0;
+        this.screenShake.y = 0;
+        this.screenShake.intensity = 0;
+      }
+      this._updateHitSparks();
+      if (this.hitStop > 0) {
+        this.hitStop--;
+        return;
       }
       this._updateFighter(this.p1, this.p2, inputsP1);
       this._updateFighter(this.p2, this.p1, inputsP2);
@@ -2682,6 +2838,8 @@
           break;
         case "light_punch":
         case "heavy_kick":
+        case "crouch_punch":
+        case "crouch_kick":
         case "ranged_attack":
         case "skill":
           this._updateAttackAction(char, opp);
@@ -2731,20 +2889,29 @@
         this._executeSkill(char, opp, 2);
         return;
       }
+      const moveX = input.x || 0;
+      const moveY = input.y || 0;
+      const isCrouching = (moveY > 0.35 || char.state === "crouch") && char.isGrounded;
       if (input.ranged && char.rangedCooldown <= 0) {
         this._executeRangedAttack(char, opp);
         return;
       }
       if (input.punch) {
-        this._executeLightPunch(char, opp);
+        if (isCrouching) {
+          this._executeCrouchPunch(char, opp);
+        } else {
+          this._executeLightPunch(char, opp);
+        }
         return;
       }
       if (input.kick) {
-        this._executeHeavyKick(char, opp);
+        if (isCrouching) {
+          this._executeCrouchKick(char, opp);
+        } else {
+          this._executeHeavyKick(char, opp);
+        }
         return;
       }
-      const moveX = input.x || 0;
-      const moveY = input.y || 0;
       if (input.guard && char.isGrounded) {
         const wasGuarding = char.isGuarding;
         char.isGuarding = true;
@@ -2825,7 +2992,7 @@
         });
       }
     }
-    // ─── 普攻打擊 (大幅縮短前搖與硬直，極致靈敏) ───
+    // ─── 普攻打擊體系 (站立、下蹲、空中全細節三段判定) ───
     _executeLightPunch(char, opp) {
       char.isGuarding = false;
       char.state = "light_punch";
@@ -2841,7 +3008,7 @@
         guardType: "all",
         hitChecked: false
       };
-      soundEngine.playHit("punch");
+      soundEngine.playHit("whiff_punch");
     }
     _executeHeavyKick(char, opp) {
       char.isGuarding = false;
@@ -2858,25 +3025,62 @@
         guardType: "all",
         hitChecked: false
       };
-      soundEngine.playHit("kick");
+      soundEngine.playHit("whiff_kick");
+    }
+    _executeCrouchPunch(char, opp) {
+      char.isGuarding = false;
+      char.state = "crouch_punch";
+      char.stateTime = 0;
+      char.stateDuration = 9;
+      char.currentAction = {
+        name: "\u4E0B\u8E72\u523A\u62F3",
+        startup: 3,
+        active: 3,
+        recovery: 3,
+        damage: 42,
+        guardType: "all",
+        hitChecked: false
+      };
+      soundEngine.playHit("whiff_punch");
+    }
+    _executeCrouchKick(char, opp) {
+      char.isGuarding = false;
+      char.state = "crouch_kick";
+      char.stateTime = 0;
+      char.stateDuration = 14;
+      char.currentAction = {
+        name: "\u4E0B\u8E72\u6383\u5802\u817F",
+        startup: 4,
+        active: 4,
+        recovery: 6,
+        damage: 75,
+        guardType: "crouch_only",
+        // 下段判定：站防無效，必須蹲防！
+        knockdown: true,
+        // 命中掃翻倒地！
+        hitChecked: false
+      };
+      soundEngine.playHit("sweep");
+      soundEngine.playHit("whiff_kick");
     }
     _executeAirAttack(char, opp, type) {
       char.isGuarding = false;
       char.state = "jump";
       char.stateTime = 0;
-      char.stateDuration = 9;
+      char.stateDuration = 10;
       char.currentAction = {
-        name: type === "kick" ? "\u8E8D\u7A7A\u91CD\u8E22" : "\u8DF3\u8E8D\u523A\u62F3",
+        name: type === "kick" ? "\u8E8D\u7A7A\u91CD\u98DB\u8E22" : "\u8DF3\u8E8D\u523A\u62F3",
         startup: 2,
-        // 2 幀瞬發
         active: 4,
-        recovery: 3,
-        damage: type === "kick" ? 90 : 50,
+        recovery: 4,
+        damage: type === "kick" ? 90 : 48,
         guardType: "stand_only",
-        // 空中打擊視為中段，不可蹲防
+        // 空中打擊視為中段，不可蹲防！
+        knockdown: type === "kick",
+        // 空中重飛踢擊倒對手
         hitChecked: false
       };
-      soundEngine.playHit(type === "kick" ? "kick" : "punch");
+      soundEngine.playHit(type === "kick" ? "whiff_kick" : "whiff_punch");
     }
     // ─── 遠程攻擊：量子光彈 (地面發射與空中壓制) ───
     _executeRangedAttack(char, opp) {
@@ -3096,6 +3300,14 @@
       } else if (opp.isGuarding) {
         isBlocked = true;
       }
+      const isCounter = !isBlocked && opp.currentAction && !opp.currentAction.hitChecked;
+      if (isCounter) {
+        damage = Math.round(damage * 1.25);
+      }
+      if (char.comboCount > 0) {
+        const comboScale = Math.max(0.55, 1 - char.comboCount * 0.08);
+        damage = Math.max(12, Math.round(damage * comboScale));
+      }
       if (isBlocked) {
         damage = Math.max(12, Math.round(damage * 0.5));
         opp.hp = Math.max(0, opp.hp - damage);
@@ -3103,6 +3315,30 @@
         this._triggerHaptic(25);
         opp.vx = char.facing * 4.5;
         char.frameAdvantage = -4;
+        this.hitStop = Math.max(this.hitStop, 2);
+        this.triggerScreenShake(2);
+        const sparkX = (char.x + opp.x) / 2;
+        const sparkY = opp.y - 70;
+        this.hitSparks.push({
+          type: "shield_block",
+          x: sparkX,
+          y: sparkY,
+          facing: char.facing,
+          color: "#38bdf8",
+          coreRadius: 16,
+          life: 14,
+          maxLife: 14,
+          particles: Array.from({ length: 10 }, () => ({
+            x: sparkX,
+            y: sparkY,
+            vx: (Math.random() - 0.5) * 8 - char.facing * 2,
+            vy: (Math.random() - 0.5) * 8,
+            life: 12,
+            maxLife: 12,
+            size: Math.random() * 3 + 2,
+            color: Math.random() > 0.3 ? "#38bdf8" : "#e0f2fe"
+          }))
+        });
         this.floatingTexts.push({
           text: `SHIELD -${damage}`,
           x: opp.x,
@@ -3117,13 +3353,18 @@
       char.comboCount++;
       char.comboDamage += damage;
       char.comboResetTimer = 45;
-      char.frameAdvantage = 4;
+      char.frameAdvantage = isCounter ? 7 : 4;
+      this.hitStop = Math.max(this.hitStop, isCounter ? 6 : damage >= 80 ? 4 : 2);
+      this.triggerScreenShake(isCounter ? 6.5 : damage >= 80 ? 5 : 3);
       if (action.knockdown || damage >= 150) {
         soundEngine.playHit("slam");
         this._triggerHaptic(80);
+      } else if (isCounter) {
+        soundEngine.playHit("counter");
+        this._triggerHaptic(60);
       } else {
         soundEngine.playHit(action.name.includes("\u8E22") ? "kick" : "punch");
-        this._triggerHaptic(action.damage > 80 ? 50 : 15);
+        this._triggerHaptic(action.damage > 80 ? 50 : 20);
       }
       if (action.knockdown) {
         opp.state = "knockdown";
@@ -3131,28 +3372,109 @@
         opp.vx = char.facing * 12;
         opp.vy = -6;
         opp.isGrounded = false;
+      } else if (!opp.isGrounded) {
+        opp.state = "hit_stun";
+        opp.stateTime = 0;
+        opp.stateDuration = 22;
+        opp.vy = -5.5;
+        opp.vx = char.facing * 4.5;
       } else {
         opp.state = "hit_stun";
         opp.stateTime = 0;
-        opp.stateDuration = 16;
+        opp.stateDuration = isCounter ? 22 : 16;
         opp.vx = char.facing * 6;
       }
-      this.floatingTexts.push({
-        text: `HIT! -${damage}`,
-        x: opp.x,
-        y: opp.y - 90,
-        color: "#ff007f",
-        life: 35
+      if (isCounter) {
+        this.floatingTexts.push({
+          text: `\u2605 COUNTER! -${damage}`,
+          x: opp.x,
+          y: opp.y - 110,
+          color: "#ffd700",
+          life: 45
+        });
+      } else {
+        this.floatingTexts.push({
+          text: `HIT! -${damage}`,
+          x: opp.x,
+          y: opp.y - 90,
+          color: "#ff007f",
+          life: 35
+        });
+      }
+      if (!opp.isGrounded && !action.knockdown && char.comboCount >= 2) {
+        this.floatingTexts.push({
+          text: "AIR JUGGLE!",
+          x: opp.x,
+          y: opp.y - 130,
+          color: "#00f3ff",
+          life: 35
+        });
+      }
+      const contactX = (char.x + opp.x) / 2 + char.facing * 10;
+      const contactY = opp.y - (action.name.includes("\u4E0B\u8E72") ? 35 : action.name.includes("\u8E22") ? 65 : 75);
+      const sparkColor = isCounter ? "#ffd700" : damage >= 80 ? "#ff007f" : "#ff9900";
+      const rayCount = damage >= 80 ? 8 : 5;
+      this.hitSparks.push({
+        type: isCounter ? "counter_hit" : damage >= 80 ? "heavy_hit" : "light_hit",
+        x: contactX,
+        y: contactY,
+        facing: char.facing,
+        color: sparkColor,
+        coreRadius: damage >= 80 ? 28 : 18,
+        life: 18,
+        maxLife: 18,
+        rays: Array.from({ length: rayCount }, (_, i) => ({
+          angle: Math.PI * 2 / rayCount * i + (Math.random() - 0.5) * 0.4,
+          len: Math.random() * 25 + 20,
+          width: Math.random() * 2 + 2
+        })),
+        particles: Array.from({ length: damage >= 80 ? 14 : 8 }, () => ({
+          x: contactX,
+          y: contactY,
+          vx: (Math.random() - 0.5) * 12 + char.facing * 3,
+          vy: (Math.random() - 0.5) * 12 - 2,
+          life: Math.floor(Math.random() * 8 + 10),
+          maxLife: 18,
+          size: Math.random() * 3.5 + 2,
+          color: isCounter ? "#ffd700" : Math.random() > 0.4 ? "#ff007f" : "#ffff00"
+        }))
       });
     }
     _triggerParryCounter(parryChar, attacker) {
       parryChar.currentAction.hitChecked = true;
       soundEngine.playHit("parry_trigger");
       this._triggerHaptic(60);
+      this.hitStop = 6;
+      this.triggerScreenShake(5);
       attacker.state = "hit_stun";
       attacker.stateTime = 0;
       attacker.stateDuration = 35;
       attacker.hp = Math.max(0, attacker.hp - 190);
+      this.hitSparks.push({
+        type: "parry",
+        x: (parryChar.x + attacker.x) / 2,
+        y: parryChar.y - 70,
+        facing: parryChar.facing,
+        color: "#00ff66",
+        coreRadius: 30,
+        life: 20,
+        maxLife: 20,
+        rays: Array.from({ length: 10 }, (_, i) => ({
+          angle: Math.PI * 2 / 10 * i,
+          len: 35,
+          width: 3
+        })),
+        particles: Array.from({ length: 16 }, () => ({
+          x: (parryChar.x + attacker.x) / 2,
+          y: parryChar.y - 70,
+          vx: (Math.random() - 0.5) * 14,
+          vy: (Math.random() - 0.5) * 14,
+          life: 16,
+          maxLife: 16,
+          size: 3.5,
+          color: "#00ff88"
+        }))
+      });
       this.floatingTexts.push({
         text: "PARRY COUNTER! -190",
         x: parryChar.x,
@@ -3194,6 +3516,24 @@
         }
         if (s.duration <= 0) {
           this.shockwaves.splice(i, 1);
+        }
+      }
+    }
+    _updateHitSparks() {
+      for (let i = this.hitSparks.length - 1; i >= 0; i--) {
+        const s = this.hitSparks[i];
+        s.life--;
+        if (s.particles) {
+          for (let p of s.particles) {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vx *= 0.9;
+            p.vy *= 0.9;
+            p.life--;
+          }
+        }
+        if (s.life <= 0) {
+          this.hitSparks.splice(i, 1);
         }
       }
     }
@@ -4262,6 +4602,10 @@
       const h = this.canvas.height;
       ctx.fillStyle = "#050814";
       ctx.fillRect(0, 0, w, h);
+      ctx.save();
+      if (combatEngine.screenShake && combatEngine.screenShake.intensity > 0.1) {
+        ctx.translate(combatEngine.screenShake.x, combatEngine.screenShake.y);
+      }
       const groundY = combatEngine.floorY;
       ctx.strokeStyle = "rgba(0, 243, 255, 0.15)";
       ctx.lineWidth = 1;
@@ -4317,6 +4661,7 @@
         }
         ctx.restore();
       });
+      this._drawHitSparks(ctx);
       combatEngine.floatingTexts.forEach((t) => {
         ctx.save();
         ctx.font = "bold 18px Orbitron, sans-serif";
@@ -4326,9 +4671,105 @@
         ctx.fillText(t.text, t.x - 40, t.y);
         ctx.restore();
       });
+      ctx.restore();
+      this._drawComboCounters(ctx, w, h);
       if (combatEngine.isOver && !combatEngine.isTraining) {
         this._drawVictoryBanner(ctx, w, h);
       }
+    }
+    // ─── 打擊爆裂火花與斬芒特效 (Hit Sparks & Impact Rays) ───
+    _drawHitSparks(ctx) {
+      if (!combatEngine.hitSparks || combatEngine.hitSparks.length === 0) return;
+      for (const spark of combatEngine.hitSparks) {
+        const alpha = Math.max(0, spark.life / spark.maxLife);
+        const progress = 1 - alpha;
+        ctx.save();
+        const currentRadius = (spark.coreRadius || 20) * (0.4 + progress * 1.3);
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = spark.color || "#ff007f";
+        ctx.lineWidth = Math.max(1, (1 - progress) * 4);
+        ctx.shadowColor = spark.color || "#ff007f";
+        ctx.shadowBlur = 16;
+        ctx.beginPath();
+        ctx.arc(spark.x, spark.y, currentRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        if (spark.life >= spark.maxLife - 4) {
+          ctx.fillStyle = "#ffffff";
+          ctx.shadowColor = "#ffffff";
+          ctx.shadowBlur = 24;
+          ctx.beginPath();
+          ctx.arc(spark.x, spark.y, (spark.coreRadius || 20) * 0.5 * (1 - progress), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        if (spark.rays && spark.rays.length > 0) {
+          ctx.strokeStyle = spark.color || "#ffd700";
+          ctx.lineWidth = Math.max(1, 2.8 * alpha);
+          ctx.shadowColor = spark.color || "#ffd700";
+          ctx.shadowBlur = 12;
+          for (const ray of spark.rays) {
+            const rayLen = ray.len * (0.6 + progress * 0.8);
+            const startDist = progress * 6;
+            const sx = spark.x + Math.cos(ray.angle) * startDist;
+            const sy = spark.y + Math.sin(ray.angle) * startDist;
+            const ex = spark.x + Math.cos(ray.angle) * (startDist + rayLen);
+            const ey = spark.y + Math.sin(ray.angle) * (startDist + rayLen);
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+          }
+        }
+        if (spark.particles) {
+          for (const p of spark.particles) {
+            if (p.life <= 0) continue;
+            const pAlpha = Math.max(0, p.life / p.maxLife);
+            ctx.globalAlpha = pAlpha;
+            ctx.fillStyle = p.color || spark.color;
+            ctx.shadowColor = p.color || spark.color;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, (p.size || 2.5) * pAlpha, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+    }
+    // ─── 街機風格連擊計數器 (Arcade Combo Counter HUD) ───
+    _drawComboCounters(ctx, w, h) {
+      const p1 = combatEngine.p1;
+      const p2 = combatEngine.p2;
+      const renderCombo = (fighter, isLeft) => {
+        if (!fighter || fighter.comboCount < 2) return;
+        ctx.save();
+        const count = fighter.comboCount;
+        const damage = fighter.comboDamage;
+        const themeColor = isLeft ? "#00f3ff" : "#ff007f";
+        const secColor = isLeft ? "#ffd700" : "#ff9900";
+        const pulse = 1 + Math.min(0.2, fighter.comboResetTimer / 45 * 0.15);
+        const posX = isLeft ? Math.max(80, w * 0.16) : Math.min(w - 80, w * 0.84);
+        const posY = Math.max(140, h * 0.35);
+        ctx.translate(posX, posY);
+        ctx.scale(pulse, pulse);
+        ctx.textAlign = isLeft ? "left" : "right";
+        ctx.font = '900 42px "Orbitron", sans-serif';
+        ctx.fillStyle = themeColor;
+        ctx.shadowColor = themeColor;
+        ctx.shadowBlur = 18;
+        ctx.fillText(`${count} HITS!`, 0, 0);
+        ctx.font = 'bold 15px "Orbitron", "Noto Sans TC", sans-serif';
+        ctx.fillStyle = secColor;
+        ctx.shadowColor = secColor;
+        ctx.shadowBlur = 10;
+        let praise = "GOOD COMBO";
+        if (count >= 7) praise = "\u2605 QUANTUM MASTER! \u2605";
+        else if (count >= 5) praise = "\u2605 AMAZING COMBO! \u2605";
+        else if (count >= 3) praise = "GREAT COMBO!";
+        ctx.fillText(`DAMAGE: ${damage}  [${praise}]`, 0, 24);
+        ctx.restore();
+      };
+      renderCombo(p1, true);
+      renderCombo(p2, false);
     }
     _drawVictoryBanner(ctx, w, h) {
       const isP1Win = combatEngine.winner === 1;
@@ -4536,6 +4977,57 @@
       ctx.shadowColor = "#00f3ff";
       ctx.shadowBlur = 10;
       ctx.fillText(`\u2605 \u9019\u662F\u73A9\u5BB6\u7684\u89D2\u8272 [${p1Hp} HP]`, p1.x, badgeY1 + badgeH1 / 2);
+      if (p1.currentAction) {
+        const act = p1.currentAction;
+        let propText = "\u4E0A\u6BB5";
+        let propColor = "#00f3ff";
+        if (act.guardType === "crouch_only") {
+          propText = "\u4E0B\u6BB5\u30FB\u6383\u5012";
+          propColor = "#ffaa00";
+        } else if (act.guardType === "stand_only") {
+          propText = "\u4E2D\u6BB5\u30FB\u7834\u8E72";
+          propColor = "#ff007f";
+        } else if (act.guardType === "unblockable") {
+          propText = "\u6295\u6280\u30FB\u7834\u9632";
+          propColor = "#ffd700";
+        } else if (act.isRanged) {
+          propText = "\u9060\u7A0B\u5F48\u9053";
+          propColor = "#38bdf8";
+        }
+        const actTagW = 200;
+        const actTagH = 22;
+        const actTagX = p1.x - actTagW / 2;
+        const actTagY = badgeY1 - actTagH - 4;
+        ctx.fillStyle = "rgba(2, 10, 24, 0.95)";
+        ctx.strokeStyle = propColor;
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = propColor;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(actTagX, actTagY, actTagW, actTagH, 5);
+        else ctx.rect(actTagX, actTagY, actTagW, actTagH);
+        ctx.fill();
+        ctx.stroke();
+        ctx.font = 'bold 11px "Noto Sans TC", "Orbitron", sans-serif';
+        ctx.fillStyle = propColor;
+        ctx.fillText(`\u2694\uFE0F ${act.name} [${propText}] ${act.damage}D`, p1.x, actTagY + actTagH / 2);
+      } else if (p1.isGuarding) {
+        const guardTagW = 160;
+        const guardTagH = 20;
+        const guardTagX = p1.x - guardTagW / 2;
+        const guardTagY = badgeY1 - guardTagH - 4;
+        ctx.fillStyle = "rgba(2, 16, 32, 0.9)";
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(guardTagX, guardTagY, guardTagW, guardTagH, 4);
+        else ctx.rect(guardTagX, guardTagY, guardTagW, guardTagH);
+        ctx.fill();
+        ctx.stroke();
+        ctx.font = 'bold 10px "Noto Sans TC", sans-serif';
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillText(`\u{1F6E1}\uFE0F \u9632\u8B77\u7F69\u9632\u79A6 (50%\u6E1B\u50B7)`, p1.x, guardTagY + guardTagH / 2);
+      }
       ctx.restore();
       const p2HeadY = p2.y - 170 - bounce;
       ctx.save();
@@ -4572,6 +5064,57 @@
       ctx.shadowColor = "#ff007f";
       ctx.shadowBlur = 10;
       ctx.fillText(`${p2Label} [${p2Hp} HP]`, p2.x, badgeY2 + badgeH2 / 2);
+      if (p2.currentAction) {
+        const act = p2.currentAction;
+        let propText = "\u4E0A\u6BB5";
+        let propColor = "#ff007f";
+        if (act.guardType === "crouch_only") {
+          propText = "\u4E0B\u6BB5\u30FB\u6383\u5012";
+          propColor = "#ffaa00";
+        } else if (act.guardType === "stand_only") {
+          propText = "\u4E2D\u6BB5\u30FB\u7834\u8E72";
+          propColor = "#ff007f";
+        } else if (act.guardType === "unblockable") {
+          propText = "\u6295\u6280\u30FB\u7834\u9632";
+          propColor = "#ffd700";
+        } else if (act.isRanged) {
+          propText = "\u9060\u7A0B\u5F48\u9053";
+          propColor = "#38bdf8";
+        }
+        const actTagW = 200;
+        const actTagH = 22;
+        const actTagX = p2.x - actTagW / 2;
+        const actTagY = badgeY2 - actTagH - 4;
+        ctx.fillStyle = "rgba(25, 5, 15, 0.95)";
+        ctx.strokeStyle = propColor;
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = propColor;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(actTagX, actTagY, actTagW, actTagH, 5);
+        else ctx.rect(actTagX, actTagY, actTagW, actTagH);
+        ctx.fill();
+        ctx.stroke();
+        ctx.font = 'bold 11px "Noto Sans TC", "Orbitron", sans-serif';
+        ctx.fillStyle = propColor;
+        ctx.fillText(`\u2694\uFE0F ${act.name} [${propText}] ${act.damage}D`, p2.x, actTagY + actTagH / 2);
+      } else if (p2.isGuarding) {
+        const guardTagW = 160;
+        const guardTagH = 20;
+        const guardTagX = p2.x - guardTagW / 2;
+        const guardTagY = badgeY2 - guardTagH - 4;
+        ctx.fillStyle = "rgba(28, 5, 20, 0.9)";
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(guardTagX, guardTagY, guardTagW, guardTagH, 4);
+        else ctx.rect(guardTagX, guardTagY, guardTagW, guardTagH);
+        ctx.fill();
+        ctx.stroke();
+        ctx.font = 'bold 10px "Noto Sans TC", sans-serif';
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillText(`\u{1F6E1}\uFE0F \u9632\u8B77\u7F69\u9632\u79A6 (50%\u6E1B\u50B7)`, p2.x, guardTagY + guardTagH / 2);
+      }
       ctx.restore();
     }
     _updateBattleHUD() {

@@ -20,6 +20,9 @@ export class CombatEngine {
     this.projectiles = [];
     this.shockwaves = [];
     this.floatingTexts = [];
+    this.hitSparks = [];
+    this.hitStop = 0;
+    this.screenShake = { x: 0, y: 0, intensity: 0 };
     this.roundTime = 99;
     this.timerAcc = 0;
     this.isOver = false;
@@ -36,6 +39,10 @@ export class CombatEngine {
 
     // 震動回饋開關
     this.enableHaptics = true;
+  }
+
+  triggerScreenShake(intensity = 4) {
+    this.screenShake.intensity = Math.max(this.screenShake.intensity, intensity);
   }
 
   updatePlatforms(arenaWidth = this.arenaWidth, floorY = this.floorY) {
@@ -64,6 +71,9 @@ export class CombatEngine {
     this.projectiles = [];
     this.shockwaves = [];
     this.floatingTexts = [];
+    this.hitSparks = [];
+    this.hitStop = 0;
+    this.screenShake = { x: 0, y: 0, intensity: 0 };
 
     if (isTraining && trainingOpts) {
       this.trainingSettings = { ...this.trainingSettings, ...trainingOpts };
@@ -161,11 +171,30 @@ export class CombatEngine {
       }
     }
 
-    // 3. 處理雙方冷卻與輸入
+    // 3. 畫面震動衰減與打擊火花更新
+    if (this.screenShake.intensity > 0.15) {
+      this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity * 2.2;
+      this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity * 2.2;
+      this.screenShake.intensity *= 0.82;
+    } else {
+      this.screenShake.x = 0;
+      this.screenShake.y = 0;
+      this.screenShake.intensity = 0;
+    }
+
+    this._updateHitSparks();
+
+    // 命中頓幀 (Hit Stop)：打擊爆裂瞬間凍結數幀，呈現格鬥遊戲扎實厚重的打擊感
+    if (this.hitStop > 0) {
+      this.hitStop--;
+      return;
+    }
+
+    // 4. 處理雙方冷卻與輸入
     this._updateFighter(this.p1, this.p2, inputsP1);
     this._updateFighter(this.p2, this.p1, inputsP2);
 
-    // 4. 更新飛行道具與衝擊波
+    // 5. 更新飛行道具與衝擊波
     this._updateProjectiles();
     this._updateShockwaves();
     this._updateFloatingTexts();
@@ -384,6 +413,8 @@ export class CombatEngine {
 
       case 'light_punch':
       case 'heavy_kick':
+      case 'crouch_punch':
+      case 'crouch_kick':
       case 'ranged_attack':
       case 'skill':
         this._updateAttackAction(char, opp);
@@ -442,22 +473,31 @@ export class CombatEngine {
       return;
     }
 
-    // 2. 基礎攻擊
+    const moveX = input.x || 0;
+    const moveY = input.y || 0;
+    const isCrouching = (moveY > 0.35 || char.state === 'crouch') && char.isGrounded;
+
+    // 2. 基礎攻擊 (細節三段判定：站立直拳/重踢、下蹲刺拳/下段掃堂腿、遠程光彈)
     if (input.ranged && char.rangedCooldown <= 0) {
       this._executeRangedAttack(char, opp);
       return;
     }
     if (input.punch) {
-      this._executeLightPunch(char, opp);
+      if (isCrouching) {
+        this._executeCrouchPunch(char, opp);
+      } else {
+        this._executeLightPunch(char, opp);
+      }
       return;
     }
     if (input.kick) {
-      this._executeHeavyKick(char, opp);
+      if (isCrouching) {
+        this._executeCrouchKick(char, opp);
+      } else {
+        this._executeHeavyKick(char, opp);
+      }
       return;
     }
-
-    const moveX = input.x || 0;
-    const moveY = input.y || 0;
 
     // 3. 專屬按鍵主動召喚量子防護罩 (Dedicated Guard Key: L / Shift / 觸控盾牌)
     // 只有在按下防禦鍵時才會召喚防護罩；單純向後走位後退絕不觸發防護罩
@@ -557,7 +597,7 @@ export class CombatEngine {
     }
   }
 
-  // ─── 普攻打擊 (大幅縮短前搖與硬直，極致靈敏) ───
+  // ─── 普攻打擊體系 (站立、下蹲、空中全細節三段判定) ───
   _executeLightPunch(char, opp) {
     char.isGuarding = false;
     char.state = 'light_punch';
@@ -572,7 +612,7 @@ export class CombatEngine {
       guardType: 'all',
       hitChecked: false
     };
-    soundEngine.playHit('punch');
+    soundEngine.playHit('whiff_punch');
   }
 
   _executeHeavyKick(char, opp) {
@@ -589,24 +629,61 @@ export class CombatEngine {
       guardType: 'all',
       hitChecked: false
     };
-    soundEngine.playHit('kick');
+    soundEngine.playHit('whiff_kick');
+  }
+
+  _executeCrouchPunch(char, opp) {
+    char.isGuarding = false;
+    char.state = 'crouch_punch';
+    char.stateTime = 0;
+    char.stateDuration = 9; // 9 幀低位秒刺
+    char.currentAction = {
+      name: '下蹲刺拳',
+      startup: 3,
+      active: 3,
+      recovery: 3,
+      damage: 42,
+      guardType: 'all',
+      hitChecked: false
+    };
+    soundEngine.playHit('whiff_punch');
+  }
+
+  _executeCrouchKick(char, opp) {
+    char.isGuarding = false;
+    char.state = 'crouch_kick';
+    char.stateTime = 0;
+    char.stateDuration = 14; // 14 幀破空旋掃
+    char.currentAction = {
+      name: '下蹲掃堂腿',
+      startup: 4,
+      active: 4,
+      recovery: 6,
+      damage: 75,
+      guardType: 'crouch_only', // 下段判定：站防無效，必須蹲防！
+      knockdown: true, // 命中掃翻倒地！
+      hitChecked: false
+    };
+    soundEngine.playHit('sweep');
+    soundEngine.playHit('whiff_kick');
   }
 
   _executeAirAttack(char, opp, type) {
     char.isGuarding = false;
     char.state = 'jump';
     char.stateTime = 0;
-    char.stateDuration = 9; // 9 幀超敏捷空中打擊 (靈敏瞬出)
+    char.stateDuration = 10;
     char.currentAction = {
-      name: type === 'kick' ? '躍空重踢' : '跳躍刺拳',
-      startup: 2, // 2 幀瞬發
+      name: type === 'kick' ? '躍空重飛踢' : '跳躍刺拳',
+      startup: 2,
       active: 4,
-      recovery: 3,
-      damage: type === 'kick' ? 90 : 50,
-      guardType: 'stand_only', // 空中打擊視為中段，不可蹲防
+      recovery: 4,
+      damage: type === 'kick' ? 90 : 48,
+      guardType: 'stand_only', // 空中打擊視為中段，不可蹲防！
+      knockdown: type === 'kick', // 空中重飛踢擊倒對手
       hitChecked: false
     };
-    soundEngine.playHit(type === 'kick' ? 'kick' : 'punch');
+    soundEngine.playHit(type === 'kick' ? 'whiff_kick' : 'whiff_punch');
   }
 
   // ─── 遠程攻擊：量子光彈 (地面發射與空中壓制) ───
@@ -877,6 +954,18 @@ export class CombatEngine {
       isBlocked = true;
     }
 
+    // 破招判定 (Counter Hit)：若對手正處於出招前搖或判定中被打中
+    const isCounter = !isBlocked && opp.currentAction && !opp.currentAction.hitChecked;
+    if (isCounter) {
+      damage = Math.round(damage * 1.25);
+    }
+
+    // 連段傷害遞減修正 (Combo Scaling)
+    if (char.comboCount > 0) {
+      const comboScale = Math.max(0.55, 1.0 - char.comboCount * 0.08);
+      damage = Math.max(12, Math.round(damage * comboScale));
+    }
+
     // 格擋減傷機制：防護罩只能減少攻擊傷害，不能擋下所有傷害！
     if (isBlocked) {
       // 50% 傷害穿透防護罩，實質扣除血量
@@ -888,6 +977,34 @@ export class CombatEngine {
       // 受擊格擋擊退
       opp.vx = char.facing * 4.5;
       char.frameAdvantage = -4;
+
+      // 格擋頓幀與輕微震屏
+      this.hitStop = Math.max(this.hitStop, 2);
+      this.triggerScreenShake(2);
+
+      // 格擋量子火花特效
+      const sparkX = (char.x + opp.x) / 2;
+      const sparkY = opp.y - 70;
+      this.hitSparks.push({
+        type: 'shield_block',
+        x: sparkX,
+        y: sparkY,
+        facing: char.facing,
+        color: '#38bdf8',
+        coreRadius: 16,
+        life: 14,
+        maxLife: 14,
+        particles: Array.from({ length: 10 }, () => ({
+          x: sparkX,
+          y: sparkY,
+          vx: (Math.random() - 0.5) * 8 - char.facing * 2,
+          vy: (Math.random() - 0.5) * 8,
+          life: 12,
+          maxLife: 12,
+          size: Math.random() * 3 + 2,
+          color: Math.random() > 0.3 ? '#38bdf8' : '#e0f2fe'
+        }))
+      });
 
       this.floatingTexts.push({
         text: `SHIELD -${damage}`,
@@ -909,37 +1026,104 @@ export class CombatEngine {
     char.comboCount++;
     char.comboDamage += damage;
     char.comboResetTimer = 45; // 45 幀內再次命中算連段
-    char.frameAdvantage = 4;   // 攻擊命中享有有利幀 (+4f)
+    char.frameAdvantage = isCounter ? 7 : 4;   // 破招享有超長有利幀 (+7f)
+
+    // 命中頓幀 (Hit Stop) 與震屏 (Screen Shake)
+    this.hitStop = Math.max(this.hitStop, isCounter ? 6 : (damage >= 80 ? 4 : 2));
+    this.triggerScreenShake(isCounter ? 6.5 : (damage >= 80 ? 5 : 3));
 
     // 音效與觸覺震動
     if (action.knockdown || damage >= 150) {
       soundEngine.playHit('slam');
       this._triggerHaptic(80);
+    } else if (isCounter) {
+      soundEngine.playHit('counter');
+      this._triggerHaptic(60);
     } else {
       soundEngine.playHit(action.name.includes('踢') ? 'kick' : 'punch');
-      this._triggerHaptic(action.damage > 80 ? 50 : 15);
+      this._triggerHaptic(action.damage > 80 ? 50 : 20);
     }
 
-    // 擊退與硬直 / 擊倒受身
+    // 擊退與硬直 / 擊倒受身 / 空中浮空 (Air Juggle)
     if (action.knockdown) {
       opp.state = 'knockdown';
       opp.stateTime = 0;
       opp.vx = char.facing * 12;
       opp.vy = -6;
       opp.isGrounded = false;
+    } else if (!opp.isGrounded) {
+      // 空中受擊浮空 (Air Juggle)，延長受擊滯空硬直
+      opp.state = 'hit_stun';
+      opp.stateTime = 0;
+      opp.stateDuration = 22;
+      opp.vy = -5.5;
+      opp.vx = char.facing * 4.5;
     } else {
       opp.state = 'hit_stun';
       opp.stateTime = 0;
-      opp.stateDuration = 16; // 輕受擊硬直 16 幀
+      opp.stateDuration = isCounter ? 22 : 16; // 破招受擊硬直高達 22 幀
       opp.vx = char.facing * 6;
     }
 
-    this.floatingTexts.push({
-      text: `HIT! -${damage}`,
-      x: opp.x,
-      y: opp.y - 90,
-      color: '#ff007f',
-      life: 35
+    // 浮動提示文字
+    if (isCounter) {
+      this.floatingTexts.push({
+        text: `★ COUNTER! -${damage}`,
+        x: opp.x,
+        y: opp.y - 110,
+        color: '#ffd700',
+        life: 45
+      });
+    } else {
+      this.floatingTexts.push({
+        text: `HIT! -${damage}`,
+        x: opp.x,
+        y: opp.y - 90,
+        color: '#ff007f',
+        life: 35
+      });
+    }
+
+    if (!opp.isGrounded && !action.knockdown && char.comboCount >= 2) {
+      this.floatingTexts.push({
+        text: 'AIR JUGGLE!',
+        x: opp.x,
+        y: opp.y - 130,
+        color: '#00f3ff',
+        life: 35
+      });
+    }
+
+    // 打擊爆裂火花特效 (Hit Sparks)
+    const contactX = (char.x + opp.x) / 2 + (char.facing * 10);
+    const contactY = opp.y - (action.name.includes('下蹲') ? 35 : (action.name.includes('踢') ? 65 : 75));
+    const sparkColor = isCounter ? '#ffd700' : (damage >= 80 ? '#ff007f' : '#ff9900');
+    const rayCount = damage >= 80 ? 8 : 5;
+
+    this.hitSparks.push({
+      type: isCounter ? 'counter_hit' : (damage >= 80 ? 'heavy_hit' : 'light_hit'),
+      x: contactX,
+      y: contactY,
+      facing: char.facing,
+      color: sparkColor,
+      coreRadius: damage >= 80 ? 28 : 18,
+      life: 18,
+      maxLife: 18,
+      rays: Array.from({ length: rayCount }, (_, i) => ({
+        angle: (Math.PI * 2 / rayCount) * i + (Math.random() - 0.5) * 0.4,
+        len: Math.random() * 25 + 20,
+        width: Math.random() * 2 + 2
+      })),
+      particles: Array.from({ length: damage >= 80 ? 14 : 8 }, () => ({
+        x: contactX,
+        y: contactY,
+        vx: (Math.random() - 0.5) * 12 + char.facing * 3,
+        vy: (Math.random() - 0.5) * 12 - 2,
+        life: Math.floor(Math.random() * 8 + 10),
+        maxLife: 18,
+        size: Math.random() * 3.5 + 2,
+        color: isCounter ? '#ffd700' : (Math.random() > 0.4 ? '#ff007f' : '#ffff00')
+      }))
     });
   }
 
@@ -947,12 +1131,41 @@ export class CombatEngine {
     parryChar.currentAction.hitChecked = true;
     soundEngine.playHit('parry_trigger');
     this._triggerHaptic(60);
+    this.hitStop = 6;
+    this.triggerScreenShake(5);
 
     // 架招成功，反彈擊暈對手並給予反擊傷害
     attacker.state = 'hit_stun';
     attacker.stateTime = 0;
     attacker.stateDuration = 35; // 擊暈 35 幀
     attacker.hp = Math.max(0, attacker.hp - 190);
+
+    // 架招翡翠爆裂火花
+    this.hitSparks.push({
+      type: 'parry',
+      x: (parryChar.x + attacker.x) / 2,
+      y: parryChar.y - 70,
+      facing: parryChar.facing,
+      color: '#00ff66',
+      coreRadius: 30,
+      life: 20,
+      maxLife: 20,
+      rays: Array.from({ length: 10 }, (_, i) => ({
+        angle: (Math.PI * 2 / 10) * i,
+        len: 35,
+        width: 3
+      })),
+      particles: Array.from({ length: 16 }, () => ({
+        x: (parryChar.x + attacker.x) / 2,
+        y: parryChar.y - 70,
+        vx: (Math.random() - 0.5) * 14,
+        vy: (Math.random() - 0.5) * 14,
+        life: 16,
+        maxLife: 16,
+        size: 3.5,
+        color: '#00ff88'
+      }))
+    });
 
     this.floatingTexts.push({
       text: 'PARRY COUNTER! -190',
@@ -1001,6 +1214,25 @@ export class CombatEngine {
       }
       if (s.duration <= 0) {
         this.shockwaves.splice(i, 1);
+      }
+    }
+  }
+
+  _updateHitSparks() {
+    for (let i = this.hitSparks.length - 1; i >= 0; i--) {
+      const s = this.hitSparks[i];
+      s.life--;
+      if (s.particles) {
+        for (let p of s.particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.90;
+          p.vy *= 0.90;
+          p.life--;
+        }
+      }
+      if (s.life <= 0) {
+        this.hitSparks.splice(i, 1);
       }
     }
   }
