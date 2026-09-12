@@ -6,6 +6,7 @@
  */
 
 import { specialSkinsRenderer } from './special_skins_renderer.js';
+import { scifiSkinsRenderer } from './scifi_skins_renderer.js';
 import { getSkinAttackStyle } from '../data/skins.js';
 
 export class CharacterRenderer {
@@ -28,38 +29,33 @@ export class CharacterRenderer {
       thighWidth: 13,
       shinLength: 32,
       shinWidth: 12,
-      footLength: 20,
-      footHeight: 10
+      footLength: 18,
+      footHeight: 9
     };
   }
 
-  /**
-   * 渲染單一角色至 2D Canvas
-   * @param {CanvasRenderingContext2D} ctx 
-   * @param {Object} char 角色資料模型（包含 x, y, facing, state, stateTime, skin, isGuarding, etc.）
-   */
+  // ─── 核心繪製入口 ───
   draw(ctx, char) {
-    ctx.save();
-
+    if (!char) return;
     const skin = char.skin;
-    const facing = char.facing || 1; // 1: 朝右, -1: 朝左
-    const state = char.state || 'idle';
+    const state = char.state;
     const t = char.stateTime || 0;
 
-    // 定位角色基準原點 (底部腳掌中心)
-    ctx.translate(Math.round(char.x), Math.round(char.y));
-    ctx.scale(facing, 1);
+    ctx.save();
+    ctx.translate(char.x, char.y);
+    ctx.scale(char.facing, 1);
 
-    // 起身無敵閃爍保護 (15 幀)
-    if (char.invincibleTimer > 0 && Math.floor(char.invincibleTimer / 3) % 2 === 0) {
+    // 受傷或無敵半透明閃爍
+    if (char.invincibleTimer && char.invincibleTimer > 0 && Math.floor(char.invincibleTimer / 2) % 2 === 1) {
       ctx.globalAlpha = 0.5;
     }
 
     // 計算 12 種姿態骨骼角度
     const pose = this.calculatePose(state, t, char);
 
-    // 0. 專屬特殊角色氣場與光環 (七龍珠金色氣焰、索爾雷電、薩諾斯無限寶石)
+    // 0. 專屬特殊角色與科幻戰將氣場光環
     specialSkinsRenderer.drawAura(ctx, char, skin, t);
+    scifiSkinsRenderer.drawAura(ctx, char, skin, t);
 
     // 1. 繪製後層肢體 (背側手臂、背側腿)
     this.drawLimb(ctx, pose.backLeg, skin, 'backLeg');
@@ -99,7 +95,7 @@ export class CharacterRenderer {
    * 6. 腳踝與戰靴自然踩踏滾動 (Ankle Dorsiflexion & Plantarflexion)
    */
   _calculateHumanWalkPose(t, isBackward = false) {
-    const speed = isBackward ? 0.045 : 0.054;
+    const speed = isBackward ? 0.068 : 0.078;
     const phase = t * speed * (isBackward ? -1 : 1);
 
     const normPhase = (p) => ((p % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -279,7 +275,7 @@ export class CharacterRenderer {
 
       case 'crouch_punch': {
         const style = getSkinAttackStyle(char ? char.skin : null);
-        const pProgress = Math.min(1, t / 20);
+        const pProgress = Math.min(1, t / 15);
         const reach = Math.sin(pProgress * Math.PI);
         defaultPose.torso.y = -48;
         defaultPose.torso.angle = 0.35 * reach;
@@ -349,7 +345,7 @@ export class CharacterRenderer {
 
       case 'crouch_kick': {
         // 下蹲掃堂腿 (2HK / Sweep)：重心極致貼地，雙手撐地，單腿破空低位旋掃
-        const sProgress = Math.min(1, t / 28);
+        const sProgress = Math.min(1, t / 20);
         const sweepWave = Math.sin(sProgress * Math.PI);
         defaultPose.torso.y = -36;
         defaultPose.torso.angle = -0.38 * sweepWave;
@@ -392,7 +388,7 @@ export class CharacterRenderer {
 
       case 'light_punch': {
         const style = getSkinAttackStyle(char ? char.skin : null);
-        const pProgress = Math.min(1, t / 22);
+        const pProgress = Math.min(1, t / 16);
         const reach = Math.sin(pProgress * Math.PI);
 
         if (style === 'bow') {
@@ -619,7 +615,7 @@ export class CharacterRenderer {
       case 'heavy_kick': {
         // 重力猛踢：踢擊腿大角度破空踢擊，上身反向後仰平衡
         const style = getSkinAttackStyle(char ? char.skin : null);
-        const kProgress = Math.min(1, t / 28);
+        const kProgress = Math.min(1, t / 20);
         const kickWave = Math.sin(kProgress * Math.PI);
         defaultPose.torso.angle = -0.3 * kickWave; // 上身反向後仰
         defaultPose.frontLeg.thighAngle = 0.2 - kickWave * 1.8; // 大角度踢出
@@ -647,7 +643,7 @@ export class CharacterRenderer {
 
       case 'ranged_attack': {
         // 遠程攻擊：支援平射、高仰角對空射擊與重砲蓄勢射擊
-        const rProgress = Math.min(1, t / 26);
+        const rProgress = Math.min(1, t / 18);
         const blastWave = Math.sin(rProgress * Math.PI);
         const isAntiAir = char && char.currentAction && char.currentAction.name.includes('對空');
         const isHeavy = char && char.currentAction && char.currentAction.name.includes('重砲');
@@ -809,6 +805,9 @@ export class CharacterRenderer {
     if (specialSkinsRenderer.drawTorso(ctx, torso, skin, t)) {
       return;
     }
+    if (scifiSkinsRenderer.drawTorso(ctx, torso, skin, t)) {
+      return;
+    }
 
     ctx.save();
     ctx.translate(torso.x, torso.y);
@@ -876,6 +875,10 @@ export class CharacterRenderer {
     ctx.rotate(head.angle);
 
     if (specialSkinsRenderer.drawHead(ctx, head, skin)) {
+      ctx.restore();
+      return;
+    }
+    if (scifiSkinsRenderer.drawHead(ctx, head, skin)) {
       ctx.restore();
       return;
     }
@@ -1255,6 +1258,9 @@ export class CharacterRenderer {
   // ─── 防禦力場護盾渲染 ───
   drawGuardShield(ctx, stance, skin, t) {
     if (specialSkinsRenderer.drawGuardShield(ctx, stance, skin, t)) {
+      return;
+    }
+    if (scifiSkinsRenderer.drawGuardShield(ctx, stance, skin, t)) {
       return;
     }
 

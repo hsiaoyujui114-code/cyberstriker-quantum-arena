@@ -1909,6 +1909,12 @@ class CyberStrikerApp {
     this.updateUserHUD();
   }
 
+  playAgain() {
+    const endModal = document.getElementById('matchEndModal');
+    if (endModal) endModal.classList.remove('active');
+    this._launchMatch();
+  }
+
   // ─── 事件綁定 ───
   _bindDOMEvents() {
     // 導航分頁切換
@@ -2152,7 +2158,12 @@ class CyberStrikerApp {
       };
     }
 
-    // 回到大廳按鈕與常駐戰鬥退出按鈕
+    // 賽後「再玩一次」按鈕與「回到大廳」按鈕
+    const playAgainBtn = document.getElementById('matchPlayAgainBtn');
+    if (playAgainBtn) {
+      playAgainBtn.onclick = () => this.playAgain();
+    }
+
     const backLobbyBtn = document.getElementById('matchBackLobbyBtn');
     if (backLobbyBtn) {
       backLobbyBtn.onclick = () => this.exitBattleToLobby();

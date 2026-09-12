@@ -36,12 +36,12 @@ export class AiController {
       this.bufferedDecision.y = 0;
     }
 
-    // 4. 依據難度設定地面反應幀數 (毫秒級人類反應延遲模擬，放緩決策頻率，動作清晰自然)
-    let targetDelay = 24;
-    if (this.difficulty === 'easy') targetDelay = 42;        // 簡單：反應餘裕充沛 (~700ms)，給新手充裕博弈空間
-    else if (this.difficulty === 'normal') targetDelay = 24; // 普通：自然舒適慢速節奏 (~400ms)
-    else if (this.difficulty === 'hard') targetDelay = 12;   // 困難：高階選手反應 (~200ms)
-    else if (this.difficulty === 'nightmare') targetDelay = 5; // 惡夢：極限電競神經反應 (~83ms)
+    // 4. 依據難度設定地面反應幀數 (毫秒級人類反應延遲模擬，保持競技快節奏與擬真度)
+    let targetDelay = 16;
+    if (this.difficulty === 'easy') targetDelay = 28;        // 簡單：反應餘裕充沛 (~460ms)，給新手充裕博弈空間
+    else if (this.difficulty === 'normal') targetDelay = 16; // 普通：自然舒適流暢節奏 (~260ms)
+    else if (this.difficulty === 'hard') targetDelay = 8;    // 困難：高階選手反應 (~130ms)
+    else if (this.difficulty === 'nightmare') targetDelay = 4; // 惡夢：極限電競神經反應 (~66ms)
 
     this.currentDelay++;
     if (this.currentDelay >= targetDelay) {
@@ -65,7 +65,7 @@ export class AiController {
     input.x = dirToPlayer;
 
     // 接近對手時主動發動空中打擊 (跃空重飞踢為中段判定，不可蹲防且強制擊倒！)
-    if (dist < 150 && !ai.currentAction) {
+    if (dist < 175 && !ai.currentAction) {
       let attackChance = 0.5;
       if (this.difficulty === 'nightmare') attackChance = 0.95;
       else if (this.difficulty === 'hard') attackChance = 0.85;

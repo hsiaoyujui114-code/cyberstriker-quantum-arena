@@ -5263,6 +5263,1516 @@
   };
   var specialSkinsRenderer = new SpecialSkinsRenderer();
 
+  // js/engine/scifi_skins_renderer.js
+  var SciFiSkinsRenderer = class {
+    constructor() {
+      this.sciFiSkinIds = /* @__PURE__ */ new Set([
+        "skin_cyber_warrior",
+        "skin_neon_shadow",
+        "skin_pulse_enforcer",
+        "skin_cosmic_ronin",
+        "skin_volt_ranger",
+        "skin_abyssal_ghost",
+        "skin_dark_hacker",
+        "skin_nano_cyborg",
+        "skin_crimson_tyrant",
+        "skin_cryo_maiden",
+        "skin_void_devourer",
+        "skin_solar_valkyrie",
+        "skin_cyber_diva",
+        "skin_archangel_judicator",
+        "skin_omega_emperor"
+      ]);
+    }
+    isSciFi(skin) {
+      return skin && skin.id && this.sciFiSkinIds.has(skin.id);
+    }
+    // ─── 1. 頭部獨家造型渲染 (Head Rendering) ───
+    drawHead(ctx, head, skin) {
+      if (!this.isSciFi(skin)) return false;
+      const id = skin.id;
+      const t = Date.now() / 250;
+      const themeCol = skin.themeColor || "#00f3ff";
+      const armorCol = skin.armorColor || "#0f172a";
+      switch (id) {
+        // ══════════════════════════════════════════
+        // 1. 賽博武者 (Cyber Warrior): 機武兜盔 + 金色 V-fin 角 + 青藍目鏡
+        // ══════════════════════════════════════════
+        case "skin_cyber_warrior": {
+          ctx.fillStyle = armorCol;
+          ctx.strokeStyle = themeCol;
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-13, 8);
+          ctx.quadraticCurveTo(-18, -4, -14, -14);
+          ctx.quadraticCurveTo(-8, -18, 2, -18);
+          ctx.lineTo(13, -12);
+          ctx.lineTo(15, -2);
+          ctx.lineTo(13, 8);
+          ctx.lineTo(6, 16);
+          ctx.lineTo(-6, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fbbf24";
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(3, -13);
+          ctx.lineTo(12, -26);
+          ctx.lineTo(7, -15);
+          ctx.lineTo(3, -14);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(-1, -13);
+          ctx.lineTo(-8, -24);
+          ctx.lineTo(-4, -15);
+          ctx.lineTo(-1, -14);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#ef4444";
+          ctx.beginPath();
+          ctx.moveTo(2, -15);
+          ctx.lineTo(4, -13);
+          ctx.lineTo(2, -11);
+          ctx.lineTo(0, -13);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "rgba(0, 243, 255, 0.9)";
+          ctx.shadowColor = "#00f3ff";
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.moveTo(2, -4);
+          ctx.lineTo(14, -2);
+          ctx.lineTo(13, 4);
+          ctx.lineTo(3, 4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#090d16";
+          ctx.strokeStyle = "#38bdf8";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(1, 5);
+          ctx.lineTo(12, 5);
+          ctx.lineTo(7, 15);
+          ctx.lineTo(1, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 2. 霓虹暗影刺客 (Neon Shadow): 狐面鬼忍兜帽 + 飄逸圍巾 + 粉光尖眼
+        // ══════════════════════════════════════════
+        case "skin_neon_shadow": {
+          const wave1 = Math.sin(t * 1.6) * 4;
+          const wave2 = Math.cos(t * 1.8) * 6;
+          ctx.fillStyle = "#ff007f";
+          ctx.shadowColor = "#ff007f";
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.moveTo(-10, 10);
+          ctx.quadraticCurveTo(-22 + wave1, 16, -34 + wave2, 18);
+          ctx.lineTo(-32 + wave2, 24);
+          ctx.quadraticCurveTo(-20 + wave1, 20, -8, 14);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = armorCol;
+          ctx.strokeStyle = "#e879f9";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-12, 10);
+          ctx.quadraticCurveTo(-20, -2, -14, -14);
+          ctx.quadraticCurveTo(-8, -20, 2, -18);
+          ctx.lineTo(12, -13);
+          ctx.lineTo(15, -1);
+          ctx.lineTo(12, 12);
+          ctx.lineTo(0, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#ff007f";
+          ctx.beginPath();
+          ctx.moveTo(-9, -17);
+          ctx.lineTo(-14, -26);
+          ctx.lineTo(-5, -19);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(1, -18);
+          ctx.lineTo(5, -27);
+          ctx.lineTo(6, -17);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#ff007f";
+          ctx.shadowColor = "#ff007f";
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.moveTo(2, -4);
+          ctx.lineTo(14, -6);
+          ctx.lineTo(13, 0);
+          ctx.lineTo(3, 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#0d0614";
+          ctx.strokeStyle = "#ff007f";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(1, 3);
+          ctx.lineTo(13, 1);
+          ctx.lineTo(10, 13);
+          ctx.lineTo(0, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 3. 脈衝重裝執法官 (Pulse Enforcer): 警用鎮暴全罩盔 + 旋轉警燈 + 防暴盾面
+        // ══════════════════════════════════════════
+        case "skin_pulse_enforcer": {
+          const flash = Math.sin(t * 3.5) > 0;
+          ctx.fillStyle = flash ? "#ffd700" : "#78350f";
+          ctx.shadowColor = "#ffd700";
+          ctx.shadowBlur = flash ? 14 : 2;
+          ctx.fillRect(-4, -24, 9, 6);
+          ctx.strokeRect(-4, -24, 9, 6);
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = armorCol;
+          ctx.strokeStyle = "#fbbf24";
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.arc(0, -3, 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "rgba(251, 191, 36, 0.45)";
+          ctx.strokeStyle = "#ffd700";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(1, -9);
+          ctx.lineTo(16, -6);
+          ctx.lineTo(15, 6);
+          ctx.lineTo(2, 6);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(7, -4);
+          ctx.lineTo(11, -4);
+          ctx.moveTo(9, -6);
+          ctx.lineTo(9, -2);
+          ctx.stroke();
+          ctx.fillStyle = "#292524";
+          ctx.strokeStyle = "#f59e0b";
+          ctx.lineWidth = 1.5;
+          ctx.fillRect(0, 7, 14, 8);
+          ctx.strokeRect(0, 7, 14, 8);
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 4. 星穹量子浪人 (Cosmic Ronin): 斗笠 (Kasa) + 斗笠邊緣霓虹圈 + 飄帶
+        // ══════════════════════════════════════════
+        case "skin_cosmic_ronin": {
+          const ribbonW = Math.sin(t * 1.5) * 5;
+          ctx.strokeStyle = "#818cf8";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(-12, 0);
+          ctx.quadraticCurveTo(-22, 6 + ribbonW, -32, 4 + ribbonW);
+          ctx.stroke();
+          ctx.fillStyle = "#0f172a";
+          ctx.beginPath();
+          ctx.arc(0, 2, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#c084fc";
+          ctx.shadowColor = "#818cf8";
+          ctx.shadowBlur = 8;
+          ctx.fillRect(3, -1, 8, 3);
+          ctx.shadowBlur = 0;
+          ctx.save();
+          ctx.fillStyle = "#1e1b4b";
+          ctx.strokeStyle = "#818cf8";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-25, -5);
+          ctx.lineTo(2, -22);
+          ctx.lineTo(26, -3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#a5b4fc";
+          ctx.shadowColor = "#818cf8";
+          ctx.shadowBlur = 10;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-25, -5);
+          ctx.lineTo(26, -3);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.restore();
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 5. 雷霆神速遊俠 (Volt Ranger): 神速雷電鰭盔 + 耳側閃電翼
+        // ══════════════════════════════════════════
+        case "skin_volt_ranger": {
+          ctx.fillStyle = armorCol;
+          ctx.strokeStyle = "#facc15";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-13, 8);
+          ctx.quadraticCurveTo(-18, -4, -13, -14);
+          ctx.quadraticCurveTo(-6, -18, 4, -16);
+          ctx.lineTo(15, -8);
+          ctx.lineTo(16, 2);
+          ctx.lineTo(12, 10);
+          ctx.lineTo(4, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#facc15";
+          ctx.beginPath();
+          ctx.moveTo(-10, -15);
+          ctx.lineTo(0, -26);
+          ctx.lineTo(8, -16);
+          ctx.lineTo(0, -18);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#fde047";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-8, -2);
+          ctx.lineTo(-18, -12);
+          ctx.lineTo(-12, -8);
+          ctx.lineTo(-20, -18);
+          ctx.lineTo(-8, -8);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#facc15";
+          ctx.shadowColor = "#facc15";
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.moveTo(3, -5);
+          ctx.lineTo(14, -8);
+          ctx.lineTo(11, -1);
+          ctx.lineTo(16, 3);
+          ctx.lineTo(4, 3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 6. 深淵幽靈特工 (Abyssal Ghost): 三眼夜視儀 (Tri-Ocular NVG) + 戰術防毒面具
+        // ══════════════════════════════════════════
+        case "skin_abyssal_ghost": {
+          ctx.fillStyle = "#082f49";
+          ctx.strokeStyle = "#0284c7";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.arc(0, 0, 15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#030712";
+          ctx.fillRect(1, -9, 14, 10);
+          ctx.shadowColor = "#06b6d4";
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = "#06b6d4";
+          ctx.beginPath();
+          ctx.arc(11, -7, 2.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(11, -1, 2.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(5, -4, 2.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#1e293b";
+          ctx.strokeStyle = "#0ea5e9";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(8, 7, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 7. 暗黑駭客 (Dark Hacker): 寬大連帽風衣 (Hacker Hoodie) + 矩陣代碼眼鏡
+        // ══════════════════════════════════════════
+        case "skin_dark_hacker": {
+          ctx.fillStyle = "#022c22";
+          ctx.strokeStyle = "#00ff66";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, 12);
+          ctx.quadraticCurveTo(-24, -4, -16, -16);
+          ctx.quadraticCurveTo(-8, -24, 2, -22);
+          ctx.quadraticCurveTo(14, -20, 16, -8);
+          ctx.lineTo(16, 6);
+          ctx.quadraticCurveTo(12, 16, 2, 18);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#050c08";
+          ctx.beginPath();
+          ctx.arc(2, 0, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(0, 255, 102, 0.85)";
+          ctx.shadowColor = "#00ff66";
+          ctx.shadowBlur = 10;
+          ctx.fillRect(2, -4, 12, 6);
+          ctx.fillStyle = "#fff";
+          ctx.font = "5px monospace";
+          ctx.fillText("0", 4, 1);
+          ctx.fillText("1", 8, 0);
+          ctx.shadowBlur = 0;
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 8. 奈米生化戰警 (Nano Cyborg): 魔鬼終結者半鈦金屬頭骨 + 血紅機械眼
+        // ══════════════════════════════════════════
+        case "skin_nano_cyborg": {
+          ctx.fillStyle = "#14532d";
+          ctx.strokeStyle = "#84cc16";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(0, 0, 15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#94a3b8";
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(2, -14);
+          ctx.lineTo(14, -10);
+          ctx.lineTo(16, 2);
+          ctx.lineTo(12, 14);
+          ctx.lineTo(2, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#334155";
+          ctx.lineWidth = 1;
+          for (let i = 4; i <= 11; i += 3) {
+            ctx.beginPath();
+            ctx.moveTo(i, 8);
+            ctx.lineTo(i, 13);
+            ctx.stroke();
+          }
+          ctx.shadowColor = "#ef4444";
+          ctx.shadowBlur = 14;
+          ctx.fillStyle = "#ef4444";
+          ctx.beginPath();
+          ctx.arc(8, -2, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(8, -2, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 9. 赤紅暴君重機甲 (Crimson Tyrant): 惡魔雙巨角 + 熔岩排氣面罩
+        // ══════════════════════════════════════════
+        case "skin_crimson_tyrant": {
+          ctx.fillStyle = "#7f1d1d";
+          ctx.strokeStyle = "#ef4444";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(2, -12);
+          ctx.quadraticCurveTo(14, -22, 18, -32);
+          ctx.quadraticCurveTo(6, -24, -2, -16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(-10, -10);
+          ctx.quadraticCurveTo(-18, -24, -14, -34);
+          ctx.quadraticCurveTo(-14, -20, -6, -14);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = armorCol;
+          ctx.strokeStyle = "#ef4444";
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(-13, 8);
+          ctx.lineTo(-16, -8);
+          ctx.lineTo(2, -18);
+          ctx.lineTo(16, -6);
+          ctx.lineTo(15, 6);
+          ctx.lineTo(6, 17);
+          ctx.lineTo(-6, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#ef4444";
+          ctx.shadowColor = "#ef4444";
+          ctx.shadowBlur = 12;
+          ctx.fillRect(2, -4, 13, 4);
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = "#f97316";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(4, 8);
+          ctx.lineTo(12, 8);
+          ctx.moveTo(5, 11);
+          ctx.lineTo(11, 11);
+          ctx.stroke();
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 10. 極寒超導武姬 (Cryo Maiden): 5 晶棱極地冰晶王冠 + 冰霜髮辮
+        // ══════════════════════════════════════════
+        case "skin_cryo_maiden": {
+          ctx.fillStyle = "rgba(186, 230, 253, 0.75)";
+          ctx.strokeStyle = "#38bdf8";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-10, 4);
+          ctx.lineTo(-24, -2);
+          ctx.lineTo(-16, -6);
+          ctx.lineTo(-28, -12);
+          ctx.lineTo(-12, -14);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#0c4a6e";
+          ctx.strokeStyle = "#38bdf8";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(0, 0, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#e0f2fe";
+          ctx.strokeStyle = "#38bdf8";
+          ctx.lineWidth = 1.2;
+          ctx.shadowColor = "#38bdf8";
+          ctx.shadowBlur = 8;
+          const spires = [-10, -5, 1, 7, 12];
+          const heights = [16, 22, 26, 22, 16];
+          for (let i = 0; i < spires.length; i++) {
+            ctx.beginPath();
+            ctx.moveTo(spires[i] - 2, -12);
+            ctx.lineTo(spires[i], -heights[i]);
+            ctx.lineTo(spires[i] + 2, -12);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          }
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#38bdf8";
+          ctx.fillRect(2, -3, 11, 4);
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 11. 虛空吞噬者 (Void Devourer): 無面異面具 + 額前微型黑洞奇點
+        // ══════════════════════════════════════════
+        case "skin_void_devourer": {
+          ctx.fillStyle = "#090514";
+          ctx.strokeStyle = "#9333ea";
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.arc(0, 0, 15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          const holeAngle = t * 2.5;
+          ctx.save();
+          ctx.translate(5, -3);
+          ctx.rotate(holeAngle);
+          ctx.shadowColor = "#a855f7";
+          ctx.shadowBlur = 16;
+          ctx.strokeStyle = "#c084fc";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, 8, 0, Math.PI * 1.6);
+          ctx.stroke();
+          ctx.fillStyle = "#000000";
+          ctx.beginPath();
+          ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          ctx.shadowBlur = 0;
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 12. 太陽女武神 (Solar Valkyrie): 金翼戰盔 + 金羽雙角 + 烈陽額鑽
+        // ══════════════════════════════════════════
+        case "skin_solar_valkyrie": {
+          ctx.fillStyle = "#f59e0b";
+          ctx.strokeStyle = "#fbbf24";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(-6, -4);
+          ctx.lineTo(-24, -18);
+          ctx.lineTo(-16, -10);
+          ctx.lineTo(-28, -26);
+          ctx.lineTo(-12, -18);
+          ctx.lineTo(-26, -34);
+          ctx.lineTo(-2, -14);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#451a03";
+          ctx.strokeStyle = "#fbbf24";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#ff4500";
+          ctx.shadowColor = "#ff4500";
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(3, -13, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#fbbf24";
+          ctx.fillRect(2, -4, 12, 4);
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 13. 賽博歌姬音律 (Cyber Diva): 青綠全息雙馬尾 + DJ 耳機 + 等化器
+        // ══════════════════════════════════════════
+        case "skin_cyber_diva": {
+          const hairWave = Math.sin(t * 1.8) * 6;
+          ctx.fillStyle = "rgba(20, 184, 166, 0.85)";
+          ctx.strokeStyle = "#2dd4bf";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(-10, -10);
+          ctx.quadraticCurveTo(-26, 6 + hairWave, -22, 28 + hairWave);
+          ctx.lineTo(-16, 24 + hairWave);
+          ctx.quadraticCurveTo(-18, 4 + hairWave, -6, -4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#134e4a";
+          ctx.strokeStyle = "#2dd4bf";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(0, 0, 13, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#042f2e";
+          ctx.strokeStyle = "#14b8a6";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(-8, 1, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          const b1 = Math.abs(Math.sin(t * 3)) * 6 + 2;
+          const b2 = Math.abs(Math.cos(t * 2.5)) * 6 + 2;
+          ctx.fillStyle = "#5eead4";
+          ctx.fillRect(-10, 1 - b1 / 2, 2, b1);
+          ctx.fillRect(-7, 1 - b2 / 2, 2, b2);
+          ctx.fillStyle = "#2dd4bf";
+          ctx.fillRect(2, -3, 10, 4);
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 14. 曜白裁決聖使 (Archangel Judicator): 懸浮天使光環 + 聖白金十字面甲
+        // ══════════════════════════════════════════
+        case "skin_archangel_judicator": {
+          const haloBob = Math.sin(t * 1.5) * 2;
+          ctx.save();
+          ctx.shadowColor = "#ffffff";
+          ctx.shadowBlur = 16;
+          ctx.strokeStyle = "#f8fafc";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.ellipse(0, -26 + haloBob, 15, 4.5, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+          ctx.fillStyle = "#f8fafc";
+          ctx.strokeStyle = "#e2e8f0";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#eab308";
+          ctx.shadowColor = "#facc15";
+          ctx.shadowBlur = 10;
+          ctx.fillRect(1, -2, 13, 3.5);
+          ctx.fillRect(7, -8, 3.5, 15);
+          ctx.shadowBlur = 0;
+          return true;
+        }
+        // ══════════════════════════════════════════
+        // 15. 黃金終極機神 (Omega Emperor): 帝皇三重金冠 + 龍首面甲
+        // ══════════════════════════════════════════
+        case "skin_omega_emperor": {
+          ctx.fillStyle = "#eab308";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 1.6;
+          ctx.shadowColor = "#facc15";
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.moveTo(-12, -12);
+          ctx.lineTo(-14, -26);
+          ctx.lineTo(-6, -16);
+          ctx.lineTo(2, -32);
+          ctx.lineTo(8, -16);
+          ctx.lineTo(16, -24);
+          ctx.lineTo(12, -12);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#dc2626";
+          ctx.beginPath();
+          ctx.arc(2, -18, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#713f12";
+          ctx.strokeStyle = "#eab308";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fde047";
+          ctx.shadowColor = "#fde047";
+          ctx.shadowBlur = 8;
+          ctx.fillRect(2, -3, 12, 4);
+          ctx.shadowBlur = 0;
+          return true;
+        }
+        default:
+          return false;
+      }
+    }
+    // ─── 2. 胸軀外甲與背部專屬飾物渲染 (Torso & Accessories) ───
+    drawTorso(ctx, torso, skin, t) {
+      if (!this.isSciFi(skin)) return false;
+      const id = skin.id;
+      const themeCol = skin.themeColor || "#00f3ff";
+      const armorCol = skin.armorColor || "#0f172a";
+      ctx.save();
+      ctx.translate(torso.x, torso.y);
+      ctx.rotate(torso.angle);
+      switch (id) {
+        // 1. 賽博武者：武士護板 + 腰間佩刀刀鞘 + 胸前反應爐
+        case "skin_cyber_warrior": {
+          ctx.fillStyle = armorCol;
+          ctx.strokeStyle = themeCol;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#00f3ff";
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.moveTo(-14, 8);
+          ctx.lineTo(-28, 26);
+          ctx.stroke();
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(-29, 24, 4, 4);
+          this._drawCore(ctx, 0, -6, themeCol, 6);
+          break;
+        }
+        // 2. 霓虹暗影刺客：夜行黑甲 + 交叉苦無背帶 (Kunai Harness)
+        case "skin_neon_shadow": {
+          ctx.fillStyle = armorCol;
+          ctx.strokeStyle = "#ff007f";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-14, -22);
+          ctx.lineTo(14, -22);
+          ctx.lineTo(10, 15);
+          ctx.lineTo(-10, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#a855f7";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(-13, -20);
+          ctx.lineTo(11, 14);
+          ctx.stroke();
+          ctx.fillStyle = "#ff007f";
+          ctx.fillRect(-4, -8, 6, 2.5);
+          ctx.fillRect(2, 0, 6, 2.5);
+          this._drawCore(ctx, 0, -5, "#ff007f", 5);
+          break;
+        }
+        // 3. 脈衝重裝執法官：厚重防暴戰術防彈背心 + 金色警徽
+        case "skin_pulse_enforcer": {
+          ctx.fillStyle = "#1c1917";
+          ctx.strokeStyle = "#ffd700";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(-18, -24);
+          ctx.lineTo(18, -24);
+          ctx.lineTo(14, 17);
+          ctx.lineTo(-14, 17);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#ffd700";
+          ctx.beginPath();
+          ctx.arc(6, -12, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#fbbf24";
+          ctx.fillRect(-12, 6, 24, 4);
+          ctx.fillStyle = "#000";
+          ctx.fillRect(-8, 6, 5, 4);
+          ctx.fillRect(2, 6, 5, 4);
+          this._drawCore(ctx, -2, -4, "#ffd700", 6);
+          break;
+        }
+        // 4. 星穹量子浪人：浪人羽織 (Haori Coat) 隨風拂動 + 星辰紋
+        case "skin_cosmic_ronin": {
+          const coatW = Math.sin(t * 1.6) * 3;
+          ctx.fillStyle = "#1e1b4b";
+          ctx.strokeStyle = "#818cf8";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-18, -23);
+          ctx.lineTo(18, -23);
+          ctx.lineTo(16 + coatW, 20);
+          ctx.lineTo(-16 - coatW, 20);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#f8fafc";
+          ctx.fillRect(-12, 10, 24, 5);
+          this._drawCore(ctx, 0, -6, "#818cf8", 5);
+          break;
+        }
+        // 5. 雷霆神速遊俠：流線金色閃電胸甲 + 雙肩微型特斯拉電容
+        case "skin_volt_ranger": {
+          ctx.fillStyle = armorCol;
+          ctx.strokeStyle = "#facc15";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-15, -23);
+          ctx.lineTo(15, -23);
+          ctx.lineTo(11, 15);
+          ctx.lineTo(-11, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fde047";
+          ctx.shadowColor = "#facc15";
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.moveTo(3, -20);
+          ctx.lineTo(-6, -4);
+          ctx.lineTo(1, -4);
+          ctx.lineTo(-4, 10);
+          ctx.lineTo(6, -6);
+          ctx.lineTo(-1, -6);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          break;
+        }
+        // 6. 深淵幽靈特工：潛水作戰胸掛 + 聲納脈衝環 + 氧氣瓶
+        case "skin_abyssal_ghost": {
+          ctx.fillStyle = "#082f49";
+          ctx.strokeStyle = "#06b6d4";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, -22);
+          ctx.lineTo(16, -22);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#0284c7";
+          ctx.fillRect(-20, -18, 5, 24);
+          ctx.fillRect(-22, -18, 3, 4);
+          this._drawCore(ctx, 0, -5, "#06b6d4", 6);
+          break;
+        }
+        // 7. 暗黑駭客：長版風衣領 (Matrix Trench Coat) + 二進制綠色代碼流
+        case "skin_dark_hacker": {
+          ctx.fillStyle = "#022c22";
+          ctx.strokeStyle = "#00ff66";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-18, -23);
+          ctx.lineTo(18, -23);
+          ctx.lineTo(14, 22);
+          ctx.lineTo(-14, 22);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#22c55e";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-8, -18);
+          ctx.lineTo(-8, 14);
+          ctx.moveTo(8, -18);
+          ctx.lineTo(8, 14);
+          ctx.stroke();
+          this._drawCore(ctx, 0, -6, "#00ff66", 5);
+          break;
+        }
+        // 8. 奈米生化戰警：外露金屬機械肋骨 + 綠色生化藥劑管
+        case "skin_nano_cyborg": {
+          ctx.fillStyle = "#0f291e";
+          ctx.strokeStyle = "#84cc16";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-15, -23);
+          ctx.lineTo(15, -23);
+          ctx.lineTo(11, 16);
+          ctx.lineTo(-11, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 2;
+          for (let y = -14; y <= 8; y += 7) {
+            ctx.beginPath();
+            ctx.moveTo(-11, y);
+            ctx.lineTo(-2, y + 2);
+            ctx.moveTo(11, y);
+            ctx.lineTo(2, y + 2);
+            ctx.stroke();
+          }
+          this._drawCore(ctx, 0, -6, "#84cc16", 5.5);
+          break;
+        }
+        // 9. 赤紅暴君重機甲：尖刺巨肩 + 熔岩發光散熱排氣槽
+        case "skin_crimson_tyrant": {
+          ctx.fillStyle = "#450a0a";
+          ctx.strokeStyle = "#ef4444";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(-20, -25);
+          ctx.lineTo(20, -25);
+          ctx.lineTo(14, 18);
+          ctx.lineTo(-14, 18);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#7f1d1d";
+          ctx.beginPath();
+          ctx.moveTo(-18, -25);
+          ctx.lineTo(-30, -32);
+          ctx.lineTo(-16, -14);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(18, -25);
+          ctx.lineTo(30, -32);
+          ctx.lineTo(16, -14);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#f97316";
+          ctx.shadowColor = "#ef4444";
+          ctx.shadowBlur = 10;
+          ctx.fillRect(-6, 2, 12, 6);
+          ctx.shadowBlur = 0;
+          this._drawCore(ctx, 0, -9, "#ef4444", 6);
+          break;
+        }
+        // 10. 極寒超導武姬：冰晶馬甲 + 浮空鑽石冰錐飾品
+        case "skin_cryo_maiden": {
+          ctx.fillStyle = "#075985";
+          ctx.strokeStyle = "#38bdf8";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-14, -22);
+          ctx.lineTo(14, -22);
+          ctx.lineTo(10, 16);
+          ctx.lineTo(-10, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          const iceRot = t * 2;
+          ctx.fillStyle = "#e0f2fe";
+          ctx.strokeStyle = "#38bdf8";
+          ctx.lineWidth = 1;
+          ctx.save();
+          ctx.translate(-20, -18 + Math.sin(iceRot) * 3);
+          ctx.beginPath();
+          ctx.moveTo(0, -6);
+          ctx.lineTo(4, 0);
+          ctx.lineTo(0, 6);
+          ctx.lineTo(-4, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+          this._drawCore(ctx, 0, -6, "#38bdf8", 5);
+          break;
+        }
+        // 11. 虛空吞噬者：事件視界黑洞反應爐 + 虛空翅膀觸鬚
+        case "skin_void_devourer": {
+          ctx.fillStyle = "#0b0416";
+          ctx.strokeStyle = "#9333ea";
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(-15, -23);
+          ctx.lineTo(15, -23);
+          ctx.lineTo(11, 16);
+          ctx.lineTo(-11, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(168, 85, 247, 0.6)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(-10, -14);
+          ctx.quadraticCurveTo(-26, -26 + Math.sin(t * 2) * 5, -34, -18);
+          ctx.stroke();
+          this._drawCore(ctx, 0, -6, "#9333ea", 7);
+          break;
+        }
+        // 12. 太陽女武神：金色太陽浮雕胸甲 + 戰神披風
+        case "skin_solar_valkyrie": {
+          ctx.fillStyle = "#991b1b";
+          ctx.beginPath();
+          ctx.moveTo(-16, -20);
+          ctx.lineTo(-24, 26);
+          ctx.lineTo(4, 24);
+          ctx.lineTo(14, -20);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#78350f";
+          ctx.strokeStyle = "#fbbf24";
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#ff4500";
+          ctx.shadowColor = "#ff4500";
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(0, -6, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          break;
+        }
+        // 13. 賽博歌姬音律：即時音波跳躍頻譜胸甲 (Equalizer Spectrum)
+        case "skin_cyber_diva": {
+          ctx.fillStyle = "#042f2e";
+          ctx.strokeStyle = "#14b8a6";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-14, -22);
+          ctx.lineTo(14, -22);
+          ctx.lineTo(10, 16);
+          ctx.lineTo(-10, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#2dd4bf";
+          const barHeights = [4, 8, 12, 6, 10, 5];
+          for (let i = 0; i < barHeights.length; i++) {
+            const h = (Math.sin(t * 3 + i * 0.8) * 0.5 + 0.5) * barHeights[i] + 2;
+            ctx.fillRect(-9 + i * 3.2, 2 - h, 2, h);
+          }
+          this._drawCore(ctx, 0, -8, "#2dd4bf", 5);
+          break;
+        }
+        // ══════════════════════════════════════════
+        // 14. 曜白裁決聖使：六翼幾何天翔光羽 (6 Geometric Light Wings) + 聖十字
+        // ══════════════════════════════════════════
+        case "skin_archangel_judicator": {
+          ctx.save();
+          ctx.shadowColor = "#ffffff";
+          ctx.shadowBlur = 14;
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+          ctx.lineWidth = 2.2;
+          const wingFlap = Math.sin(t * 1.5) * 4;
+          ctx.beginPath();
+          ctx.moveTo(-10, -18);
+          ctx.lineTo(-38, -36 + wingFlap);
+          ctx.lineTo(-24, -14);
+          ctx.moveTo(10, -18);
+          ctx.lineTo(38, -36 + wingFlap);
+          ctx.lineTo(24, -14);
+          ctx.moveTo(-12, -10);
+          ctx.lineTo(-44, -18 + wingFlap);
+          ctx.lineTo(-20, -4);
+          ctx.moveTo(12, -10);
+          ctx.lineTo(44, -18 + wingFlap);
+          ctx.lineTo(20, -4);
+          ctx.moveTo(-10, -4);
+          ctx.lineTo(-34, 4 + wingFlap);
+          ctx.lineTo(-14, 4);
+          ctx.moveTo(10, -4);
+          ctx.lineTo(34, 4 + wingFlap);
+          ctx.lineTo(14, 4);
+          ctx.stroke();
+          ctx.restore();
+          ctx.fillStyle = "#f8fafc";
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#eab308";
+          ctx.fillRect(-2, -14, 4, 16);
+          ctx.fillRect(-7, -10, 14, 4);
+          break;
+        }
+        // ══════════════════════════════════════════
+        // 15. 黃金終極機神：雄獅龍頭巨型金肩甲 + 日冕光環 + 鎏金披風
+        // ══════════════════════════════════════════
+        case "skin_omega_emperor": {
+          ctx.save();
+          ctx.shadowColor = "#eab308";
+          ctx.shadowBlur = 16;
+          ctx.strokeStyle = "#fde047";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(0, -20, 22, 0, Math.PI * 2);
+          ctx.stroke();
+          for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * 22, -20 + Math.sin(a) * 22);
+            ctx.lineTo(Math.cos(a) * 28, -20 + Math.sin(a) * 28);
+            ctx.stroke();
+          }
+          ctx.restore();
+          ctx.fillStyle = "#854d0e";
+          ctx.strokeStyle = "#eab308";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(-18, -24);
+          ctx.lineTo(18, -24);
+          ctx.lineTo(13, 17);
+          ctx.lineTo(-13, 17);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#eab308";
+          ctx.beginPath();
+          ctx.arc(-18, -22, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          this._drawCore(ctx, 0, -6, "#eab308", 7);
+          break;
+        }
+      }
+      ctx.fillStyle = "#090d16";
+      ctx.fillRect(-11, 16, 22, 12);
+      ctx.strokeRect(-11, 16, 22, 12);
+      ctx.restore();
+      return true;
+    }
+    // ─── 3. 專屬氣場與動態粒子 (Aura & Atmospheric Particles) ───
+    drawAura(ctx, char, skin, t) {
+      if (!this.isSciFi(skin)) return false;
+      const id = skin.id;
+      const cx = char.x;
+      const cy = char.y - 45;
+      ctx.save();
+      switch (id) {
+        // 1. 賽博武者：青藍全息像素方塊浮空
+        case "skin_cyber_warrior": {
+          ctx.fillStyle = "rgba(0, 243, 255, 0.4)";
+          for (let i = 0; i < 4; i++) {
+            const offX = Math.sin(t * 1.5 + i * 1.6) * 28;
+            const offY = -((t * 20 + i * 25) % 80);
+            ctx.fillRect(cx + offX, char.y + offY, 4, 4);
+          }
+          break;
+        }
+        // 2. 霓虹暗影刺客：粉紅櫻花瓣隨風飄飛
+        case "skin_neon_shadow": {
+          ctx.fillStyle = "rgba(255, 0, 127, 0.5)";
+          for (let i = 0; i < 5; i++) {
+            const offX = Math.sin(t * 1.2 + i * 1.3) * 32;
+            const offY = -((t * 18 + i * 20) % 75);
+            ctx.beginPath();
+            ctx.ellipse(cx + offX, char.y + offY, 3, 1.5, Math.PI / 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        // 3. 脈衝重裝執法官：金黃警示電弧與重壓震波
+        case "skin_pulse_enforcer": {
+          if (Math.sin(t * 4) > 0.4) {
+            ctx.strokeStyle = "rgba(255, 215, 0, 0.6)";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(cx - 15, cy - 10);
+            ctx.lineTo(cx - 24, cy - 4);
+            ctx.lineTo(cx - 18, cy + 12);
+            ctx.stroke();
+          }
+          break;
+        }
+        // 4. 星穹量子浪人：靛藍星宿與流星光塵
+        case "skin_cosmic_ronin": {
+          ctx.fillStyle = "#a5b4fc";
+          for (let i = 0; i < 4; i++) {
+            const offX = Math.cos(t * 0.8 + i * 1.8) * 30;
+            const offY = -((t * 15 + i * 22) % 85);
+            ctx.beginPath();
+            ctx.arc(cx + offX, char.y + offY, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        // 5. 雷霆神速遊俠：周身跳動黃金高壓閃電
+        case "skin_volt_ranger": {
+          ctx.strokeStyle = "#facc15";
+          ctx.lineWidth = 1.4;
+          const spark = Math.sin(t * 5);
+          if (spark > 0) {
+            ctx.beginPath();
+            ctx.moveTo(cx + 12, cy - 20);
+            ctx.lineTo(cx + 22, cy - 8);
+            ctx.lineTo(cx + 16, cy + 8);
+            ctx.lineTo(cx + 26, cy + 24);
+            ctx.stroke();
+          }
+          break;
+        }
+        // 6. 深淵幽靈特工：聲納擴散圓環
+        case "skin_abyssal_ghost": {
+          const ringProgress = t * 0.8 % 1;
+          ctx.strokeStyle = `rgba(6, 182, 212, ${1 - ringProgress})`;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.ellipse(cx, char.y - 10, 25 * ringProgress + 5, 8 * ringProgress + 2, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          break;
+        }
+        // 7. 暗黑駭客：向上浮升的綠色 0 與 1
+        case "skin_dark_hacker": {
+          ctx.fillStyle = "rgba(0, 255, 102, 0.6)";
+          ctx.font = "8px monospace";
+          for (let i = 0; i < 3; i++) {
+            const offX = Math.sin(i * 2.2) * 26;
+            const offY = -((t * 22 + i * 30) % 85);
+            ctx.fillText(i % 2 === 0 ? "0" : "1", cx + offX, char.y + offY);
+          }
+          break;
+        }
+        // 8. 奈米生化戰警：綠色生化修復微粒
+        case "skin_nano_cyborg": {
+          ctx.fillStyle = "#84cc16";
+          for (let i = 0; i < 4; i++) {
+            const offX = Math.sin(t * 2 + i * 1.5) * 22;
+            const offY = -((t * 20 + i * 22) % 70);
+            ctx.beginPath();
+            ctx.arc(cx + offX, char.y + offY, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        // 9. 赤紅暴君重機甲：上升熔岩火星與濃煙
+        case "skin_crimson_tyrant": {
+          ctx.fillStyle = "#f97316";
+          for (let i = 0; i < 5; i++) {
+            const offX = Math.sin(t * 1.8 + i * 1.4) * 28;
+            const offY = -((t * 25 + i * 20) % 90);
+            ctx.beginPath();
+            ctx.arc(cx + offX, char.y + offY, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        // 10. 極寒超導武姬：飄落冰晶雪花
+        case "skin_cryo_maiden": {
+          ctx.fillStyle = "#e0f2fe";
+          for (let i = 0; i < 5; i++) {
+            const offX = Math.sin(t * 1.1 + i * 1.5) * 32;
+            const offY = (t * 16 + i * 20) % 80 - 60;
+            ctx.beginPath();
+            ctx.arc(cx + offX, char.y + offY, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        // 11. 虛空吞噬者：向中心吸引之暗物質奇點
+        case "skin_void_devourer": {
+          ctx.fillStyle = "#c084fc";
+          for (let i = 0; i < 4; i++) {
+            const dist = 40 - (t * 18 + i * 20) % 40;
+            const angle = t * 2 + i * 1.5;
+            ctx.beginPath();
+            ctx.arc(cx + Math.cos(angle) * dist, cy + Math.sin(angle) * dist, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        // 12. 太陽女武神：金色太陽光羽閃爍
+        case "skin_solar_valkyrie": {
+          ctx.fillStyle = "#fbbf24";
+          for (let i = 0; i < 4; i++) {
+            const offX = Math.sin(t * 1.4 + i * 1.7) * 26;
+            const offY = -((t * 20 + i * 24) % 80);
+            ctx.beginPath();
+            ctx.arc(cx + offX, char.y + offY, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        // 13. 賽博歌姬音律：漂浮動態音符 (♪ ♫)
+        case "skin_cyber_diva": {
+          ctx.fillStyle = "#2dd4bf";
+          ctx.font = "10px sans-serif";
+          const offX1 = Math.sin(t * 1.3) * 25;
+          const offY1 = -(t * 18 % 75);
+          ctx.fillText("\u266A", cx + offX1, char.y + offY1);
+          const offX2 = Math.cos(t * 1.5) * 28;
+          const offY2 = -((t * 18 + 35) % 75);
+          ctx.fillText("\u266B", cx + offX2, char.y + offY2);
+          break;
+        }
+        // 14. 曜白裁決聖使：純白神聖羽毛飄落
+        case "skin_archangel_judicator": {
+          ctx.fillStyle = "#ffffff";
+          for (let i = 0; i < 4; i++) {
+            const offX = Math.sin(t * 0.9 + i * 1.5) * 34;
+            const offY = -((t * 16 + i * 22) % 85);
+            ctx.beginPath();
+            ctx.ellipse(cx + offX, char.y + offY, 3.5, 1.8, Math.PI / 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        // 15. 黃金終極機神：璀璨帝皇金輝光暈
+        case "skin_omega_emperor": {
+          ctx.fillStyle = "#fde047";
+          for (let i = 0; i < 5; i++) {
+            const offX = Math.cos(t * 1.2 + i * 1.4) * 30;
+            const offY = -((t * 20 + i * 25) % 85);
+            ctx.beginPath();
+            ctx.arc(cx + offX, char.y + offY, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+      }
+      ctx.restore();
+      return true;
+    }
+    // ─── 4. 專屬護盾防護罩渲染 (Guard Shield) ───
+    drawGuardShield(ctx, stance, skin, t) {
+      if (!this.isSciFi(skin)) return false;
+      const id = skin.id;
+      const isHigh = stance === "high";
+      const shieldY = isHigh ? -50 : -25;
+      const themeCol = skin.themeColor || "#00f3ff";
+      ctx.save();
+      ctx.shadowColor = themeCol;
+      ctx.shadowBlur = 18;
+      switch (id) {
+        // 1. 賽博武者：全息武士家紋八角陣 (Octagonal Samurai Mon)
+        case "skin_cyber_warrior": {
+          ctx.strokeStyle = "#00f3ff";
+          ctx.fillStyle = "rgba(0, 243, 255, 0.2)";
+          ctx.lineWidth = 2.5;
+          this._drawPolygon(ctx, 28, shieldY, 26, 8);
+          break;
+        }
+        // 2. 霓虹暗影刺客：紫櫻煙幕幾何盾 (Cherry Blossom Smokescreen)
+        case "skin_neon_shadow": {
+          ctx.strokeStyle = "#ff007f";
+          ctx.fillStyle = "rgba(255, 0, 127, 0.25)";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.ellipse(26, shieldY, 22, 32, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          break;
+        }
+        // 3. 脈衝重裝執法官：金黑重裝防暴透明大盾 (SWAT Riot Blast Shield)
+        case "skin_pulse_enforcer": {
+          ctx.strokeStyle = "#ffd700";
+          ctx.fillStyle = "rgba(251, 191, 36, 0.3)";
+          ctx.lineWidth = 3;
+          ctx.strokeRect(18, shieldY - 34, 18, 68);
+          ctx.fillRect(18, shieldY - 34, 18, 68);
+          break;
+        }
+        // 4. 星穹量子浪人：旋轉斗笠式星辰光輪盾
+        case "skin_cosmic_ronin": {
+          ctx.strokeStyle = "#818cf8";
+          ctx.fillStyle = "rgba(129, 140, 248, 0.22)";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(28, shieldY, 28, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          break;
+        }
+        // 5. 雷霆神速遊俠：高壓電磁閃電防禦罩
+        case "skin_volt_ranger": {
+          ctx.strokeStyle = "#facc15";
+          ctx.fillStyle = "rgba(250, 204, 21, 0.22)";
+          ctx.lineWidth = 2.5;
+          this._drawPolygon(ctx, 28, shieldY, 27, 6);
+          break;
+        }
+        // 6. 深淵幽靈特工：水冷高壓抗壓水泡力場 (Hydro-bubble)
+        case "skin_abyssal_ghost": {
+          ctx.strokeStyle = "#06b6d4";
+          ctx.fillStyle = "rgba(6, 182, 212, 0.25)";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(26, shieldY, 26, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          break;
+        }
+        // 7. 暗黑駭客：綠色代碼防火牆 (Matrix Code Firewall)
+        case "skin_dark_hacker": {
+          ctx.strokeStyle = "#00ff66";
+          ctx.fillStyle = "rgba(0, 255, 102, 0.2)";
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(20, shieldY - 32, 14, 64);
+          ctx.fillRect(20, shieldY - 32, 14, 64);
+          break;
+        }
+        // 8. 奈米生化戰警：蜂巢綠色生化六角盾 (Bio-Nanite Honeycomb)
+        case "skin_nano_cyborg": {
+          ctx.strokeStyle = "#84cc16";
+          ctx.fillStyle = "rgba(132, 204, 22, 0.25)";
+          ctx.lineWidth = 2.5;
+          this._drawPolygon(ctx, 28, shieldY, 26, 6);
+          break;
+        }
+        // 9. 赤紅暴君重機甲：地裂熔岩固態裝甲盾 (Magma Crust Shield)
+        case "skin_crimson_tyrant": {
+          ctx.strokeStyle = "#ef4444";
+          ctx.fillStyle = "rgba(239, 68, 68, 0.3)";
+          ctx.lineWidth = 3.5;
+          this._drawPolygon(ctx, 28, shieldY, 28, 5);
+          break;
+        }
+        // 10. 極寒超導武姬：尖錐冰川冰壁 (Spiked Glacier Wall)
+        case "skin_cryo_maiden": {
+          ctx.strokeStyle = "#38bdf8";
+          ctx.fillStyle = "rgba(56, 189, 248, 0.3)";
+          ctx.lineWidth = 2.5;
+          this._drawPolygon(ctx, 28, shieldY, 27, 4);
+          break;
+        }
+        // 11. 虛空吞噬者：事件視界吸積盤暗盾 (Singularity Event Horizon)
+        case "skin_void_devourer": {
+          ctx.strokeStyle = "#9333ea";
+          ctx.fillStyle = "rgba(147, 51, 234, 0.35)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(28, shieldY, 27, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          break;
+        }
+        // 12. 太陽女武神：真金烈陽神聖大盾 (Solar Aegis)
+        case "skin_solar_valkyrie": {
+          ctx.strokeStyle = "#f59e0b";
+          ctx.fillStyle = "rgba(245, 158, 11, 0.3)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.ellipse(26, shieldY, 20, 32, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          break;
+        }
+        // 13. 賽博歌姬音律：音波同心漣漪盾 (Sonic Pulse Barrier)
+        case "skin_cyber_diva": {
+          ctx.strokeStyle = "#14b8a6";
+          ctx.fillStyle = "rgba(20, 184, 166, 0.25)";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(28, shieldY, 26, -Math.PI / 2, Math.PI / 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(28, shieldY, 18, -Math.PI / 2, Math.PI / 2);
+          ctx.stroke();
+          break;
+        }
+        // 14. 曜白裁決聖使：六翼合攏聖光神聖守護 (Seraphic Wings Guard)
+        case "skin_archangel_judicator": {
+          ctx.strokeStyle = "#f8fafc";
+          ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(28, shieldY, 28, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          break;
+        }
+        // 15. 黃金終極機神：萬丈帝皇金輪結界 (Imperial Golden Wheel)
+        case "skin_omega_emperor": {
+          ctx.strokeStyle = "#eab308";
+          ctx.fillStyle = "rgba(234, 179, 8, 0.35)";
+          ctx.lineWidth = 3.5;
+          this._drawPolygon(ctx, 28, shieldY, 28, 8);
+          break;
+        }
+        default:
+          ctx.restore();
+          return false;
+      }
+      ctx.restore();
+      return true;
+    }
+    // ─── 輔助繪圖函式 ───
+    _drawCore(ctx, x, y, color, radius) {
+      ctx.save();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    _drawPolygon(ctx, cx, cy, radius, sides) {
+      ctx.beginPath();
+      for (let i = 0; i < sides; i++) {
+        const a = i * 2 * Math.PI / sides;
+        const px = cx + Math.cos(a) * radius;
+        const py = cy + Math.sin(a) * radius;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+  };
+  var scifiSkinsRenderer = new SciFiSkinsRenderer();
+
   // js/engine/character_renderer.js
   var CharacterRenderer = class {
     constructor() {
@@ -5283,28 +6793,25 @@
         thighWidth: 13,
         shinLength: 32,
         shinWidth: 12,
-        footLength: 20,
-        footHeight: 10
+        footLength: 18,
+        footHeight: 9
       };
     }
-    /**
-     * 渲染單一角色至 2D Canvas
-     * @param {CanvasRenderingContext2D} ctx 
-     * @param {Object} char 角色資料模型（包含 x, y, facing, state, stateTime, skin, isGuarding, etc.）
-     */
+    // ─── 核心繪製入口 ───
     draw(ctx, char) {
-      ctx.save();
+      if (!char) return;
       const skin = char.skin;
-      const facing = char.facing || 1;
-      const state = char.state || "idle";
+      const state = char.state;
       const t = char.stateTime || 0;
-      ctx.translate(Math.round(char.x), Math.round(char.y));
-      ctx.scale(facing, 1);
-      if (char.invincibleTimer > 0 && Math.floor(char.invincibleTimer / 3) % 2 === 0) {
+      ctx.save();
+      ctx.translate(char.x, char.y);
+      ctx.scale(char.facing, 1);
+      if (char.invincibleTimer && char.invincibleTimer > 0 && Math.floor(char.invincibleTimer / 2) % 2 === 1) {
         ctx.globalAlpha = 0.5;
       }
       const pose = this.calculatePose(state, t, char);
       specialSkinsRenderer.drawAura(ctx, char, skin, t);
+      scifiSkinsRenderer.drawAura(ctx, char, skin, t);
       this.drawLimb(ctx, pose.backLeg, skin, "backLeg");
       this.drawArm(ctx, pose.backArm, skin, "backArm");
       this.drawTorso(ctx, pose.torso, skin, t);
@@ -5330,7 +6837,7 @@
      * 6. 腳踝與戰靴自然踩踏滾動 (Ankle Dorsiflexion & Plantarflexion)
      */
     _calculateHumanWalkPose(t, isBackward = false) {
-      const speed = isBackward ? 0.045 : 0.054;
+      const speed = isBackward ? 0.068 : 0.078;
       const phase = t * speed * (isBackward ? -1 : 1);
       const normPhase = (p) => (p % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
       const getHumanLegJoints = (phi) => {
@@ -5467,7 +6974,7 @@
         }
         case "crouch_punch": {
           const style = getSkinAttackStyle(char ? char.skin : null);
-          const pProgress = Math.min(1, t / 20);
+          const pProgress = Math.min(1, t / 15);
           const reach = Math.sin(pProgress * Math.PI);
           defaultPose.torso.y = -48;
           defaultPose.torso.angle = 0.35 * reach;
@@ -5528,7 +7035,7 @@
           return defaultPose;
         }
         case "crouch_kick": {
-          const sProgress = Math.min(1, t / 28);
+          const sProgress = Math.min(1, t / 20);
           const sweepWave = Math.sin(sProgress * Math.PI);
           defaultPose.torso.y = -36;
           defaultPose.torso.angle = -0.38 * sweepWave;
@@ -5566,7 +7073,7 @@
         }
         case "light_punch": {
           const style = getSkinAttackStyle(char ? char.skin : null);
-          const pProgress = Math.min(1, t / 22);
+          const pProgress = Math.min(1, t / 16);
           const reach = Math.sin(pProgress * Math.PI);
           if (style === "bow") {
             defaultPose.torso.angle = -0.12 * reach;
@@ -5727,7 +7234,7 @@
         }
         case "heavy_kick": {
           const style = getSkinAttackStyle(char ? char.skin : null);
-          const kProgress = Math.min(1, t / 28);
+          const kProgress = Math.min(1, t / 20);
           const kickWave = Math.sin(kProgress * Math.PI);
           defaultPose.torso.angle = -0.3 * kickWave;
           defaultPose.frontLeg.thighAngle = 0.2 - kickWave * 1.8;
@@ -5751,7 +7258,7 @@
           return defaultPose;
         }
         case "ranged_attack": {
-          const rProgress = Math.min(1, t / 26);
+          const rProgress = Math.min(1, t / 18);
           const blastWave = Math.sin(rProgress * Math.PI);
           const isAntiAir = char && char.currentAction && char.currentAction.name.includes("\u5C0D\u7A7A");
           const isHeavy = char && char.currentAction && char.currentAction.name.includes("\u91CD\u7832");
@@ -5887,6 +7394,9 @@
       if (specialSkinsRenderer.drawTorso(ctx, torso, skin, t)) {
         return;
       }
+      if (scifiSkinsRenderer.drawTorso(ctx, torso, skin, t)) {
+        return;
+      }
       ctx.save();
       ctx.translate(torso.x, torso.y);
       ctx.rotate(torso.angle);
@@ -5940,6 +7450,10 @@
       ctx.translate(head.x, head.y);
       ctx.rotate(head.angle);
       if (specialSkinsRenderer.drawHead(ctx, head, skin)) {
+        ctx.restore();
+        return;
+      }
+      if (scifiSkinsRenderer.drawHead(ctx, head, skin)) {
         ctx.restore();
         return;
       }
@@ -6235,6 +7749,9 @@
     // ─── 防禦力場護盾渲染 ───
     drawGuardShield(ctx, stance, skin, t) {
       if (specialSkinsRenderer.drawGuardShield(ctx, stance, skin, t)) {
+        return;
+      }
+      if (scifiSkinsRenderer.drawGuardShield(ctx, stance, skin, t)) {
         return;
       }
       ctx.save();
@@ -6834,10 +8351,10 @@
       }
       const prevY = char.y;
       if (!char.isGrounded) {
-        char.vy += 0.48;
+        char.vy += 0.66;
         if (input && Math.abs(input.x || 0) > 0.1) {
-          char.vx += (input.x || 0) * 0.35;
-          char.vx = Math.max(-3.4, Math.min(3.4, char.vx));
+          char.vx += (input.x || 0) * 0.55;
+          char.vx = Math.max(-5, Math.min(5, char.vx));
         }
         char.x += char.vx;
         char.y += char.vy;
@@ -7016,8 +8533,8 @@
       if (moveY < -0.35 && char.isGrounded) {
         char.isGrounded = false;
         char.currentPlatform = null;
-        char.vy = -10.8;
-        char.vx = moveX * 3.2;
+        char.vy = -13.6;
+        char.vx = moveX * 4.6;
         char.state = "jump";
         char.stateTime = 0;
         char.isGuarding = false;
@@ -7033,11 +8550,11 @@
         const speedMod = char.frostTimer && char.frostTimer > 0 ? 0.55 : 1;
         const isMovingFwd = char.facing === 1 && moveX > 0 || char.facing === -1 && moveX < 0;
         if (isMovingFwd) {
-          char.x += char.facing * 3.2 * speedMod;
+          char.x += char.facing * 5 * speedMod;
           char.state = "walk_fwd";
           char.isGuarding = false;
         } else {
-          char.x -= char.facing * 2.2 * speedMod;
+          char.x -= char.facing * 3.6 * speedMod;
           char.state = "walk_back";
           char.isGuarding = false;
         }
@@ -7084,14 +8601,13 @@
       char.isGuarding = false;
       char.state = "light_punch";
       char.stateTime = 0;
-      char.stateDuration = 22;
+      char.stateDuration = 16;
       const meta = getSkinAttackMeta(char.skin, "light_punch");
       char.currentAction = {
         name: meta.name || "\u523A\u62F3\u6253\u64CA",
-        startup: 6,
-        // 6 幀出拳
-        active: 6,
-        recovery: 10,
+        startup: 4,
+        active: 5,
+        recovery: 7,
         damage: 80,
         guardType: "all",
         hitChecked: false,
@@ -7104,14 +8620,13 @@
       char.isGuarding = false;
       char.state = "heavy_kick";
       char.stateTime = 0;
-      char.stateDuration = 28;
+      char.stateDuration = 20;
       const meta = getSkinAttackMeta(char.skin, "heavy_kick");
       char.currentAction = {
         name: meta.name || "\u91CD\u529B\u731B\u8E22",
-        startup: 8,
-        // 8 幀重擊前搖
-        active: 8,
-        recovery: 12,
+        startup: 6,
+        active: 6,
+        recovery: 8,
         damage: 145,
         guardType: "all",
         hitChecked: false,
@@ -7124,13 +8639,13 @@
       char.isGuarding = false;
       char.state = "crouch_punch";
       char.stateTime = 0;
-      char.stateDuration = 20;
+      char.stateDuration = 15;
       const meta = getSkinAttackMeta(char.skin, "crouch_punch");
       char.currentAction = {
         name: meta.name || "\u4E0B\u8E72\u523A\u62F3",
-        startup: 6,
-        active: 5,
-        recovery: 9,
+        startup: 4,
+        active: 4,
+        recovery: 7,
         damage: 85,
         guardType: "all",
         hitChecked: false,
@@ -7143,13 +8658,13 @@
       char.isGuarding = false;
       char.state = "crouch_kick";
       char.stateTime = 0;
-      char.stateDuration = 28;
+      char.stateDuration = 20;
       const meta = getSkinAttackMeta(char.skin, "crouch_kick");
       char.currentAction = {
         name: meta.name || "\u4E0B\u8E72\u6383\u5802\u817F",
-        startup: 8,
-        active: 8,
-        recovery: 12,
+        startup: 6,
+        active: 6,
+        recovery: 8,
         damage: 135,
         guardType: "crouch_only",
         // 下段判定：站防無效，必須蹲防！
@@ -7166,12 +8681,12 @@
       char.isGuarding = false;
       char.state = "jump";
       char.stateTime = 0;
-      char.stateDuration = 24;
+      char.stateDuration = 16;
       char.currentAction = {
         name: type === "kick" ? "\u8E8D\u7A7A\u91CD\u98DB\u8E22" : "\u8DF3\u8E8D\u523A\u62F3",
-        startup: 5,
-        active: 10,
-        recovery: 9,
+        startup: 4,
+        active: 6,
+        recovery: 6,
         damage: type === "kick" ? 155 : 90,
         guardType: "stand_only",
         // 空中打擊視為中段，不可蹲防！
@@ -7186,13 +8701,13 @@
       char.isGuarding = false;
       char.state = "ranged_attack";
       char.stateTime = 0;
-      char.stateDuration = 26;
-      char.rangedCooldown = 32;
+      char.stateDuration = 18;
+      char.rangedCooldown = 24;
       char.currentAction = {
         name: "\u91CF\u5B50\u76F4\u5C04\u5149\u5F48",
-        startup: 6,
-        active: 6,
-        recovery: 14,
+        startup: 4,
+        active: 5,
+        recovery: 9,
         damage: 110,
         guardType: "all",
         isRanged: true,
@@ -7205,27 +8720,27 @@
         name: "\u91CF\u5B50\u76F4\u5C04\u5149\u5F48",
         x: char.x + char.facing * 42,
         y: char.y - 74,
-        vx: char.facing * 6.2,
-        // 慢速清晰飛行
+        vx: char.facing * 8.8,
+        // 敏捷流暢飛行
         vy: 0,
         radius: 9,
         damage: 110,
         guardType: "all",
         skin: char.skin,
-        life: 140
+        life: 110
       });
     }
     _executeCrouchRangedAttack(char, opp) {
       char.isGuarding = false;
       char.state = "crouch_punch";
       char.stateTime = 0;
-      char.stateDuration = 24;
-      char.rangedCooldown = 32;
+      char.stateDuration = 18;
+      char.rangedCooldown = 24;
       char.currentAction = {
         name: "\u5730\u88C2\u722C\u884C\u9707\u6CE2",
-        startup: 6,
-        active: 6,
-        recovery: 12,
+        startup: 4,
+        active: 5,
+        recovery: 9,
         damage: 135,
         guardType: "crouch_only",
         // 下段判定！站立防禦無效，必須蹲防或翻越！
@@ -7240,27 +8755,27 @@
         name: "\u5730\u88C2\u722C\u884C\u9707\u6CE2",
         x: char.x + char.facing * 36,
         y: this.floorY - 14,
-        vx: char.facing * 5,
+        vx: char.facing * 7,
         vy: 0,
         radius: 13,
         damage: 135,
         guardType: "crouch_only",
         knockdown: true,
         skin: char.skin,
-        life: 150
+        life: 120
       });
     }
     _executeHeavyRangedAttack(char, opp) {
       char.isGuarding = false;
       char.state = "ranged_attack";
       char.stateTime = 0;
-      char.stateDuration = 28;
-      char.rangedCooldown = 36;
+      char.stateDuration = 20;
+      char.rangedCooldown = 28;
       char.currentAction = {
         name: "\u8D85\u8F09\u7A7F\u900F\u91CD\u7832",
-        startup: 8,
-        active: 8,
-        recovery: 12,
+        startup: 6,
+        active: 6,
+        recovery: 8,
         damage: 160,
         guardType: "all",
         knockdown: true,
@@ -7276,27 +8791,27 @@
         name: "\u8D85\u8F09\u7A7F\u900F\u91CD\u7832",
         x: char.x + char.facing * 46,
         y: char.y - 74,
-        vx: char.facing * 7.5,
+        vx: char.facing * 10.5,
         vy: 0,
         radius: 16,
         damage: 160,
         guardType: "all",
         knockdown: true,
         skin: char.skin,
-        life: 130
+        life: 100
       });
     }
     _executeAntiAirRangedAttack(char, opp) {
       char.isGuarding = false;
       char.state = "ranged_attack";
       char.stateTime = 0;
-      char.stateDuration = 24;
-      char.rangedCooldown = 30;
+      char.stateDuration = 18;
+      char.rangedCooldown = 24;
       char.currentAction = {
         name: "\u5C0D\u7A7A\u9AD8\u5C04\u96E2\u5B50\u5F48",
-        startup: 6,
-        active: 6,
-        recovery: 12,
+        startup: 4,
+        active: 5,
+        recovery: 9,
         damage: 120,
         guardType: "all",
         isRanged: true,
@@ -7309,26 +8824,26 @@
         name: "\u5C0D\u7A7A\u9AD8\u5C04\u96E2\u5B50\u5F48",
         x: char.x + char.facing * 40,
         y: char.y - 88,
-        vx: char.facing * 5.2,
-        vy: -6,
+        vx: char.facing * 7,
+        vy: -7.5,
         radius: 10,
         damage: 120,
         guardType: "all",
         skin: char.skin,
-        life: 140
+        life: 110
       });
     }
     _executeAirRangedAttack(char, opp) {
       char.isGuarding = false;
       char.state = "jump";
       char.stateTime = 0;
-      char.stateDuration = 22;
-      char.rangedCooldown = 28;
+      char.stateDuration = 16;
+      char.rangedCooldown = 22;
       char.currentAction = {
         name: "\u8E8D\u7A7A\u4FEF\u885D\u5149\u5F48",
-        startup: 5,
-        active: 8,
-        recovery: 9,
+        startup: 4,
+        active: 6,
+        recovery: 6,
         damage: 115,
         guardType: "all",
         isRanged: true,
@@ -7341,26 +8856,26 @@
         name: "\u8E8D\u7A7A\u4FEF\u885D\u5149\u5F48",
         x: char.x + char.facing * 42,
         y: char.y - 50,
-        vx: char.facing * 6,
-        vy: 1.5,
+        vx: char.facing * 8,
+        vy: 2,
         radius: 9,
         damage: 115,
         guardType: "all",
         skin: char.skin,
-        life: 140
+        life: 110
       });
     }
     _executeAirBombAttack(char, opp) {
       char.isGuarding = false;
       char.state = "jump";
       char.stateTime = 0;
-      char.stateDuration = 24;
-      char.rangedCooldown = 32;
+      char.stateDuration = 18;
+      char.rangedCooldown = 24;
       char.currentAction = {
         name: "\u7A7A\u5C0D\u5730\u96E2\u5B50\u7206\u5F48",
-        startup: 5,
-        active: 8,
-        recovery: 11,
+        startup: 4,
+        active: 6,
+        recovery: 8,
         damage: 145,
         guardType: "stand_only",
         // 中段落雷判定，不可蹲防！
@@ -7375,14 +8890,14 @@
         name: "\u7A7A\u5C0D\u5730\u96E2\u5B50\u7206\u5F48",
         x: char.x + char.facing * 25,
         y: char.y - 30,
-        vx: char.facing * 2.5,
-        vy: 5.5,
+        vx: char.facing * 3.5,
+        vy: 7,
         radius: 12,
         damage: 145,
         guardType: "stand_only",
         knockdown: true,
         skin: char.skin,
-        life: 130
+        life: 100
       });
     }
     // ─── 10 大核心技能執行 ───
@@ -7405,18 +8920,18 @@
         case "SK-02":
           char.invincibleTimer = skill.invincibleFrames || 4;
           char.isGrounded = false;
-          char.vy = -10.5;
-          char.vx = char.facing * 2.5;
+          char.vy = -13;
+          char.vx = char.facing * 3.2;
           soundEngine.playHit("dp");
           break;
         case "SK-03":
-          char.vx = char.facing * 8.5;
+          char.vx = char.facing * 12;
           soundEngine.playHit("slide");
           break;
         case "SK-04":
           char.isGrounded = false;
-          char.vy = -8.5;
-          char.vx = char.facing * 3.6;
+          char.vy = -10.5;
+          char.vx = char.facing * 4.8;
           soundEngine.playHit("dp");
           break;
         case "SK-05":
@@ -7426,7 +8941,7 @@
           soundEngine.playHit("teleport");
           break;
         case "SK-07":
-          char.vx = char.facing * 5.2;
+          char.vx = char.facing * 7.2;
           soundEngine.playHit("punch");
           break;
         case "SK-08":
@@ -7821,7 +9336,7 @@
         opp.hp = Math.max(0, opp.hp - damage);
         soundEngine.playHit("guard");
         this._triggerHaptic(25);
-        opp.vx = char.facing * 2;
+        opp.vx = char.facing * 2.6;
         char.frameAdvantage = -4;
         this.hitStop = Math.max(this.hitStop, 2);
         this.triggerScreenShake(2);
@@ -7877,20 +9392,20 @@
       if (action.knockdown) {
         opp.state = "knockdown";
         opp.stateTime = 0;
-        opp.vx = char.facing * 5.5;
-        opp.vy = -3.8;
+        opp.vx = char.facing * 7;
+        opp.vy = -4.5;
         opp.isGrounded = false;
       } else if (!opp.isGrounded) {
         opp.state = "hit_stun";
         opp.stateTime = 0;
-        opp.stateDuration = 22;
-        opp.vy = -3.5;
-        opp.vx = char.facing * 2.4;
+        opp.stateDuration = 18;
+        opp.vy = -4;
+        opp.vx = char.facing * 3;
       } else {
         opp.state = "hit_stun";
         opp.stateTime = 0;
-        opp.stateDuration = isCounter ? 22 : 16;
-        opp.vx = char.facing * 2.8;
+        opp.stateDuration = isCounter ? 18 : 14;
+        opp.vx = char.facing * 3.6;
       }
       if (isCounter) {
         this.floatingTexts.push({
@@ -8338,14 +9853,14 @@
         const p1Pushing = p1.state === "walk_fwd";
         const p2Pushing = p2.state === "walk_fwd";
         if (p1Pushing && !p2Pushing) {
-          p1.x += p1.facing * 1.5;
-          p2.x -= p1.facing * 0.5;
+          p1.x += p1.facing * 2.2;
+          p2.x -= p1.facing * 0.7;
         } else if (p2Pushing && !p1Pushing) {
-          p2.x += p2.facing * 1.5;
-          p1.x -= p2.facing * 0.5;
+          p2.x += p2.facing * 2.2;
+          p1.x -= p2.facing * 0.7;
         } else if (p1Pushing && p2Pushing) {
-          p1.x += p1.facing * 1.1;
-          p2.x += p2.facing * 1.1;
+          p1.x += p1.facing * 1.6;
+          p2.x += p2.facing * 1.6;
         } else {
           const push = (minDistance - dist) / 2;
           if (dx >= 0) {
@@ -8403,11 +9918,11 @@
       if (!aiChar.isGrounded && this.bufferedDecision.y < 0) {
         this.bufferedDecision.y = 0;
       }
-      let targetDelay = 24;
-      if (this.difficulty === "easy") targetDelay = 42;
-      else if (this.difficulty === "normal") targetDelay = 24;
-      else if (this.difficulty === "hard") targetDelay = 12;
-      else if (this.difficulty === "nightmare") targetDelay = 5;
+      let targetDelay = 16;
+      if (this.difficulty === "easy") targetDelay = 28;
+      else if (this.difficulty === "normal") targetDelay = 16;
+      else if (this.difficulty === "hard") targetDelay = 8;
+      else if (this.difficulty === "nightmare") targetDelay = 4;
       this.currentDelay++;
       if (this.currentDelay >= targetDelay) {
         this.currentDelay = 0;
@@ -8424,7 +9939,7 @@
       const dist = Math.abs(ai.x - player.x);
       const dirToPlayer = ai.x < player.x ? 1 : -1;
       input.x = dirToPlayer;
-      if (dist < 150 && !ai.currentAction) {
+      if (dist < 175 && !ai.currentAction) {
         let attackChance = 0.5;
         if (this.difficulty === "nightmare") attackChance = 0.95;
         else if (this.difficulty === "hard") attackChance = 0.85;
@@ -10527,6 +12042,11 @@
       if (trainingBar) trainingBar.style.display = "none";
       this.updateUserHUD();
     }
+    playAgain() {
+      const endModal = document.getElementById("matchEndModal");
+      if (endModal) endModal.classList.remove("active");
+      this._launchMatch();
+    }
     // ─── 事件綁定 ───
     _bindDOMEvents() {
       document.querySelectorAll(".nav-tab-btn[data-tab]").forEach((btn) => {
@@ -10741,6 +12261,10 @@
           soundEngine.setMuted(!soundEngine.isMuted);
           muteBtn.innerHTML = soundEngine.isMuted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
         };
+      }
+      const playAgainBtn = document.getElementById("matchPlayAgainBtn");
+      if (playAgainBtn) {
+        playAgainBtn.onclick = () => this.playAgain();
       }
       const backLobbyBtn = document.getElementById("matchBackLobbyBtn");
       if (backLobbyBtn) {
