@@ -296,13 +296,13 @@ export class CombatEngine {
 
     const prevY = char.y;
 
-    // 重力與空中運動物理 (適度放緩，手感自然扎實)
+    // 重力與空中運動物理 (放緩重力與空中位移，滯空柔和平緩)
     if (!char.isGrounded) {
-      char.vy += 0.78; // 自然平穩重力
+      char.vy += 0.48; // 柔和浮空重力 (慢速滯空，動作清晰)
       // 空中水平操縱轉向 (Air Control)
       if (input && Math.abs(input.x || 0) > 0.1) {
-        char.vx += (input.x || 0) * 0.7;
-        char.vx = Math.max(-6.2, Math.min(6.2, char.vx));
+        char.vx += (input.x || 0) * 0.35;
+        char.vx = Math.max(-3.4, Math.min(3.4, char.vx));
       }
       char.x += char.vx;
       char.y += char.vy;
@@ -513,12 +513,12 @@ export class CombatEngine {
       return;
     }
 
-    // 4. 起跳 (自然柔和起跳弧度，手感扎實可控)
+    // 4. 起跳 (大幅放緩起跳衝力，柔和升空，軌跡清晰優雅)
     if (moveY < -0.35 && char.isGrounded) {
       char.isGrounded = false;
       char.currentPlatform = null;
-      char.vy = -14.8; // 沉穩自然起跳
-      char.vx = moveX * 5.8; // 自然前跳/後跳弧線
+      char.vy = -10.8; // 輕盈平緩起跳
+      char.vx = moveX * 3.2; // 舒適慢速前跳/後跳位移
       char.state = 'jump';
       char.stateTime = 0;
       char.isGuarding = false;
@@ -533,17 +533,17 @@ export class CombatEngine {
       return;
     }
 
-    // 6. 橫向移動 (適度放緩走位速度，動作清晰，立回博弈更精準)
+    // 6. 橫向移動 (全面放緩走位速度，節奏沉穩，立回博弈更清晰可控)
     if (Math.abs(moveX) > 0.15) {
       const speedMod = (char.frostTimer && char.frostTimer > 0) ? 0.55 : 1.0;
       const isMovingFwd = (char.facing === 1 && moveX > 0) || (char.facing === -1 && moveX < 0);
       if (isMovingFwd) {
-        char.x += char.facing * 6.0 * speedMod; // 穩定適中前進走位 (若中冰霜減速則乘以 0.55)
+        char.x += char.facing * 3.2 * speedMod; // 慢速舒適前進 (若中冰霜減速則乘以 0.55)
         char.state = 'walk_fwd';
         char.isGuarding = false;
       } else {
         // 後撤走位：純粹向後退走位，不召喚防護罩 (由專屬防護罩按鍵召喚)
-        char.x -= char.facing * 4.6 * speedMod; // 穩定適中後撤走位 (若中冰霜減速則乘以 0.55)
+        char.x -= char.facing * 2.2 * speedMod; // 慢速舒適後撤走位 (若中冰霜減速則乘以 0.55)
         char.state = 'walk_back';
         char.isGuarding = false;
       }
@@ -599,13 +599,13 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'light_punch';
     char.stateTime = 0;
-    char.stateDuration = 14; // 14 幀完整展示動作、拉弓與武器細節
+    char.stateDuration = 22; // 22 幀 (~0.37s) 慢速清晰展示動作、拉弓與武器細節
     const meta = getSkinAttackMeta(char.skin, 'light_punch');
     char.currentAction = {
       name: meta.name || '刺拳打擊',
-      startup: 4, // 4 幀出拳
-      active: 4,
-      recovery: 6,
+      startup: 6, // 6 幀出拳
+      active: 6,
+      recovery: 10,
       damage: 80,
       guardType: 'all',
       hitChecked: false,
@@ -619,13 +619,13 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'heavy_kick';
     char.stateTime = 0;
-    char.stateDuration = 18; // 18 幀沉穩破空重踢，清晰打擊
+    char.stateDuration = 28; // 28 幀 (~0.47s) 沉穩破空重踢，清晰打擊
     const meta = getSkinAttackMeta(char.skin, 'heavy_kick');
     char.currentAction = {
       name: meta.name || '重力猛踢',
-      startup: 6, // 6 幀重擊前搖
-      active: 5,
-      recovery: 7,
+      startup: 8, // 8 幀重擊前搖
+      active: 8,
+      recovery: 12,
       damage: 145,
       guardType: 'all',
       hitChecked: false,
@@ -639,13 +639,13 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'crouch_punch';
     char.stateTime = 0;
-    char.stateDuration = 13; // 13 幀下蹲刺拳
+    char.stateDuration = 20; // 20 幀下蹲刺拳
     const meta = getSkinAttackMeta(char.skin, 'crouch_punch');
     char.currentAction = {
       name: meta.name || '下蹲刺拳',
-      startup: 4,
-      active: 4,
-      recovery: 5,
+      startup: 6,
+      active: 5,
+      recovery: 9,
       damage: 85,
       guardType: 'all',
       hitChecked: false,
@@ -659,13 +659,13 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'crouch_kick';
     char.stateTime = 0;
-    char.stateDuration = 18; // 18 幀完整低位旋掃
+    char.stateDuration = 28; // 28 幀完整低位旋掃
     const meta = getSkinAttackMeta(char.skin, 'crouch_kick');
     char.currentAction = {
       name: meta.name || '下蹲掃堂腿',
-      startup: 5,
-      active: 5,
-      recovery: 8,
+      startup: 8,
+      active: 8,
+      recovery: 12,
       damage: 135,
       guardType: 'crouch_only', // 下段判定：站防無效，必須蹲防！
       knockdown: true, // 命中掃翻倒地！
@@ -681,12 +681,12 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'jump';
     char.stateTime = 0;
-    char.stateDuration = 15; // 15 幀空中打擊，動作舒展清晰
+    char.stateDuration = 24; // 24 幀空中打擊，動作舒展清晰
     char.currentAction = {
       name: type === 'kick' ? '躍空重飛踢' : '跳躍刺拳',
-      startup: 3,
-      active: 6,
-      recovery: 6,
+      startup: 5,
+      active: 10,
+      recovery: 9,
       damage: type === 'kick' ? 155 : 90,
       guardType: 'stand_only', // 空中打擊視為中段，不可蹲防！
       knockdown: type === 'kick', // 空中重飛踢擊倒對手
@@ -700,13 +700,13 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'ranged_attack';
     char.stateTime = 0;
-    char.stateDuration = 16; // 16 幀完整出招展示
-    char.rangedCooldown = 22;
+    char.stateDuration = 26; // 26 幀完整出招展示
+    char.rangedCooldown = 32;
     char.currentAction = {
       name: '量子直射光彈',
-      startup: 4,
-      active: 4,
-      recovery: 8,
+      startup: 6,
+      active: 6,
+      recovery: 14,
       damage: 110,
       guardType: 'all',
       isRanged: true,
@@ -720,13 +720,13 @@ export class CombatEngine {
       name: '量子直射光彈',
       x: char.x + char.facing * 42,
       y: char.y - 74,
-      vx: char.facing * 10.5,
+      vx: char.facing * 6.2, // 慢速清晰飛行
       vy: 0,
       radius: 9,
       damage: 110,
       guardType: 'all',
       skin: char.skin,
-      life: 90
+      life: 140
     });
   }
 
@@ -734,13 +734,13 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'crouch_punch';
     char.stateTime = 0;
-    char.stateDuration = 16;
-    char.rangedCooldown = 24;
+    char.stateDuration = 24;
+    char.rangedCooldown = 32;
     char.currentAction = {
       name: '地裂爬行震波',
-      startup: 4,
-      active: 4,
-      recovery: 8,
+      startup: 6,
+      active: 6,
+      recovery: 12,
       damage: 135,
       guardType: 'crouch_only', // 下段判定！站立防禦無效，必須蹲防或翻越！
       knockdown: true,
@@ -755,14 +755,14 @@ export class CombatEngine {
       name: '地裂爬行震波',
       x: char.x + char.facing * 36,
       y: this.floorY - 14,
-      vx: char.facing * 8.5,
+      vx: char.facing * 5.0,
       vy: 0,
       radius: 13,
       damage: 135,
       guardType: 'crouch_only',
       knockdown: true,
       skin: char.skin,
-      life: 95
+      life: 150
     });
   }
 
@@ -770,13 +770,13 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'ranged_attack';
     char.stateTime = 0;
-    char.stateDuration = 18;
-    char.rangedCooldown = 28;
+    char.stateDuration = 28;
+    char.rangedCooldown = 36;
     char.currentAction = {
       name: '超載穿透重砲',
-      startup: 5,
-      active: 5,
-      recovery: 8,
+      startup: 8,
+      active: 8,
+      recovery: 12,
       damage: 160,
       guardType: 'all',
       knockdown: true, // 命中直接擊倒！
@@ -792,14 +792,14 @@ export class CombatEngine {
       name: '超載穿透重砲',
       x: char.x + char.facing * 46,
       y: char.y - 74,
-      vx: char.facing * 12,
+      vx: char.facing * 7.5,
       vy: 0,
       radius: 16,
       damage: 160,
       guardType: 'all',
       knockdown: true,
       skin: char.skin,
-      life: 85
+      life: 130
     });
   }
 
@@ -807,13 +807,13 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'ranged_attack';
     char.stateTime = 0;
-    char.stateDuration = 15;
-    char.rangedCooldown = 22;
+    char.stateDuration = 24;
+    char.rangedCooldown = 30;
     char.currentAction = {
       name: '對空高射離子彈',
-      startup: 4,
-      active: 4,
-      recovery: 7,
+      startup: 6,
+      active: 6,
+      recovery: 12,
       damage: 120,
       guardType: 'all',
       isRanged: true,
@@ -827,13 +827,13 @@ export class CombatEngine {
       name: '對空高射離子彈',
       x: char.x + char.facing * 40,
       y: char.y - 88,
-      vx: char.facing * 8,
-      vy: -8.5,
+      vx: char.facing * 5.2,
+      vy: -6.0,
       radius: 10,
       damage: 120,
       guardType: 'all',
       skin: char.skin,
-      life: 90
+      life: 140
     });
   }
 
@@ -841,13 +841,13 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'jump';
     char.stateTime = 0;
-    char.stateDuration = 14;
-    char.rangedCooldown = 20;
+    char.stateDuration = 22;
+    char.rangedCooldown = 28;
     char.currentAction = {
       name: '躍空俯衝光彈',
-      startup: 3,
-      active: 5,
-      recovery: 6,
+      startup: 5,
+      active: 8,
+      recovery: 9,
       damage: 115,
       guardType: 'all',
       isRanged: true,
@@ -861,13 +861,13 @@ export class CombatEngine {
       name: '躍空俯衝光彈',
       x: char.x + char.facing * 42,
       y: char.y - 50,
-      vx: char.facing * 9.5,
-      vy: 2.2,
+      vx: char.facing * 6.0,
+      vy: 1.5,
       radius: 9,
       damage: 115,
       guardType: 'all',
       skin: char.skin,
-      life: 90
+      life: 140
     });
   }
 
@@ -875,13 +875,13 @@ export class CombatEngine {
     char.isGuarding = false;
     char.state = 'jump';
     char.stateTime = 0;
-    char.stateDuration = 15;
-    char.rangedCooldown = 24;
+    char.stateDuration = 24;
+    char.rangedCooldown = 32;
     char.currentAction = {
       name: '空對地離子爆彈',
-      startup: 3,
-      active: 5,
-      recovery: 7,
+      startup: 5,
+      active: 8,
+      recovery: 11,
       damage: 145,
       guardType: 'stand_only', // 中段落雷判定，不可蹲防！
       knockdown: true,
@@ -896,14 +896,14 @@ export class CombatEngine {
       name: '空對地離子爆彈',
       x: char.x + char.facing * 25,
       y: char.y - 30,
-      vx: char.facing * 4,
-      vy: 8.5,
+      vx: char.facing * 2.5,
+      vy: 5.5,
       radius: 12,
       damage: 145,
       guardType: 'stand_only',
       knockdown: true,
       skin: char.skin,
-      life: 80
+      life: 130
     });
   }
 
@@ -932,20 +932,20 @@ export class CombatEngine {
       case 'SK-02': // 升龍衝天擊
         char.invincibleTimer = skill.invincibleFrames || 4;
         char.isGrounded = false;
-        char.vy = -14.2; // 沉穩升空
-        char.vx = char.facing * 3.8;
+        char.vy = -10.5; // 慢速沉穩升空
+        char.vx = char.facing * 2.5;
         soundEngine.playHit('dp');
         break;
 
       case 'SK-03': // 音速滑踢
-        char.vx = char.facing * 14; // 順暢貼地滑踢
+        char.vx = char.facing * 8.5; // 順暢慢速貼地滑踢
         soundEngine.playHit('slide');
         break;
 
       case 'SK-04': // 躍空震地砸
         char.isGrounded = false;
-        char.vy = -11.5;
-        char.vx = char.facing * 5.5;
+        char.vy = -8.5;
+        char.vx = char.facing * 3.6;
         soundEngine.playHit('dp');
         break;
 
@@ -958,7 +958,7 @@ export class CombatEngine {
         break;
 
       case 'SK-07': // 百裂連擊衝
-        char.vx = char.facing * 8; // 節奏突進
+        char.vx = char.facing * 5.2; // 慢速節奏突進
         soundEngine.playHit('punch');
         break;
 
@@ -1426,8 +1426,8 @@ export class CombatEngine {
       soundEngine.playHit('guard');
       this._triggerHaptic(25);
 
-      // 受擊格擋擊退 (適度平穩)
-      opp.vx = char.facing * 3.2;
+      // 受擊格擋擊退 (慢速微幅平穩)
+      opp.vx = char.facing * 2.0;
       char.frameAdvantage = -4;
 
       // 格擋頓幀與輕微震屏
@@ -1500,21 +1500,21 @@ export class CombatEngine {
     if (action.knockdown) {
       opp.state = 'knockdown';
       opp.stateTime = 0;
-      opp.vx = char.facing * 8.5; // 扎實擊倒擊退 (原 12)
-      opp.vy = -5.0;
+      opp.vx = char.facing * 5.5; // 慢速清晰擊倒擊退
+      opp.vy = -3.8;
       opp.isGrounded = false;
     } else if (!opp.isGrounded) {
       // 空中受擊浮空 (Air Juggle)，延長受擊滯空硬直
       opp.state = 'hit_stun';
       opp.stateTime = 0;
       opp.stateDuration = 22;
-      opp.vy = -4.5;
-      opp.vx = char.facing * 3.6;
+      opp.vy = -3.5;
+      opp.vx = char.facing * 2.4;
     } else {
       opp.state = 'hit_stun';
       opp.stateTime = 0;
       opp.stateDuration = isCounter ? 22 : 16; // 破招受擊硬直高達 22 幀
-      opp.vx = char.facing * 4.5; // 平穩受擊擊退 (原 6)
+      opp.vx = char.facing * 2.8; // 慢速平穩受擊擊退
     }
 
     // 浮動提示文字
@@ -2017,16 +2017,16 @@ export class CombatEngine {
 
       if (p1Pushing && !p2Pushing) {
         // P1 主動向前走推擠：P1 順暢前推滑過對手身側換邊
-        p1.x += p1.facing * 2.4;
-        p2.x -= p1.facing * 0.8;
+        p1.x += p1.facing * 1.5;
+        p2.x -= p1.facing * 0.5;
       } else if (p2Pushing && !p1Pushing) {
         // P2 主動向前走推擠：P2 順暢前推滑過對手身側換邊
-        p2.x += p2.facing * 2.4;
-        p1.x -= p2.facing * 0.8;
+        p2.x += p2.facing * 1.5;
+        p1.x -= p2.facing * 0.5;
       } else if (p1Pushing && p2Pushing) {
         // 雙方同時前推：順勢交錯互換身位
-        p1.x += p1.facing * 1.8;
-        p2.x += p2.facing * 1.8;
+        p1.x += p1.facing * 1.1;
+        p2.x += p2.facing * 1.1;
       } else {
         // 雙方均未主動推擠（待機/格擋/受擊）：維持正常站位軟隔離，防止重疊
         const push = (minDistance - dist) / 2;

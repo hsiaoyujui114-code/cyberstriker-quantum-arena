@@ -99,7 +99,7 @@ export class CharacterRenderer {
    * 6. 腳踝與戰靴自然踩踏滾動 (Ankle Dorsiflexion & Plantarflexion)
    */
   _calculateHumanWalkPose(t, isBackward = false) {
-    const speed = isBackward ? 0.082 : 0.092;
+    const speed = isBackward ? 0.045 : 0.054;
     const phase = t * speed * (isBackward ? -1 : 1);
 
     const normPhase = (p) => ((p % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -279,7 +279,7 @@ export class CharacterRenderer {
 
       case 'crouch_punch': {
         const style = getSkinAttackStyle(char ? char.skin : null);
-        const pProgress = Math.min(1, t / 13);
+        const pProgress = Math.min(1, t / 20);
         const reach = Math.sin(pProgress * Math.PI);
         defaultPose.torso.y = -48;
         defaultPose.torso.angle = 0.35 * reach;
@@ -349,7 +349,7 @@ export class CharacterRenderer {
 
       case 'crouch_kick': {
         // 下蹲掃堂腿 (2HK / Sweep)：重心極致貼地，雙手撐地，單腿破空低位旋掃
-        const sProgress = Math.min(1, t / 18);
+        const sProgress = Math.min(1, t / 28);
         const sweepWave = Math.sin(sProgress * Math.PI);
         defaultPose.torso.y = -36;
         defaultPose.torso.angle = -0.38 * sweepWave;
@@ -392,7 +392,7 @@ export class CharacterRenderer {
 
       case 'light_punch': {
         const style = getSkinAttackStyle(char ? char.skin : null);
-        const pProgress = Math.min(1, t / 14);
+        const pProgress = Math.min(1, t / 22);
         const reach = Math.sin(pProgress * Math.PI);
 
         if (style === 'bow') {
@@ -619,7 +619,7 @@ export class CharacterRenderer {
       case 'heavy_kick': {
         // 重力猛踢：踢擊腿大角度破空踢擊，上身反向後仰平衡
         const style = getSkinAttackStyle(char ? char.skin : null);
-        const kProgress = Math.min(1, t / 18);
+        const kProgress = Math.min(1, t / 28);
         const kickWave = Math.sin(kProgress * Math.PI);
         defaultPose.torso.angle = -0.3 * kickWave; // 上身反向後仰
         defaultPose.frontLeg.thighAngle = 0.2 - kickWave * 1.8; // 大角度踢出
@@ -647,7 +647,7 @@ export class CharacterRenderer {
 
       case 'ranged_attack': {
         // 遠程攻擊：支援平射、高仰角對空射擊與重砲蓄勢射擊
-        const rProgress = Math.min(1, t / 16);
+        const rProgress = Math.min(1, t / 26);
         const blastWave = Math.sin(rProgress * Math.PI);
         const isAntiAir = char && char.currentAction && char.currentAction.name.includes('對空');
         const isHeavy = char && char.currentAction && char.currentAction.name.includes('重砲');

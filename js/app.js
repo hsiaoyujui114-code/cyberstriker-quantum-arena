@@ -39,6 +39,7 @@ class CyberStrikerApp {
     this.ctx = null;
     this.pedestalCanvas = null;
     this.pedestalCtx = null;
+    this._battleLoopId = null;
   }
 
   init() {
@@ -627,6 +628,10 @@ class CyberStrikerApp {
   }
 
   _launchMatch() {
+    if (this._battleLoopId) {
+      cancelAnimationFrame(this._battleLoopId);
+      this._battleLoopId = null;
+    }
     const battleScreen = document.getElementById('battleScreen');
     if (battleScreen) battleScreen.classList.add('active');
 
@@ -779,7 +784,7 @@ class CyberStrikerApp {
     // 6. 更新戰鬥 HUD
     this._updateBattleHUD();
 
-    requestAnimationFrame((ts) => this._runBattleLoop(ts));
+    this._battleLoopId = requestAnimationFrame((ts) => this._runBattleLoop(ts));
   }
 
   _gatherInputsP1() {
@@ -1888,6 +1893,10 @@ class CyberStrikerApp {
 
   exitBattleToLobby() {
     this.isFighting = false;
+    if (this._battleLoopId) {
+      cancelAnimationFrame(this._battleLoopId);
+      this._battleLoopId = null;
+    }
     this.matchEndTimer = 0;
     combatEngine.isOver = true;
     soundEngine.stopBgm();
