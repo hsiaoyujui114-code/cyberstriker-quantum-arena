@@ -353,31 +353,40 @@
 
   <!-- ── 賽前戰術配技視窗 (Loadout Modal - 無時間限制) ── -->
   <div class="modal-overlay" id="loadoutModal">
-    <div class="modal-card" style="max-width: 740px;">
+    <div class="modal-card" style="max-width: 780px;">
       <button class="modal-close-btn">&times;</button>
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; padding-right: 32px;">
         <div>
-          <h2 style="font-size: 20px; color: var(--primary-cyan);"><i class="fa-solid fa-boxes-stacked"></i> 賽前戰術配技 (10 大技能自由挑選 3 招)</h2>
-          <div style="font-size: 12px; color: #94a3b8;">無時間限制，依戰術喜好自由挑選 3 招綁定至 [U]、[I]、[O] 按鍵</div>
+          <h2 style="font-size: 20px; color: var(--primary-cyan);"><i class="fa-solid fa-crosshairs"></i> 賽前戰術武器與技能配置 (20 款武裝自由挑選 3 項)</h2>
+          <div style="font-size: 12px; color: #94a3b8;">無時間限制，自由挑選 3 款遠程神兵或格鬥武藝綁定至 [U]、[I]、[O] 按鍵</div>
         </div>
         <div class="stat-capsule" style="font-size: 14px; border-color: #00f3ff; color: #00f3ff;">
           <i class="fa-solid fa-infinity"></i> 不限時間
         </div>
       </div>
 
-      <!-- 三大流派快捷選擇 -->
-      <div style="display: flex; gap: 8px;">
-        <button class="nav-tab-btn archetype-btn" data-arch="wave_dp" style="flex: 1; justify-content: center; font-size: 12px;">波升控制流</button>
-        <button class="nav-tab-btn archetype-btn" data-arch="low_rush" style="flex: 1; justify-content: center; font-size: 12px;">下段狂攻流</button>
-        <button class="nav-tab-btn archetype-btn" data-arch="counter_cross" style="flex: 1; justify-content: center; font-size: 12px;">奇襲反打流</button>
+      <!-- 武裝分類篩選標籤 (全部武裝 / 遠程武器庫 / 近戰格鬥武藝) -->
+      <div style="display: flex; gap: 8px; margin-top: 6px;">
+        <button class="nav-tab-btn loadout-filter-btn active" data-filter="all" style="flex: 1; justify-content: center; font-size: 12px; font-weight: 700; border-color: #00f3ff;">全部武裝 (20)</button>
+        <button class="nav-tab-btn loadout-filter-btn" data-filter="ranged" style="flex: 1; justify-content: center; font-size: 12px; font-weight: 700; border-color: #38bdf8; color: #38bdf8;">🏹 遠程武器庫 (12)</button>
+        <button class="nav-tab-btn loadout-filter-btn" data-filter="melee" style="flex: 1; justify-content: center; font-size: 12px; font-weight: 700; border-color: #f43f5e; color: #f43f5e;">⚔️ 近戰格鬥武藝 (8)</button>
+      </div>
+
+      <!-- 戰術流派快捷選擇 -->
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <button class="nav-tab-btn archetype-btn" data-arch="sniper_freeze" style="flex: 1; min-width: 120px; justify-content: center; font-size: 11px; background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #38bdf8;">🎯 狙擊冰霜牽制流</button>
+        <button class="nav-tab-btn archetype-btn" data-arch="shotgun_funnel" style="flex: 1; min-width: 120px; justify-content: center; font-size: 11px; background: rgba(168, 85, 247, 0.15); border-color: #a855f7; color: #d8b4fe;">⚡ 散彈浮游火力流</button>
+        <button class="nav-tab-btn archetype-btn" data-arch="wave_dp" style="flex: 1; min-width: 100px; justify-content: center; font-size: 11px;">波升控制流</button>
+        <button class="nav-tab-btn archetype-btn" data-arch="low_rush" style="flex: 1; min-width: 100px; justify-content: center; font-size: 11px;">下段狂攻流</button>
+        <button class="nav-tab-btn archetype-btn" data-arch="counter_cross" style="flex: 1; min-width: 100px; justify-content: center; font-size: 11px;">奇襲反打流</button>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 380px; overflow-y: auto;" id="loadoutSkillsGrid">
-        <!-- 動態渲染 10 大技能卡片 -->
+        <!-- 動態渲染 20 款武裝技能卡片 -->
       </div>
 
-      <button class="nav-tab-btn" id="confirmLoadoutBtn" style="background: linear-gradient(90deg, #00f3ff, #ff007f); color: #fff; justify-content: center; padding: 12px; font-size: 16px;">
-        確認配置並開戰！
+      <button class="nav-tab-btn" id="confirmLoadoutBtn" style="background: linear-gradient(90deg, #00f3ff, #ff007f); color: #fff; justify-content: center; padding: 12px; font-size: 16px; font-weight: bold;">
+        確認武裝配置並開戰！
       </button>
     </div>
   </div>

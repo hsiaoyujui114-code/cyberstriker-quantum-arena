@@ -487,7 +487,7 @@ class CyberStrikerApp {
     if (modal) modal.classList.remove('active');
   }
 
-  // ─── 賽前「10 選 3」配技視窗 (無時間限制) ───
+  // ─── 賽前戰術武器與技能配置視窗 (20 款自由挑選 3 項・無時間限制) ───
   openLoadoutModal(startMatchCallback) {
     const modal = document.getElementById('loadoutModal');
     if (!modal) return;
@@ -500,11 +500,27 @@ class CyberStrikerApp {
     }
 
     const u = saveSystem.currentUser;
-    this.loadoutSelection = (u && u.loadout && u.loadout.length === 3) ? [...u.loadout] : ['SK-01', 'SK-02', 'SK-09'];
+    this.loadoutSelection = (u && u.loadout && u.loadout.length === 3) ? [...u.loadout] : ['SK-15', 'SK-16', 'SK-18'];
+    this.loadoutFilter = this.loadoutFilter || 'all';
+
+    // 綁定武裝分類篩選標籤 (全部武裝 / 遠程武器庫 / 近戰格鬥武藝)
+    document.querySelectorAll('.loadout-filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.loadout-filter-btn').forEach(b => {
+          b.classList.remove('active');
+          b.style.background = 'transparent';
+        });
+        btn.classList.add('active');
+        btn.style.background = 'rgba(255,255,255,0.1)';
+        this.loadoutFilter = btn.dataset.filter || 'all';
+        this._renderLoadoutSkillsGrid();
+        soundEngine.playUI('click');
+      };
+    });
 
     this._renderLoadoutSkillsGrid();
 
-    // 綁定三大流派快捷按鈕
+    // 綁定五大戰術流派快捷按鈕
     document.querySelectorAll('.archetype-btn').forEach(btn => {
       btn.onclick = () => {
         const archId = btn.dataset.arch;
@@ -530,19 +546,31 @@ class CyberStrikerApp {
     const container = document.getElementById('loadoutSkillsGrid');
     if (!container) return;
 
-    container.innerHTML = SKILLS.map(sk => {
+    const filter = this.loadoutFilter || 'all';
+    const displayedSkills = SKILLS.filter(sk => {
+      if (filter === 'all') return true;
+      return sk.category === filter;
+    });
+
+    container.innerHTML = displayedSkills.map(sk => {
       const isSelected = this.loadoutSelection.includes(sk.id);
       const slotIndex = this.loadoutSelection.indexOf(sk.id);
       const keyName = slotIndex === 0 ? '[U]' : (slotIndex === 1 ? '[I]' : (slotIndex === 2 ? '[O]' : ''));
+      const isRanged = sk.category === 'ranged';
 
       return `
-        <div class="skill-card ${isSelected ? 'selected' : ''}" data-id="${sk.id}" style="background: rgba(255,255,255,0.03); border: 1px solid ${isSelected ? '#00f3ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 10px; cursor: pointer; position: relative;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <strong style="color: ${sk.color}; font-size: 13px;"><i class="${sk.icon}"></i> ${sk.name}</strong>
-            ${isSelected ? `<span style="background: #00f3ff; color: #000; font-size: 11px; font-weight: 900; padding: 1px 6px; border-radius: 4px;">${keyName}</span>` : ''}
+        <div class="skill-card ${isSelected ? 'selected' : ''}" data-id="${sk.id}" style="background: rgba(255,255,255,0.03); border: 1.5px solid ${isSelected ? '#00f3ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 10px; cursor: pointer; position: relative; transition: all 0.2s;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: ${isRanged ? 'rgba(56,189,248,0.2)' : 'rgba(244,63,94,0.2)'}; color: ${isRanged ? '#38bdf8' : '#fb7185'}; border: 1px solid ${isRanged ? '#38bdf8' : '#fb7185'};">
+                ${isRanged ? '🏹 遠程武器' : '⚔️ 近戰武藝'}
+              </span>
+              <strong style="color: ${sk.color}; font-size: 13px;"><i class="${sk.icon}"></i> ${sk.name}</strong>
+            </div>
+            ${isSelected ? `<span style="background: #00f3ff; color: #000; font-size: 11px; font-weight: 900; padding: 1px 7px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${keyName}</span>` : ''}
           </div>
-          <div style="font-size: 11px; color: #94a3b8;">${sk.typeName} | 傷害 ${sk.damage} | CD ${sk.cd}s</div>
-          <div style="font-size: 11px; color: #64748b; margin-top: 4px;">${sk.description}</div>
+          <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">${sk.typeName} | 傷害 ${sk.damage} | CD ${sk.cd}s</div>
+          <div style="font-size: 11px; color: #64748b; margin-top: 4px; line-height: 1.35;">${sk.description}</div>
         </div>
       `;
     }).join('');
@@ -559,7 +587,7 @@ class CyberStrikerApp {
           if (this.loadoutSelection.length < 3) {
             this.loadoutSelection.push(id);
           } else {
-            // 已滿3個，替換最後一個
+            // 已滿3個，替換最先選擇的項目
             this.loadoutSelection.shift();
             this.loadoutSelection.push(id);
           }
@@ -986,6 +1014,155 @@ class CyberStrikerApp {
         ctx.fill();
         ctx.strokeStyle = '#00f3ff';
         ctx.stroke();
+      } else if (p.type === 'sniper') {
+        // 高斯狙擊穿甲重槍：超音速針狀電磁穿甲彈與擴散音爆環
+        ctx.translate(p.x, p.y);
+        ctx.rotate(angle);
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 24;
+        ctx.fillStyle = '#00ffff';
+        ctx.fillRect(-22, -3, 44, 6);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-12, -1.5, 30, 3);
+        // 超音速音爆衝擊環
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.75)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(-18, 0, 9, -Math.PI / 2, Math.PI / 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-34, 0, 14, -Math.PI / 2, Math.PI / 2);
+        ctx.stroke();
+      } else if (p.type === 'shotgun') {
+        // 擴散式電漿霰彈：高溫紫曜電漿霰彈球
+        ctx.shadowColor = '#d946ef';
+        ctx.shadowBlur = 16;
+        ctx.fillStyle = '#d946ef';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'funnel') {
+        // 脈衝浮游砲：懸浮跟隨型高科技綠曜無人戰機
+        ctx.translate(p.x, p.y);
+        ctx.shadowColor = '#10b981';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = '#064e3b';
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(14, 0);
+        ctx.lineTo(0, -9);
+        ctx.lineTo(-12, 0);
+        ctx.lineTo(0, 9);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#6ee7b7';
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#00f3ff';
+        ctx.beginPath();
+        ctx.arc(-13, 0, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'funnel_laser') {
+        // 浮游砲雷射束：翡翠高速離子光束
+        ctx.shadowColor = '#34d399';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = '#34d399';
+        ctx.fillRect(p.x - 18, p.y - 3, 36, 6);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(p.x - 12, p.y - 1.5, 24, 3);
+      } else if (p.type === 'cryo_arrow') {
+        // 極凍冰霜穿透箭：晶瑩透亮冰晶尖錐長箭
+        ctx.translate(p.x, p.y);
+        ctx.rotate(angle);
+        ctx.shadowColor = '#00e5ff';
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#00e5ff';
+        ctx.beginPath();
+        ctx.moveTo(20, 0);
+        ctx.lineTo(-16, -7);
+        ctx.lineTo(-10, 0);
+        ctx.lineTo(-16, 7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(15, 0);
+        ctx.lineTo(-8, -3);
+        ctx.lineTo(-4, 0);
+        ctx.lineTo(-8, 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(186, 230, 253, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-16, 0);
+        ctx.lineTo(-28, 0);
+        ctx.stroke();
+      } else if (p.type === 'grenade') {
+        // 燃燒榴彈：高速翻滾榴彈彈筒與引信火花
+        ctx.translate(p.x, p.y);
+        ctx.rotate(Date.now() / 90);
+        ctx.shadowColor = '#f97316';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = '#c2410c';
+        ctx.fillRect(-8, -6, 16, 12);
+        ctx.strokeStyle = '#ea580c';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-8, -6, 16, 12);
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'napalm_pool') {
+        // 燃燒火海：地面燃燒熔岩火場與跳動烈焰
+        ctx.shadowColor = '#f97316';
+        ctx.shadowBlur = 22;
+        const flameH = Math.sin(Date.now() / 80 + p.x) * 5;
+        const grad = ctx.createRadialGradient(p.x, p.y, 4, p.x, p.y, p.radius || 48);
+        grad.addColorStop(0, 'rgba(255, 235, 59, 0.85)');
+        grad.addColorStop(0.45, 'rgba(234, 88, 12, 0.65)');
+        grad.addColorStop(1, 'rgba(220, 38, 38, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y + 4, p.radius || 48, 13 + flameH, 0, 0, Math.PI * 2);
+        ctx.fill();
+        for (let s = -2; s <= 2; s++) {
+          const sx = p.x + s * 15 + Math.sin(Date.now() / 110 + s) * 4;
+          const sy = p.y - 6 - Math.abs(Math.cos(Date.now() / 90 + s * 2)) * 18;
+          ctx.fillStyle = '#fef08a';
+          ctx.beginPath();
+          ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (p.type === 'boomerang') {
+        // 迴旋雷霆光刃鏢：高速旋轉十字等離子雷霆飛鏢
+        ctx.translate(p.x, p.y);
+        ctx.rotate(Date.now() / 40);
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 22;
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        for (let k = 0; k < 4; k++) {
+          const a = (k * Math.PI) / 2;
+          ctx.lineTo(Math.cos(a) * 18, Math.sin(a) * 18);
+          ctx.lineTo(Math.cos(a + Math.PI / 4) * 6, Math.sin(a + Math.PI / 4) * 6);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+        ctx.fill();
       } else {
         // 常規 / 仰角 / 躍空光彈 (Normal, Anti-air, Air dive)
         ctx.shadowColor = themeCol;

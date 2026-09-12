@@ -1,15 +1,17 @@
 /**
  * 《CyberStriker: Quantum Arena》
- * 10 大核心標準技能數值與機制規格表
+ * 20 大核心戰術武裝與技能規格表 (包含 12 款多元遠程武器庫與 8 款近戰體術)
  * 完全符合 GAME_PROJECT_PLAN.md 第 2.4 節
  */
 
 export const SKILLS = [
+  // ─── 核心飛行道具 & 遠程武器 (Ranged Weapons Arsenal) ───
   {
     id: 'SK-01',
     name: '能量脈衝彈',
+    category: 'ranged',
     type: 'projectile',
-    typeName: '飛行道具',
+    typeName: '直線射擊 / 遠程武器',
     cd: 0.8, // 快速冷卻：迅捷壓制
     damage: 120,
     startup: 5,
@@ -23,10 +25,214 @@ export const SKILLS = [
     color: '#00f3ff'
   },
   {
+    id: 'SK-10',
+    name: '超載終結砲',
+    category: 'ranged',
+    type: 'ultimate_beam',
+    typeName: '貫穿巨砲 / 遠程武器',
+    cd: 2.5, // 快速冷卻
+    damage: 260,
+    startup: 10,
+    active: 16,
+    recovery: 12,
+    guardType: 'all',
+    chipRatio: 0.5,
+    knockdown: true,
+    description: '胸部反應爐超載聚能，射出貫穿全螢幕之離子巨砲，具備毀滅級打擊力。',
+    counterGuide: '前搖蓄能明顯，看準光芒及時起跳越過或使用折躍斬奇襲。',
+    icon: 'fa-solid fa-sun',
+    color: '#f97316'
+  },
+  {
+    id: 'SK-11',
+    name: '追蹤微型飛彈群',
+    category: 'ranged',
+    type: 'homing_missiles',
+    typeName: '導引飛彈 / 遠程武器',
+    cd: 1.4,
+    damage: 135,
+    startup: 4,
+    active: 70,
+    recovery: 6,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '連續發射 3 枚量子導引微型飛彈，在空中劃出弧線自動追蹤鎖定對手！',
+    counterGuide: '微導彈飛行軌跡可被近身攻擊打消，或利用起跳與平台走位讓飛彈撞地引爆。',
+    icon: 'fa-solid fa-rocket',
+    color: '#ec4899'
+  },
+  {
+    id: 'SK-12',
+    name: '折射稜鏡激光',
+    category: 'ranged',
+    type: 'bouncing_laser',
+    typeName: '彈射激光 / 遠程武器',
+    cd: 1.2,
+    damage: 140,
+    startup: 3,
+    active: 75,
+    recovery: 6,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '發射超高速幾何稜鏡光束，碰觸邊界擂台與地面時自動折射反彈！',
+    counterGuide: '注意光束彈射角度，在反彈路徑前提前開啟防護罩或起跳騰空。',
+    icon: 'fa-solid fa-bolt-lightning',
+    color: '#a855f7'
+  },
+  {
+    id: 'SK-13',
+    name: '天頂軌道打擊',
+    category: 'ranged',
+    type: 'orbital_strike',
+    typeName: '軌道重砲 / 遠程武器',
+    cd: 2.0,
+    damage: 175,
+    startup: 8,
+    active: 18,
+    recovery: 8,
+    guardType: 'stand_only', // 天頂直擊中段判定，破蹲防！
+    chipRatio: 0.5,
+    knockdown: true,
+    description: '呼叫衛星軌道炮，鎖定對手座標引導巨型離子天雷垂直轟擊！下蹲防禦無效！',
+    counterGuide: '中段攻擊不可蹲防！看見腳底出現鎖定紅圈時需站立格擋或迅速向前翻滾離開。',
+    icon: 'fa-solid fa-satellite-dish',
+    color: '#ffd700'
+  },
+  {
+    id: 'SK-14',
+    name: '虛空引力黑洞球',
+    category: 'ranged',
+    type: 'gravity_vortex',
+    typeName: '黑洞力場 / 遠程武器',
+    cd: 2.2,
+    damage: 125,
+    startup: 5,
+    active: 90,
+    recovery: 8,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '射出緩慢推進的黑洞引力球，強行將途經的對手牽引吸入並造成持續多段打擊！',
+    counterGuide: '引力球移動緩慢，不可在前方後退，應立即起跳翻越或施展瞬移穿越。',
+    icon: 'fa-solid fa-circle-notch',
+    color: '#06b6d4'
+  },
+  {
+    id: 'SK-15',
+    name: '高斯狙擊穿甲重槍',
+    category: 'ranged',
+    type: 'sniper_railgun',
+    typeName: '極速狙擊 / 遠程武器',
+    cd: 1.1,
+    damage: 165,
+    startup: 3,
+    active: 45,
+    recovery: 7,
+    guardType: 'all',
+    chipRatio: 0.5,
+    knockdown: true,
+    description: '高精準超音速電磁狙擊槍！瞬發射出穿甲電磁光束，具備極致飛行速度與重度震屏打擊！',
+    counterGuide: '子彈飛行速度極快難以目押，需在中遠距離保持防備姿態或進行高空起跳牽制。',
+    icon: 'fa-solid fa-crosshairs',
+    color: '#38bdf8'
+  },
+  {
+    id: 'SK-16',
+    name: '擴散式電漿霰彈槍',
+    category: 'ranged',
+    type: 'plasma_shotgun',
+    typeName: '扇形霰彈 / 遠程武器',
+    cd: 1.3,
+    damage: 175,
+    startup: 4,
+    active: 50,
+    recovery: 8,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '向前扇形齊射 5 枚高能電漿霰彈，近中距離覆蓋整個前方空間，全彈命中爆發驚人！',
+    counterGuide: '距離越近傷害越高，拉開中遠距離即可利用散彈空隙起跳反制。',
+    icon: 'fa-solid fa-burst',
+    color: '#f43f5e'
+  },
+  {
+    id: 'SK-17',
+    name: '脈衝電磁浮游砲',
+    category: 'ranged',
+    type: 'drone_funnel',
+    typeName: '自動浮游 / 遠程武器',
+    cd: 1.8,
+    damage: 145,
+    startup: 3,
+    active: 85,
+    recovery: 6,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '召喚 2 架高科技浮游無人僚機環繞隨行，自動向對手發射連續高頻脈衝激光！',
+    counterGuide: '浮游機持續射擊，切忌盲目搶攻，利用防護罩擋下前波激光後迅速近身壓制。',
+    icon: 'fa-solid fa-satellite',
+    color: '#10b981'
+  },
+  {
+    id: 'SK-18',
+    name: '極凍冰霜穿透箭',
+    category: 'ranged',
+    type: 'cryo_arrow',
+    typeName: '減速冰箭 / 遠程武器',
+    cd: 1.4,
+    damage: 135,
+    startup: 4,
+    active: 65,
+    recovery: 6,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '凝聚絕對零度液氮冰箭射出，命中對手時附加「寒霜減速」狀態（移動速度降低 45%）！',
+    counterGuide: '若被命中移動速度將大幅下降，需利用下蹲防禦化解或起跳拉開身位等待寒霜褪去。',
+    icon: 'fa-solid fa-snowflake',
+    color: '#67e8f9'
+  },
+  {
+    id: 'SK-19',
+    name: '灼熱燃燒榴彈槍',
+    category: 'ranged',
+    type: 'incendiary_grenade',
+    typeName: '拋物榴彈 / 遠程武器',
+    cd: 1.6,
+    damage: 150,
+    startup: 5,
+    active: 80,
+    recovery: 8,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '拋物線拋射重型燃燒榴彈，觸地或平台引爆生成一片烈焰火海，造成持續灼燒傷害！',
+    counterGuide: '燃燒火海留存於地面數秒，不可踩入火海，應跳上浮空平台或越過火區作戰。',
+    icon: 'fa-solid fa-fire-flame-curved',
+    color: '#ff5500'
+  },
+  {
+    id: 'SK-20',
+    name: '迴旋雷霆光刃鏢',
+    category: 'ranged',
+    type: 'boomerang_blade',
+    typeName: '迴旋飛鏢 / 遠程武器',
+    cd: 1.2,
+    damage: 155,
+    startup: 3,
+    active: 70,
+    recovery: 6,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '擲出高頻旋轉之電光飛刃，向前穿透打擊後折返飛回，造成去程與回程雙重攻擊！',
+    counterGuide: '飛鏢具有回旋特性！擋下前擊後不可立即鬆開防禦，需提防背後飛回的折返刃。',
+    icon: 'fa-solid fa-compact-disc',
+    color: '#eab308'
+  },
+
+  // ─── 核心近戰武裝與體術 (Melee & Martial Skills) ───
+  {
     id: 'SK-02',
     name: '升龍衝天擊',
+    category: 'melee',
     type: 'anti_air',
-    typeName: '對空突進',
+    typeName: '對空突進 / 近戰武技',
     cd: 1.2, // 快速冷卻
     damage: 160,
     startup: 3,
@@ -43,8 +249,9 @@ export const SKILLS = [
   {
     id: 'SK-03',
     name: '音速滑踢',
+    category: 'melee',
     type: 'low',
-    typeName: '下段突進',
+    typeName: '下段突進 / 近戰武技',
     cd: 1.0, // 快速冷卻
     damage: 130,
     startup: 4,
@@ -61,8 +268,9 @@ export const SKILLS = [
   {
     id: 'SK-04',
     name: '躍空震地砸',
+    category: 'melee',
     type: 'overhead',
-    typeName: '中段破防',
+    typeName: '中段破防 / 近戰武技',
     cd: 1.3, // 快速冷卻
     damage: 170,
     startup: 8,
@@ -79,8 +287,9 @@ export const SKILLS = [
   {
     id: 'SK-05',
     name: '幻影反擊壁',
+    category: 'melee',
     type: 'parry',
-    typeName: '架招反制',
+    typeName: '架招反制 / 戰術武裝',
     cd: 1.5, // 快速冷卻
     damage: 190,
     startup: 1,
@@ -96,8 +305,9 @@ export const SKILLS = [
   {
     id: 'SK-06',
     name: '虛空折躍斬',
+    category: 'melee',
     type: 'teleport',
-    typeName: '位移奇襲',
+    typeName: '位移奇襲 / 戰術武裝',
     cd: 1.8, // 快速冷卻
     damage: 150,
     startup: 5,
@@ -113,8 +323,9 @@ export const SKILLS = [
   {
     id: 'SK-07',
     name: '百裂連擊衝',
+    category: 'melee',
     type: 'rush',
-    typeName: '高段壓制',
+    typeName: '高段壓制 / 近戰武技',
     cd: 1.2, // 快速冷卻
     damage: 180,
     startup: 4,
@@ -130,8 +341,9 @@ export const SKILLS = [
   {
     id: 'SK-08',
     name: '磁暴重摔投',
+    category: 'melee',
     type: 'command_grab',
-    typeName: '指令摔技',
+    typeName: '指令摔技 / 近戰武裝',
     cd: 1.6, // 快速冷卻
     damage: 210,
     startup: 4,
@@ -149,8 +361,9 @@ export const SKILLS = [
   {
     id: 'SK-09',
     name: '奈米震波罩',
+    category: 'melee',
     type: 'radial_blast',
-    typeName: '擊退防護',
+    typeName: '擊退防護 / 戰術武裝',
     cd: 1.8, // 快速冷卻
     damage: 100,
     startup: 3,
@@ -163,97 +376,10 @@ export const SKILLS = [
     counterGuide: '傷害較低但擊退距離極遠，避免貼身貪刀，保持中距離拉扯。',
     icon: 'fa-solid fa-atom',
     color: '#14b8a6'
-  },
-  {
-    id: 'SK-10',
-    name: '超載終結砲',
-    type: 'ultimate_beam',
-    typeName: '終極巨砲',
-    cd: 2.5, // 快速冷卻
-    damage: 260,
-    startup: 10,
-    active: 16,
-    recovery: 12,
-    guardType: 'all',
-    chipRatio: 0.5,
-    knockdown: true,
-    description: '胸部反應爐超載聚能，射出貫穿全螢幕之離子巨砲，具備毀滅級打擊力。',
-    counterGuide: '前搖蓄能明顯，看準光芒及時起跳越過或使用折躍斬奇襲。',
-    icon: 'fa-solid fa-sun',
-    color: '#f97316'
-  },
-  {
-    id: 'SK-11',
-    name: '追蹤微型飛彈群',
-    type: 'homing_missiles',
-    typeName: '導引追蹤',
-    cd: 1.4,
-    damage: 135,
-    startup: 4,
-    active: 70,
-    recovery: 6,
-    guardType: 'all',
-    chipRatio: 0.5,
-    description: '連續發射 3 枚量子導引微型飛彈，在空中劃出弧線追蹤鎖定對手！',
-    counterGuide: '微導彈飛行軌跡可被近身攻擊打消，或利用起跳與平台走位讓飛彈撞地引爆。',
-    icon: 'fa-solid fa-rocket',
-    color: '#ec4899'
-  },
-  {
-    id: 'SK-12',
-    name: '折射稜鏡激光',
-    type: 'bouncing_laser',
-    typeName: '反彈彈道',
-    cd: 1.2,
-    damage: 140,
-    startup: 3,
-    active: 75,
-    recovery: 6,
-    guardType: 'all',
-    chipRatio: 0.5,
-    description: '發射超高速幾何稜鏡光束，碰觸邊界擂台與地面時自動折射反彈！',
-    counterGuide: '注意光束彈射角度，在反彈路徑前提前開啟防護罩或起跳騰空。',
-    icon: 'fa-solid fa-bolt-lightning',
-    color: '#a855f7'
-  },
-  {
-    id: 'SK-13',
-    name: '天頂軌道打擊',
-    type: 'orbital_strike',
-    typeName: '天頂中段',
-    cd: 2.0,
-    damage: 175,
-    startup: 8,
-    active: 18,
-    recovery: 8,
-    guardType: 'stand_only', // 天頂直擊中段判定，破蹲防！
-    chipRatio: 0.5,
-    knockdown: true,
-    description: '呼叫衛星軌道炮，鎖定對手座標引導巨型離子天雷垂直轟擊！下蹲防禦無效！',
-    counterGuide: '中段攻擊不可蹲防！看見腳底出現鎖定紅圈時需站立格擋或迅速向前翻滾離開。',
-    icon: 'fa-solid fa-satellite-dish',
-    color: '#ffd700'
-  },
-  {
-    id: 'SK-14',
-    name: '虛空引力黑洞球',
-    type: 'gravity_vortex',
-    typeName: '引力控場',
-    cd: 2.2,
-    damage: 125,
-    startup: 5,
-    active: 90,
-    recovery: 8,
-    guardType: 'all',
-    chipRatio: 0.5,
-    description: '射出緩慢推進的黑洞引力球，強行將途經的對手牽引吸入並造成持續多段打擊！',
-    counterGuide: '引力球移動緩慢，不可在前方後退，應立即起跳翻越或施展瞬移穿越。',
-    icon: 'fa-solid fa-circle-notch',
-    color: '#06b6d4'
   }
 ];
 
-// 四大主流經典戰術流派快捷配置
+// 六大經典戰術流派快捷配置
 export const ARCHETYPES = [
   {
     id: 'wave_dp',
@@ -261,6 +387,27 @@ export const ARCHETYPES = [
     desc: '遠程發波逼跳，升龍空中截擊，震波化解近身',
     skills: ['SK-01', 'SK-02', 'SK-09'],
     badge: '經典牽制'
+  },
+  {
+    id: 'ranged_artillery',
+    name: '全域重砲火力流',
+    desc: '追蹤飛彈鎖定、折射激光壓制、天頂軌道重砲轟頂，全屏火力覆蓋',
+    skills: ['SK-11', 'SK-12', 'SK-13'],
+    badge: '極致射手'
+  },
+  {
+    id: 'sniper_freeze',
+    name: '狙擊冰霜牽制流',
+    desc: '高斯超音速狙擊槍穿透、極凍冰箭減速控場、迴旋光刃去程回程雙打擊',
+    skills: ['SK-15', 'SK-18', 'SK-20'],
+    badge: '穿甲狙殺'
+  },
+  {
+    id: 'shotgun_funnel',
+    name: '散彈浮游火力流',
+    desc: '擴散霰彈正面封鎖、浮游機自動連續雷射掩護、燃燒榴彈封鎖地面',
+    skills: ['SK-16', 'SK-17', 'SK-19'],
+    badge: '密集群火'
   },
   {
     id: 'low_rush',
@@ -275,12 +422,5 @@ export const ARCHETYPES = [
     desc: '瞬移穿透遠程波導，架招反制近戰，指令摔強制破防',
     skills: ['SK-05', 'SK-06', 'SK-08'],
     badge: '靈活反擊'
-  },
-  {
-    id: 'ranged_artillery',
-    name: '全域重砲火力流',
-    desc: '追蹤飛彈鎖定、折射激光壓制、天頂軌道重砲轟頂，全屏火力覆蓋',
-    skills: ['SK-11', 'SK-12', 'SK-13'],
-    badge: '極致射手'
   }
 ];

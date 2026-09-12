@@ -119,6 +119,7 @@ export class CombatEngine {
       burstMeter: 500, // 滿 500 點可施展
       burstMax: 500,
       burstAvailable: true,
+      frostTimer: 0, // 冰凍減速計時器
 
       // 3 大自選技能
       skills: skillList,
@@ -272,6 +273,7 @@ export class CombatEngine {
       }
     }
     if (char.rangedCooldown > 0) char.rangedCooldown--;
+    if (char.frostTimer > 0) char.frostTimer--;
 
     // 連段重置計時
     if (char.comboResetTimer > 0) {
@@ -556,14 +558,15 @@ export class CombatEngine {
 
     // 6. 橫向移動 (移動速度大幅加速，靈敏度全面調高，流暢無卡頓)
     if (Math.abs(moveX) > 0.15) {
+      const speedMod = (char.frostTimer && char.frostTimer > 0) ? 0.55 : 1.0;
       const isMovingFwd = (char.facing === 1 && moveX > 0) || (char.facing === -1 && moveX < 0);
       if (isMovingFwd) {
-        char.x += char.facing * 9.6; // 靈敏前進走位 (調高靈敏度)
+        char.x += char.facing * 9.6 * speedMod; // 靈敏前進走位 (調高靈敏度，若中冰霜減速則乘以 0.55)
         char.state = 'walk_fwd';
         char.isGuarding = false;
       } else {
         // 後撤走位：純粹向後退走位，不召喚防護罩 (由專屬防護罩按鍵召喚)
-        char.x -= char.facing * 8.2; // 靈敏後撤走位 (調高靈敏度)
+        char.x -= char.facing * 8.2 * speedMod; // 靈敏後撤走位 (調高靈敏度，若中冰霜減速則乘以 0.55)
         char.state = 'walk_back';
         char.isGuarding = false;
       }
@@ -998,6 +1001,32 @@ export class CombatEngine {
       case 'SK-14': // 虛空引力黑洞球
         soundEngine.playHit('burst');
         break;
+
+      case 'SK-15': // 高斯狙擊穿甲重槍
+        soundEngine.playHit('laser');
+        this.triggerScreenShake(4.5);
+        break;
+
+      case 'SK-16': // 擴散式電漿霰彈槍
+        soundEngine.playHit('laser');
+        this.triggerScreenShake(3.5);
+        break;
+
+      case 'SK-17': // 脈衝電磁浮游砲
+        soundEngine.playHit('burst');
+        break;
+
+      case 'SK-18': // 極凍冰霜穿透箭
+        soundEngine.playHit('laser');
+        break;
+
+      case 'SK-19': // 灼熱燃燒榴彈槍
+        soundEngine.playHit('bomb_drop');
+        break;
+
+      case 'SK-20': // 迴旋雷霆光刃鏢
+        soundEngine.playHit('dp');
+        break;
     }
   }
 
@@ -1144,6 +1173,159 @@ export class CombatEngine {
         guardType: 'all',
         skin: char.skin,
         life: 110
+      });
+      return;
+    }
+
+    // 高斯狙擊穿甲重槍 (SK-15)
+    if (action.id === 'SK-15') {
+      action.hitChecked = true;
+      soundEngine.playHit('laser');
+      this.triggerScreenShake(4.5);
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'sniper',
+        name: '高斯狙擊穿甲彈',
+        x: char.x + char.facing * 44,
+        y: char.y - 72,
+        vx: char.facing * 34,
+        vy: 0,
+        radius: 13,
+        damage: action.damage,
+        guardType: 'all',
+        knockdown: true,
+        skin: char.skin,
+        life: 45
+      });
+      return;
+    }
+
+    // 擴散式電漿霰彈槍 (SK-16)
+    if (action.id === 'SK-16') {
+      action.hitChecked = true;
+      soundEngine.playHit('laser');
+      this.triggerScreenShake(3.5);
+      const angles = [-0.22, -0.11, 0, 0.11, 0.22];
+      for (let ang of angles) {
+        this.projectiles.push({
+          ownerId: char.id,
+          type: 'shotgun',
+          name: '電漿霰彈',
+          x: char.x + char.facing * 42,
+          y: char.y - 70,
+          vx: Math.cos(ang) * 15 * char.facing,
+          vy: Math.sin(ang) * 15,
+          radius: 7,
+          damage: 35,
+          guardType: 'all',
+          skin: char.skin,
+          life: 40
+        });
+      }
+      return;
+    }
+
+    // 脈衝電磁浮游砲 (SK-17)
+    if (action.id === 'SK-17') {
+      action.hitChecked = true;
+      soundEngine.playHit('burst');
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'funnel',
+        name: '電磁浮游僚機-Alpha',
+        droneIndex: 0,
+        offsetX: -char.facing * 28,
+        offsetY: -105,
+        fireTimer: 16,
+        shotsLeft: 3,
+        x: char.x - char.facing * 28,
+        y: char.y - 105,
+        radius: 10,
+        skin: char.skin,
+        life: 140
+      });
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'funnel',
+        name: '電磁浮游僚機-Beta',
+        droneIndex: 1,
+        offsetX: -char.facing * 44,
+        offsetY: -75,
+        fireTimer: 28,
+        shotsLeft: 3,
+        x: char.x - char.facing * 44,
+        y: char.y - 75,
+        radius: 10,
+        skin: char.skin,
+        life: 140
+      });
+      return;
+    }
+
+    // 極凍冰霜穿透箭 (SK-18)
+    if (action.id === 'SK-18') {
+      action.hitChecked = true;
+      soundEngine.playHit('laser');
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'cryo_arrow',
+        name: '極凍冰霜穿透箭',
+        x: char.x + char.facing * 42,
+        y: char.y - 72,
+        vx: char.facing * 18,
+        vy: 0,
+        radius: 10,
+        damage: action.damage,
+        guardType: 'all',
+        skin: char.skin,
+        life: 70
+      });
+      return;
+    }
+
+    // 灼熱燃燒榴彈槍 (SK-19)
+    if (action.id === 'SK-19') {
+      action.hitChecked = true;
+      soundEngine.playHit('bomb_drop');
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'grenade',
+        name: '燃燒榴彈',
+        x: char.x + char.facing * 40,
+        y: char.y - 72,
+        vx: char.facing * 10.5,
+        vy: -8.5,
+        radius: 9,
+        damage: action.damage,
+        guardType: 'all',
+        skin: char.skin,
+        life: 80
+      });
+      return;
+    }
+
+    // 迴旋雷霆光刃鏢 (SK-20)
+    if (action.id === 'SK-20') {
+      action.hitChecked = true;
+      soundEngine.playHit('dp');
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'boomerang',
+        name: '迴旋雷霆光刃鏢',
+        ownerChar: char,
+        x: char.x + char.facing * 40,
+        y: char.y - 70,
+        vx: char.facing * 14,
+        vy: 0,
+        outwardFrames: 32,
+        returnTarget: char,
+        hasHitForward: false,
+        hasHitReturn: false,
+        radius: 14,
+        damage: 78,
+        guardType: 'all',
+        skin: char.skin,
+        life: 85
       });
       return;
     }
@@ -1471,6 +1653,7 @@ export class CombatEngine {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
       const target = p.ownerId === 1 ? this.p2 : this.p1;
+      const owner = p.ownerId === 1 ? this.p1 : this.p2;
 
       // 1. 特殊彈道物理運算
       if (p.type === 'homing' && target) {
@@ -1509,14 +1692,117 @@ export class CombatEngine {
         if (dist < 220) {
           target.vx += Math.sign(p.x - target.x) * 1.6;
         }
+      } else if (p.type === 'funnel') {
+        // 脈衝浮游砲無人機懸浮跟隨與自動開火
+        if (owner) {
+          const targetX = owner.x - owner.facing * 25 + (p.droneIndex === 0 ? -16 : 16);
+          const targetY = owner.y + (p.offsetY || -70) + Math.sin((p.life || 0) * 0.12) * 6;
+          p.x += (targetX - p.x) * 0.22;
+          p.y += (targetY - p.y) * 0.22;
+          p.fireTimer = (p.fireTimer || 18) - 1;
+          if (p.fireTimer <= 0 && (p.shotsLeft || 0) > 0) {
+            p.shotsLeft--;
+            p.fireTimer = 34;
+            soundEngine.playHit('laser');
+            this.triggerScreenShake(2);
+            this.projectiles.push({
+              ownerId: p.ownerId,
+              type: 'funnel_laser',
+              name: '浮游砲聚焦脈衝光',
+              x: p.x + owner.facing * 18,
+              y: p.y,
+              vx: owner.facing * 20,
+              vy: 0,
+              radius: 6,
+              damage: 48,
+              guardType: 'all',
+              skin: p.skin,
+              life: 38
+            });
+          }
+        }
+      } else if (p.type === 'grenade') {
+        p.vy = (p.vy || 0) + 0.46; // 拋物線重力
+      } else if (p.type === 'boomerang') {
+        p.outwardFrames = (p.outwardFrames !== undefined ? p.outwardFrames : 30) - 1;
+        if (p.outwardFrames > 0) {
+          p.vx *= 0.93;
+        } else if (owner) {
+          const dx = owner.x - p.x;
+          const dy = (owner.y - 50) - p.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 32 && p.outwardFrames < -10) {
+            // 折返回到主人手中回收
+            this.projectiles.splice(i, 1);
+            continue;
+          }
+          p.vx += Math.sign(dx) * 1.6;
+          p.vy = (p.vy || 0) + Math.sign(dy) * 0.9;
+          p.vx = Math.max(-18, Math.min(18, p.vx));
+          p.vy = Math.max(-11, Math.min(11, p.vy));
+        }
+      } else if (p.type === 'napalm_pool') {
+        p.tickCooldown = (p.tickCooldown || 15) - 1;
+        if (p.tickCooldown <= 0) {
+          p.tickCooldown = 16;
+          if (target && Math.abs(target.x - p.x) < (p.radius || 48) && Math.abs(target.y - p.y) < 35 && target.invincibleTimer <= 0) {
+            this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+              name: '燃燒火海灼傷',
+              damage: p.damage || 18,
+              guardType: 'low',
+              chipRatio: 0.5
+            });
+          }
+        }
       }
 
-      // 位置推進
-      p.x += p.vx;
-      if (p.vy) p.y += p.vy;
+      // 位置推進 (浮游砲與地火池維持自適應座標)
+      if (p.type !== 'funnel' && p.type !== 'napalm_pool') {
+        p.x += p.vx;
+        if (p.vy) p.y += p.vy;
+      }
       p.life--;
 
-      // 2. 空對地爆彈觸地 / 觸平台引爆判定
+      // 2. 榴彈或空對地爆彈觸地 / 觸平台引爆判定
+      if (p.type === 'grenade' && (p.y >= this.floorY - 6 || (p.vy > 0 && this._checkPlatformHit(p)))) {
+        soundEngine.playHit('bomb_drop');
+        this.triggerScreenShake(5);
+        this.shockwaves.push({
+          x: p.x,
+          y: p.y,
+          radius: 12,
+          maxRadius: 75,
+          color: '#ff4500',
+          duration: 18
+        });
+        // 落地引爆為燃燒火海池
+        this.projectiles.push({
+          ownerId: p.ownerId,
+          type: 'napalm_pool',
+          name: '燃燒火海',
+          x: p.x,
+          y: p.y,
+          vx: 0,
+          vy: 0,
+          radius: 52,
+          damage: 18,
+          guardType: 'low',
+          skin: p.skin,
+          life: 150,
+          tickCooldown: 10
+        });
+        if (target && Math.abs(p.x - target.x) < 55 && Math.abs(p.y - target.y) < 60 && target.invincibleTimer <= 0) {
+          this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+            name: '燃燒榴彈直擊',
+            damage: p.damage,
+            guardType: 'stand_only',
+            knockdown: true
+          });
+        }
+        this.projectiles.splice(i, 1);
+        continue;
+      }
+
       if (p.type === 'bomb' && (p.y >= this.floorY - 10 || (p.vy > 0 && this._checkPlatformHit(p)))) {
         soundEngine.playHit('bomb_drop');
         this.triggerScreenShake(5);
@@ -1540,11 +1826,19 @@ export class CombatEngine {
         continue;
       }
 
+      // 浮游砲與地火池不受一般撞擊立即銷毀，只在壽命結束時移除
+      if (p.type === 'funnel' || p.type === 'napalm_pool') {
+        if (p.life <= 0) {
+          this.projectiles.splice(i, 1);
+        }
+        continue;
+      }
+
       // 3. 檢查碰撞命中對手
       const dist = Math.abs(p.x - target.x);
       const dy = Math.abs(p.y - (target.y - 45));
-      const hitRadius = p.type === 'vortex' ? 42 : (p.type === 'heavy' ? 38 : 34);
-      const hitHeight = p.type === 'ground_wave' ? 42 : 62;
+      const hitRadius = p.type === 'vortex' ? 42 : (p.type === 'heavy' ? 38 : (p.type === 'sniper' ? 42 : 34));
+      const hitHeight = p.type === 'ground_wave' ? 42 : 64;
 
       if (dist < hitRadius && dy < hitHeight && target && target.invincibleTimer <= 0) {
         if (p.type === 'vortex') {
@@ -1558,6 +1852,62 @@ export class CombatEngine {
               guardType: p.guardType || 'all',
               chipRatio: 0.5
             });
+          }
+        } else if (p.type === 'boomerang') {
+          if (p.outwardFrames > 0 && !p.hasHitForward) {
+            p.hasHitForward = true;
+            soundEngine.playHit('laser');
+            this.triggerScreenShake(3);
+            this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+              name: '迴旋雷霆光刃鏢 (前向)',
+              damage: p.damage,
+              guardType: 'all',
+              chipRatio: 0.5
+            });
+            p.outwardFrames = 0; // 命中後即刻準備折返
+          } else if (p.outwardFrames <= 0 && !p.hasHitReturn) {
+            p.hasHitReturn = true;
+            soundEngine.playHit('laser');
+            this.triggerScreenShake(3);
+            this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+              name: '迴旋雷霆光刃鏢 (折返背擊)',
+              damage: p.damage,
+              guardType: 'all',
+              chipRatio: 0.5
+            });
+          }
+        } else if (p.type === 'cryo_arrow') {
+          target.frostTimer = 130;
+          this.floatingTexts.push({
+            text: '❄️ 極凍減速 45%',
+            x: target.x,
+            y: target.y - 85,
+            color: '#00e5ff',
+            life: 45
+          });
+          soundEngine.playHit('laser_bounce');
+          this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+            name: p.name || '極凍冰霜穿透箭',
+            damage: p.damage,
+            guardType: 'all',
+            chipRatio: 0.5
+          });
+          this.projectiles.splice(i, 1);
+          continue;
+        } else if (p.type === 'sniper') {
+          this.triggerScreenShake(7);
+          soundEngine.playHit('heavy_punch');
+          this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+            name: p.name || '高斯狙擊穿甲重槍',
+            damage: p.damage,
+            guardType: 'all',
+            chipRatio: 0.6,
+            knockdown: true
+          });
+          p.pierce = (p.pierce || 1) - 1;
+          if (p.pierce <= 0) {
+            this.projectiles.splice(i, 1);
+            continue;
           }
         } else {
           this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
