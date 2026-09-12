@@ -634,7 +634,7 @@ export class SaveSystem {
       return { success: false, reason: "已擁有此造型" };
     }
     if (this.currentUser.credits < price) {
-      return { success: false, reason: "能量幣餘額不足（可領取上方每日戰備補給獲得 +1,500 幣）" };
+      return { success: false, reason: "能量幣餘額不足（可隨時點擊上方戰備補給無限制領取 +1,500 幣）" };
     }
     this.currentUser.credits -= price;
     if (!Array.isArray(this.currentUser.purchasedSkins)) {

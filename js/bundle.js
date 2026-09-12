@@ -1823,7 +1823,7 @@
         return { success: false, reason: "\u5DF2\u64C1\u6709\u6B64\u9020\u578B" };
       }
       if (this.currentUser.credits < price) {
-        return { success: false, reason: "\u80FD\u91CF\u5E63\u9918\u984D\u4E0D\u8DB3\uFF08\u53EF\u9818\u53D6\u4E0A\u65B9\u6BCF\u65E5\u6230\u5099\u88DC\u7D66\u7372\u5F97 +1,500 \u5E63\uFF09" };
+        return { success: false, reason: "\u80FD\u91CF\u5E63\u9918\u984D\u4E0D\u8DB3\uFF08\u53EF\u96A8\u6642\u9EDE\u64CA\u4E0A\u65B9\u6230\u5099\u88DC\u7D66\u7121\u9650\u5236\u9818\u53D6 +1,500 \u5E63\uFF09" };
       }
       this.currentUser.credits -= price;
       if (!Array.isArray(this.currentUser.purchasedSkins)) {
@@ -8382,7 +8382,6 @@
   var AiController = class {
     constructor(difficulty = "normal") {
       this.difficulty = difficulty;
-      this.reactionDelay = 20;
       this.currentDelay = 0;
       this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
     }
@@ -8397,11 +8396,17 @@
       if (combatEngine2.isTraining) {
         return this._decideTrainingDummy(aiChar, playerChar, combatEngine2.trainingSettings);
       }
-      let targetDelay = 20;
-      if (this.difficulty === "easy") targetDelay = 40;
-      else if (this.difficulty === "normal") targetDelay = 20;
-      else if (this.difficulty === "hard") targetDelay = 9;
-      else if (this.difficulty === "nightmare") targetDelay = 3;
+      if ((!aiChar.isGrounded || aiChar.state === "jump") && !aiChar.currentAction) {
+        return this._decideAirborneCombat(aiChar, playerChar, combatEngine2);
+      }
+      if (!aiChar.isGrounded && this.bufferedDecision.y < 0) {
+        this.bufferedDecision.y = 0;
+      }
+      let targetDelay = 15;
+      if (this.difficulty === "easy") targetDelay = 24;
+      else if (this.difficulty === "normal") targetDelay = 14;
+      else if (this.difficulty === "hard") targetDelay = 6;
+      else if (this.difficulty === "nightmare") targetDelay = 2;
       this.currentDelay++;
       if (this.currentDelay >= targetDelay) {
         this.currentDelay = 0;
@@ -8409,119 +8414,402 @@
       }
       return this.bufferedDecision;
     }
+    /**
+     * 空中戰鬥決策 (Airborne Combat Execution)
+     * 在躍空過程中根據與玩家之相對距離，執行中段破防躍空飛踢或快速刺拳
+     */
+    _decideAirborneCombat(ai, player, engine) {
+      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      const dist = Math.abs(ai.x - player.x);
+      const dirToPlayer = ai.x < player.x ? 1 : -1;
+      input.x = dirToPlayer;
+      if (dist < 190 && !ai.currentAction) {
+        let attackChance = 0.5;
+        if (this.difficulty === "nightmare") attackChance = 0.95;
+        else if (this.difficulty === "hard") attackChance = 0.85;
+        else if (this.difficulty === "normal") attackChance = 0.7;
+        else if (this.difficulty === "easy") attackChance = 0.45;
+        if (Math.random() < attackChance) {
+          if (Math.random() < 0.7) {
+            input.kick = true;
+          } else {
+            input.punch = true;
+          }
+        }
+      }
+      return input;
+    }
+    /**
+     * 地面主決策行為樹 (Ground AI Decision Tree)
+     */
     _makeDecision(ai, player, engine) {
       const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       const dist = Math.abs(ai.x - player.x);
       const facingPlayer = (ai.x < player.x ? 1 : -1) === ai.facing;
+      const dirToPlayer = ai.x < player.x ? 1 : -1;
       const playerInAir = !player.isGrounded;
-      const playerAttacking = player.state === "light_punch" || player.state === "heavy_kick" || player.state === "skill";
+      const playerAttacking = player.state === "light_punch" || player.state === "heavy_kick" || player.state === "crouch_punch" || player.state === "crouch_kick" || player.state === "ranged_attack" || player.state === "skill" || player.state === "jump" && !!player.currentAction;
+      const isPlayerLowAttack = player.state === "crouch_kick" || player.currentAction && player.currentAction.guardType === "crouch_only";
       const playerGuarding = player.isGuarding;
+      const incomingProjectile = engine && engine.projectiles && engine.projectiles.find((p) => {
+        if (p.owner === player) {
+          const pTowardsAI = p.vx > 0 && p.x < ai.x || p.vx < 0 && p.x > ai.x || Math.abs(p.vx) < 1;
+          const pDist = Math.abs(p.x - ai.x);
+          return pTowardsAI && pDist < 280;
+        }
+        return false;
+      });
       if (this.difficulty === "nightmare") {
         if (ai.state === "hit_stun" && ai.burstMeter >= ai.burstMax && ai.burstAvailable) {
           input.burst = true;
           return input;
         }
-        if (playerInAir && dist < 160) {
+        if (playerInAir && dist < 170) {
           if (ai.cooldowns[1] <= 0) {
             input.skill2 = true;
             return input;
           } else {
-            input.kick = true;
+            if (Math.random() < 0.6) {
+              input.y = -1;
+              input.x = dirToPlayer;
+              input.kick = true;
+            } else {
+              input.kick = true;
+            }
             return input;
           }
         }
-        if (playerAttacking && dist < 120) {
-          if (ai.cooldowns[0] <= 0 && ai.skills[0].id === "SK-05") {
-            input.skill1 = true;
-            return input;
-          }
-          if (player.currentAction && player.currentAction.guardType === "crouch_only") {
-            input.guard = true;
-            input.y = 1;
+        if (incomingProjectile) {
+          if (Math.random() < 0.5) {
+            input.y = -1;
+            input.x = dirToPlayer;
             return input;
           } else {
             input.guard = true;
             return input;
           }
         }
-        if (playerGuarding && dist < 100) {
-          if (ai.cooldowns[2] <= 0 && ai.skills[2].id === "SK-08") {
-            input.skill3 = true;
-            return input;
-          } else if (ai.cooldowns[0] <= 0 && ai.skills[0].id === "SK-03") {
+        if (playerAttacking && dist < 140) {
+          if (ai.cooldowns[0] <= 0 && ai.skills?.[0]?.id === "SK-05") {
             input.skill1 = true;
             return input;
+          }
+          input.guard = true;
+          if (isPlayerLowAttack) {
+            input.y = 1;
+          }
+          return input;
+        }
+        if (playerGuarding && dist < 120) {
+          if (ai.cooldowns[2] <= 0 && ai.skills?.[2]?.id === "SK-08") {
+            input.skill3 = true;
+            return input;
+          } else if (ai.cooldowns[0] <= 0 && ai.skills?.[0]?.id === "SK-03") {
+            input.skill1 = true;
+            return input;
+          } else {
+            if (Math.random() < 0.4) {
+              input.y = -1;
+              input.x = dirToPlayer;
+              return input;
+            } else {
+              input.y = 1;
+              input.kick = true;
+              return input;
+            }
           }
         }
         if (dist > 220) {
-          if (ai.cooldowns[0] <= 0) {
+          const r = Math.random();
+          if (r < 0.35) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            return input;
+          } else if (r < 0.65 && ai.cooldowns[0] <= 0) {
             input.skill1 = true;
             return input;
+          } else {
+            input.x = dirToPlayer;
+            return input;
           }
-          input.x = ai.facing;
+        }
+        if (dist >= 120) {
+          const r = Math.random();
+          if (r < 0.35) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            return input;
+          } else if (r < 0.65) {
+            input.x = dirToPlayer;
+            return input;
+          } else if (r < 0.85) {
+            input.x = -dirToPlayer;
+            return input;
+          } else {
+            input.y = -1;
+            input.x = 0;
+            return input;
+          }
+        }
+        const rClose2 = Math.random();
+        if (rClose2 < 0.2) {
+          input.y = -1;
+          input.x = Math.random() < 0.5 ? dirToPlayer : -dirToPlayer;
+          return input;
+        } else if (rClose2 < 0.55) {
+          input.punch = true;
+          return input;
+        } else if (rClose2 < 0.85) {
+          input.kick = true;
+          if (Math.random() < 0.4) input.y = 1;
           return input;
         } else {
-          if (Math.random() < 0.6) input.punch = true;
-          else input.kick = true;
+          input.x = -dirToPlayer;
           return input;
         }
       }
       if (this.difficulty === "hard") {
-        if (playerInAir && dist < 140) {
-          if (ai.cooldowns[1] <= 0) {
+        if (playerInAir && dist < 150) {
+          if (ai.cooldowns[1] <= 0 && Math.random() < 0.75) {
             input.skill2 = true;
             return input;
-          }
-          input.kick = true;
-          return input;
-        }
-        if (playerAttacking && dist < 100) {
-          input.guard = true;
-          return input;
-        }
-        if (dist > 180) {
-          if (ai.cooldowns[0] <= 0 && Math.random() < 0.7) {
-            input.skill1 = true;
+          } else if (Math.random() < 0.6) {
+            input.kick = true;
             return input;
-          }
-          input.x = ai.facing;
-        } else {
-          if (Math.random() < 0.5) input.punch = true;
-          else if (Math.random() < 0.8) input.kick = true;
-          else input.x = ai.facing * -1;
-        }
-        return input;
-      }
-      if (this.difficulty === "normal") {
-        if (dist > 200) {
-          if (ai.cooldowns[0] <= 0 && Math.random() < 0.5) {
-            input.skill1 = true;
           } else {
-            input.x = ai.facing;
-          }
-        } else {
-          if (playerAttacking && Math.random() < 0.5) {
             input.guard = true;
             return input;
-          } else {
-            const r = Math.random();
-            if (r < 0.4) input.punch = true;
-            else if (r < 0.7) input.kick = true;
-            else if (r < 0.85 && ai.cooldowns[1] <= 0) input.skill2 = true;
           }
         }
+        if (incomingProjectile) {
+          if (Math.random() < 0.45) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            return input;
+          } else {
+            input.guard = true;
+            return input;
+          }
+        }
+        if (playerAttacking && dist < 140) {
+          if (Math.random() < 0.85) {
+            input.guard = true;
+            if (isPlayerLowAttack) {
+              input.y = 1;
+            }
+            return input;
+          } else {
+            input.y = -1;
+            input.x = -dirToPlayer;
+            return input;
+          }
+        }
+        if (playerGuarding && dist < 120) {
+          const r = Math.random();
+          if (r < 0.35) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            return input;
+          } else if (r < 0.65) {
+            input.y = 1;
+            input.kick = true;
+            return input;
+          }
+        }
+        if (dist > 200) {
+          const r = Math.random();
+          if (r < 0.3) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            return input;
+          } else if (r < 0.55 && ai.cooldowns[0] <= 0) {
+            input.skill1 = true;
+            return input;
+          } else {
+            input.x = dirToPlayer;
+            return input;
+          }
+        }
+        if (dist >= 120) {
+          const r = Math.random();
+          if (r < 0.3) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            return input;
+          } else if (r < 0.65) {
+            input.x = dirToPlayer;
+            return input;
+          } else if (r < 0.9) {
+            input.x = -dirToPlayer;
+            return input;
+          } else {
+            input.y = -1;
+            input.x = 0;
+            return input;
+          }
+        }
+        const rClose2 = Math.random();
+        if (rClose2 < 0.18) {
+          input.y = -1;
+          input.x = Math.random() < 0.6 ? -dirToPlayer : dirToPlayer;
+          return input;
+        } else if (rClose2 < 0.55) {
+          input.punch = true;
+          return input;
+        } else if (rClose2 < 0.85) {
+          input.kick = true;
+          return input;
+        } else {
+          input.x = -dirToPlayer;
+          return input;
+        }
+      }
+      if (this.difficulty === "normal") {
+        if (playerInAir && dist < 140) {
+          const r = Math.random();
+          if (r < 0.4) {
+            input.kick = true;
+            return input;
+          } else if (r < 0.8) {
+            input.guard = true;
+            return input;
+          }
+        }
+        if (incomingProjectile) {
+          if (Math.random() < 0.35) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            return input;
+          } else if (Math.random() < 0.8) {
+            input.guard = true;
+            return input;
+          }
+        }
+        if (playerAttacking && dist < 135) {
+          const r = Math.random();
+          if (r < 0.65) {
+            input.guard = true;
+            if (isPlayerLowAttack && Math.random() < 0.75) {
+              input.y = 1;
+            }
+            return input;
+          } else if (r < 0.8) {
+            input.y = -1;
+            input.x = -dirToPlayer;
+            return input;
+          }
+        }
+        if (dist > 200) {
+          const r = Math.random();
+          if (r < 0.25) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            return input;
+          } else if (r < 0.5 && ai.cooldowns[0] <= 0) {
+            input.skill1 = true;
+            return input;
+          } else {
+            input.x = dirToPlayer;
+            return input;
+          }
+        }
+        if (dist >= 120) {
+          const r = Math.random();
+          if (r < 0.25) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            return input;
+          } else if (r < 0.65) {
+            input.x = dirToPlayer;
+            return input;
+          } else if (r < 0.88) {
+            input.x = -dirToPlayer;
+            return input;
+          } else {
+            input.y = -1;
+            input.x = 0;
+            return input;
+          }
+        }
+        const rClose2 = Math.random();
+        if (rClose2 < 0.15) {
+          input.y = -1;
+          input.x = Math.random() < 0.5 ? -dirToPlayer : dirToPlayer;
+          return input;
+        } else if (rClose2 < 0.5) {
+          input.punch = true;
+          return input;
+        } else if (rClose2 < 0.8) {
+          input.kick = true;
+          return input;
+        } else if (rClose2 < 0.9 && ai.cooldowns[1] <= 0) {
+          input.skill2 = true;
+          return input;
+        } else {
+          input.x = -dirToPlayer;
+          return input;
+        }
+      }
+      if (playerAttacking && dist < 120) {
+        const r = Math.random();
+        if (r < 0.35) {
+          input.guard = true;
+          if (isPlayerLowAttack && Math.random() < 0.5) {
+            input.y = 1;
+          }
+          return input;
+        } else if (r < 0.5) {
+          input.y = -1;
+          input.x = -dirToPlayer;
+          return input;
+        }
+      }
+      if (dist > 180) {
+        const r = Math.random();
+        if (r < 0.18) {
+          input.y = -1;
+          input.x = dirToPlayer;
+          return input;
+        } else {
+          input.x = dirToPlayer * 0.8;
+          return input;
+        }
+      }
+      if (dist >= 100) {
+        const r = Math.random();
+        if (r < 0.18) {
+          input.y = -1;
+          input.x = dirToPlayer;
+          return input;
+        } else if (r < 0.68) {
+          input.x = dirToPlayer * 0.75;
+          return input;
+        } else {
+          input.x = -dirToPlayer * 0.6;
+          return input;
+        }
+      }
+      const rClose = Math.random();
+      if (rClose < 0.15) {
+        input.y = -1;
+        input.x = dirToPlayer;
+        return input;
+      } else if (rClose < 0.45) {
+        input.punch = true;
+        return input;
+      } else if (rClose < 0.7) {
+        input.kick = true;
+        return input;
+      } else if (rClose < 0.85) {
+        input.guard = true;
+        return input;
+      } else {
+        input.x = -dirToPlayer * 0.6;
         return input;
       }
-      if (dist > 120) {
-        input.x = ai.facing * 0.7;
-      } else {
-        if (Math.random() < 0.3) input.punch = true;
-        else if (Math.random() < 0.45) input.kick = true;
-      }
-      return input;
     }
     /**
-     * 自由格鬥訓練營假人行為控制
+     * 自由格鬥訓練營假人行為控制 (Training Dummy Behavior)
      */
     _decideTrainingDummy(dummy, player, settings) {
       const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
@@ -10509,7 +10797,7 @@
             saveSystem._saveCurrent();
             this.updateUserHUD();
             soundEngine.playUI("equip");
-            alert("\u{1F381} \u6BCF\u65E5\u6230\u5099\u88DC\u7D66\u9818\u53D6\u6210\u529F\uFF01\u5DF2\u7372\u5F97 +1,500 \u80FD\u91CF\u5E63\uFF0C\u5FEB\u53BB\u89E3\u9396\u5FC3\u5100\u7684\u6230\u5C07\u5427\uFF01");
+            alert("\u{1F381} \u6230\u5099\u88DC\u7D66\u9818\u53D6\u6210\u529F\uFF01\u5DF2\u7372\u5F97 +1,500 \u80FD\u91CF\u5E63\uFF08\u7121\u6B21\u6578\u9650\u5236\uFF0C\u96A8\u6642\u53EF\u518D\u6B21\u9818\u53D6\uFF09\uFF01\u5FEB\u53BB\u89E3\u9396\u5FC3\u5100\u7684\u6230\u5C07\u5427\uFF01");
             this.renderShopCatalog();
           }
         });

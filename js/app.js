@@ -2214,7 +2214,7 @@ class CyberStrikerApp {
       });
     });
 
-    // 每日戰備補給領取按鈕
+    // 戰備補給領取按鈕（無次數限制隨時可領）
     const claimRewardBtn = document.getElementById('dailyRewardClaimBtn');
     if (claimRewardBtn) {
       claimRewardBtn.addEventListener('click', () => {
@@ -2223,7 +2223,7 @@ class CyberStrikerApp {
           saveSystem._saveCurrent();
           this.updateUserHUD();
           soundEngine.playUI('equip');
-          alert('🎁 每日戰備補給領取成功！已獲得 +1,500 能量幣，快去解鎖心儀的戰將吧！');
+          alert('🎁 戰備補給領取成功！已獲得 +1,500 能量幣（無次數限制，隨時可再次領取）！快去解鎖心儀的戰將吧！');
           this.renderShopCatalog();
         }
       });
