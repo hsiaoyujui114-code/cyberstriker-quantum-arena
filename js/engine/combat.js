@@ -401,17 +401,9 @@ export class CombatEngine {
           }
         }
 
-        // 2. 空中攻擊打擊判定與出招 (Air Punch, Kick & Ranged Blast)
+        // 2. 空中攻擊打擊判定與出招 (Air Punch, Kick)
         if (char.currentAction) {
           this._updateAttackAction(char, opp);
-        } else if (input && input.ranged && char.rangedCooldown <= 0) {
-          char.facing = char.x < opp.x ? 1 : -1;
-          const airMoveY = input.y || 0;
-          if (airMoveY > 0.35) {
-            this._executeAirBombAttack(char, opp);
-          } else {
-            this._executeAirRangedAttack(char, opp);
-          }
         } else if (input && (input.punch || input.kick)) {
           char.facing = char.x < opp.x ? 1 : -1;
           this._executeAirAttack(char, opp, input.kick ? 'kick' : 'punch');
@@ -484,23 +476,7 @@ export class CombatEngine {
     const moveY = input.y || 0;
     const isCrouching = (moveY > 0.35 || char.state === 'crouch') && char.isGrounded;
 
-    // 2. 基礎攻擊 (細節三段判定：站立直拳/重踢、下蹲刺拳/下段掃堂腿、全域多元遠程光武裝)
-    if (input.ranged && char.rangedCooldown <= 0) {
-      if (isCrouching) {
-        // 下蹲遠程：地裂爬行震波（下段判定・必須蹲防）
-        this._executeCrouchRangedAttack(char, opp);
-      } else if (moveY < -0.35) {
-        // 仰角遠程：對空高射離子彈（專打空中與平台）
-        this._executeAntiAirRangedAttack(char, opp);
-      } else if ((char.facing === 1 && moveX > 0.35) || (char.facing === -1 && moveX < -0.35)) {
-        // 前推遠程：超載穿透重砲（重傷害・擊倒）
-        this._executeHeavyRangedAttack(char, opp);
-      } else {
-        // 中立常規遠程：量子直射光彈
-        this._executeRangedAttack(char, opp);
-      }
-      return;
-    }
+    // 2. 基礎近戰攻擊 (細節三段判定：站立直拳/重踢、下蹲刺拳/下段掃堂腿)
     if (input.punch) {
       if (isCrouching) {
         this._executeCrouchPunch(char, opp);

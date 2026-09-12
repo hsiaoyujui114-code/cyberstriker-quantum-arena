@@ -5703,14 +5703,6 @@
           }
           if (char.currentAction) {
             this._updateAttackAction(char, opp);
-          } else if (input && input.ranged && char.rangedCooldown <= 0) {
-            char.facing = char.x < opp.x ? 1 : -1;
-            const airMoveY = input.y || 0;
-            if (airMoveY > 0.35) {
-              this._executeAirBombAttack(char, opp);
-            } else {
-              this._executeAirRangedAttack(char, opp);
-            }
           } else if (input && (input.punch || input.kick)) {
             char.facing = char.x < opp.x ? 1 : -1;
             this._executeAirAttack(char, opp, input.kick ? "kick" : "punch");
@@ -5772,18 +5764,6 @@
       const moveX = input.x || 0;
       const moveY = input.y || 0;
       const isCrouching = (moveY > 0.35 || char.state === "crouch") && char.isGrounded;
-      if (input.ranged && char.rangedCooldown <= 0) {
-        if (isCrouching) {
-          this._executeCrouchRangedAttack(char, opp);
-        } else if (moveY < -0.35) {
-          this._executeAntiAirRangedAttack(char, opp);
-        } else if (char.facing === 1 && moveX > 0.35 || char.facing === -1 && moveX < -0.35) {
-          this._executeHeavyRangedAttack(char, opp);
-        } else {
-          this._executeRangedAttack(char, opp);
-        }
-        return;
-      }
       if (input.punch) {
         if (isCrouching) {
           this._executeCrouchPunch(char, opp);
@@ -7174,7 +7154,7 @@
       this.difficulty = difficulty;
       this.reactionDelay = 20;
       this.currentDelay = 0;
-      this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
     }
     setDifficulty(diff) {
       this.difficulty = diff;
@@ -7200,7 +7180,7 @@
       return this.bufferedDecision;
     }
     _makeDecision(ai, player, engine) {
-      const input = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       const dist = Math.abs(ai.x - player.x);
       const facingPlayer = (ai.x < player.x ? 1 : -1) === ai.facing;
       const playerInAir = !player.isGrounded;
@@ -7248,10 +7228,6 @@
             input.skill1 = true;
             return input;
           }
-          if (ai.rangedCooldown <= 0 && Math.random() < 0.6) {
-            input.ranged = true;
-            return input;
-          }
           input.x = ai.facing;
           return input;
         } else {
@@ -7277,9 +7253,6 @@
           if (ai.cooldowns[0] <= 0 && Math.random() < 0.7) {
             input.skill1 = true;
             return input;
-          } else if (ai.rangedCooldown <= 0 && Math.random() < 0.5) {
-            input.ranged = true;
-            return input;
           }
           input.x = ai.facing;
         } else {
@@ -7291,10 +7264,8 @@
       }
       if (this.difficulty === "normal") {
         if (dist > 200) {
-          if (ai.cooldowns[0] <= 0 && Math.random() < 0.4) {
+          if (ai.cooldowns[0] <= 0 && Math.random() < 0.5) {
             input.skill1 = true;
-          } else if (ai.rangedCooldown <= 0 && Math.random() < 0.4) {
-            input.ranged = true;
           } else {
             input.x = ai.facing;
           }
@@ -7323,7 +7294,7 @@
      * 自由格鬥訓練營假人行為控制
      */
     _decideTrainingDummy(dummy, player, settings) {
-      const input = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       if (settings.dummyReversal && dummy.state === "wakeup" && dummy.stateTime >= 13) {
         input.skill2 = true;
         return input;
@@ -7484,7 +7455,7 @@
       this.loadoutTimer = 15;
       this.loadoutInterval = null;
       this.keys = {};
-      this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
       this.canvas = null;
       this.ctx = null;
       this.pedestalCanvas = null;
@@ -8035,10 +8006,6 @@
         </div>
       `;
       }).join("") + `
-      <div class="skill-hud-card" id="rangedHudBtn" style="border-color: #00f3ff; background: rgba(0, 243, 255, 0.12); cursor: pointer;" title="\u767C\u5C04\u91CF\u5B50\u9060\u7A0B\u5149\u5F48 (\u5FEB\u6377\u9375: H / P)">
-        <i class="fa-solid fa-crosshairs" style="font-size: 18px; color: #00f3ff;"></i>
-        <span style="font-size: 10px; font-weight: 900; color: #00f3ff;">[H] \u9060\u7A0B</span>
-      </div>
       <div class="guard-hud-card" id="guardHudBtn" title="\u6309\u4F4F\u53EC\u559A\u91CF\u5B50\u9632\u8B77\u7F69 (\u5FEB\u6377\u9375: L / Shift)">
         <i class="fa-solid fa-shield-halved" style="font-size: 20px; color: #38bdf8;"></i>
         <span style="font-size: 10px; font-weight: 900; color: #38bdf8;">[L] \u8B77\u76FE</span>
@@ -8048,28 +8015,6 @@
         <span style="font-size: 9px; opacity: 0.8;">[B]</span>
       </div>
     `;
-      const rangedBtn = document.getElementById("rangedHudBtn");
-      if (rangedBtn) {
-        rangedBtn.onmousedown = (e) => {
-          e.preventDefault();
-          this.keys["KeyH"] = true;
-        };
-        rangedBtn.onmouseup = (e) => {
-          e.preventDefault();
-          this.keys["KeyH"] = false;
-        };
-        rangedBtn.onmouseleave = () => {
-          this.keys["KeyH"] = false;
-        };
-        rangedBtn.ontouchstart = (e) => {
-          e.preventDefault();
-          this.mobileInputs.ranged = true;
-        };
-        rangedBtn.ontouchend = (e) => {
-          e.preventDefault();
-          this.mobileInputs.ranged = false;
-        };
-      }
       const guardBtn = document.getElementById("guardHudBtn");
       if (guardBtn) {
         guardBtn.onmousedown = (e) => {
@@ -8139,7 +8084,6 @@
         y,
         punch: !!(k["KeyJ"] || m.punch),
         kick: !!(k["KeyK"] || m.kick),
-        ranged: !!(k["KeyH"] || k["KeyP"] || k["KeyY"] || m.ranged),
         guard: !!(k["KeyL"] || k["ShiftLeft"] || k["ShiftRight"] || m.guard),
         skill1: !!(k["KeyU"] || m.skill1),
         skill2: !!(k["KeyI"] || m.skill2),
@@ -8160,7 +8104,6 @@
         y,
         punch: !!(k["Numpad1"] || k["Digit1"]),
         kick: !!(k["Numpad2"] || k["Digit2"]),
-        ranged: !!(k["Numpad3"] || k["Digit3"]),
         guard: !!(k["Numpad0"] || k["NumpadDecimal"]),
         skill1: !!(k["Numpad4"] || k["Digit4"]),
         skill2: !!(k["Numpad5"] || k["Digit5"]),
@@ -9050,12 +8993,10 @@
       }
       const pPunch = document.getElementById("pedestalPunchBtn");
       const pKick = document.getElementById("pedestalKickBtn");
-      const pRanged = document.getElementById("pedestalRangedBtn");
       const pJump = document.getElementById("pedestalJumpBtn");
       const pGuard = document.getElementById("pedestalGuardBtn");
       if (pPunch) pPunch.onclick = () => this.previewPedestalAction("light_punch");
       if (pKick) pKick.onclick = () => this.previewPedestalAction("heavy_kick");
-      if (pRanged) pRanged.onclick = () => this.previewPedestalAction("ranged_attack");
       if (pJump) pJump.onclick = () => this.previewPedestalAction("jump");
       if (pGuard) pGuard.onclick = () => this.previewPedestalAction("high_guard");
       const fab = document.getElementById("fabStartBtn");
@@ -9384,7 +9325,6 @@
       };
       bindTouchBtn("touchPunchBtn", "punch");
       bindTouchBtn("touchKickBtn", "kick");
-      bindTouchBtn("touchRangedBtn", "ranged");
       bindTouchBtn("touchGuardBtn", "guard");
       bindTouchBtn("touchSkill1Btn", "skill1");
       bindTouchBtn("touchSkill2Btn", "skill2");

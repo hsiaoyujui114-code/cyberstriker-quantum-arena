@@ -32,7 +32,7 @@ class CyberStrikerApp {
 
     // 按鍵映射
     this.keys = {};
-    this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, ranged: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+    this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
 
     // 畫布
     this.canvas = null;
@@ -687,10 +687,6 @@ class CyberStrikerApp {
         </div>
       `;
     }).join('') + `
-      <div class="skill-hud-card" id="rangedHudBtn" style="border-color: #00f3ff; background: rgba(0, 243, 255, 0.12); cursor: pointer;" title="發射量子遠程光彈 (快捷鍵: H / P)">
-        <i class="fa-solid fa-crosshairs" style="font-size: 18px; color: #00f3ff;"></i>
-        <span style="font-size: 10px; font-weight: 900; color: #00f3ff;">[H] 遠程</span>
-      </div>
       <div class="guard-hud-card" id="guardHudBtn" title="按住召喚量子防護罩 (快捷鍵: L / Shift)">
         <i class="fa-solid fa-shield-halved" style="font-size: 20px; color: #38bdf8;"></i>
         <span style="font-size: 10px; font-weight: 900; color: #38bdf8;">[L] 護盾</span>
@@ -700,16 +696,6 @@ class CyberStrikerApp {
         <span style="font-size: 9px; opacity: 0.8;">[B]</span>
       </div>
     `;
-
-    // 綁定遠程攻擊 HUD 按鈕點擊/觸控事件
-    const rangedBtn = document.getElementById('rangedHudBtn');
-    if (rangedBtn) {
-      rangedBtn.onmousedown = (e) => { e.preventDefault(); this.keys['KeyH'] = true; };
-      rangedBtn.onmouseup = (e) => { e.preventDefault(); this.keys['KeyH'] = false; };
-      rangedBtn.onmouseleave = () => { this.keys['KeyH'] = false; };
-      rangedBtn.ontouchstart = (e) => { e.preventDefault(); this.mobileInputs.ranged = true; };
-      rangedBtn.ontouchend = (e) => { e.preventDefault(); this.mobileInputs.ranged = false; };
-    }
 
     // 綁定防護罩 HUD 按鈕點擊/按住事件
     const guardBtn = document.getElementById('guardHudBtn');
@@ -792,7 +778,6 @@ class CyberStrikerApp {
       y,
       punch: !!(k['KeyJ'] || m.punch),
       kick: !!(k['KeyK'] || m.kick),
-      ranged: !!(k['KeyH'] || k['KeyP'] || k['KeyY'] || m.ranged),
       guard: !!(k['KeyL'] || k['ShiftLeft'] || k['ShiftRight'] || m.guard),
       skill1: !!(k['KeyU'] || m.skill1),
       skill2: !!(k['KeyI'] || m.skill2),
@@ -802,7 +787,7 @@ class CyberStrikerApp {
   }
 
   _gatherInputsP2() {
-    // 本地雙人同機對決 2P 鍵位 (方向鍵 + 數字鍵盤 1/2/3/4/5/6)
+    // 本地雙人同機對決 2P 鍵位 (方向鍵 + 數字鍵盤 1/2/4/5/6)
     const k = this.keys;
     let x = 0;
     let y = 0;
@@ -816,7 +801,6 @@ class CyberStrikerApp {
       y,
       punch: !!(k['Numpad1'] || k['Digit1']),
       kick: !!(k['Numpad2'] || k['Digit2']),
-      ranged: !!(k['Numpad3'] || k['Digit3']),
       guard: !!(k['Numpad0'] || k['NumpadDecimal']),
       skill1: !!(k['Numpad4'] || k['Digit4']),
       skill2: !!(k['Numpad5'] || k['Digit5']),
@@ -1905,16 +1889,14 @@ class CyberStrikerApp {
       userBadge.addEventListener('click', () => this.openAuthModal());
     }
 
-    // 展示台 5 大動作按鈕
+    // 展示台 4 大動作按鈕
     const pPunch = document.getElementById('pedestalPunchBtn');
     const pKick = document.getElementById('pedestalKickBtn');
-    const pRanged = document.getElementById('pedestalRangedBtn');
     const pJump = document.getElementById('pedestalJumpBtn');
     const pGuard = document.getElementById('pedestalGuardBtn');
 
     if (pPunch) pPunch.onclick = () => this.previewPedestalAction('light_punch');
     if (pKick) pKick.onclick = () => this.previewPedestalAction('heavy_kick');
-    if (pRanged) pRanged.onclick = () => this.previewPedestalAction('ranged_attack');
     if (pJump) pJump.onclick = () => this.previewPedestalAction('jump');
     if (pGuard) pGuard.onclick = () => this.previewPedestalAction('high_guard');
 
@@ -2288,7 +2270,6 @@ class CyberStrikerApp {
 
     bindTouchBtn('touchPunchBtn', 'punch');
     bindTouchBtn('touchKickBtn', 'kick');
-    bindTouchBtn('touchRangedBtn', 'ranged');
     bindTouchBtn('touchGuardBtn', 'guard');
     bindTouchBtn('touchSkill1Btn', 'skill1');
     bindTouchBtn('touchSkill2Btn', 'skill2');
