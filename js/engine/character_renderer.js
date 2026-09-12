@@ -366,16 +366,42 @@ export class CharacterRenderer {
       }
 
       case 'ranged_attack': {
-        // 遠程攻擊：雙臂前平舉凝聚能量或單臂瞄準射擊，身姿前傾
+        // 遠程攻擊：支援平射、高仰角對空射擊與重砲蓄勢射擊
         const rProgress = Math.min(1, t / 14);
         const blastWave = Math.sin(rProgress * Math.PI);
-        defaultPose.torso.angle = 0.16 * blastWave;
-        defaultPose.frontArm.upperAngle = -0.15 - blastWave * 0.2; // 平舉前推發射
-        defaultPose.frontArm.foreAngle = 0.05; // 前臂筆直伸出
-        defaultPose.backArm.upperAngle = 0.35;
-        defaultPose.backArm.foreAngle = 0.85;
-        if (blastWave > 0.2) {
-          defaultPose.vfx = { type: 'plasma_muzzle', progress: blastWave, x: 48, y: -74 };
+        const isAntiAir = char && char.currentAction && char.currentAction.name.includes('對空');
+        const isHeavy = char && char.currentAction && char.currentAction.name.includes('重砲');
+
+        if (isAntiAir) {
+          // 45度高仰角射擊姿態
+          defaultPose.torso.angle = -0.18 * blastWave; // 身體後仰
+          defaultPose.frontArm.upperAngle = -0.75 - blastWave * 0.22;
+          defaultPose.frontArm.foreAngle = 0.05;
+          defaultPose.backArm.upperAngle = 0.45;
+          defaultPose.backArm.foreAngle = 0.85;
+          if (blastWave > 0.2) {
+            defaultPose.vfx = { type: 'plasma_muzzle', progress: blastWave, x: 42, y: -90 };
+          }
+        } else if (isHeavy) {
+          // 重型重砲後坐力姿態
+          defaultPose.torso.angle = 0.28 * blastWave;
+          defaultPose.frontArm.upperAngle = -0.15 - blastWave * 0.35;
+          defaultPose.frontArm.foreAngle = 0.02;
+          defaultPose.backArm.upperAngle = -0.12 - blastWave * 0.3; // 雙手合抱重砲
+          defaultPose.backArm.foreAngle = 0.1;
+          if (blastWave > 0.2) {
+            defaultPose.vfx = { type: 'plasma_muzzle', progress: blastWave, x: 54, y: -74 };
+          }
+        } else {
+          // 平舉直射姿態
+          defaultPose.torso.angle = 0.16 * blastWave;
+          defaultPose.frontArm.upperAngle = -0.15 - blastWave * 0.2;
+          defaultPose.frontArm.foreAngle = 0.05;
+          defaultPose.backArm.upperAngle = 0.35;
+          defaultPose.backArm.foreAngle = 0.85;
+          if (blastWave > 0.2) {
+            defaultPose.vfx = { type: 'plasma_muzzle', progress: blastWave, x: 48, y: -74 };
+          }
         }
         return defaultPose;
       }

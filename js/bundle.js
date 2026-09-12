@@ -187,6 +187,76 @@
       counterGuide: "\u524D\u6416\u84C4\u80FD\u660E\u986F\uFF0C\u770B\u6E96\u5149\u8292\u53CA\u6642\u8D77\u8DF3\u8D8A\u904E\u6216\u4F7F\u7528\u6298\u8E8D\u65AC\u5947\u8972\u3002",
       icon: "fa-solid fa-sun",
       color: "#f97316"
+    },
+    {
+      id: "SK-11",
+      name: "\u8FFD\u8E64\u5FAE\u578B\u98DB\u5F48\u7FA4",
+      type: "homing_missiles",
+      typeName: "\u5C0E\u5F15\u8FFD\u8E64",
+      cd: 1.4,
+      damage: 135,
+      startup: 4,
+      active: 70,
+      recovery: 6,
+      guardType: "all",
+      chipRatio: 0.5,
+      description: "\u9023\u7E8C\u767C\u5C04 3 \u679A\u91CF\u5B50\u5C0E\u5F15\u5FAE\u578B\u98DB\u5F48\uFF0C\u5728\u7A7A\u4E2D\u5283\u51FA\u5F27\u7DDA\u8FFD\u8E64\u9396\u5B9A\u5C0D\u624B\uFF01",
+      counterGuide: "\u5FAE\u5C0E\u5F48\u98DB\u884C\u8ECC\u8DE1\u53EF\u88AB\u8FD1\u8EAB\u653B\u64CA\u6253\u6D88\uFF0C\u6216\u5229\u7528\u8D77\u8DF3\u8207\u5E73\u53F0\u8D70\u4F4D\u8B93\u98DB\u5F48\u649E\u5730\u5F15\u7206\u3002",
+      icon: "fa-solid fa-rocket",
+      color: "#ec4899"
+    },
+    {
+      id: "SK-12",
+      name: "\u6298\u5C04\u7A1C\u93E1\u6FC0\u5149",
+      type: "bouncing_laser",
+      typeName: "\u53CD\u5F48\u5F48\u9053",
+      cd: 1.2,
+      damage: 140,
+      startup: 3,
+      active: 75,
+      recovery: 6,
+      guardType: "all",
+      chipRatio: 0.5,
+      description: "\u767C\u5C04\u8D85\u9AD8\u901F\u5E7E\u4F55\u7A1C\u93E1\u5149\u675F\uFF0C\u78B0\u89F8\u908A\u754C\u64C2\u53F0\u8207\u5730\u9762\u6642\u81EA\u52D5\u6298\u5C04\u53CD\u5F48\uFF01",
+      counterGuide: "\u6CE8\u610F\u5149\u675F\u5F48\u5C04\u89D2\u5EA6\uFF0C\u5728\u53CD\u5F48\u8DEF\u5F91\u524D\u63D0\u524D\u958B\u555F\u9632\u8B77\u7F69\u6216\u8D77\u8DF3\u9A30\u7A7A\u3002",
+      icon: "fa-solid fa-bolt-lightning",
+      color: "#a855f7"
+    },
+    {
+      id: "SK-13",
+      name: "\u5929\u9802\u8ECC\u9053\u6253\u64CA",
+      type: "orbital_strike",
+      typeName: "\u5929\u9802\u4E2D\u6BB5",
+      cd: 2,
+      damage: 175,
+      startup: 8,
+      active: 18,
+      recovery: 8,
+      guardType: "stand_only",
+      // 天頂直擊中段判定，破蹲防！
+      chipRatio: 0.5,
+      knockdown: true,
+      description: "\u547C\u53EB\u885B\u661F\u8ECC\u9053\u70AE\uFF0C\u9396\u5B9A\u5C0D\u624B\u5EA7\u6A19\u5F15\u5C0E\u5DE8\u578B\u96E2\u5B50\u5929\u96F7\u5782\u76F4\u8F5F\u64CA\uFF01\u4E0B\u8E72\u9632\u79A6\u7121\u6548\uFF01",
+      counterGuide: "\u4E2D\u6BB5\u653B\u64CA\u4E0D\u53EF\u8E72\u9632\uFF01\u770B\u898B\u8173\u5E95\u51FA\u73FE\u9396\u5B9A\u7D05\u5708\u6642\u9700\u7AD9\u7ACB\u683C\u64CB\u6216\u8FC5\u901F\u5411\u524D\u7FFB\u6EFE\u96E2\u958B\u3002",
+      icon: "fa-solid fa-satellite-dish",
+      color: "#ffd700"
+    },
+    {
+      id: "SK-14",
+      name: "\u865B\u7A7A\u5F15\u529B\u9ED1\u6D1E\u7403",
+      type: "gravity_vortex",
+      typeName: "\u5F15\u529B\u63A7\u5834",
+      cd: 2.2,
+      damage: 125,
+      startup: 5,
+      active: 90,
+      recovery: 8,
+      guardType: "all",
+      chipRatio: 0.5,
+      description: "\u5C04\u51FA\u7DE9\u6162\u63A8\u9032\u7684\u9ED1\u6D1E\u5F15\u529B\u7403\uFF0C\u5F37\u884C\u5C07\u9014\u7D93\u7684\u5C0D\u624B\u727D\u5F15\u5438\u5165\u4E26\u9020\u6210\u6301\u7E8C\u591A\u6BB5\u6253\u64CA\uFF01",
+      counterGuide: "\u5F15\u529B\u7403\u79FB\u52D5\u7DE9\u6162\uFF0C\u4E0D\u53EF\u5728\u524D\u65B9\u5F8C\u9000\uFF0C\u61C9\u7ACB\u5373\u8D77\u8DF3\u7FFB\u8D8A\u6216\u65BD\u5C55\u77AC\u79FB\u7A7F\u8D8A\u3002",
+      icon: "fa-solid fa-circle-notch",
+      color: "#06b6d4"
     }
   ];
   var ARCHETYPES = [
@@ -210,6 +280,13 @@
       desc: "\u77AC\u79FB\u7A7F\u900F\u9060\u7A0B\u6CE2\u5C0E\uFF0C\u67B6\u62DB\u53CD\u5236\u8FD1\u6230\uFF0C\u6307\u4EE4\u6454\u5F37\u5236\u7834\u9632",
       skills: ["SK-05", "SK-06", "SK-08"],
       badge: "\u9748\u6D3B\u53CD\u64CA"
+    },
+    {
+      id: "ranged_artillery",
+      name: "\u5168\u57DF\u91CD\u7832\u706B\u529B\u6D41",
+      desc: "\u8FFD\u8E64\u98DB\u5F48\u9396\u5B9A\u3001\u6298\u5C04\u6FC0\u5149\u58D3\u5236\u3001\u5929\u9802\u8ECC\u9053\u91CD\u7832\u8F5F\u9802\uFF0C\u5168\u5C4F\u706B\u529B\u8986\u84CB",
+      skills: ["SK-11", "SK-12", "SK-13"],
+      badge: "\u6975\u81F4\u5C04\u624B"
     }
   ];
 
@@ -1452,6 +1529,54 @@
           this._playNoise(t, 0.14, 500, 0.55);
           break;
         }
+        case "missile_launch": {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(400, t);
+          osc.frequency.exponentialRampToValueAtTime(1600, t + 0.18);
+          gain.gain.setValueAtTime(0.5, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+          this._playNoise(t, 0.12, 1200, 0.35);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.18);
+          break;
+        }
+        case "laser_bounce": {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(1400, t);
+          osc.frequency.exponentialRampToValueAtTime(800, t + 0.08);
+          gain.gain.setValueAtTime(0.6, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.08);
+          break;
+        }
+        case "orbital_beam": {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(120, t);
+          osc.frequency.exponentialRampToValueAtTime(30, t + 0.6);
+          gain.gain.setValueAtTime(1, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
+          this._playNoise(t, 0.5, 600, 0.85);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.6);
+          break;
+        }
+        case "bomb_drop": {
+          this._playNoise(t, 0.3, 350, 0.8);
+          break;
+        }
         case "ko": {
           const chords = [220, 277.18, 329.63, 440];
           chords.forEach((freq) => {
@@ -1901,13 +2026,35 @@
         case "ranged_attack": {
           const rProgress = Math.min(1, t / 14);
           const blastWave = Math.sin(rProgress * Math.PI);
-          defaultPose.torso.angle = 0.16 * blastWave;
-          defaultPose.frontArm.upperAngle = -0.15 - blastWave * 0.2;
-          defaultPose.frontArm.foreAngle = 0.05;
-          defaultPose.backArm.upperAngle = 0.35;
-          defaultPose.backArm.foreAngle = 0.85;
-          if (blastWave > 0.2) {
-            defaultPose.vfx = { type: "plasma_muzzle", progress: blastWave, x: 48, y: -74 };
+          const isAntiAir = char && char.currentAction && char.currentAction.name.includes("\u5C0D\u7A7A");
+          const isHeavy = char && char.currentAction && char.currentAction.name.includes("\u91CD\u7832");
+          if (isAntiAir) {
+            defaultPose.torso.angle = -0.18 * blastWave;
+            defaultPose.frontArm.upperAngle = -0.75 - blastWave * 0.22;
+            defaultPose.frontArm.foreAngle = 0.05;
+            defaultPose.backArm.upperAngle = 0.45;
+            defaultPose.backArm.foreAngle = 0.85;
+            if (blastWave > 0.2) {
+              defaultPose.vfx = { type: "plasma_muzzle", progress: blastWave, x: 42, y: -90 };
+            }
+          } else if (isHeavy) {
+            defaultPose.torso.angle = 0.28 * blastWave;
+            defaultPose.frontArm.upperAngle = -0.15 - blastWave * 0.35;
+            defaultPose.frontArm.foreAngle = 0.02;
+            defaultPose.backArm.upperAngle = -0.12 - blastWave * 0.3;
+            defaultPose.backArm.foreAngle = 0.1;
+            if (blastWave > 0.2) {
+              defaultPose.vfx = { type: "plasma_muzzle", progress: blastWave, x: 54, y: -74 };
+            }
+          } else {
+            defaultPose.torso.angle = 0.16 * blastWave;
+            defaultPose.frontArm.upperAngle = -0.15 - blastWave * 0.2;
+            defaultPose.frontArm.foreAngle = 0.05;
+            defaultPose.backArm.upperAngle = 0.35;
+            defaultPose.backArm.foreAngle = 0.85;
+            if (blastWave > 0.2) {
+              defaultPose.vfx = { type: "plasma_muzzle", progress: blastWave, x: 48, y: -74 };
+            }
           }
           return defaultPose;
         }
@@ -2830,7 +2977,12 @@
             this._updateAttackAction(char, opp);
           } else if (input && input.ranged && char.rangedCooldown <= 0) {
             char.facing = char.x < opp.x ? 1 : -1;
-            this._executeAirRangedAttack(char, opp);
+            const airMoveY = input.y || 0;
+            if (airMoveY > 0.35) {
+              this._executeAirBombAttack(char, opp);
+            } else {
+              this._executeAirRangedAttack(char, opp);
+            }
           } else if (input && (input.punch || input.kick)) {
             char.facing = char.x < opp.x ? 1 : -1;
             this._executeAirAttack(char, opp, input.kick ? "kick" : "punch");
@@ -2893,7 +3045,15 @@
       const moveY = input.y || 0;
       const isCrouching = (moveY > 0.35 || char.state === "crouch") && char.isGrounded;
       if (input.ranged && char.rangedCooldown <= 0) {
-        this._executeRangedAttack(char, opp);
+        if (isCrouching) {
+          this._executeCrouchRangedAttack(char, opp);
+        } else if (moveY < -0.35) {
+          this._executeAntiAirRangedAttack(char, opp);
+        } else if (char.facing === 1 && moveX > 0.35 || char.facing === -1 && moveX < -0.35) {
+          this._executeHeavyRangedAttack(char, opp);
+        } else {
+          this._executeRangedAttack(char, opp);
+        }
         return;
       }
       if (input.punch) {
@@ -3082,7 +3242,7 @@
       };
       soundEngine.playHit(type === "kick" ? "whiff_kick" : "whiff_punch");
     }
-    // ─── 遠程攻擊：量子光彈 (地面發射與空中壓制) ───
+    // ─── 遠程攻擊：全域多元光子武裝體系 (直射/下段爬行波/重砲/防空高射/躍空俯衝/垂直爆彈) ───
     _executeRangedAttack(char, opp) {
       char.isGuarding = false;
       char.state = "ranged_attack";
@@ -3090,7 +3250,7 @@
       char.stateDuration = 12;
       char.rangedCooldown = 18;
       char.currentAction = {
-        name: "\u91CF\u5B50\u9060\u7A0B\u5149\u5F48",
+        name: "\u91CF\u5B50\u76F4\u5C04\u5149\u5F48",
         startup: 2,
         active: 4,
         recovery: 6,
@@ -3102,13 +3262,118 @@
       soundEngine.playHit("projectile");
       this.projectiles.push({
         ownerId: char.id,
-        name: "\u91CF\u5B50\u9060\u7A0B\u5149\u5F48",
+        type: "normal",
+        name: "\u91CF\u5B50\u76F4\u5C04\u5149\u5F48",
         x: char.x + char.facing * 42,
         y: char.y - 74,
-        vx: char.facing * 14,
+        vx: char.facing * 15,
         vy: 0,
         radius: 9,
         damage: 55,
+        guardType: "all",
+        skin: char.skin,
+        life: 80
+      });
+    }
+    _executeCrouchRangedAttack(char, opp) {
+      char.isGuarding = false;
+      char.state = "crouch_punch";
+      char.stateTime = 0;
+      char.stateDuration = 14;
+      char.rangedCooldown = 22;
+      char.currentAction = {
+        name: "\u5730\u88C2\u722C\u884C\u9707\u6CE2",
+        startup: 3,
+        active: 4,
+        recovery: 7,
+        damage: 65,
+        guardType: "crouch_only",
+        // 下段判定！站立防禦無效，必須蹲防或翻越！
+        knockdown: true,
+        isRanged: true,
+        hitChecked: true
+      };
+      soundEngine.playHit("sweep");
+      this.projectiles.push({
+        ownerId: char.id,
+        type: "ground_wave",
+        name: "\u5730\u88C2\u722C\u884C\u9707\u6CE2",
+        x: char.x + char.facing * 36,
+        y: this.floorY - 14,
+        vx: char.facing * 12,
+        vy: 0,
+        radius: 13,
+        damage: 65,
+        guardType: "crouch_only",
+        knockdown: true,
+        skin: char.skin,
+        life: 85
+      });
+    }
+    _executeHeavyRangedAttack(char, opp) {
+      char.isGuarding = false;
+      char.state = "ranged_attack";
+      char.stateTime = 0;
+      char.stateDuration = 16;
+      char.rangedCooldown = 26;
+      char.currentAction = {
+        name: "\u8D85\u8F09\u7A7F\u900F\u91CD\u7832",
+        startup: 4,
+        active: 4,
+        recovery: 8,
+        damage: 78,
+        guardType: "all",
+        knockdown: true,
+        // 命中直接擊倒！
+        isRanged: true,
+        hitChecked: true
+      };
+      soundEngine.playHit("beam");
+      this.triggerScreenShake(3);
+      this.projectiles.push({
+        ownerId: char.id,
+        type: "heavy",
+        name: "\u8D85\u8F09\u7A7F\u900F\u91CD\u7832",
+        x: char.x + char.facing * 46,
+        y: char.y - 74,
+        vx: char.facing * 18,
+        vy: 0,
+        radius: 16,
+        damage: 78,
+        guardType: "all",
+        knockdown: true,
+        skin: char.skin,
+        life: 75
+      });
+    }
+    _executeAntiAirRangedAttack(char, opp) {
+      char.isGuarding = false;
+      char.state = "ranged_attack";
+      char.stateTime = 0;
+      char.stateDuration = 13;
+      char.rangedCooldown = 20;
+      char.currentAction = {
+        name: "\u5C0D\u7A7A\u9AD8\u5C04\u96E2\u5B50\u5F48",
+        startup: 3,
+        active: 4,
+        recovery: 6,
+        damage: 60,
+        guardType: "all",
+        isRanged: true,
+        hitChecked: true
+      };
+      soundEngine.playHit("projectile");
+      this.projectiles.push({
+        ownerId: char.id,
+        type: "anti_air",
+        name: "\u5C0D\u7A7A\u9AD8\u5C04\u96E2\u5B50\u5F48",
+        x: char.x + char.facing * 40,
+        y: char.y - 88,
+        vx: char.facing * 11,
+        vy: -11,
+        radius: 10,
+        damage: 60,
+        guardType: "all",
         skin: char.skin,
         life: 80
       });
@@ -3120,7 +3385,7 @@
       char.stateDuration = 10;
       char.rangedCooldown = 18;
       char.currentAction = {
-        name: "\u8E8D\u7A7A\u9060\u7A0B\u5149\u5F48",
+        name: "\u8E8D\u7A7A\u4FEF\u885D\u5149\u5F48",
         startup: 2,
         active: 4,
         recovery: 4,
@@ -3132,15 +3397,52 @@
       soundEngine.playHit("projectile");
       this.projectiles.push({
         ownerId: char.id,
-        name: "\u8E8D\u7A7A\u9060\u7A0B\u5149\u5F48",
+        type: "air_dive",
+        name: "\u8E8D\u7A7A\u4FEF\u885D\u5149\u5F48",
         x: char.x + char.facing * 42,
         y: char.y - 50,
         vx: char.facing * 14,
-        vy: 2.2,
+        vy: 3.2,
         radius: 9,
         damage: 55,
+        guardType: "all",
         skin: char.skin,
         life: 80
+      });
+    }
+    _executeAirBombAttack(char, opp) {
+      char.isGuarding = false;
+      char.state = "jump";
+      char.stateTime = 0;
+      char.stateDuration = 12;
+      char.rangedCooldown = 22;
+      char.currentAction = {
+        name: "\u7A7A\u5C0D\u5730\u96E2\u5B50\u7206\u5F48",
+        startup: 2,
+        active: 4,
+        recovery: 6,
+        damage: 70,
+        guardType: "stand_only",
+        // 中段落雷判定，不可蹲防！
+        knockdown: true,
+        isRanged: true,
+        hitChecked: true
+      };
+      soundEngine.playHit("projectile");
+      this.projectiles.push({
+        ownerId: char.id,
+        type: "bomb",
+        name: "\u7A7A\u5C0D\u5730\u96E2\u5B50\u7206\u5F48",
+        x: char.x + char.facing * 25,
+        y: char.y - 30,
+        vx: char.facing * 5,
+        vy: 12,
+        radius: 12,
+        damage: 70,
+        guardType: "stand_only",
+        knockdown: true,
+        skin: char.skin,
+        life: 70
       });
     }
     // ─── 10 大核心技能執行 ───
@@ -3197,6 +3499,18 @@
         case "SK-10":
           soundEngine.playHit("beam");
           break;
+        case "SK-11":
+          soundEngine.playHit("missile_launch");
+          break;
+        case "SK-12":
+          soundEngine.playHit("laser_bounce");
+          break;
+        case "SK-13":
+          soundEngine.playHit("laser");
+          break;
+        case "SK-14":
+          soundEngine.playHit("burst");
+          break;
       }
     }
     _updateAttackAction(char, opp) {
@@ -3231,6 +3545,99 @@
           damage: action.damage,
           skin: char.skin,
           life: 70
+        });
+        return;
+      }
+      if (action.id === "SK-11") {
+        action.hitChecked = true;
+        soundEngine.playHit("missile_launch");
+        for (let m = 0; m < 3; m++) {
+          this.projectiles.push({
+            ownerId: char.id,
+            type: "homing",
+            name: "\u8FFD\u8E64\u5FAE\u578B\u98DB\u5F48",
+            x: char.x + char.facing * (32 + m * 10),
+            y: char.y - 65 - m * 14,
+            vx: char.facing * (9 + m * 1.5),
+            vy: (m - 1) * 2.8,
+            radius: 8,
+            damage: 45,
+            guardType: "all",
+            skin: char.skin,
+            life: 95
+          });
+        }
+        return;
+      }
+      if (action.id === "SK-12") {
+        action.hitChecked = true;
+        this.projectiles.push({
+          ownerId: char.id,
+          type: "bouncing",
+          name: "\u6298\u5C04\u7A1C\u93E1\u6FC0\u5149",
+          x: char.x + char.facing * 44,
+          y: char.y - 68,
+          vx: char.facing * 16,
+          vy: 5.5,
+          bouncesLeft: 3,
+          radius: 11,
+          damage: action.damage,
+          guardType: "all",
+          skin: char.skin,
+          life: 85
+        });
+        return;
+      }
+      if (action.id === "SK-13") {
+        action.hitChecked = true;
+        const targetX = Math.max(50, Math.min(this.arenaWidth - 50, opp.x));
+        this.shockwaves.push({
+          x: targetX,
+          y: this.floorY - 6,
+          radius: 6,
+          maxRadius: 45,
+          color: "#ffd700",
+          duration: 16
+        });
+        setTimeout(() => {
+          soundEngine.playHit("orbital_beam");
+          this.triggerScreenShake(7);
+          this.shockwaves.push({
+            x: targetX,
+            y: this.floorY / 2,
+            width: 55,
+            height: this.floorY + 80,
+            isBeam: true,
+            color: "#ffd700",
+            duration: 16
+          });
+          if (Math.abs(opp.x - targetX) < 48 && opp.invincibleTimer <= 0) {
+            this._applyHit(char, opp, {
+              name: "\u5929\u9802\u8ECC\u9053\u6253\u64CA",
+              damage: action.damage,
+              guardType: "stand_only",
+              knockdown: true
+            });
+          }
+        }, 180);
+        return;
+      }
+      if (action.id === "SK-14") {
+        action.hitChecked = true;
+        this.projectiles.push({
+          ownerId: char.id,
+          type: "vortex",
+          name: "\u865B\u7A7A\u5F15\u529B\u9ED1\u6D1E\u7403",
+          x: char.x + char.facing * 40,
+          y: char.y - 70,
+          vx: char.facing * 4.5,
+          vy: 0,
+          radius: 26,
+          damage: 25,
+          tickCooldown: 0,
+          guardType: "all",
+          skin: char.skin,
+          life: 110
         });
         return;
       }
@@ -3483,26 +3890,106 @@
         life: 45
       });
     }
+    _checkPlatformHit(p) {
+      if (!this.platforms) return false;
+      for (const plat of this.platforms) {
+        if (p.x >= plat.x && p.x <= plat.x + plat.width && Math.abs(p.y - plat.y) < 14) {
+          return true;
+        }
+      }
+      return false;
+    }
     _updateProjectiles() {
       for (let i = this.projectiles.length - 1; i >= 0; i--) {
         const p = this.projectiles[i];
+        const target = p.ownerId === 1 ? this.p2 : this.p1;
+        if (p.type === "homing" && target) {
+          const targetY = target.y - 48;
+          const dx = target.x - p.x;
+          const dy2 = targetY - p.y;
+          p.vx += Math.sign(dx) * 0.48;
+          p.vy += Math.sign(dy2) * 0.42;
+          p.vx = Math.max(-14, Math.min(14, p.vx));
+          p.vy = Math.max(-9, Math.min(9, p.vy));
+        } else if (p.type === "bouncing") {
+          if (p.x <= 35 && p.vx < 0 || p.x >= this.arenaWidth - 35 && p.vx > 0) {
+            if ((p.bouncesLeft || 0) > 0) {
+              p.bouncesLeft--;
+              p.vx = -p.vx;
+              soundEngine.playHit("laser_bounce");
+              this.triggerScreenShake(2);
+            }
+          }
+          if (p.y >= this.floorY - 8 && p.vy > 0) {
+            if ((p.bouncesLeft || 0) > 0) {
+              p.bouncesLeft--;
+              p.vy = -Math.abs(p.vy) * 0.88;
+              soundEngine.playHit("laser_bounce");
+              this.triggerScreenShake(2);
+            }
+          }
+        } else if (p.type === "ground_wave") {
+          p.y = this.floorY - 14;
+        } else if (p.type === "vortex" && target) {
+          const dist2 = Math.abs(p.x - target.x);
+          if (dist2 < 220) {
+            target.vx += Math.sign(p.x - target.x) * 1.6;
+          }
+        }
         p.x += p.vx;
         if (p.vy) p.y += p.vy;
         p.life--;
-        const target = p.ownerId === 1 ? this.p2 : this.p1;
-        const dist = Math.abs(p.x - target.x);
-        const dy = Math.abs(p.y - (target.y - 45));
-        if (dist < 45 && dy < 65 && target.invincibleTimer <= 0) {
-          this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
-            name: p.name || "\u91CF\u5B50\u9060\u7A0B\u5149\u5F48",
-            damage: p.damage,
-            guardType: "all",
-            chipRatio: 0.5
+        if (p.type === "bomb" && (p.y >= this.floorY - 10 || p.vy > 0 && this._checkPlatformHit(p))) {
+          soundEngine.playHit("bomb_drop");
+          this.triggerScreenShake(5);
+          this.shockwaves.push({
+            x: p.x,
+            y: p.y,
+            radius: 8,
+            maxRadius: 68,
+            color: p.skin && p.skin.themeColor ? p.skin.themeColor : "#ff007f",
+            duration: 16
           });
+          if (target && Math.abs(p.x - target.x) < 70 && Math.abs(p.y - target.y) < 75 && target.invincibleTimer <= 0) {
+            this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+              name: p.name || "\u7A7A\u5C0D\u5730\u96E2\u5B50\u7206\u5F48",
+              damage: p.damage,
+              guardType: p.guardType || "stand_only",
+              knockdown: true
+            });
+          }
           this.projectiles.splice(i, 1);
           continue;
         }
-        if (p.life <= 0 || p.x < 20 || p.x > this.arenaWidth - 20 || p.y > this.floorY + 30) {
+        const dist = Math.abs(p.x - target.x);
+        const dy = Math.abs(p.y - (target.y - 45));
+        const hitRadius = p.type === "vortex" ? 42 : p.type === "heavy" ? 38 : 34;
+        const hitHeight = p.type === "ground_wave" ? 42 : 62;
+        if (dist < hitRadius && dy < hitHeight && target && target.invincibleTimer <= 0) {
+          if (p.type === "vortex") {
+            p.tickCooldown = (p.tickCooldown || 0) - 1;
+            if (p.tickCooldown <= 0) {
+              p.tickCooldown = 12;
+              this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+                name: p.name || "\u865B\u7A7A\u5F15\u529B\u9ED1\u6D1E\u7403",
+                damage: p.damage,
+                guardType: p.guardType || "all",
+                chipRatio: 0.5
+              });
+            }
+          } else {
+            this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+              name: p.name || "\u91CF\u5B50\u9060\u7A0B\u5149\u5F48",
+              damage: p.damage,
+              guardType: p.guardType || "all",
+              chipRatio: 0.5,
+              knockdown: !!p.knockdown
+            });
+            this.projectiles.splice(i, 1);
+            continue;
+          }
+        }
+        if (p.life <= 0 || p.x < 15 || p.x > this.arenaWidth - 15 || p.y > this.floorY + 35 || p.y < -120) {
           this.projectiles.splice(i, 1);
         }
       }
@@ -4627,22 +5114,142 @@
         const themeCol = p.skin && p.skin.themeColor ? p.skin.themeColor : "#00f3ff";
         const secCol = p.skin && p.skin.secondaryColor ? p.skin.secondaryColor : "#ffffff";
         const rad = p.radius || 10;
-        ctx.shadowColor = themeCol;
-        ctx.shadowBlur = 18;
-        ctx.fillStyle = themeCol;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, rad * 0.45, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = secCol;
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x - p.vx * 3, p.y - (p.vy || 0) * 3);
-        ctx.stroke();
+        const angle = Math.atan2(p.vy || 0, p.vx || 1);
+        if (p.type === "ground_wave") {
+          ctx.shadowColor = "#ffaa00";
+          ctx.shadowBlur = 18;
+          ctx.strokeStyle = "#ffaa00";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(p.x - 24, p.y + 4);
+          ctx.lineTo(p.x - 8, p.y - 12);
+          ctx.lineTo(p.x + 4, p.y - 4);
+          ctx.lineTo(p.x + 20, p.y - 18);
+          ctx.lineTo(p.x + 28, p.y + 4);
+          ctx.stroke();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(p.x + 8, p.y - 10, 4, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.type === "heavy") {
+          ctx.shadowColor = themeCol;
+          ctx.shadowBlur = 24;
+          ctx.fillStyle = themeCol;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rad * 0.55, 0, Math.PI * 2);
+          ctx.fill();
+          const ringT = Date.now() / 150;
+          ctx.strokeStyle = secCol;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.ellipse(p.x, p.y, rad * 1.5, rad * 0.6, ringT, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.strokeStyle = themeCol;
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - p.vx * 3.5, p.y - (p.vy || 0) * 3.5);
+          ctx.stroke();
+        } else if (p.type === "homing") {
+          ctx.translate(p.x, p.y);
+          ctx.rotate(angle);
+          ctx.shadowColor = "#ec4899";
+          ctx.shadowBlur = 15;
+          ctx.fillStyle = "#f43f5e";
+          ctx.beginPath();
+          ctx.moveTo(10, 0);
+          ctx.lineTo(-8, -4.5);
+          ctx.lineTo(-6, 0);
+          ctx.lineTo(-8, 4.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#ffd700";
+          ctx.beginPath();
+          ctx.moveTo(-7, -2);
+          ctx.lineTo(-18 - Math.random() * 6, 0);
+          ctx.lineTo(-7, 2);
+          ctx.closePath();
+          ctx.fill();
+        } else if (p.type === "bouncing") {
+          ctx.translate(p.x, p.y);
+          const rot = Date.now() / 120;
+          ctx.rotate(rot);
+          ctx.shadowColor = "#a855f7";
+          ctx.shadowBlur = 20;
+          ctx.fillStyle = "#c084fc";
+          ctx.beginPath();
+          ctx.moveTo(0, -rad);
+          ctx.lineTo(rad, 0);
+          ctx.lineTo(0, rad);
+          ctx.lineTo(-rad, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(0, 0, rad * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        } else if (p.type === "bomb") {
+          ctx.shadowColor = "#ff0055";
+          ctx.shadowBlur = 18;
+          ctx.fillStyle = "#ff0055";
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffd700";
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rad * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#ff0055";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - p.vx * 2.5, p.y - p.vy * 2.5);
+          ctx.stroke();
+        } else if (p.type === "vortex") {
+          const vRot = Date.now() / 200;
+          ctx.shadowColor = "#00f3ff";
+          ctx.shadowBlur = 24;
+          ctx.strokeStyle = "rgba(0, 243, 255, 0.75)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rad * (1 + Math.sin(vRot * 2) * 0.15), 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.strokeStyle = "#a855f7";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rad * 0.75, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = "#050510";
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rad * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#00f3ff";
+          ctx.stroke();
+        } else {
+          ctx.shadowColor = themeCol;
+          ctx.shadowBlur = 18;
+          ctx.fillStyle = themeCol;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rad * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = secCol;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - p.vx * 3, p.y - (p.vy || 0) * 3);
+          ctx.stroke();
+        }
         ctx.restore();
       });
       combatEngine.shockwaves.forEach((s) => {

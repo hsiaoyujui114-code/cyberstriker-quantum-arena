@@ -833,36 +833,180 @@ class CyberStrikerApp {
     // 5. 繪製角色頭頂醒目標籤與攻擊招式細節
     this._drawFighterOverheadBadges(ctx);
 
-    // 6. 繪製飛行道具 (Projectiles - 量子遠程光彈 & 技能飛行道具)
+    // 6. 繪製飛行道具 (Projectiles - 全向多元光子武裝 & 技能飛行道具)
     combatEngine.projectiles.forEach(p => {
       ctx.save();
       const themeCol = p.skin && p.skin.themeColor ? p.skin.themeColor : '#00f3ff';
       const secCol = p.skin && p.skin.secondaryColor ? p.skin.secondaryColor : '#ffffff';
       const rad = p.radius || 10;
+      const angle = Math.atan2(p.vy || 0, p.vx || 1);
 
-      // 外發光光暈
-      ctx.shadowColor = themeCol;
-      ctx.shadowBlur = 18;
+      if (p.type === 'ground_wave') {
+        // 地裂爬行震波：貼地滑行之裂地電弧光冠
+        ctx.shadowColor = '#ffaa00';
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = '#ffaa00';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(p.x - 24, p.y + 4);
+        ctx.lineTo(p.x - 8, p.y - 12);
+        ctx.lineTo(p.x + 4, p.y - 4);
+        ctx.lineTo(p.x + 20, p.y - 18);
+        ctx.lineTo(p.x + 28, p.y + 4);
+        ctx.stroke();
 
-      // 能量球體外層
-      ctx.fillStyle = themeCol;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(p.x + 8, p.y - 10, 4, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'heavy') {
+        // 超載穿透重砲：大型等離子重型聚能球與環繞能量光環
+        ctx.shadowColor = themeCol;
+        ctx.shadowBlur = 24;
+        ctx.fillStyle = themeCol;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+        ctx.fill();
 
-      // 亮白聚能核心
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, rad * 0.45, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad * 0.55, 0, Math.PI * 2);
+        ctx.fill();
 
-      // 拖尾激光射線與粒子
-      ctx.strokeStyle = secCol;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(p.x - p.vx * 3, p.y - (p.vy || 0) * 3);
-      ctx.stroke();
+        // 環形公轉離子軌道
+        const ringT = Date.now() / 150;
+        ctx.strokeStyle = secCol;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, rad * 1.5, rad * 0.6, ringT, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 巨型破空拖尾光柱
+        ctx.strokeStyle = themeCol;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - p.vx * 3.5, p.y - (p.vy || 0) * 3.5);
+        ctx.stroke();
+      } else if (p.type === 'homing') {
+        // 追蹤微型飛彈：高科技流線型微導彈與尾焰
+        ctx.translate(p.x, p.y);
+        ctx.rotate(angle);
+        ctx.shadowColor = '#ec4899';
+        ctx.shadowBlur = 15;
+
+        // 彈體金屬梭形
+        ctx.fillStyle = '#f43f5e';
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.lineTo(-8, -4.5);
+        ctx.lineTo(-6, 0);
+        ctx.lineTo(-8, 4.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // 噴射尾焰
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.moveTo(-7, -2);
+        ctx.lineTo(-18 - Math.random() * 6, 0);
+        ctx.lineTo(-7, 2);
+        ctx.closePath();
+        ctx.fill();
+      } else if (p.type === 'bouncing') {
+        // 折射稜鏡激光：旋轉幾何稜鏡晶核與高亮折射射線
+        ctx.translate(p.x, p.y);
+        const rot = Date.now() / 120;
+        ctx.rotate(rot);
+        ctx.shadowColor = '#a855f7';
+        ctx.shadowBlur = 20;
+
+        // 八面菱形稜鏡
+        ctx.fillStyle = '#c084fc';
+        ctx.beginPath();
+        ctx.moveTo(0, -rad);
+        ctx.lineTo(rad, 0);
+        ctx.lineTo(0, rad);
+        ctx.lineTo(-rad, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, 0, rad * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else if (p.type === 'bomb') {
+        // 空對地爆彈：高能聚能核彈與警示危險紅圈
+        ctx.shadowColor = '#ff0055';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = '#ff0055';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 下墜拖尾
+        ctx.strokeStyle = '#ff0055';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - p.vx * 2.5, p.y - p.vy * 2.5);
+        ctx.stroke();
+      } else if (p.type === 'vortex') {
+        // 虛空引力黑洞：事件視界與旋轉吸積盤
+        const vRot = Date.now() / 200;
+        ctx.shadowColor = '#00f3ff';
+        ctx.shadowBlur = 24;
+
+        // 外層引力吸積螺旋
+        ctx.strokeStyle = 'rgba(0, 243, 255, 0.75)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad * (1 + Math.sin(vRot * 2) * 0.15), 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#a855f7';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad * 0.75, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 黑色引力奇點核心
+        ctx.fillStyle = '#050510';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#00f3ff';
+        ctx.stroke();
+      } else {
+        // 常規 / 仰角 / 躍空光彈 (Normal, Anti-air, Air dive)
+        ctx.shadowColor = themeCol;
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = themeCol;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = secCol;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - p.vx * 3, p.y - (p.vy || 0) * 3);
+        ctx.stroke();
+      }
 
       ctx.restore();
     });

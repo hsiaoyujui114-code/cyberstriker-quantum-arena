@@ -181,10 +181,79 @@ export const SKILLS = [
     counterGuide: '前搖蓄能明顯，看準光芒及時起跳越過或使用折躍斬奇襲。',
     icon: 'fa-solid fa-sun',
     color: '#f97316'
+  },
+  {
+    id: 'SK-11',
+    name: '追蹤微型飛彈群',
+    type: 'homing_missiles',
+    typeName: '導引追蹤',
+    cd: 1.4,
+    damage: 135,
+    startup: 4,
+    active: 70,
+    recovery: 6,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '連續發射 3 枚量子導引微型飛彈，在空中劃出弧線追蹤鎖定對手！',
+    counterGuide: '微導彈飛行軌跡可被近身攻擊打消，或利用起跳與平台走位讓飛彈撞地引爆。',
+    icon: 'fa-solid fa-rocket',
+    color: '#ec4899'
+  },
+  {
+    id: 'SK-12',
+    name: '折射稜鏡激光',
+    type: 'bouncing_laser',
+    typeName: '反彈彈道',
+    cd: 1.2,
+    damage: 140,
+    startup: 3,
+    active: 75,
+    recovery: 6,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '發射超高速幾何稜鏡光束，碰觸邊界擂台與地面時自動折射反彈！',
+    counterGuide: '注意光束彈射角度，在反彈路徑前提前開啟防護罩或起跳騰空。',
+    icon: 'fa-solid fa-bolt-lightning',
+    color: '#a855f7'
+  },
+  {
+    id: 'SK-13',
+    name: '天頂軌道打擊',
+    type: 'orbital_strike',
+    typeName: '天頂中段',
+    cd: 2.0,
+    damage: 175,
+    startup: 8,
+    active: 18,
+    recovery: 8,
+    guardType: 'stand_only', // 天頂直擊中段判定，破蹲防！
+    chipRatio: 0.5,
+    knockdown: true,
+    description: '呼叫衛星軌道炮，鎖定對手座標引導巨型離子天雷垂直轟擊！下蹲防禦無效！',
+    counterGuide: '中段攻擊不可蹲防！看見腳底出現鎖定紅圈時需站立格擋或迅速向前翻滾離開。',
+    icon: 'fa-solid fa-satellite-dish',
+    color: '#ffd700'
+  },
+  {
+    id: 'SK-14',
+    name: '虛空引力黑洞球',
+    type: 'gravity_vortex',
+    typeName: '引力控場',
+    cd: 2.2,
+    damage: 125,
+    startup: 5,
+    active: 90,
+    recovery: 8,
+    guardType: 'all',
+    chipRatio: 0.5,
+    description: '射出緩慢推進的黑洞引力球，強行將途經的對手牽引吸入並造成持續多段打擊！',
+    counterGuide: '引力球移動緩慢，不可在前方後退，應立即起跳翻越或施展瞬移穿越。',
+    icon: 'fa-solid fa-circle-notch',
+    color: '#06b6d4'
   }
 ];
 
-// 三大主流經典戰術流派快捷配置
+// 四大主流經典戰術流派快捷配置
 export const ARCHETYPES = [
   {
     id: 'wave_dp',
@@ -206,5 +275,12 @@ export const ARCHETYPES = [
     desc: '瞬移穿透遠程波導，架招反制近戰，指令摔強制破防',
     skills: ['SK-05', 'SK-06', 'SK-08'],
     badge: '靈活反擊'
+  },
+  {
+    id: 'ranged_artillery',
+    name: '全域重砲火力流',
+    desc: '追蹤飛彈鎖定、折射激光壓制、天頂軌道重砲轟頂，全屏火力覆蓋',
+    skills: ['SK-11', 'SK-12', 'SK-13'],
+    badge: '極致射手'
   }
 ];

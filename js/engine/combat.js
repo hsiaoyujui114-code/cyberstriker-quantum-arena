@@ -404,7 +404,12 @@ export class CombatEngine {
           this._updateAttackAction(char, opp);
         } else if (input && input.ranged && char.rangedCooldown <= 0) {
           char.facing = char.x < opp.x ? 1 : -1;
-          this._executeAirRangedAttack(char, opp);
+          const airMoveY = input.y || 0;
+          if (airMoveY > 0.35) {
+            this._executeAirBombAttack(char, opp);
+          } else {
+            this._executeAirRangedAttack(char, opp);
+          }
         } else if (input && (input.punch || input.kick)) {
           char.facing = char.x < opp.x ? 1 : -1;
           this._executeAirAttack(char, opp, input.kick ? 'kick' : 'punch');
@@ -477,9 +482,21 @@ export class CombatEngine {
     const moveY = input.y || 0;
     const isCrouching = (moveY > 0.35 || char.state === 'crouch') && char.isGrounded;
 
-    // 2. 基礎攻擊 (細節三段判定：站立直拳/重踢、下蹲刺拳/下段掃堂腿、遠程光彈)
+    // 2. 基礎攻擊 (細節三段判定：站立直拳/重踢、下蹲刺拳/下段掃堂腿、全域多元遠程光武裝)
     if (input.ranged && char.rangedCooldown <= 0) {
-      this._executeRangedAttack(char, opp);
+      if (isCrouching) {
+        // 下蹲遠程：地裂爬行震波（下段判定・必須蹲防）
+        this._executeCrouchRangedAttack(char, opp);
+      } else if (moveY < -0.35) {
+        // 仰角遠程：對空高射離子彈（專打空中與平台）
+        this._executeAntiAirRangedAttack(char, opp);
+      } else if ((char.facing === 1 && moveX > 0.35) || (char.facing === -1 && moveX < -0.35)) {
+        // 前推遠程：超載穿透重砲（重傷害・擊倒）
+        this._executeHeavyRangedAttack(char, opp);
+      } else {
+        // 中立常規遠程：量子直射光彈
+        this._executeRangedAttack(char, opp);
+      }
       return;
     }
     if (input.punch) {
@@ -686,7 +703,7 @@ export class CombatEngine {
     soundEngine.playHit(type === 'kick' ? 'whiff_kick' : 'whiff_punch');
   }
 
-  // ─── 遠程攻擊：量子光彈 (地面發射與空中壓制) ───
+  // ─── 遠程攻擊：全域多元光子武裝體系 (直射/下段爬行波/重砲/防空高射/躍空俯衝/垂直爆彈) ───
   _executeRangedAttack(char, opp) {
     char.isGuarding = false;
     char.state = 'ranged_attack';
@@ -694,7 +711,7 @@ export class CombatEngine {
     char.stateDuration = 12; // 12 幀利落發射與收招
     char.rangedCooldown = 18; // ~0.3 秒節奏冷卻防刷屏
     char.currentAction = {
-      name: '量子遠程光彈',
+      name: '量子直射光彈',
       startup: 2,
       active: 4,
       recovery: 6,
@@ -707,13 +724,122 @@ export class CombatEngine {
 
     this.projectiles.push({
       ownerId: char.id,
-      name: '量子遠程光彈',
+      type: 'normal',
+      name: '量子直射光彈',
       x: char.x + char.facing * 42,
       y: char.y - 74,
-      vx: char.facing * 14,
+      vx: char.facing * 15,
       vy: 0,
       radius: 9,
       damage: 55,
+      guardType: 'all',
+      skin: char.skin,
+      life: 80
+    });
+  }
+
+  _executeCrouchRangedAttack(char, opp) {
+    char.isGuarding = false;
+    char.state = 'crouch_punch';
+    char.stateTime = 0;
+    char.stateDuration = 14;
+    char.rangedCooldown = 22;
+    char.currentAction = {
+      name: '地裂爬行震波',
+      startup: 3,
+      active: 4,
+      recovery: 7,
+      damage: 65,
+      guardType: 'crouch_only', // 下段判定！站立防禦無效，必須蹲防或翻越！
+      knockdown: true,
+      isRanged: true,
+      hitChecked: true
+    };
+    soundEngine.playHit('sweep');
+
+    this.projectiles.push({
+      ownerId: char.id,
+      type: 'ground_wave',
+      name: '地裂爬行震波',
+      x: char.x + char.facing * 36,
+      y: this.floorY - 14,
+      vx: char.facing * 12,
+      vy: 0,
+      radius: 13,
+      damage: 65,
+      guardType: 'crouch_only',
+      knockdown: true,
+      skin: char.skin,
+      life: 85
+    });
+  }
+
+  _executeHeavyRangedAttack(char, opp) {
+    char.isGuarding = false;
+    char.state = 'ranged_attack';
+    char.stateTime = 0;
+    char.stateDuration = 16;
+    char.rangedCooldown = 26;
+    char.currentAction = {
+      name: '超載穿透重砲',
+      startup: 4,
+      active: 4,
+      recovery: 8,
+      damage: 78,
+      guardType: 'all',
+      knockdown: true, // 命中直接擊倒！
+      isRanged: true,
+      hitChecked: true
+    };
+    soundEngine.playHit('beam');
+    this.triggerScreenShake(3);
+
+    this.projectiles.push({
+      ownerId: char.id,
+      type: 'heavy',
+      name: '超載穿透重砲',
+      x: char.x + char.facing * 46,
+      y: char.y - 74,
+      vx: char.facing * 18,
+      vy: 0,
+      radius: 16,
+      damage: 78,
+      guardType: 'all',
+      knockdown: true,
+      skin: char.skin,
+      life: 75
+    });
+  }
+
+  _executeAntiAirRangedAttack(char, opp) {
+    char.isGuarding = false;
+    char.state = 'ranged_attack';
+    char.stateTime = 0;
+    char.stateDuration = 13;
+    char.rangedCooldown = 20;
+    char.currentAction = {
+      name: '對空高射離子彈',
+      startup: 3,
+      active: 4,
+      recovery: 6,
+      damage: 60,
+      guardType: 'all',
+      isRanged: true,
+      hitChecked: true
+    };
+    soundEngine.playHit('projectile');
+
+    this.projectiles.push({
+      ownerId: char.id,
+      type: 'anti_air',
+      name: '對空高射離子彈',
+      x: char.x + char.facing * 40,
+      y: char.y - 88,
+      vx: char.facing * 11,
+      vy: -11,
+      radius: 10,
+      damage: 60,
+      guardType: 'all',
       skin: char.skin,
       life: 80
     });
@@ -726,7 +852,7 @@ export class CombatEngine {
     char.stateDuration = 10;
     char.rangedCooldown = 18;
     char.currentAction = {
-      name: '躍空遠程光彈',
+      name: '躍空俯衝光彈',
       startup: 2,
       active: 4,
       recovery: 4,
@@ -739,15 +865,53 @@ export class CombatEngine {
 
     this.projectiles.push({
       ownerId: char.id,
-      name: '躍空遠程光彈',
+      type: 'air_dive',
+      name: '躍空俯衝光彈',
       x: char.x + char.facing * 42,
       y: char.y - 50,
       vx: char.facing * 14,
-      vy: 2.2,
+      vy: 3.2,
       radius: 9,
       damage: 55,
+      guardType: 'all',
       skin: char.skin,
       life: 80
+    });
+  }
+
+  _executeAirBombAttack(char, opp) {
+    char.isGuarding = false;
+    char.state = 'jump';
+    char.stateTime = 0;
+    char.stateDuration = 12;
+    char.rangedCooldown = 22;
+    char.currentAction = {
+      name: '空對地離子爆彈',
+      startup: 2,
+      active: 4,
+      recovery: 6,
+      damage: 70,
+      guardType: 'stand_only', // 中段落雷判定，不可蹲防！
+      knockdown: true,
+      isRanged: true,
+      hitChecked: true
+    };
+    soundEngine.playHit('projectile');
+
+    this.projectiles.push({
+      ownerId: char.id,
+      type: 'bomb',
+      name: '空對地離子爆彈',
+      x: char.x + char.facing * 25,
+      y: char.y - 30,
+      vx: char.facing * 5,
+      vy: 12,
+      radius: 12,
+      damage: 70,
+      guardType: 'stand_only',
+      knockdown: true,
+      skin: char.skin,
+      life: 70
     });
   }
 
@@ -818,6 +982,22 @@ export class CombatEngine {
       case 'SK-10': // 超載終結砲
         soundEngine.playHit('beam');
         break;
+
+      case 'SK-11': // 追蹤微型飛彈群
+        soundEngine.playHit('missile_launch');
+        break;
+
+      case 'SK-12': // 折射稜鏡激光
+        soundEngine.playHit('laser_bounce');
+        break;
+
+      case 'SK-13': // 天頂軌道打擊
+        soundEngine.playHit('laser');
+        break;
+
+      case 'SK-14': // 虛空引力黑洞球
+        soundEngine.playHit('burst');
+        break;
     }
   }
 
@@ -863,6 +1043,107 @@ export class CombatEngine {
         damage: action.damage,
         skin: char.skin,
         life: 70
+      });
+      return;
+    }
+
+    // 追蹤微型飛彈群 (SK-11)
+    if (action.id === 'SK-11') {
+      action.hitChecked = true;
+      soundEngine.playHit('missile_launch');
+      for (let m = 0; m < 3; m++) {
+        this.projectiles.push({
+          ownerId: char.id,
+          type: 'homing',
+          name: '追蹤微型飛彈',
+          x: char.x + char.facing * (32 + m * 10),
+          y: char.y - 65 - m * 14,
+          vx: char.facing * (9 + m * 1.5),
+          vy: (m - 1) * 2.8,
+          radius: 8,
+          damage: 45,
+          guardType: 'all',
+          skin: char.skin,
+          life: 95
+        });
+      }
+      return;
+    }
+
+    // 折射稜鏡激光 (SK-12)
+    if (action.id === 'SK-12') {
+      action.hitChecked = true;
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'bouncing',
+        name: '折射稜鏡激光',
+        x: char.x + char.facing * 44,
+        y: char.y - 68,
+        vx: char.facing * 16,
+        vy: 5.5,
+        bouncesLeft: 3,
+        radius: 11,
+        damage: action.damage,
+        guardType: 'all',
+        skin: char.skin,
+        life: 85
+      });
+      return;
+    }
+
+    // 天頂軌道打擊 (SK-13)
+    if (action.id === 'SK-13') {
+      action.hitChecked = true;
+      const targetX = Math.max(50, Math.min(this.arenaWidth - 50, opp.x));
+      this.shockwaves.push({
+        x: targetX,
+        y: this.floorY - 6,
+        radius: 6,
+        maxRadius: 45,
+        color: '#ffd700',
+        duration: 16
+      });
+      setTimeout(() => {
+        soundEngine.playHit('orbital_beam');
+        this.triggerScreenShake(7);
+        this.shockwaves.push({
+          x: targetX,
+          y: this.floorY / 2,
+          width: 55,
+          height: this.floorY + 80,
+          isBeam: true,
+          color: '#ffd700',
+          duration: 16
+        });
+        if (Math.abs(opp.x - targetX) < 48 && opp.invincibleTimer <= 0) {
+          this._applyHit(char, opp, {
+            name: '天頂軌道打擊',
+            damage: action.damage,
+            guardType: 'stand_only',
+            knockdown: true
+          });
+        }
+      }, 180);
+      return;
+    }
+
+    // 虛空引力黑洞球 (SK-14)
+    if (action.id === 'SK-14') {
+      action.hitChecked = true;
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'vortex',
+        name: '虛空引力黑洞球',
+        x: char.x + char.facing * 40,
+        y: char.y - 70,
+        vx: char.facing * 4.5,
+        vy: 0,
+        radius: 26,
+        damage: 25,
+        tickCooldown: 0,
+        guardType: 'all',
+        skin: char.skin,
+        life: 110
       });
       return;
     }
@@ -1176,30 +1457,123 @@ export class CombatEngine {
     });
   }
 
+  _checkPlatformHit(p) {
+    if (!this.platforms) return false;
+    for (const plat of this.platforms) {
+      if (p.x >= plat.x && p.x <= plat.x + plat.width && Math.abs(p.y - plat.y) < 14) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   _updateProjectiles() {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
+      const target = p.ownerId === 1 ? this.p2 : this.p1;
+
+      // 1. 特殊彈道物理運算
+      if (p.type === 'homing' && target) {
+        // 導引微飛彈弧形轉彎追蹤
+        const targetY = target.y - 48;
+        const dx = target.x - p.x;
+        const dy = targetY - p.y;
+        p.vx += Math.sign(dx) * 0.48;
+        p.vy += Math.sign(dy) * 0.42;
+        p.vx = Math.max(-14, Math.min(14, p.vx));
+        p.vy = Math.max(-9, Math.min(9, p.vy));
+      } else if (p.type === 'bouncing') {
+        // 幾何稜鏡反彈
+        if ((p.x <= 35 && p.vx < 0) || (p.x >= this.arenaWidth - 35 && p.vx > 0)) {
+          if ((p.bouncesLeft || 0) > 0) {
+            p.bouncesLeft--;
+            p.vx = -p.vx;
+            soundEngine.playHit('laser_bounce');
+            this.triggerScreenShake(2);
+          }
+        }
+        if (p.y >= this.floorY - 8 && p.vy > 0) {
+          if ((p.bouncesLeft || 0) > 0) {
+            p.bouncesLeft--;
+            p.vy = -Math.abs(p.vy) * 0.88;
+            soundEngine.playHit('laser_bounce');
+            this.triggerScreenShake(2);
+          }
+        }
+      } else if (p.type === 'ground_wave') {
+        // 地裂爬行波貼地滑行
+        p.y = this.floorY - 14;
+      } else if (p.type === 'vortex' && target) {
+        // 虛空引力黑洞：將對手緩慢吸引向球心
+        const dist = Math.abs(p.x - target.x);
+        if (dist < 220) {
+          target.vx += Math.sign(p.x - target.x) * 1.6;
+        }
+      }
+
+      // 位置推進
       p.x += p.vx;
       if (p.vy) p.y += p.vy;
       p.life--;
 
-      // 檢查是否命中對手 (支援地面、空中與平台上之精確 2D 碰撞)
-      const target = p.ownerId === 1 ? this.p2 : this.p1;
-      const dist = Math.abs(p.x - target.x);
-      const dy = Math.abs(p.y - (target.y - 45));
-      if (dist < 45 && dy < 65 && target.invincibleTimer <= 0) {
-        this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
-          name: p.name || '量子遠程光彈',
-          damage: p.damage,
-          guardType: 'all',
-          chipRatio: 0.5
+      // 2. 空對地爆彈觸地 / 觸平台引爆判定
+      if (p.type === 'bomb' && (p.y >= this.floorY - 10 || (p.vy > 0 && this._checkPlatformHit(p)))) {
+        soundEngine.playHit('bomb_drop');
+        this.triggerScreenShake(5);
+        this.shockwaves.push({
+          x: p.x,
+          y: p.y,
+          radius: 8,
+          maxRadius: 68,
+          color: p.skin && p.skin.themeColor ? p.skin.themeColor : '#ff007f',
+          duration: 16
         });
+        if (target && Math.abs(p.x - target.x) < 70 && Math.abs(p.y - target.y) < 75 && target.invincibleTimer <= 0) {
+          this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+            name: p.name || '空對地離子爆彈',
+            damage: p.damage,
+            guardType: p.guardType || 'stand_only',
+            knockdown: true
+          });
+        }
         this.projectiles.splice(i, 1);
         continue;
       }
 
-      // 超出邊界或生命耗盡
-      if (p.life <= 0 || p.x < 20 || p.x > this.arenaWidth - 20 || p.y > this.floorY + 30) {
+      // 3. 檢查碰撞命中對手
+      const dist = Math.abs(p.x - target.x);
+      const dy = Math.abs(p.y - (target.y - 45));
+      const hitRadius = p.type === 'vortex' ? 42 : (p.type === 'heavy' ? 38 : 34);
+      const hitHeight = p.type === 'ground_wave' ? 42 : 62;
+
+      if (dist < hitRadius && dy < hitHeight && target && target.invincibleTimer <= 0) {
+        if (p.type === 'vortex') {
+          // 引力黑洞多段判定
+          p.tickCooldown = (p.tickCooldown || 0) - 1;
+          if (p.tickCooldown <= 0) {
+            p.tickCooldown = 12;
+            this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+              name: p.name || '虛空引力黑洞球',
+              damage: p.damage,
+              guardType: p.guardType || 'all',
+              chipRatio: 0.5
+            });
+          }
+        } else {
+          this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+            name: p.name || '量子遠程光彈',
+            damage: p.damage,
+            guardType: p.guardType || 'all',
+            chipRatio: 0.5,
+            knockdown: !!p.knockdown
+          });
+          this.projectiles.splice(i, 1);
+          continue;
+        }
+      }
+
+      // 4. 超出邊界或生命耗盡
+      if (p.life <= 0 || p.x < 15 || p.x > this.arenaWidth - 15 || p.y > this.floorY + 35 || p.y < -120) {
         this.projectiles.splice(i, 1);
       }
     }

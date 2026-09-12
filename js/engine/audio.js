@@ -354,6 +354,62 @@ class SoundEngine {
         break;
       }
 
+      case 'missile_launch': {
+        // 微型導彈呼嘯發射
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(400, t);
+        osc.frequency.exponentialRampToValueAtTime(1600, t + 0.18);
+        gain.gain.setValueAtTime(0.5, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+        this._playNoise(t, 0.12, 1200, 0.35);
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.18);
+        break;
+      }
+
+      case 'laser_bounce': {
+        // 稜鏡反彈音
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1400, t);
+        osc.frequency.exponentialRampToValueAtTime(800, t + 0.08);
+        gain.gain.setValueAtTime(0.6, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.08);
+        break;
+      }
+
+      case 'orbital_beam': {
+        // 天頂衛星軌道打擊
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(120, t);
+        osc.frequency.exponentialRampToValueAtTime(30, t + 0.6);
+        gain.gain.setValueAtTime(1.0, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
+        this._playNoise(t, 0.5, 600, 0.85);
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.6);
+        break;
+      }
+
+      case 'bomb_drop': {
+        // 炸彈下墜與爆響
+        this._playNoise(t, 0.3, 350, 0.8);
+        break;
+      }
+
       case 'ko': {
         // K.O. 勝利號角與長音
         const chords = [220, 277.18, 329.63, 440];
