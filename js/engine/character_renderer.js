@@ -5,6 +5,8 @@
  * 完全符合 GAME_PROJECT_PLAN.md 第 2.3 與 3.1 節
  */
 
+import { specialSkinsRenderer } from './special_skins_renderer.js';
+
 export class CharacterRenderer {
   constructor() {
     // 8 大骨骼標準尺寸規格 (像素級精確，全外觀判定盒 100% 對稱)
@@ -54,6 +56,9 @@ export class CharacterRenderer {
 
     // 計算 12 種姿態骨骼角度
     const pose = this.calculatePose(state, t, char);
+
+    // 0. 專屬特殊角色氣場與光環 (七龍珠金色氣焰、索爾雷電、薩諾斯無限寶石)
+    specialSkinsRenderer.drawAura(ctx, char, skin, t);
 
     // 1. 繪製後層肢體 (背側手臂、背側腿)
     this.drawLimb(ctx, pose.backLeg, skin, 'backLeg');
@@ -526,6 +531,10 @@ export class CharacterRenderer {
   // ─── 肢體繪製方法 ───
 
   drawTorso(ctx, torso, skin, t) {
+    if (specialSkinsRenderer.drawTorso(ctx, torso, skin, t)) {
+      return;
+    }
+
     ctx.save();
     ctx.translate(torso.x, torso.y);
     ctx.rotate(torso.angle);
@@ -590,6 +599,11 @@ export class CharacterRenderer {
     ctx.save();
     ctx.translate(head.x, head.y);
     ctx.rotate(head.angle);
+
+    if (specialSkinsRenderer.drawHead(ctx, head, skin)) {
+      ctx.restore();
+      return;
+    }
 
     const themeColor = skin.themeColor || '#00f3ff';
     const visorColor = skin.visorColor || themeColor;
@@ -776,6 +790,10 @@ export class CharacterRenderer {
   }
 
   drawArm(ctx, arm, skin, layer) {
+    if (specialSkinsRenderer.drawArm(ctx, arm, skin, layer)) {
+      return;
+    }
+
     ctx.save();
     ctx.translate(arm.shoulderX, arm.shoulderY);
     ctx.rotate(arm.upperAngle);
@@ -811,6 +829,10 @@ export class CharacterRenderer {
   }
 
   drawLimb(ctx, leg, skin, layer) {
+    if (specialSkinsRenderer.drawLimb(ctx, leg, skin, layer)) {
+      return;
+    }
+
     ctx.save();
     ctx.translate(leg.hipX, leg.hipY);
     ctx.rotate(leg.thighAngle);
@@ -851,6 +873,10 @@ export class CharacterRenderer {
 
   // ─── 防禦力場護盾渲染 ───
   drawGuardShield(ctx, stance, skin, t) {
+    if (specialSkinsRenderer.drawGuardShield(ctx, stance, skin, t)) {
+      return;
+    }
+
     ctx.save();
     const pulse = Math.sin(t * 0.2) * 0.1 + 0.9;
     ctx.shadowColor = skin.themeColor;
@@ -898,6 +924,10 @@ export class CharacterRenderer {
 
   // ─── 武打 VFX 渲染 (依外觀色彩分離映射) ───
   drawAttackVFX(ctx, vfx, skin) {
+    if (specialSkinsRenderer.drawAttackVFX(ctx, vfx, skin)) {
+      return;
+    }
+
     ctx.save();
     ctx.shadowColor = skin.themeColor;
     ctx.shadowBlur = 16;

@@ -83,7 +83,21 @@ export class SaveSystem {
   _loadAccountsFromStorage() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        for (const email in parsed) {
+          if (parsed[email] && Array.isArray(parsed[email].skins)) {
+            const desired = ["skin_iron_man", "skin_spiderman", "skin_goku_ssj", "skin_vegeta_ssj"];
+            desired.forEach(s => {
+              if (!parsed[email].skins.includes(s)) parsed[email].skins.push(s);
+            });
+            if ((parsed[email].credits || 0) < 20000) {
+              parsed[email].credits = 50000;
+            }
+          }
+        }
+        return parsed;
+      }
     } catch (e) {
       console.warn("Failed to parse saved accounts:", e);
     }
@@ -94,10 +108,14 @@ export class SaveSystem {
         email: "player@gmail.com",
         nickname: "量子先鋒",
         avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=QuantumVanguard",
-        credits: 2450,
+        credits: 50000,
         eventTokens: 120,
-        skins: ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer", "skin_dark_hacker"],
-        equippedSkin: "skin_cyber_warrior",
+        skins: [
+          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer", "skin_dark_hacker",
+          "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
+          "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
+        ],
+        equippedSkin: "skin_goku_ssj",
         loadout: ["SK-01", "SK-02", "SK-09"],
         stats: { total: 18, wins: 14, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: false } },
         preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -109,10 +127,14 @@ export class SaveSystem {
         email: "ethan.cyber@gmail.com",
         nickname: "伊森大師",
         avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=EthanStriker",
-        credits: 4800,
+        credits: 50000,
         eventTokens: 350,
-        skins: ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer", "skin_dark_hacker", "skin_solar_valkyrie"],
-        equippedSkin: "skin_solar_valkyrie",
+        skins: [
+          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer", "skin_dark_hacker", "skin_solar_valkyrie",
+          "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
+          "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
+        ],
+        equippedSkin: "skin_iron_man",
         loadout: ["SK-03", "SK-04", "SK-07"],
         stats: { total: 42, wins: 38, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: true } },
         preferences: { bgmVol: 0.5, sfxVol: 0.85, haptics: true },
@@ -396,10 +418,14 @@ export class SaveSystem {
         email: email,
         nickname: defaultNick.slice(0, 12),
         avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=" + encodeURIComponent(email),
-        credits: 1200,
+        credits: 50000,
         eventTokens: 0,
-        skins: ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"],
-        equippedSkin: "skin_cyber_warrior",
+        skins: [
+          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer",
+          "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
+          "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
+        ],
+        equippedSkin: "skin_goku_ssj",
         loadout: ["SK-01", "SK-02", "SK-09"],
         stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
         preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -450,10 +476,14 @@ export class SaveSystem {
       email: "guest@offline.local",
       nickname: "訪客戰士",
       avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=GuestStriker",
-      credits: 600,
+      credits: 50000,
       eventTokens: 0,
-      skins: ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"],
-      equippedSkin: "skin_cyber_warrior",
+      skins: [
+        "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer",
+        "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
+        "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
+      ],
+      equippedSkin: "skin_goku_ssj",
       loadout: ["SK-01", "SK-02", "SK-09"],
       stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
       preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },

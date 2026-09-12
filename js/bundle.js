@@ -668,6 +668,258 @@
         hitEffect: "\u5E1D\u7687\u9F8D\u9C57\u91D1\u5149\u70B8\u88C2"
       },
       creator: "Legendary Artisan (PR #99)"
+    },
+    // ── 漫威宇宙正宗經典系列 (Marvel Universe) ──
+    {
+      id: "skin_iron_man",
+      name: "\u92FC\u9435\u4EBA\u30FB\u99AC\u514B85",
+      title: "\u7D0D\u7C73\u9AD8\u79D1\u6280\u5FA9\u4EC7\u8005",
+      category: "shop",
+      series: "\u6F2B\u5A01\u5B87\u5B99",
+      price: 2800,
+      isDefault: false,
+      themeColor: "#c1121f",
+      secondaryColor: "#fbbf24",
+      glowColor: "rgba(56, 189, 248, 0.8)",
+      accentColor: "#fbbf24",
+      armorColor: "#7f1d1d",
+      visorColor: "#38bdf8",
+      coreColor: "#38bdf8",
+      desc: "\u771F\u5BE6\u9084\u539F\u6F2B\u5A01\u300A\u5FA9\u4EC7\u8005\u806F\u76DF\u300B\u7D42\u5C40\u4E4B\u6230\u99AC\u514B85\u88DD\u7532\u3002\u80F8\u53E3\u642D\u8F09\u9AD8\u80FD\u5F27\u5F62\u65B9\u821F\u53CD\u61C9\u7210\uFF0C\u96D9\u624B\u638C\u5FC3\u914D\u5099\u7B49\u96E2\u5B50\u8108\u885D\u7832\u3002",
+      vfx: {
+        punchTrail: "\u91D1\u7D05\u7D0D\u7C73\u5149\u5203\u3001\u638C\u5FC3\u8108\u885D\u5149\u6D41",
+        sk1: "\u9AD8\u80FD\u65B9\u821F\u96E2\u5B50\u805A\u80FD\u7832\uFF0C\u8000\u773C\u851A\u85CD\u96FB\u6D41",
+        sk2: "\u63A8\u9032\u80CC\u7FFC\u5168\u958B\u6C96\u5929\u5347\u9F8D\u5674\u5C04",
+        guardShield: "\u516D\u89D2\u5F62\u5FAE\u6676\u7D0D\u7C73\u529B\u5834\u76FE",
+        hitEffect: "\u851A\u85CD\u8108\u885D\u7B49\u96E2\u5B50\u706B\u82B1"
+      },
+      creator: "Marvel Studios Tribute"
+    },
+    {
+      id: "skin_spiderman",
+      name: "\u8718\u86DB\u4EBA\u30FB\u7D93\u5178\u7D05\u85CD",
+      title: "\u597D\u9130\u5C45\u7D10\u7D04\u82F1\u96C4",
+      category: "shop",
+      series: "\u6F2B\u5A01\u5B87\u5B99",
+      price: 2500,
+      isDefault: false,
+      themeColor: "#dc2626",
+      secondaryColor: "#2563eb",
+      glowColor: "rgba(220, 38, 38, 0.65)",
+      accentColor: "#1d4ed8",
+      armorColor: "#991b1b",
+      visorColor: "#ffffff",
+      coreColor: "#dc2626",
+      desc: "\u771F\u5BE6\u9084\u539F\u5F7C\u5F97\u5E15\u514B\u7D93\u5178\u7D05\u85CD\u86DB\u7DB2\u6230\u8863\uFF01\u9762\u90E8\u5177\u5099\u6A19\u8A8C\u6027\u5927\u767D\u86DB\u773C\u8207\u7C97\u9ED1\u773C\u6846\uFF0C\u80F8\u53E3\u5370\u6709\u6A19\u8A8C\u6027\u9ED1\u8718\u86DB\u5716\u9A30\u3002",
+      vfx: {
+        punchTrail: "\u86DB\u7D72\u8ECC\u8DE1\u3001\u52D5\u611F\u7D05\u85CD\u5149\u5F71",
+        sk1: "\u9AD8\u901F\u9AD8\u9ECF\u5EA6\u91CF\u5B50\u86DB\u7D72\u5F48\uFF0C\u5E36\u86DB\u7DB2\u62D6\u5C3E",
+        sk2: "\u5410\u7D72\u501F\u529B\u6C96\u5929\u8FF4\u65CB\u7A7A\u7FFB\u8E22",
+        guardShield: "\u5168\u65B9\u4F4D\u591A\u5C64\u5E7E\u4F55\u86DB\u7DB2\u9632\u8B77\u5C4F",
+        hitEffect: "\u767D\u8272\u86DB\u7D72\u8207\u7D05\u8272\u611F\u61C9\u9583\u96FB"
+      },
+      creator: "Marvel Studios Tribute"
+    },
+    {
+      id: "skin_captain_america",
+      name: "\u7F8E\u570B\u968A\u9577\u30FB\u7F85\u5091\u65AF",
+      title: "\u50B3\u5947\u5FA9\u4EC7\u8005\u968A\u9577",
+      category: "shop",
+      series: "\u6F2B\u5A01\u5B87\u5B99",
+      price: 2600,
+      isDefault: false,
+      themeColor: "#1d4ed8",
+      secondaryColor: "#ef4444",
+      glowColor: "rgba(29, 78, 216, 0.65)",
+      accentColor: "#ffffff",
+      armorColor: "#1e3a8a",
+      visorColor: "#ffffff",
+      coreColor: "#ffffff",
+      desc: "\u771F\u5BE6\u9084\u539F\u53F2\u8482\u592B\u7F85\u5091\u65AF\u6DF1\u85CD\u661F\u689D\u6230\u670D\uFF01\u982D\u6234\u8C61\u5FB5\u968A\u9577\u4E4B\u767D\u8272A\u5B57\u982D\u76D4\uFF0C\u80CC\u8CA0\u4E0D\u673D\u7684\u5713\u5F62\u6C4E\u5408\u91D1\u661F\u76FE\u3002",
+      vfx: {
+        punchTrail: "\u661F\u76FE\u7834\u7A7A\u6B98\u5F71\u3001\u7D05\u767D\u85CD\u4E09\u8272\u82F1\u52C7\u885D\u64CA",
+        sk1: "\u8FF4\u65CB\u98DB\u64F2\u9AD8\u901F\u65CB\u8F49\u7684\u6C4E\u5408\u91D1\u661F\u76FE",
+        sk2: "\u64CE\u76FE\u6C96\u5929\u91CD\u9318\u7834\u9632\u731B\u64CA",
+        guardShield: "\u5DE8\u5927\u6C4E\u5408\u91D1\u9280\u661F\u8FF4\u65CB\u683C\u64CB\u58C1",
+        hitEffect: "\u91D1\u5C6C\u5DE8\u97FF\u8207\u9280\u8272\u706B\u82B1"
+      },
+      creator: "Marvel Studios Tribute"
+    },
+    {
+      id: "skin_thor",
+      name: "\u96F7\u795E\u7D22\u723E\u30FB\u5967\u4E01\u4E4B\u5B50",
+      title: "\u963F\u65AF\u5609\u96F7\u9706\u6230\u795E",
+      category: "shop",
+      series: "\u6F2B\u5A01\u5B87\u5B99",
+      price: 3e3,
+      isDefault: false,
+      themeColor: "#38bdf8",
+      secondaryColor: "#ef4444",
+      glowColor: "rgba(56, 189, 248, 0.85)",
+      accentColor: "#e2e8f0",
+      armorColor: "#0f172a",
+      visorColor: "#38bdf8",
+      coreColor: "#38bdf8",
+      desc: "\u771F\u5BE6\u9084\u539F\u963F\u65AF\u5609\u96F7\u795E\u5C0A\u5BB9\uFF01\u8EAB\u62AB\u98DB\u821E\u7684\u9BAE\u7D05\u6230\u888D\u62AB\u98A8\uFF0C\u9ED1\u8272\u9C57\u7532\u80F8\u524D\u9472\u5D4C\u516D\u9846\u767D\u9280\u795E\u76FE\u5713\u76E4\uFF0C\u96D9\u76EE\u7DBB\u653E\u842C\u921E\u96F7\u9706\u3002",
+      vfx: {
+        punchTrail: "\u96F7\u795E\u4E4B\u9318\u66B4\u98A8\u96FB\u5F27\u3001\u8000\u85CD\u7834\u7A7A\u5149\u8DE1",
+        sk1: "\u805A\u96C6\u4E5D\u754C\u96F7\u9706\u4E4B\u843D\u96F7\u96F7\u7403",
+        sk2: "\u53EC\u559A\u96F7\u9706\u72C2\u66B4\u6C96\u5929\u7684\u5F15\u96F7\u4E4B\u64CA",
+        guardShield: "\u963F\u65AF\u5609\u5F69\u8679\u6A4B\u7B26\u6587\u96F7\u5149\u7D50\u754C",
+        hitEffect: "\u842C\u4E08\u851A\u85CD\u843D\u96F7\u70B8\u88C2"
+      },
+      creator: "Marvel Studios Tribute"
+    },
+    {
+      id: "skin_thanos",
+      name: "\u85A9\u8AFE\u65AF\u30FB\u7121\u9650\u624B\u5957",
+      title: "\u5B87\u5B99\u5929\u547D\u638C\u63A7\u8005",
+      category: "shop",
+      series: "\u6F2B\u5A01\u5B87\u5B99",
+      price: 3800,
+      isDefault: false,
+      themeColor: "#ffd700",
+      secondaryColor: "#a855f7",
+      glowColor: "rgba(255, 215, 0, 0.8)",
+      accentColor: "#fbbf24",
+      armorColor: "#3b0764",
+      visorColor: "#ffd700",
+      coreColor: "#ffd700",
+      desc: "\u771F\u5BE6\u9084\u539F\u6CF0\u5766\u9738\u738B\u85A9\u8AFE\u65AF\uFF01\u5DE6\u624B\u914D\u6234\u5B8C\u6574\u9472\u5D4C\u516D\u9846\u7121\u9650\u539F\u77F3\uFF08\u529B\u91CF/\u7A7A\u9593/\u73FE\u5BE6/\u9748\u9B42/\u6642\u9593/\u5FC3\u9748\uFF09\u7684\u8000\u773C\u9EC3\u91D1\u7121\u9650\u624B\u5957\uFF01",
+      vfx: {
+        punchTrail: "\u516D\u8272\u539F\u77F3\u7480\u74A8\u5149\u6688\u3001\u6CF0\u5766\u5DE8\u529B\u88C2\u75D5",
+        sk1: "\u7A7A\u9593\u8207\u529B\u91CF\u539F\u77F3\u878D\u5408\u4E4B\u7D2B\u9ED1\u574D\u7E2E\u5F15\u529B\u7403",
+        sk2: "\u7121\u9650\u62F3\u5957\u6307\u5929\u9707\u64BC\u64C2\u53F0\u4E4B\u5B87\u5B99\u885D\u64CA\u67F1",
+        guardShield: "\u6642\u9593\u8207\u73FE\u5BE6\u539F\u77F3\u4E4B\u5F69\u8679\u504F\u6298\u7D50\u754C",
+        hitEffect: "\u516D\u539F\u77F3\u5F69\u5149\u661F\u96F2\u788E\u88C2"
+      },
+      creator: "Marvel Studios Tribute"
+    },
+    // ── 七龍珠超正宗傳奇系列 (Dragon Ball Super) ──
+    {
+      id: "skin_goku_ssj",
+      name: "\u5B6B\u609F\u7A7A\u30FB\u8D85\u7D1A\u8CFD\u4E9E\u4EBA",
+      title: "\u5B87\u5B99\u50B3\u5947\u8D85\u7D1A\u8CFD\u4E9E\u4EBA",
+      category: "shop",
+      series: "\u4E03\u9F8D\u73E0\u8D85",
+      price: 2800,
+      isDefault: false,
+      themeColor: "#fde047",
+      secondaryColor: "#ea580c",
+      glowColor: "rgba(253, 224, 71, 0.85)",
+      accentColor: "#2563eb",
+      armorColor: "#c2410c",
+      visorColor: "#06b6d4",
+      coreColor: "#fde047",
+      desc: "\u771F\u5BE6\u9084\u539F\u9CE5\u5C71\u660E\u7B46\u4E0B\u50B3\u5947\u8D85\u8CFD\uFF01\u6012\u9AEE\u885D\u51A0\u7684\u91D1\u8272\u5C16\u523A\u523A\u875F\u982D\u3001\u78A7\u85CD\u96D9\u7738\uFF0C\u8EAB\u8457\u7D93\u5178\u9F9C\u4ED9\u6D41\u6A59\u8272\u9053\u670D\u8207\u6DF1\u85CD\u8170\u5E36\uFF01",
+      vfx: {
+        punchTrail: "\u91D1\u9EC3\u71C3\u71D2\u6C23\u7130\u3001\u8D85\u8CFD\u7206\u6C23\u97F3\u7206",
+        sk1: "\u6B63\u5B97\u85CD\u767D\u76F8\u9593\u300C\u9F9C\u6D3E\u6C23\u529F\u6CE2\u300D\u5149\u5F48",
+        sk2: "\u91D1\u5149\u6C96\u5929\u9F8D\u62F3\u5486\u54EE\u5347\u9F8D\u64CA",
+        guardShield: "\u5168\u65B9\u4F4D\u71C3\u71D2\u7684\u91D1\u8272\u8CFD\u4E9E\u4EBA\u6C23\u7130\u7206\u767C\u7F69",
+        hitEffect: "\u8D85\u8CFD\u91D1\u9EC3\u6C23\u8292\u9707\u6CE2"
+      },
+      creator: "Dragon Ball Tribute"
+    },
+    {
+      id: "skin_vegeta_ssj",
+      name: "\u8C9D\u5409\u5854\u30FB\u8CFD\u4E9E\u4EBA\u738B\u5B50",
+      title: "\u9A55\u50B2\u7684\u8CFD\u4E9E\u4EBA\u738B\u5B50",
+      category: "shop",
+      series: "\u4E03\u9F8D\u73E0\u8D85",
+      price: 2800,
+      isDefault: false,
+      themeColor: "#3b82f6",
+      secondaryColor: "#fde047",
+      glowColor: "rgba(59, 130, 246, 0.8)",
+      accentColor: "#ffffff",
+      armorColor: "#1e3a8a",
+      visorColor: "#06b6d4",
+      coreColor: "#fde047",
+      desc: "\u771F\u5BE6\u9084\u539F\u8C9D\u5409\u5854\u738B\u5B50\uFF01\u76F4\u7ACB\u6C96\u5929\u4E4B\u706B\u7130\u91D1\u8272\u8CFD\u4E9E\u9577\u9AEE\uFF0C\u8EAB\u7A7F\u7D93\u5178\u767D\u5E95\u9EC3\u80A9\u689D\u7D0B\u6230\u9B25\u670D\u3001\u6DF1\u85CD\u9023\u9AD4\u670D\u8207\u767D\u624B\u5957\uFF01",
+      vfx: {
+        punchTrail: "\u6E5B\u85CD\u8207\u91D1\u9EC3\u4EA4\u7E54\u7684\u7206\u88C2\u6C23\u6D41",
+        sk1: "\u6975\u9650\u91D1\u8272\u300C\u6700\u7D42\u9583\u5149\u300D\u9023\u7E8C\u5149\u5B50\u5F48",
+        sk2: "\u738B\u8005\u50B2\u6C23\u6C96\u5929\u4E4B\u5927\u9739\u9742\u66B4\u98A8\u8E22",
+        guardShield: "\u7687\u5BB6\u8CFD\u4E9E\u4EBA\u85CD\u91D1\u96D9\u74B0\u6C23\u969C\u58C1",
+        hitEffect: "\u91D1\u8272\u96FB\u5F27\u8207\u6DF1\u85CD\u706B\u82B1"
+      },
+      creator: "Dragon Ball Tribute"
+    },
+    {
+      id: "skin_trunks_future",
+      name: "\u672A\u4F86\u7279\u5357\u514B\u65AF",
+      title: "\u5E0C\u671B\u4E4B\u528D\u5B88\u8B77\u8005",
+      category: "shop",
+      series: "\u4E03\u9F8D\u73E0\u8D85",
+      price: 2600,
+      isDefault: false,
+      themeColor: "#a855f7",
+      secondaryColor: "#fde047",
+      glowColor: "rgba(168, 85, 247, 0.75)",
+      accentColor: "#e2e8f0",
+      armorColor: "#312e81",
+      visorColor: "#06b6d4",
+      coreColor: "#a855f7",
+      desc: "\u771F\u5BE6\u9084\u539F\u672A\u4F86\u5C11\u5E74\u7279\u5357\u514B\u65AF\uFF01\u8EAB\u7A7F\u81A0\u56CA\u516C\u53F8\u6DF1\u85CD\u7ACB\u9818\u77ED\u593E\u514B\uFF0C\u659C\u630E\u76AE\u5E36\u80CC\u8CA0\u52C7\u8005\u4E4B\u528D\uFF0C\u96A8\u98A8\u98C4\u52D5\u4FD0\u843D\u7D2B\u9AEE\uFF01",
+      vfx: {
+        punchTrail: "\u9583\u8000\u52C7\u8005\u8056\u528D\u5200\u5149\u3001\u91D1\u8272\u528D\u6C23",
+        sk1: "\u8D85\u97F3\u901F\u9583\u8000\u65AC\u64CA\u528D\u6C23\u6CE2",
+        sk2: "\u9B54\u9583\u5149\u5F15\u7206\u6C96\u5929\u7684\u7834\u90AA\u98DB\u5929\u62D4\u528D",
+        guardShield: "\u4EA4\u53C9\u96D9\u81C2\u9AD8\u901F\u6C23\u5713\u9632\u79A6\u5C4F",
+        hitEffect: "\u7D2B\u8272\u528D\u75D5\u8207\u91D1\u9EC3\u528D\u6C23\u8FF8\u5C04"
+      },
+      creator: "Dragon Ball Tribute"
+    },
+    {
+      id: "skin_piccolo",
+      name: "\u6BD4\u514B\u5927\u9B54\u738B",
+      title: "\u90A3\u7F8E\u514B\u661F\u667A\u52C7\u6230\u795E",
+      category: "shop",
+      series: "\u4E03\u9F8D\u73E0\u8D85",
+      price: 2500,
+      isDefault: false,
+      themeColor: "#22c55e",
+      secondaryColor: "#a855f7",
+      glowColor: "rgba(34, 197, 94, 0.75)",
+      accentColor: "#f43f5e",
+      armorColor: "#581c87",
+      visorColor: "#22c55e",
+      coreColor: "#22c55e",
+      desc: "\u771F\u5BE6\u9084\u539F\u90A3\u7F8E\u514B\u661F\u5927\u9B54\u738B\uFF01\u7DA0\u8272\u76AE\u819A\u3001\u7C89\u7D05\u624B\u81C2\u808C\u8089\u689D\u7D0B\uFF0C\u982D\u6234\u767D\u8272\u982D\u5DFE\uFF0C\u8EAB\u62AB\u5BEC\u5927\u539A\u91CD\u7684\u767D\u8272\u9577\u62AB\u80A9\u8207\u7D2B\u8272\u9053\u670D\uFF01",
+      vfx: {
+        punchTrail: "\u90A3\u7F8E\u514B\u661F\u624B\u81C2\u5EF6\u4F38\u7DA0\u8272\u6C23\u5203\u3001\u6B98\u5F71",
+        sk1: "\u6307\u5C16\u51DD\u805A\u4E4B\u96D9\u87BA\u65CB\u300C\u9B54\u8CAB\u5149\u6BBA\u7832\u300D",
+        sk2: "\u72C2\u66B4\u5347\u9F8D\u88C2\u5730\u7206\u88C2\u9B54\u6CE2",
+        guardShield: "\u90A3\u7F8E\u514B\u661F\u795E\u79D8\u7CBE\u795E\u529B\u5834\u5C4F",
+        hitEffect: "\u9EC3\u7DA0\u96FB\u5149\u9B54\u6C23\u56DB\u5C04"
+      },
+      creator: "Dragon Ball Tribute"
+    },
+    {
+      id: "skin_golden_frieza",
+      name: "\u9EC3\u91D1\u5F17\u5229\u6C99",
+      title: "\u5B87\u5B99\u5E1D\u738B\u7D42\u6975\u5F62\u614B",
+      category: "shop",
+      series: "\u4E03\u9F8D\u73E0\u8D85",
+      price: 3600,
+      isDefault: false,
+      themeColor: "#ffd700",
+      secondaryColor: "#9333ea",
+      glowColor: "rgba(255, 215, 0, 0.85)",
+      accentColor: "#ef4444",
+      armorColor: "#4c1d95",
+      visorColor: "#ef4444",
+      coreColor: "#ffd700",
+      desc: "\u771F\u5BE6\u9084\u539F\u5F17\u5229\u6C99\u7D42\u6975\u9EC3\u91D1\u9032\u5316\uFF01\u8EAB\u8EC0\u8986\u84CB\u8457\u9AD8\u8CB4\u5962\u83EF\u7684\u91D1\u5C6C\u771F\u91D1\u751F\u7269\u7532\uFF0C\u982D\u9802\u8207\u80F8\u53E3\u9583\u8000\u7D2B\u6C34\u6676\u5BF6\u77F3\uFF0C\u7329\u7D05\u96D9\u773C\u8511\u8996\u4E00\u5207\uFF01",
+      vfx: {
+        punchTrail: "\u9EC3\u91D1\u6B7B\u4EA1\u6C23\u8292\u3001\u6DF1\u7D2B\u5E1D\u7687\u5149\u7130",
+        sk1: "\u6975\u901F\u7834\u7A7A\u4E4B\u7329\u7D05\u300C\u6B7B\u4EA1\u5149\u7DDA\u300D\u6307\u69CD",
+        sk2: "\u9EC3\u91D1\u5E1D\u7687\u8D85\u7D1A\u8D85\u65B0\u661F\u6BC0\u6EC5\u67F1",
+        guardShield: "\u9EC3\u91D1\u6B7B\u4EA1\u5713\u7403\u74B0\u5F62\u7D55\u5C0D\u9632\u79A6\u7403",
+        hitEffect: "\u7329\u7D05\u91D1\u8292\u6B7B\u4EA1\u7206\u88C2"
+      },
+      creator: "Dragon Ball Tribute"
     }
   ];
 
@@ -732,7 +984,21 @@
     _loadAccountsFromStorage() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
-        if (raw) return JSON.parse(raw);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          for (const email in parsed) {
+            if (parsed[email] && Array.isArray(parsed[email].skins)) {
+              const desired = ["skin_iron_man", "skin_spiderman", "skin_goku_ssj", "skin_vegeta_ssj"];
+              desired.forEach((s) => {
+                if (!parsed[email].skins.includes(s)) parsed[email].skins.push(s);
+              });
+              if ((parsed[email].credits || 0) < 2e4) {
+                parsed[email].credits = 5e4;
+              }
+            }
+          }
+          return parsed;
+        }
       } catch (e) {
         console.warn("Failed to parse saved accounts:", e);
       }
@@ -742,10 +1008,25 @@
           email: "player@gmail.com",
           nickname: "\u91CF\u5B50\u5148\u92D2",
           avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=QuantumVanguard",
-          credits: 2450,
+          credits: 5e4,
           eventTokens: 120,
-          skins: ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer", "skin_dark_hacker"],
-          equippedSkin: "skin_cyber_warrior",
+          skins: [
+            "skin_cyber_warrior",
+            "skin_neon_shadow",
+            "skin_pulse_enforcer",
+            "skin_dark_hacker",
+            "skin_iron_man",
+            "skin_spiderman",
+            "skin_captain_america",
+            "skin_thor",
+            "skin_thanos",
+            "skin_goku_ssj",
+            "skin_vegeta_ssj",
+            "skin_trunks_future",
+            "skin_piccolo",
+            "skin_golden_frieza"
+          ],
+          equippedSkin: "skin_goku_ssj",
           loadout: ["SK-01", "SK-02", "SK-09"],
           stats: { total: 18, wins: 14, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: false } },
           preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -757,10 +1038,26 @@
           email: "ethan.cyber@gmail.com",
           nickname: "\u4F0A\u68EE\u5927\u5E2B",
           avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=EthanStriker",
-          credits: 4800,
+          credits: 5e4,
           eventTokens: 350,
-          skins: ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer", "skin_dark_hacker", "skin_solar_valkyrie"],
-          equippedSkin: "skin_solar_valkyrie",
+          skins: [
+            "skin_cyber_warrior",
+            "skin_neon_shadow",
+            "skin_pulse_enforcer",
+            "skin_dark_hacker",
+            "skin_solar_valkyrie",
+            "skin_iron_man",
+            "skin_spiderman",
+            "skin_captain_america",
+            "skin_thor",
+            "skin_thanos",
+            "skin_goku_ssj",
+            "skin_vegeta_ssj",
+            "skin_trunks_future",
+            "skin_piccolo",
+            "skin_golden_frieza"
+          ],
+          equippedSkin: "skin_iron_man",
           loadout: ["SK-03", "SK-04", "SK-07"],
           stats: { total: 42, wins: 38, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: true } },
           preferences: { bgmVol: 0.5, sfxVol: 0.85, haptics: true },
@@ -1004,10 +1301,24 @@
           email,
           nickname: defaultNick.slice(0, 12),
           avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=" + encodeURIComponent(email),
-          credits: 1200,
+          credits: 5e4,
           eventTokens: 0,
-          skins: ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"],
-          equippedSkin: "skin_cyber_warrior",
+          skins: [
+            "skin_cyber_warrior",
+            "skin_neon_shadow",
+            "skin_pulse_enforcer",
+            "skin_iron_man",
+            "skin_spiderman",
+            "skin_captain_america",
+            "skin_thor",
+            "skin_thanos",
+            "skin_goku_ssj",
+            "skin_vegeta_ssj",
+            "skin_trunks_future",
+            "skin_piccolo",
+            "skin_golden_frieza"
+          ],
+          equippedSkin: "skin_goku_ssj",
           loadout: ["SK-01", "SK-02", "SK-09"],
           stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
           preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -1050,10 +1361,24 @@
         email: "guest@offline.local",
         nickname: "\u8A2A\u5BA2\u6230\u58EB",
         avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=GuestStriker",
-        credits: 600,
+        credits: 5e4,
         eventTokens: 0,
-        skins: ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"],
-        equippedSkin: "skin_cyber_warrior",
+        skins: [
+          "skin_cyber_warrior",
+          "skin_neon_shadow",
+          "skin_pulse_enforcer",
+          "skin_iron_man",
+          "skin_spiderman",
+          "skin_captain_america",
+          "skin_thor",
+          "skin_thanos",
+          "skin_goku_ssj",
+          "skin_vegeta_ssj",
+          "skin_trunks_future",
+          "skin_piccolo",
+          "skin_golden_frieza"
+        ],
+        equippedSkin: "skin_goku_ssj",
         loadout: ["SK-01", "SK-02", "SK-09"],
         stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
         preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -1740,6 +2065,2211 @@
   };
   var soundEngine = new SoundEngine();
 
+  // js/engine/special_skins_renderer.js
+  var SpecialSkinsRenderer = class {
+    constructor() {
+      this.specialSkinIds = /* @__PURE__ */ new Set([
+        "skin_iron_man",
+        "skin_spiderman",
+        "skin_captain_america",
+        "skin_thor",
+        "skin_thanos",
+        "skin_goku_ssj",
+        "skin_vegeta_ssj",
+        "skin_trunks_future",
+        "skin_piccolo",
+        "skin_golden_frieza"
+      ]);
+    }
+    isSpecial(skin) {
+      return skin && skin.id && this.specialSkinIds.has(skin.id);
+    }
+    // ─── 輔助繪圖工具 ───
+    _drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, fillStyle, strokeStyle = null, lineWidth = 1) {
+      let rot = Math.PI / 2 * 3;
+      let x = cx;
+      let y = cy;
+      const step = Math.PI / spikes;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - outerRadius);
+      for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+      }
+      ctx.lineTo(cx, cy - outerRadius);
+      ctx.closePath();
+      if (fillStyle) {
+        ctx.fillStyle = fillStyle;
+        ctx.fill();
+      }
+      if (strokeStyle) {
+        ctx.strokeStyle = strokeStyle;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    _drawSpiderWebOnHead(ctx, cx, cy, radius, color = "rgba(0, 0, 0, 0.75)") {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.9;
+      const angles = [
+        -Math.PI * 0.9,
+        -Math.PI * 0.7,
+        -Math.PI * 0.5,
+        -Math.PI * 0.3,
+        -Math.PI * 0.1,
+        Math.PI * 0.1,
+        Math.PI * 0.3,
+        Math.PI * 0.5,
+        Math.PI * 0.7,
+        Math.PI * 0.9
+      ];
+      for (const ang of angles) {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(ang) * radius, cy + Math.sin(ang) * radius);
+        ctx.stroke();
+      }
+      for (const r of [radius * 0.45, radius * 0.85]) {
+        ctx.beginPath();
+        for (let i = 0; i < angles.length; i++) {
+          const ang = angles[i];
+          const px = cx + Math.cos(ang) * r;
+          const py = cy + Math.sin(ang) * r;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // ─── 1. 特殊氣場與光環 (Special Aura) ───
+    drawAura(ctx, char, skin, t) {
+      if (!this.isSpecial(skin)) return;
+      const id = skin.id;
+      ctx.save();
+      if (id === "skin_goku_ssj" || id === "skin_vegeta_ssj") {
+        const isVegeta = id === "skin_vegeta_ssj";
+        const mainGold = isVegeta ? "#facc15" : "#fde047";
+        const glowGold = isVegeta ? "rgba(250, 204, 21, 0.45)" : "rgba(254, 240, 138, 0.5)";
+        ctx.shadowColor = mainGold;
+        ctx.shadowBlur = 24;
+        for (let f = 0; f < 3; f++) {
+          const wave = Math.sin(t * 0.2 + f * 1.8) * 6;
+          ctx.fillStyle = glowGold;
+          ctx.beginPath();
+          ctx.moveTo(-26 - wave, 4);
+          ctx.quadraticCurveTo(-38 + wave, -45, -18 - wave, -88);
+          ctx.quadraticCurveTo(0, -112 - Math.sin(t * 0.3) * 8, 18 + wave, -88);
+          ctx.quadraticCurveTo(38 - wave, -45, 26 + wave, 4);
+          ctx.closePath();
+          ctx.fill();
+        }
+        for (let i = 0; i < 7; i++) {
+          const pSpeed = (t * 2.2 + i * 16) % 110;
+          const px = Math.sin(t * 0.15 + i * 2) * (20 - pSpeed * 0.12);
+          const py = 4 - pSpeed;
+          const alpha = Math.max(0, 1 - pSpeed / 100);
+          ctx.fillStyle = isVegeta && i % 3 === 0 ? "#60a5fa" : "#ffffff";
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          ctx.moveTo(px, py - 3);
+          ctx.lineTo(px + 2, py);
+          ctx.lineTo(px, py + 3);
+          ctx.lineTo(px - 2, py);
+          ctx.closePath();
+          ctx.fill();
+        }
+        if (isVegeta) {
+          ctx.strokeStyle = "#60a5fa";
+          ctx.lineWidth = 1.5;
+          for (let s = 0; s < 3; s++) {
+            const sparkPhase = (t * 0.1 + s * 2.1) % (Math.PI * 2);
+            if (Math.sin(sparkPhase) > 0.4) {
+              const sx = Math.sin(sparkPhase * 3) * 22;
+              const sy = -30 - Math.cos(sparkPhase * 2) * 35;
+              ctx.beginPath();
+              ctx.moveTo(sx, sy);
+              ctx.lineTo(sx + 5, sy - 6);
+              ctx.lineTo(sx + 2, sy - 12);
+              ctx.stroke();
+            }
+          }
+        }
+      } else if (id === "skin_golden_frieza") {
+        ctx.shadowColor = "#ffd700";
+        ctx.shadowBlur = 26;
+        const wave = Math.sin(t * 0.25) * 5;
+        ctx.fillStyle = "rgba(255, 215, 0, 0.45)";
+        ctx.beginPath();
+        ctx.moveTo(-24 - wave, 4);
+        ctx.quadraticCurveTo(-34, -40, -16, -85);
+        ctx.quadraticCurveTo(0, -108, 16, -85);
+        ctx.quadraticCurveTo(34, -40, 24 + wave, 4);
+        ctx.closePath();
+        ctx.fill();
+        for (let i = 0; i < 5; i++) {
+          const pSpeed = (t * 2.5 + i * 22) % 100;
+          const px = Math.cos(t * 0.2 + i) * 24;
+          const py = -pSpeed;
+          ctx.fillStyle = "#c084fc";
+          ctx.globalAlpha = Math.max(0, 1 - pSpeed / 90);
+          ctx.beginPath();
+          ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (id === "skin_thor") {
+        ctx.shadowColor = "#38bdf8";
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = "#67e8f9";
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 3; i++) {
+          const arcT = (t * 0.3 + i * 2.3) % 4;
+          if (arcT < 2.5) {
+            const startX = -15 + i * 15;
+            const startY = -70 + i * 20;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX + 8, startY + 12);
+            ctx.lineTo(startX - 4, startY + 22);
+            ctx.lineTo(startX + 10, startY + 34);
+            ctx.stroke();
+          }
+        }
+      } else if (id === "skin_thanos") {
+        const colors = ["#facc15", "#a855f7", "#3b82f6", "#ef4444", "#f97316", "#22c55e"];
+        const activeIdx = Math.floor(t * 0.15) % colors.length;
+        ctx.shadowColor = colors[activeIdx];
+        ctx.shadowBlur = 16;
+        ctx.strokeStyle = colors[activeIdx];
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.5 + Math.sin(t * 0.3) * 0.3;
+        ctx.beginPath();
+        ctx.arc(0, -45, 34 + Math.sin(t * 0.2) * 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // ─── 2. 特殊頭部渲染 (Special Head) ───
+    drawHead(ctx, head, skin) {
+      if (!this.isSpecial(skin)) return false;
+      const id = skin.id;
+      const t = Date.now() / 250;
+      switch (id) {
+        // ══════════════════════════════════════════════════
+        // 1. 鋼鐵人・馬克85 (Iron Man Mark 85)
+        // ══════════════════════════════════════════════════
+        case "skin_iron_man": {
+          ctx.fillStyle = "#b91c1c";
+          ctx.strokeStyle = "#7f1d1d";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-14, 8);
+          ctx.quadraticCurveTo(-18, -4, -14, -14);
+          ctx.quadraticCurveTo(-6, -19, 4, -19);
+          ctx.lineTo(13, -12);
+          ctx.lineTo(15, -2);
+          ctx.lineTo(13, 8);
+          ctx.lineTo(6, 16);
+          ctx.lineTo(-6, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fbbf24";
+          ctx.beginPath();
+          ctx.moveTo(-8, -17);
+          ctx.lineTo(4, -18);
+          ctx.lineTo(10, -13);
+          ctx.lineTo(4, -15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#fbbf24";
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(2, -14);
+          ctx.lineTo(12, -12);
+          ctx.lineTo(15, -3);
+          ctx.lineTo(13, 7);
+          ctx.lineTo(7, 15);
+          ctx.lineTo(1, 15);
+          ctx.lineTo(2, 6);
+          ctx.lineTo(0, -3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#7f1d1d";
+          ctx.fillRect(4, 11, 5, 2.5);
+          const eyePulse = Math.sin(t * 1.5) * 0.15 + 0.85;
+          ctx.save();
+          ctx.shadowColor = "#38bdf8";
+          ctx.shadowBlur = 10 * eyePulse;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.moveTo(5, -4);
+          ctx.lineTo(13, -3);
+          ctx.lineTo(12, -1);
+          ctx.lineTo(6, -1.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(1, -4);
+          ctx.lineTo(3.5, -3.5);
+          ctx.lineTo(3.2, -1.8);
+          ctx.lineTo(1, -2.2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+          ctx.fillStyle = "#ca8a04";
+          ctx.beginPath();
+          ctx.arc(-8, 1, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#38bdf8";
+          ctx.beginPath();
+          ctx.arc(-8, 1, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+          return true;
+        }
+        // ══════════════════════════════════════════════════
+        // 2. 蜘蛛人・經典紅藍 (Spider-Man Classic Suit)
+        // ══════════════════════════════════════════════════
+        case "skin_spiderman": {
+          ctx.fillStyle = "#dc2626";
+          ctx.strokeStyle = "#991b1b";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-13, 8);
+          ctx.quadraticCurveTo(-16, -2, -13, -13);
+          ctx.quadraticCurveTo(-5, -18, 4, -18);
+          ctx.quadraticCurveTo(14, -14, 15, -2);
+          ctx.quadraticCurveTo(14, 8, 7, 16);
+          ctx.lineTo(-6, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          this._drawSpiderWebOnHead(ctx, 8, -2, 16, "rgba(15, 23, 42, 0.7)");
+          ctx.fillStyle = "#000000";
+          ctx.beginPath();
+          ctx.moveTo(4, -8);
+          ctx.lineTo(15, -4);
+          ctx.quadraticCurveTo(16, 2, 13, 5);
+          ctx.lineTo(5, 1);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.moveTo(6, -6);
+          ctx.lineTo(13.5, -3);
+          ctx.quadraticCurveTo(14.5, 1.5, 12, 3.5);
+          ctx.lineTo(6.5, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#000000";
+          ctx.beginPath();
+          ctx.moveTo(0, -7);
+          ctx.lineTo(3.5, -5.5);
+          ctx.lineTo(3, 0);
+          ctx.lineTo(0.5, -1);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.moveTo(1, -5.5);
+          ctx.lineTo(3, -4.5);
+          ctx.lineTo(2.5, -0.8);
+          ctx.lineTo(1.2, -1.5);
+          ctx.closePath();
+          ctx.fill();
+          return true;
+        }
+        // ══════════════════════════════════════════════════
+        // 3. 美國隊長・羅傑斯 (Captain America Steve Rogers)
+        // ══════════════════════════════════════════════════
+        case "skin_captain_america": {
+          ctx.fillStyle = "#1e3a8a";
+          ctx.strokeStyle = "#172554";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-13, 8);
+          ctx.quadraticCurveTo(-17, -2, -14, -13);
+          ctx.quadraticCurveTo(-6, -19, 4, -19);
+          ctx.lineTo(13, -12);
+          ctx.lineTo(15, -4);
+          ctx.lineTo(6, -1);
+          ctx.lineTo(3, 8);
+          ctx.lineTo(-10, 10);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.save();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 9px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("A", 8, -10);
+          ctx.restore();
+          ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+          ctx.beginPath();
+          ctx.moveTo(-7, -8);
+          ctx.lineTo(-2, -10);
+          ctx.lineTo(-4, -6);
+          ctx.lineTo(0, -7);
+          ctx.lineTo(-5, -4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#fed7aa";
+          ctx.beginPath();
+          ctx.moveTo(6, -1);
+          ctx.lineTo(15, -1);
+          ctx.lineTo(13, 7);
+          ctx.lineTo(6, 15);
+          ctx.lineTo(2, 14);
+          ctx.lineTo(3, 8);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#78350f";
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(-3, 8);
+          ctx.lineTo(4, 15);
+          ctx.stroke();
+          ctx.fillStyle = "#0284c7";
+          ctx.fillRect(8, -3, 3, 2);
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(7, -5, 5, 1.2);
+          return true;
+        }
+        // ══════════════════════════════════════════════════
+        // 4. 雷神索爾・奧丁之子 (Thor Odinson)
+        // ══════════════════════════════════════════════════
+        case "skin_thor": {
+          ctx.fillStyle = "#facc15";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(-10, -12);
+          ctx.quadraticCurveTo(-22, -2, -19, 16);
+          ctx.lineTo(-14, 18);
+          ctx.lineTo(-10, 8);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#e2e8f0";
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-12, 6);
+          ctx.quadraticCurveTo(-16, -4, -12, -14);
+          ctx.quadraticCurveTo(-4, -19, 4, -19);
+          ctx.lineTo(13, -12);
+          ctx.lineTo(14, -3);
+          ctx.lineTo(4, 0);
+          ctx.lineTo(-4, 7);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#f8fafc";
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-6, -12);
+          ctx.lineTo(-16, -26);
+          ctx.lineTo(-10, -20);
+          ctx.lineTo(-18, -20);
+          ctx.lineTo(-8, -14);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fed7aa";
+          ctx.beginPath();
+          ctx.moveTo(4, 0);
+          ctx.lineTo(14, -1);
+          ctx.lineTo(13, 8);
+          ctx.lineTo(6, 16);
+          ctx.lineTo(0, 15);
+          ctx.lineTo(-2, 7);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#eab308";
+          ctx.fillRect(4, 13, 4, 2.5);
+          ctx.save();
+          ctx.shadowColor = "#38bdf8";
+          ctx.shadowBlur = 12;
+          ctx.fillStyle = "#38bdf8";
+          ctx.beginPath();
+          ctx.arc(8, -2, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(8, -2, 1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          return true;
+        }
+        // ══════════════════════════════════════════════════
+        // 5. 薩諾斯・無限手套 (Thanos Titan Warlord)
+        // ══════════════════════════════════════════════════
+        case "skin_thanos": {
+          ctx.fillStyle = "#8b5cf6";
+          ctx.strokeStyle = "#6d28d9";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-14, 8);
+          ctx.quadraticCurveTo(-18, -4, -14, -15);
+          ctx.quadraticCurveTo(-6, -20, 5, -20);
+          ctx.lineTo(14, -12);
+          ctx.lineTo(16, 2);
+          ctx.lineTo(14, 12);
+          ctx.lineTo(6, 18);
+          ctx.lineTo(-6, 17);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#f59e0b";
+          ctx.strokeStyle = "#b45309";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-12, -4);
+          ctx.lineTo(-14, -16);
+          ctx.lineTo(5, -21);
+          ctx.lineTo(13, -14);
+          ctx.lineTo(11, -5);
+          ctx.lineTo(5, -12);
+          ctx.lineTo(-5, -6);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#d97706";
+          ctx.fillRect(-2, -21, 5, 8);
+          ctx.strokeStyle = "#581c87";
+          ctx.lineWidth = 1.5;
+          for (let i = 0; i < 4; i++) {
+            const rx = 3 + i * 2.8;
+            ctx.beginPath();
+            ctx.moveTo(rx, 11);
+            ctx.lineTo(rx, 17);
+            ctx.stroke();
+          }
+          ctx.fillStyle = "#fef08a";
+          ctx.fillRect(8, -4, 3.5, 2);
+          ctx.fillStyle = "#4c1d95";
+          ctx.fillRect(6, -6, 7, 1.5);
+          return true;
+        }
+        // ══════════════════════════════════════════════════
+        // 6. 孫悟空・超級賽亞人 (Son Goku SSJ)
+        // ══════════════════════════════════════════════════
+        case "skin_goku_ssj": {
+          ctx.fillStyle = "#facc15";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-4, -18);
+          ctx.lineTo(-14, -38);
+          ctx.lineTo(-5, -23);
+          ctx.lineTo(-24, -32);
+          ctx.lineTo(-14, -16);
+          ctx.lineTo(-26, -18);
+          ctx.lineTo(-14, -5);
+          ctx.lineTo(2, -20);
+          ctx.lineTo(8, -36);
+          ctx.lineTo(12, -18);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fef08a";
+          ctx.beginPath();
+          ctx.moveTo(-2, -18);
+          ctx.lineTo(-10, -32);
+          ctx.lineTo(-4, -22);
+          ctx.lineTo(6, -30);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#fed7aa";
+          ctx.strokeStyle = "#f59e0b";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(2, -14);
+          ctx.lineTo(14, -10);
+          ctx.lineTo(15, -1);
+          ctx.lineTo(12, 8);
+          ctx.lineTo(6, 16);
+          ctx.lineTo(-3, 15);
+          ctx.lineTo(-10, 6);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#facc15";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(11, -14);
+          ctx.lineTo(15, -4);
+          ctx.lineTo(10, -7);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(7, -13);
+          ctx.lineTo(9, -2);
+          ctx.lineTo(5, -6);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#0f172a";
+          ctx.beginPath();
+          ctx.moveTo(6, -5);
+          ctx.lineTo(13, -3);
+          ctx.lineTo(12, 1);
+          ctx.lineTo(7, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#2dd4bf";
+          ctx.fillRect(8, -3.5, 3.5, 3);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(9, -3, 1.2, 1.2);
+          ctx.fillStyle = "#facc15";
+          ctx.beginPath();
+          ctx.moveTo(5, -6);
+          ctx.lineTo(14, -4);
+          ctx.lineTo(13, -2.5);
+          ctx.lineTo(5, -4.5);
+          ctx.closePath();
+          ctx.fill();
+          return true;
+        }
+        // ══════════════════════════════════════════════════
+        // 7. 貝吉塔・賽亞人王子 (Vegeta SSJ)
+        // ══════════════════════════════════════════════════
+        case "skin_vegeta_ssj": {
+          ctx.fillStyle = "#facc15";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(5, -12);
+          ctx.lineTo(11, -44);
+          ctx.lineTo(3, -28);
+          ctx.lineTo(-2, -46);
+          ctx.lineTo(-7, -26);
+          ctx.lineTo(-14, -40);
+          ctx.lineTo(-13, -18);
+          ctx.lineTo(-22, -26);
+          ctx.lineTo(-12, -4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fef08a";
+          ctx.beginPath();
+          ctx.moveTo(3, -14);
+          ctx.lineTo(8, -38);
+          ctx.lineTo(1, -26);
+          ctx.lineTo(-2, -38);
+          ctx.lineTo(-5, -24);
+          ctx.lineTo(-9, -32);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#fed7aa";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(8, -12);
+          ctx.lineTo(5, -7);
+          ctx.lineTo(0, -12);
+          ctx.lineTo(-6, -11);
+          ctx.lineTo(-10, 4);
+          ctx.lineTo(-3, 15);
+          ctx.lineTo(5, 16);
+          ctx.lineTo(13, 7);
+          ctx.lineTo(14, -2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#0f172a";
+          ctx.beginPath();
+          ctx.moveTo(5, -4);
+          ctx.lineTo(13, -1);
+          ctx.lineTo(11, 3);
+          ctx.lineTo(5, 1);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#2dd4bf";
+          ctx.fillRect(7, -2.5, 3.8, 3.5);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(8, -2, 1.2, 1.2);
+          ctx.fillStyle = "#facc15";
+          ctx.fillRect(4, -5.5, 9, 2);
+          return true;
+        }
+        // ══════════════════════════════════════════════════
+        // 8. 未來特南克斯 (Future Trunks)
+        // ══════════════════════════════════════════════════
+        case "skin_trunks_future": {
+          ctx.fillStyle = "#c084fc";
+          ctx.strokeStyle = "#9333ea";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(2, -18);
+          ctx.quadraticCurveTo(12, -14, 15, -2);
+          ctx.lineTo(14, 5);
+          ctx.lineTo(11, 0);
+          ctx.lineTo(7, -10);
+          ctx.lineTo(2, -18);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(2, -18);
+          ctx.quadraticCurveTo(-10, -18, -16, -10);
+          ctx.quadraticCurveTo(-20, 2, -16, 12);
+          ctx.lineTo(-11, 8);
+          ctx.lineTo(-10, -6);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fed7aa";
+          ctx.beginPath();
+          ctx.moveTo(2, -11);
+          ctx.lineTo(11, -7);
+          ctx.lineTo(13, 3);
+          ctx.lineTo(7, 15);
+          ctx.lineTo(-2, 14);
+          ctx.lineTo(-8, 5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#38bdf8";
+          ctx.fillRect(6, -2, 4, 2.5);
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(5, -4, 6, 1.5);
+          return true;
+        }
+        // ══════════════════════════════════════════════════
+        // 9. 比克大魔王 (Piccolo)
+        // ══════════════════════════════════════════════════
+        case "skin_piccolo": {
+          ctx.fillStyle = "#f8fafc";
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(-14, 2);
+          ctx.quadraticCurveTo(-18, -10, -10, -18);
+          ctx.quadraticCurveTo(2, -22, 12, -15);
+          ctx.lineTo(14, -6);
+          ctx.lineTo(3, -6);
+          ctx.lineTo(-6, 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#581c87";
+          ctx.fillRect(-1, -19, 5, 8);
+          ctx.fillStyle = "#22c55e";
+          ctx.strokeStyle = "#15803d";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(-4, 0);
+          ctx.lineTo(12, -5);
+          ctx.lineTo(14, 5);
+          ctx.lineTo(7, 16);
+          ctx.lineTo(-2, 15);
+          ctx.lineTo(-8, 8);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(-10, 2);
+          ctx.lineTo(-20, -3);
+          ctx.lineTo(-9, 8);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#15803d";
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(8, -7);
+          ctx.quadraticCurveTo(12, -14, 15, -17);
+          ctx.stroke();
+          ctx.fillStyle = "#16a34a";
+          ctx.beginPath();
+          ctx.arc(15, -17, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(4, -8);
+          ctx.quadraticCurveTo(8, -16, 10, -19);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(10, -19, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#fef08a";
+          ctx.fillRect(7, 0, 4, 2.5);
+          ctx.fillStyle = "#000000";
+          ctx.fillRect(8.5, 0.5, 1.5, 1.5);
+          return true;
+        }
+        // ══════════════════════════════════════════════════
+        // 10. 黃金弗利沙 (Golden Frieza)
+        // ══════════════════════════════════════════════════
+        case "skin_golden_frieza": {
+          ctx.fillStyle = "#ffd700";
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-13, 6);
+          ctx.quadraticCurveTo(-17, -6, -12, -15);
+          ctx.quadraticCurveTo(0, -20, 11, -15);
+          ctx.lineTo(15, -3);
+          ctx.lineTo(13, 8);
+          ctx.lineTo(6, 16);
+          ctx.lineTo(-4, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.save();
+          ctx.shadowColor = "#a855f7";
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = "#9333ea";
+          ctx.beginPath();
+          ctx.ellipse(-1, -14, 7, 4.5, -0.1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(-2, -15, 1.4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          ctx.fillStyle = "#7c3aed";
+          ctx.beginPath();
+          ctx.moveTo(9, 2);
+          ctx.lineTo(11, 9);
+          ctx.lineTo(7, 8);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#000000";
+          ctx.beginPath();
+          ctx.moveTo(5, -4);
+          ctx.lineTo(14, -2);
+          ctx.lineTo(12, 2);
+          ctx.lineTo(6, 1);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#ef4444";
+          ctx.fillRect(8, -2.5, 3.5, 3);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(9, -2, 1, 1);
+          return true;
+        }
+        default:
+          return false;
+      }
+    }
+    // ─── 3. 特殊軀幹渲染 (Special Torso) ───
+    drawTorso(ctx, torso, skin, t) {
+      if (!this.isSpecial(skin)) return false;
+      const id = skin.id;
+      ctx.save();
+      ctx.translate(torso.x, torso.y);
+      ctx.rotate(torso.angle);
+      switch (id) {
+        // ══════════════════════════════════════════════════
+        // 1. 鋼鐵人・馬克85 (Iron Man Mark 85)
+        // ══════════════════════════════════════════════════
+        case "skin_iron_man": {
+          ctx.fillStyle = "#b91c1c";
+          ctx.strokeStyle = "#7f1d1d";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fbbf24";
+          ctx.beginPath();
+          ctx.moveTo(-14, -21);
+          ctx.lineTo(-6, -21);
+          ctx.lineTo(-9, -13);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(14, -21);
+          ctx.lineTo(6, -21);
+          ctx.lineTo(9, -13);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#d97706";
+          ctx.fillRect(-7, 4, 14, 3);
+          ctx.fillRect(-6, 9, 12, 3);
+          ctx.fillStyle = "#7f1d1d";
+          ctx.fillRect(-11, 16, 22, 12);
+          ctx.fillStyle = "#fbbf24";
+          ctx.fillRect(-4, 18, 8, 8);
+          const pulse = 1 + Math.sin(t * 0.2) * 0.18;
+          ctx.save();
+          ctx.shadowColor = "#38bdf8";
+          ctx.shadowBlur = 15 * pulse;
+          ctx.fillStyle = "#e2e8f0";
+          ctx.beginPath();
+          ctx.moveTo(-6, -11);
+          ctx.lineTo(6, -11);
+          ctx.lineTo(4, -2);
+          ctx.lineTo(-4, -2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#38bdf8";
+          ctx.beginPath();
+          ctx.arc(0, -6.5, 4.5 * pulse, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(0, -6.5, 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 2. 蜘蛛人・經典紅藍 (Spider-Man Classic Suit)
+        // ══════════════════════════════════════════════════
+        case "skin_spiderman": {
+          ctx.fillStyle = "#2563eb";
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#dc2626";
+          ctx.strokeStyle = "#991b1b";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-9, -23);
+          ctx.lineTo(9, -23);
+          ctx.lineTo(7, 16);
+          ctx.lineTo(-7, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#0f172a";
+          ctx.beginPath();
+          ctx.ellipse(0, -7, 2.5, 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(0, -9);
+          ctx.lineTo(7, -15);
+          ctx.lineTo(10, -10);
+          ctx.moveTo(0, -9);
+          ctx.lineTo(-7, -15);
+          ctx.lineTo(-10, -10);
+          ctx.moveTo(0, -8);
+          ctx.lineTo(8, -12);
+          ctx.lineTo(11, -8);
+          ctx.moveTo(0, -8);
+          ctx.lineTo(-8, -12);
+          ctx.lineTo(-11, -8);
+          ctx.moveTo(0, -5);
+          ctx.lineTo(6, -2);
+          ctx.lineTo(8, 5);
+          ctx.moveTo(0, -5);
+          ctx.lineTo(-6, -2);
+          ctx.lineTo(-8, 5);
+          ctx.moveTo(0, -6);
+          ctx.lineTo(5, 0);
+          ctx.lineTo(6, 7);
+          ctx.moveTo(0, -6);
+          ctx.lineTo(-5, 0);
+          ctx.lineTo(-6, 7);
+          ctx.stroke();
+          ctx.fillStyle = "#dc2626";
+          ctx.fillRect(-11, 16, 22, 10);
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(-11, 16, 22, 10);
+          ctx.fillStyle = "#1d4ed8";
+          ctx.fillRect(-11, 22, 22, 6);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 3. 美國隊長・羅傑斯 (Captain America Steve Rogers)
+        // ══════════════════════════════════════════════════
+        case "skin_captain_america": {
+          ctx.fillStyle = "#1e3a8a";
+          ctx.strokeStyle = "#172554";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          this._drawStar(ctx, 0, -10, 5, 7.5, 3.2, "#ffffff", "#cbd5e1", 0.8);
+          const numStripes = 5;
+          const stripeW = 3.6;
+          const startX = -(numStripes * stripeW / 2);
+          for (let i = 0; i < numStripes; i++) {
+            ctx.fillStyle = i % 2 === 0 ? "#dc2626" : "#ffffff";
+            ctx.fillRect(startX + i * stripeW, -1, stripeW, 17);
+          }
+          ctx.fillStyle = "#78350f";
+          ctx.fillRect(-12, 16, 24, 10);
+          ctx.fillStyle = "#e2e8f0";
+          ctx.fillRect(-3, 18, 6, 6);
+          ctx.fillStyle = "#451a03";
+          ctx.fillRect(-10, 18, 4, 6);
+          ctx.fillRect(6, 18, 4, 6);
+          const shieldX = -13;
+          const shieldY = -6;
+          ctx.fillStyle = "#dc2626";
+          ctx.beginPath();
+          ctx.arc(shieldX, shieldY, 13, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#f8fafc";
+          ctx.beginPath();
+          ctx.arc(shieldX, shieldY, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#dc2626";
+          ctx.beginPath();
+          ctx.arc(shieldX, shieldY, 7.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#1e3a8a";
+          ctx.beginPath();
+          ctx.arc(shieldX, shieldY, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          this._drawStar(ctx, shieldX, shieldY, 5, 3.8, 1.6, "#ffffff");
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 4. 雷神索爾・奧丁之子 (Thor Odinson)
+        // ══════════════════════════════════════════════════
+        case "skin_thor": {
+          ctx.fillStyle = "#b91c1c";
+          ctx.strokeStyle = "#7f1d1d";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-14, -20);
+          ctx.quadraticCurveTo(-24, 0, -22, 28);
+          ctx.lineTo(-12, 28);
+          ctx.quadraticCurveTo(-14, 5, -8, -18);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#1e293b";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          const discs = [
+            { x: -7, y: -13, r: 4 },
+            { x: 7, y: -13, r: 4 },
+            { x: -8, y: -4, r: 4.5 },
+            { x: 8, y: -4, r: 4.5 },
+            { x: -6, y: 6, r: 3.8 },
+            { x: 6, y: 6, r: 3.8 }
+          ];
+          for (const d of discs) {
+            ctx.fillStyle = "#e2e8f0";
+            ctx.strokeStyle = "#94a3b8";
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(d.x - 1, d.y - 1, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = "#f59e0b";
+          ctx.fillRect(-11, 16, 22, 10);
+          ctx.fillStyle = "#b45309";
+          ctx.fillRect(-3, 17, 6, 8);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 5. 薩諾斯・無限手套 (Thanos Titan Warlord)
+        // ══════════════════════════════════════════════════
+        case "skin_thanos": {
+          ctx.fillStyle = "#d97706";
+          ctx.strokeStyle = "#92400e";
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(-17, -23);
+          ctx.lineTo(17, -23);
+          ctx.lineTo(13, 16);
+          ctx.lineTo(-13, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#1e3a8a";
+          ctx.beginPath();
+          ctx.moveTo(-12, -18);
+          ctx.lineTo(12, -18);
+          ctx.lineTo(8, -1);
+          ctx.lineTo(-8, -1);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#f59e0b";
+          ctx.fillRect(-7, 3, 14, 3.5);
+          ctx.fillRect(-6, 9, 12, 3.5);
+          ctx.fillStyle = "#b45309";
+          ctx.fillRect(-12, 16, 24, 12);
+          ctx.fillStyle = "#fbbf24";
+          ctx.fillRect(-4, 17, 8, 9);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 6. 孫悟空・超級賽亞人 (Son Goku SSJ)
+        // ══════════════════════════════════════════════════
+        case "skin_goku_ssj": {
+          ctx.fillStyle = "#f97316";
+          ctx.strokeStyle = "#c2410c";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#1e40af";
+          ctx.beginPath();
+          ctx.moveTo(-8, -23);
+          ctx.lineTo(8, -23);
+          ctx.lineTo(0, -9);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#fed7aa";
+          ctx.beginPath();
+          ctx.moveTo(-4, -23);
+          ctx.lineTo(4, -23);
+          ctx.lineTo(0, -15);
+          ctx.closePath();
+          ctx.fill();
+          const badgeX = 5;
+          const badgeY = -5;
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(badgeX, badgeY, 5.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#000000";
+          ctx.fillRect(badgeX - 3, badgeY - 3, 2, 6);
+          ctx.fillRect(badgeX, badgeY - 3.5, 3.5, 1.2);
+          ctx.fillRect(badgeX + 1, badgeY - 2.5, 1.2, 3);
+          ctx.fillRect(badgeX - 1, badgeY + 1.5, 4.5, 1.2);
+          ctx.strokeRect(badgeX - 0.5, badgeY + 1.5, 3.5, 2.5);
+          ctx.fillStyle = "#1e40af";
+          ctx.fillRect(-11, 15, 22, 9);
+          ctx.beginPath();
+          ctx.moveTo(-9, 19);
+          ctx.lineTo(-14, 28);
+          ctx.lineTo(-10, 29);
+          ctx.lineTo(-6, 20);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 7. 貝吉塔・賽亞人王子 (Vegeta SSJ)
+        // ══════════════════════════════════════════════════
+        case "skin_vegeta_ssj": {
+          ctx.fillStyle = "#1e3a8a";
+          ctx.fillRect(-12, 16, 24, 12);
+          ctx.fillStyle = "#f8fafc";
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fbbf24";
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 1.2;
+          ctx.fillRect(-15, -23, 7, 10);
+          ctx.fillRect(8, -23, 7, 10);
+          for (let i = 0; i < 3; i++) {
+            const sy = -1 + i * 5.5;
+            ctx.fillStyle = "#fbbf24";
+            ctx.fillRect(-6, sy, 12, 4.2);
+            ctx.strokeStyle = "#d97706";
+            ctx.strokeRect(-6, sy, 12, 4.2);
+          }
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 8. 未來特南克斯 (Future Trunks)
+        // ══════════════════════════════════════════════════
+        case "skin_trunks_future": {
+          ctx.fillStyle = "#4338ca";
+          ctx.strokeStyle = "#312e81";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 4);
+          ctx.lineTo(-12, 4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#3730a3";
+          ctx.fillRect(-14, -24, 28, 5);
+          ctx.fillStyle = "#1e293b";
+          ctx.fillRect(-10, 4, 20, 14);
+          ctx.fillStyle = "#f8fafc";
+          ctx.fillRect(-10, 16, 20, 5);
+          ctx.fillStyle = "#334155";
+          ctx.fillRect(-11, 20, 22, 8);
+          ctx.strokeStyle = "#78350f";
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.moveTo(10, -22);
+          ctx.lineTo(-10, 14);
+          ctx.stroke();
+          ctx.fillStyle = "#ea580c";
+          ctx.fillRect(-17, -24, 5, 20);
+          ctx.fillStyle = "#e2e8f0";
+          ctx.fillRect(-19, -30, 9, 3);
+          ctx.fillStyle = "#38bdf8";
+          ctx.fillRect(-16, -37, 3, 7);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 9. 比克大魔王 (Piccolo)
+        // ══════════════════════════════════════════════════
+        case "skin_piccolo": {
+          ctx.fillStyle = "#6b21a8";
+          ctx.strokeStyle = "#581c87";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#0284c7";
+          ctx.fillRect(-11, 14, 22, 10);
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(-22, -20);
+          ctx.lineTo(-10, -25);
+          ctx.lineTo(0, -18);
+          ctx.lineTo(10, -25);
+          ctx.lineTo(22, -20);
+          ctx.lineTo(16, -11);
+          ctx.lineTo(-16, -11);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 10. 黃金弗利沙 (Golden Frieza)
+        // ══════════════════════════════════════════════════
+        case "skin_golden_frieza": {
+          ctx.fillStyle = "#ffd700";
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#4c1d95";
+          ctx.beginPath();
+          ctx.moveTo(-7, 3);
+          ctx.lineTo(7, 3);
+          ctx.lineTo(5, 16);
+          ctx.lineTo(-5, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.save();
+          ctx.shadowColor = "#a855f7";
+          ctx.shadowBlur = 12;
+          ctx.fillStyle = "#9333ea";
+          ctx.beginPath();
+          ctx.ellipse(0, -7, 5, 6.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(-1.5, -8.5, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          ctx.fillStyle = "#d97706";
+          ctx.fillRect(-10, 16, 20, 12);
+          break;
+        }
+        default:
+          ctx.restore();
+          return false;
+      }
+      ctx.restore();
+      return true;
+    }
+    // ─── 4. 特殊手臂渲染 (Special Arm) ───
+    drawArm(ctx, arm, skin, layer) {
+      if (!this.isSpecial(skin)) return false;
+      const id = skin.id;
+      const isBack = layer === "backArm";
+      ctx.save();
+      ctx.translate(arm.shoulderX, arm.shoulderY);
+      ctx.rotate(arm.upperAngle);
+      switch (id) {
+        // ══════════════════════════════════════════════════
+        // 1. 鋼鐵人・馬克85 (Iron Man Mark 85)
+        // ══════════════════════════════════════════════════
+        case "skin_iron_man": {
+          ctx.fillStyle = isBack ? "#7f1d1d" : "#b91c1c";
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-4, 0, 8, 22, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fbbf24";
+          ctx.fillRect(-2, 4, 4, 12);
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = isBack ? "#991b1b" : "#b91c1c";
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fbbf24";
+          ctx.fillRect(-4, 8, 8, 4);
+          ctx.save();
+          ctx.shadowColor = "#38bdf8";
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = "#38bdf8";
+          ctx.beginPath();
+          ctx.arc(0, 17, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(0, 17, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 2. 蜘蛛人・經典紅藍 (Spider-Man Classic Suit)
+        // ══════════════════════════════════════════════════
+        case "skin_spiderman": {
+          ctx.fillStyle = isBack ? "#1d4ed8" : "#2563eb";
+          ctx.strokeStyle = "#1e3a8a";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.roundRect(-4, 0, 8, 22, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = isBack ? "#991b1b" : "#dc2626";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, 22);
+          ctx.moveTo(-5, 10);
+          ctx.lineTo(5, 10);
+          ctx.moveTo(-5, 16);
+          ctx.lineTo(5, 16);
+          ctx.stroke();
+          ctx.fillStyle = "#e2e8f0";
+          ctx.fillRect(-2, 14, 4, 2);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 3. 美國隊長・羅傑斯 (Captain America Steve Rogers)
+        // ══════════════════════════════════════════════════
+        case "skin_captain_america": {
+          ctx.fillStyle = isBack ? "#172554" : "#1e3a8a";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-4, 0, 8, 22, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = isBack ? "#7f1d1d" : "#b91c1c";
+          ctx.strokeStyle = "#78350f";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#78350f";
+          ctx.fillRect(-5, 10, 10, 3.5);
+          ctx.fillStyle = "#e2e8f0";
+          ctx.fillRect(-1.5, 10.5, 3, 2.5);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 4. 雷神索爾・奧丁之子 (Thor Odinson)
+        // ══════════════════════════════════════════════════
+        case "skin_thor": {
+          ctx.fillStyle = isBack ? "#fed7aa" : "#ffedd5";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.roundRect(-4.5, 0, 9, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = "#e2e8f0";
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#f59e0b";
+          ctx.fillRect(-5, 6, 10, 3);
+          ctx.fillRect(-5, 14, 10, 2);
+          ctx.save();
+          ctx.shadowColor = "#38bdf8";
+          ctx.shadowBlur = 8;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(0, 19, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 5. 薩諾斯・無限手套 (Thanos Infinity Gauntlet)
+        // ══════════════════════════════════════════════════
+        case "skin_thanos": {
+          const isGauntlet = !isBack;
+          ctx.fillStyle = isBack ? "#6d28d9" : "#8b5cf6";
+          ctx.strokeStyle = "#4c1d95";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#f59e0b";
+          ctx.fillRect(-3, 6, 6, 12);
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = "#f59e0b";
+          ctx.strokeStyle = "#b45309";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(-6, 0, 12, 23, 4);
+          ctx.fill();
+          ctx.stroke();
+          if (isGauntlet) {
+            ctx.save();
+            ctx.shadowColor = "#facc15";
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = "#fef08a";
+            ctx.beginPath();
+            ctx.ellipse(0, 13, 3, 4.2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowColor = "#a855f7";
+            ctx.fillStyle = "#c084fc";
+            ctx.beginPath();
+            ctx.arc(3.5, 20, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowColor = "#3b82f6";
+            ctx.fillStyle = "#60a5fa";
+            ctx.beginPath();
+            ctx.arc(1.2, 21, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowColor = "#ef4444";
+            ctx.fillStyle = "#f87171";
+            ctx.beginPath();
+            ctx.arc(-1.2, 21, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowColor = "#f97316";
+            ctx.fillStyle = "#fb923c";
+            ctx.beginPath();
+            ctx.arc(-3.5, 20, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowColor = "#22c55e";
+            ctx.fillStyle = "#4ade80";
+            ctx.beginPath();
+            ctx.arc(4.2, 14, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 6. 孫悟空・超級賽亞人 (Son Goku SSJ)
+        // ══════════════════════════════════════════════════
+        case "skin_goku_ssj": {
+          ctx.fillStyle = isBack ? "#fed7aa" : "#ffedd5";
+          ctx.strokeStyle = "#f59e0b";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.roundRect(-4.5, 0, 9, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = "#fed7aa";
+          ctx.beginPath();
+          ctx.roundRect(-4.5, 0, 9, 10, 3);
+          ctx.fill();
+          ctx.fillStyle = "#1e40af";
+          ctx.strokeStyle = "#1e3a8a";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.roundRect(-5, 9, 10, 11, 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fed7aa";
+          ctx.beginPath();
+          ctx.arc(0, 20, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 7. 貝吉塔・賽亞人王子 (Vegeta SSJ)
+        // ══════════════════════════════════════════════════
+        case "skin_vegeta_ssj": {
+          ctx.fillStyle = isBack ? "#172554" : "#1e3a8a";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.roundRect(-4, 0, 8, 22, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-6, 2);
+          ctx.lineTo(6, 2);
+          ctx.lineTo(5, 22);
+          ctx.lineTo(-5, 22);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-5, 9);
+          ctx.lineTo(5, 9);
+          ctx.moveTo(-5, 14);
+          ctx.lineTo(5, 14);
+          ctx.stroke();
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 8. 未來特南克斯 (Future Trunks)
+        // ══════════════════════════════════════════════════
+        case "skin_trunks_future": {
+          ctx.fillStyle = isBack ? "#312e81" : "#4338ca";
+          ctx.strokeStyle = "#1e1b4b";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-4, 0, 8, 22, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#f8fafc";
+          ctx.beginPath();
+          ctx.arc(0, 8, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = "#fed7aa";
+          ctx.beginPath();
+          ctx.roundRect(-4, 0, 8, 12, 3);
+          ctx.fill();
+          ctx.fillStyle = "#1e293b";
+          ctx.beginPath();
+          ctx.roundRect(-5, 10, 10, 12, 3);
+          ctx.fill();
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 9. 比克大魔王 (Piccolo)
+        // ══════════════════════════════════════════════════
+        case "skin_piccolo": {
+          ctx.fillStyle = isBack ? "#16a34a" : "#22c55e";
+          ctx.strokeStyle = "#15803d";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-4.5, 0, 9, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fb7185";
+          ctx.beginPath();
+          ctx.ellipse(0, 11, 2.8, 6, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = isBack ? "#16a34a" : "#22c55e";
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fb7185";
+          ctx.beginPath();
+          ctx.ellipse(0, 10, 3, 6, 0, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 10. 黃金弗利沙 (Golden Frieza)
+        // ══════════════════════════════════════════════════
+        case "skin_golden_frieza": {
+          ctx.fillStyle = "#ffd700";
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-4.5, 0, 9, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = "#fbbf24";
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#9333ea";
+          ctx.fillRect(-5, 12, 10, 3.5);
+          ctx.fillStyle = "#d97706";
+          ctx.fillRect(-4, 20, 8, 4);
+          break;
+        }
+        default:
+          ctx.restore();
+          return false;
+      }
+      ctx.restore();
+      return true;
+    }
+    // ─── 5. 特殊腿部與戰靴渲染 (Special Limb) ───
+    drawLimb(ctx, leg, skin, layer) {
+      if (!this.isSpecial(skin)) return false;
+      const id = skin.id;
+      const isBack = layer === "backLeg";
+      ctx.save();
+      ctx.translate(leg.hipX, leg.hipY);
+      ctx.rotate(leg.thighAngle);
+      switch (id) {
+        // ══════════════════════════════════════════════════
+        // 1. 鋼鐵人・馬克85 (Iron Man Mark 85)
+        // ══════════════════════════════════════════════════
+        case "skin_iron_man": {
+          ctx.fillStyle = isBack ? "#7f1d1d" : "#b91c1c";
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 26, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fbbf24";
+          ctx.fillRect(-3, 16, 6, 8);
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = isBack ? "#991b1b" : "#b91c1c";
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fbbf24";
+          ctx.fillRect(-4, 10, 8, 12);
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#7f1d1d";
+          ctx.fillRect(-4, 0, 16, 7);
+          ctx.fillStyle = "#38bdf8";
+          ctx.fillRect(-2, 5, 12, 2.5);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 2. 蜘蛛人・經典紅藍 (Spider-Man Classic Suit)
+        // ══════════════════════════════════════════════════
+        case "skin_spiderman": {
+          ctx.fillStyle = isBack ? "#1d4ed8" : "#2563eb";
+          ctx.strokeStyle = "#1e3a8a";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 26, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = isBack ? "#1d4ed8" : "#2563eb";
+          ctx.fillRect(-5, 0, 10, 10);
+          ctx.fillStyle = isBack ? "#991b1b" : "#dc2626";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(-5, 8, 10, 20, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(0, 8);
+          ctx.lineTo(0, 28);
+          ctx.moveTo(-5, 16);
+          ctx.lineTo(5, 16);
+          ctx.stroke();
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#dc2626";
+          ctx.fillRect(-4, 0, 16, 6.5);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 3. 美國隊長・羅傑斯 (Captain America Steve Rogers)
+        // ══════════════════════════════════════════════════
+        case "skin_captain_america": {
+          ctx.fillStyle = isBack ? "#172554" : "#1e3a8a";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 26, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(-4, 18, 8, 6);
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = isBack ? "#7f1d1d" : "#991b1b";
+          ctx.strokeStyle = "#451a03";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#78350f";
+          ctx.fillRect(-5, 8, 10, 3);
+          ctx.fillRect(-5, 16, 10, 3);
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#7f1d1d";
+          ctx.fillRect(-4, 0, 16, 7);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 4. 雷神索爾・奧丁之子 (Thor Odinson)
+        // ══════════════════════════════════════════════════
+        case "skin_thor": {
+          ctx.fillStyle = isBack ? "#0f172a" : "#1e293b";
+          ctx.strokeStyle = "#020617";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 26, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = "#1e293b";
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#e2e8f0";
+          ctx.beginPath();
+          ctx.arc(0, 2, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#f59e0b";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-5, 10);
+          ctx.lineTo(5, 18);
+          ctx.moveTo(5, 10);
+          ctx.lineTo(-5, 18);
+          ctx.stroke();
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(-4, 0, 16, 6.5);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 5. 薩諾斯・無限手套 (Thanos Titan Warlord)
+        // ══════════════════════════════════════════════════
+        case "skin_thanos": {
+          ctx.fillStyle = isBack ? "#172554" : "#1e3a8a";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-5.5, 0, 11, 26, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = "#f59e0b";
+          ctx.strokeStyle = "#b45309";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(-6, 0, 12, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#d97706";
+          ctx.fillRect(-5, 0, 18, 8);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 6. 孫悟空・超級賽亞人 (Son Goku SSJ)
+        // ══════════════════════════════════════════════════
+        case "skin_goku_ssj": {
+          ctx.fillStyle = isBack ? "#ea580c" : "#f97316";
+          ctx.strokeStyle = "#c2410c";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-5.5, 0, 11, 26, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#7c2d12";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-2, 6);
+          ctx.lineTo(-2, 20);
+          ctx.stroke();
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = "#1e3a8a";
+          ctx.strokeStyle = "#172554";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#ef4444";
+          ctx.fillRect(-1.2, 0, 2.4, 28);
+          ctx.fillStyle = "#facc15";
+          ctx.fillRect(-5, 14, 10, 3);
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#1e3a8a";
+          ctx.fillRect(-4, 0, 16, 7);
+          ctx.fillStyle = "#ef4444";
+          ctx.fillRect(8, 0, 4, 7);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 7. 貝吉塔・賽亞人王子 (Vegeta SSJ)
+        // ══════════════════════════════════════════════════
+        case "skin_vegeta_ssj": {
+          ctx.fillStyle = isBack ? "#172554" : "#1e3a8a";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 26, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fbbf24";
+          ctx.fillRect(-5, 0, 10, 4);
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(-4, 0, 16, 6.5);
+          ctx.fillStyle = "#fbbf24";
+          ctx.fillRect(5, 0, 7, 6.5);
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(5, 0, 7, 6.5);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 8. 未來特南克斯 (Future Trunks)
+        // ══════════════════════════════════════════════════
+        case "skin_trunks_future": {
+          ctx.fillStyle = isBack ? "#1e293b" : "#334155";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-5.5, 0, 11, 26, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = "#eab308";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#f8fafc";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-3, 8);
+          ctx.lineTo(3, 8);
+          ctx.moveTo(-3, 14);
+          ctx.lineTo(3, 14);
+          ctx.moveTo(-3, 20);
+          ctx.lineTo(3, 20);
+          ctx.stroke();
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#eab308";
+          ctx.fillRect(-4, 0, 16, 5);
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(-4, 5, 16, 2.5);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 9. 比克大魔王 (Piccolo)
+        // ══════════════════════════════════════════════════
+        case "skin_piccolo": {
+          ctx.fillStyle = isBack ? "#581c87" : "#6b21a8";
+          ctx.strokeStyle = "#3b0764";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-6, 0, 12, 26, 5);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = isBack ? "#581c87" : "#6b21a8";
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#d97706";
+          ctx.beginPath();
+          ctx.moveTo(-4, 0);
+          ctx.lineTo(12, 0);
+          ctx.quadraticCurveTo(18, -3, 16, 5);
+          ctx.lineTo(-4, 6);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 10. 黃金弗利沙 (Golden Frieza)
+        // ══════════════════════════════════════════════════
+        case "skin_golden_frieza": {
+          ctx.fillStyle = "#ffd700";
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 26, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = "#fbbf24";
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#9333ea";
+          ctx.beginPath();
+          ctx.arc(0, 20, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#ffd700";
+          ctx.fillRect(-4, 0, 16, 6.5);
+          ctx.fillStyle = "#d97706";
+          ctx.fillRect(8, 0, 4, 6.5);
+          break;
+        }
+        default:
+          ctx.restore();
+          return false;
+      }
+      ctx.restore();
+      return true;
+    }
+    // ─── 6. 特殊防禦幾何力場 (Special Guard Shield) ───
+    drawGuardShield(ctx, stance, skin, t) {
+      if (!this.isSpecial(skin)) return false;
+      const id = skin.id;
+      ctx.save();
+      const shieldY = stance === "low" ? -35 : -74;
+      const pulse = Math.sin(t * 0.2) * 0.12 + 0.92;
+      switch (id) {
+        // 美國隊長：擴散汎合金能量光盾 (Vibranium Star Shield)
+        case "skin_captain_america": {
+          ctx.shadowColor = "#dc2626";
+          ctx.shadowBlur = 20;
+          const cx = 35;
+          const cy = shieldY;
+          const r = 38 * pulse;
+          ctx.strokeStyle = "#dc2626";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.strokeStyle = "#f8fafc";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r * 0.8, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.strokeStyle = "#dc2626";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r * 0.6, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(30, 58, 138, 0.6)";
+          ctx.beginPath();
+          ctx.arc(cx, cy, r * 0.4, 0, Math.PI * 2);
+          ctx.fill();
+          this._drawStar(ctx, cx, cy, 5, r * 0.35, r * 0.15, "#ffffff");
+          ctx.restore();
+          return true;
+        }
+        // 鋼鐵人：六角微晶納米力場盾 (Nanotech Hex Shield)
+        case "skin_iron_man": {
+          ctx.shadowColor = "#38bdf8";
+          ctx.shadowBlur = 20;
+          ctx.strokeStyle = "#38bdf8";
+          ctx.fillStyle = "rgba(56, 189, 248, 0.22)";
+          ctx.lineWidth = 2.5;
+          const cx = 36;
+          const cy = shieldY;
+          const rad = 36 * pulse;
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const ang = Math.PI / 3 * i;
+            const px = cx + Math.cos(ang) * rad;
+            const py = cy + Math.sin(ang) * rad;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(cx, cy, rad * 0.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+          return true;
+        }
+        // 蜘蛛人：蛛絲防護陣 (Spider Web Shield)
+        case "skin_spiderman": {
+          ctx.shadowColor = "#ffffff";
+          ctx.shadowBlur = 14;
+          const cx = 34;
+          const cy = shieldY;
+          this._drawSpiderWebOnHead(ctx, cx, cy, 36 * pulse, "rgba(255, 255, 255, 0.85)");
+          ctx.restore();
+          return true;
+        }
+        // 孫悟空 & 貝吉塔：超級賽亞人球形氣功防護罩 (Ki Spherical Barrier)
+        case "skin_goku_ssj":
+        case "skin_vegeta_ssj": {
+          const isVegeta = id === "skin_vegeta_ssj";
+          const color = isVegeta ? "#60a5fa" : "#fde047";
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 24;
+          ctx.strokeStyle = color;
+          ctx.fillStyle = isVegeta ? "rgba(96, 165, 250, 0.25)" : "rgba(253, 224, 71, 0.25)";
+          ctx.lineWidth = 3.5;
+          const cx = 34;
+          const cy = shieldY;
+          const r = 40 * pulse;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r * 0.85, t * 0.2, t * 0.2 + Math.PI * 0.6);
+          ctx.stroke();
+          ctx.restore();
+          return true;
+        }
+        // 薩諾斯：6 色無限寶石環狀結界 (Infinity Hexagonal Forcefield)
+        case "skin_thanos": {
+          const cx = 36;
+          const cy = shieldY;
+          const r = 42 * pulse;
+          const stones = ["#facc15", "#a855f7", "#3b82f6", "#ef4444", "#f97316", "#22c55e"];
+          ctx.shadowColor = "#facc15";
+          ctx.shadowBlur = 20;
+          ctx.fillStyle = "rgba(217, 119, 6, 0.25)";
+          ctx.strokeStyle = "#fbbf24";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          for (let i = 0; i < 6; i++) {
+            const ang = Math.PI / 3 * i + t * 0.08;
+            const sx = cx + Math.cos(ang) * (r * 0.85);
+            const sy = cy + Math.sin(ang) * (r * 0.85);
+            ctx.fillStyle = stones[i];
+            ctx.shadowColor = stones[i];
+            ctx.beginPath();
+            ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+          return true;
+        }
+        // 黃金弗利沙：黃金死亡防禦圓球 (Golden Death Sphere)
+        case "skin_golden_frieza": {
+          const cx = 35;
+          const cy = shieldY;
+          const r = 38 * pulse;
+          ctx.shadowColor = "#ffd700";
+          ctx.shadowBlur = 24;
+          ctx.strokeStyle = "#ffd700";
+          ctx.fillStyle = "rgba(255, 215, 0, 0.3)";
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#ef4444";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r * 0.75, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+          return true;
+        }
+        default:
+          ctx.restore();
+          return false;
+      }
+    }
+    // ─── 7. 特殊打擊專屬 VFX (Attack VFX) ───
+    drawAttackVFX(ctx, vfx, skin) {
+      if (!this.isSpecial(skin) || vfx.type !== "punch") return false;
+      const id = skin.id;
+      ctx.save();
+      if (id === "skin_iron_man") {
+        ctx.shadowColor = "#38bdf8";
+        ctx.shadowBlur = 14;
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 13, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return true;
+      } else if (id === "skin_spiderman") {
+        this._drawSpiderWebOnHead(ctx, vfx.x, vfx.y, 16, "#ffffff");
+        ctx.restore();
+        return true;
+      } else if (id === "skin_captain_america") {
+        this._drawStar(ctx, vfx.x, vfx.y, 5, 12, 4.5, "#ffffff", "#dc2626", 1.5);
+        ctx.restore();
+        return true;
+      } else if (id === "skin_thor") {
+        ctx.shadowColor = "#38bdf8";
+        ctx.shadowBlur = 16;
+        ctx.strokeStyle = "#67e8f9";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 12, vfx.y - 12);
+        ctx.lineTo(vfx.x - 2, vfx.y - 2);
+        ctx.lineTo(vfx.x - 8, vfx.y + 4);
+        ctx.lineTo(vfx.x + 10, vfx.y + 12);
+        ctx.stroke();
+        ctx.restore();
+        return true;
+      } else if (id === "skin_thanos") {
+        const colors = ["#facc15", "#a855f7", "#3b82f6", "#ef4444", "#f97316", "#22c55e"];
+        for (let i = 0; i < 6; i++) {
+          const ang = Math.PI / 3 * i;
+          ctx.fillStyle = colors[i];
+          ctx.beginPath();
+          ctx.arc(vfx.x + Math.cos(ang) * 11, vfx.y + Math.sin(ang) * 11, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        return true;
+      } else if (id === "skin_goku_ssj" || id === "skin_vegeta_ssj") {
+        const isVegeta = id === "skin_vegeta_ssj";
+        ctx.shadowColor = isVegeta ? "#60a5fa" : "#fde047";
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = isVegeta ? "#60a5fa" : "#fde047";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 14, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return true;
+      } else if (id === "skin_golden_frieza") {
+        ctx.shadowColor = "#ef4444";
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = "#ef4444";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 14, vfx.y);
+        ctx.lineTo(vfx.x + 14, vfx.y);
+        ctx.stroke();
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return true;
+      }
+      ctx.restore();
+      return false;
+    }
+  };
+  var specialSkinsRenderer = new SpecialSkinsRenderer();
+
   // js/engine/character_renderer.js
   var CharacterRenderer = class {
     constructor() {
@@ -1781,6 +4311,7 @@
         ctx.globalAlpha = 0.5;
       }
       const pose = this.calculatePose(state, t, char);
+      specialSkinsRenderer.drawAura(ctx, char, skin, t);
       this.drawLimb(ctx, pose.backLeg, skin, "backLeg");
       this.drawArm(ctx, pose.backArm, skin, "backArm");
       this.drawTorso(ctx, pose.torso, skin, t);
@@ -2157,6 +4688,9 @@
     }
     // ─── 肢體繪製方法 ───
     drawTorso(ctx, torso, skin, t) {
+      if (specialSkinsRenderer.drawTorso(ctx, torso, skin, t)) {
+        return;
+      }
       ctx.save();
       ctx.translate(torso.x, torso.y);
       ctx.rotate(torso.angle);
@@ -2209,6 +4743,10 @@
       ctx.save();
       ctx.translate(head.x, head.y);
       ctx.rotate(head.angle);
+      if (specialSkinsRenderer.drawHead(ctx, head, skin)) {
+        ctx.restore();
+        return;
+      }
       const themeColor = skin.themeColor || "#00f3ff";
       const visorColor = skin.visorColor || themeColor;
       const accentColor = skin.accentColor || themeColor;
@@ -2349,6 +4887,9 @@
       ctx.restore();
     }
     drawArm(ctx, arm, skin, layer) {
+      if (specialSkinsRenderer.drawArm(ctx, arm, skin, layer)) {
+        return;
+      }
       ctx.save();
       ctx.translate(arm.shoulderX, arm.shoulderY);
       ctx.rotate(arm.upperAngle);
@@ -2374,6 +4915,9 @@
       ctx.restore();
     }
     drawLimb(ctx, leg, skin, layer) {
+      if (specialSkinsRenderer.drawLimb(ctx, leg, skin, layer)) {
+        return;
+      }
       ctx.save();
       ctx.translate(leg.hipX, leg.hipY);
       ctx.rotate(leg.thighAngle);
@@ -2404,6 +4948,9 @@
     }
     // ─── 防禦力場護盾渲染 ───
     drawGuardShield(ctx, stance, skin, t) {
+      if (specialSkinsRenderer.drawGuardShield(ctx, stance, skin, t)) {
+        return;
+      }
       ctx.save();
       const pulse = Math.sin(t * 0.2) * 0.1 + 0.9;
       ctx.shadowColor = skin.themeColor;
@@ -2444,6 +4991,9 @@
     }
     // ─── 武打 VFX 渲染 (依外觀色彩分離映射) ───
     drawAttackVFX(ctx, vfx, skin) {
+      if (specialSkinsRenderer.drawAttackVFX(ctx, vfx, skin)) {
+        return;
+      }
       ctx.save();
       ctx.shadowColor = skin.themeColor;
       ctx.shadowBlur = 16;
