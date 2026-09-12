@@ -99,7 +99,7 @@ export class CharacterRenderer {
    * 6. 腳踝與戰靴自然踩踏滾動 (Ankle Dorsiflexion & Plantarflexion)
    */
   _calculateHumanWalkPose(t, isBackward = false) {
-    const speed = isBackward ? 0.105 : 0.12;
+    const speed = isBackward ? 0.082 : 0.092;
     const phase = t * speed * (isBackward ? -1 : 1);
 
     const normPhase = (p) => ((p % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -279,7 +279,7 @@ export class CharacterRenderer {
 
       case 'crouch_punch': {
         const style = getSkinAttackStyle(char ? char.skin : null);
-        const pProgress = Math.min(1, t / 11);
+        const pProgress = Math.min(1, t / 13);
         const reach = Math.sin(pProgress * Math.PI);
         defaultPose.torso.y = -48;
         defaultPose.torso.angle = 0.35 * reach;
@@ -349,7 +349,7 @@ export class CharacterRenderer {
 
       case 'crouch_kick': {
         // 下蹲掃堂腿 (2HK / Sweep)：重心極致貼地，雙手撐地，單腿破空低位旋掃
-        const sProgress = Math.min(1, t / 15);
+        const sProgress = Math.min(1, t / 18);
         const sweepWave = Math.sin(sProgress * Math.PI);
         defaultPose.torso.y = -36;
         defaultPose.torso.angle = -0.38 * sweepWave;
@@ -647,7 +647,7 @@ export class CharacterRenderer {
 
       case 'ranged_attack': {
         // 遠程攻擊：支援平射、高仰角對空射擊與重砲蓄勢射擊
-        const rProgress = Math.min(1, t / 14);
+        const rProgress = Math.min(1, t / 16);
         const blastWave = Math.sin(rProgress * Math.PI);
         const isAntiAir = char && char.currentAction && char.currentAction.name.includes('對空');
         const isHeavy = char && char.currentAction && char.currentAction.name.includes('重砲');

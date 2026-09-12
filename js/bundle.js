@@ -5330,7 +5330,7 @@
      * 6. 腳踝與戰靴自然踩踏滾動 (Ankle Dorsiflexion & Plantarflexion)
      */
     _calculateHumanWalkPose(t, isBackward = false) {
-      const speed = isBackward ? 0.105 : 0.12;
+      const speed = isBackward ? 0.082 : 0.092;
       const phase = t * speed * (isBackward ? -1 : 1);
       const normPhase = (p) => (p % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
       const getHumanLegJoints = (phi) => {
@@ -5467,7 +5467,7 @@
         }
         case "crouch_punch": {
           const style = getSkinAttackStyle(char ? char.skin : null);
-          const pProgress = Math.min(1, t / 11);
+          const pProgress = Math.min(1, t / 13);
           const reach = Math.sin(pProgress * Math.PI);
           defaultPose.torso.y = -48;
           defaultPose.torso.angle = 0.35 * reach;
@@ -5528,7 +5528,7 @@
           return defaultPose;
         }
         case "crouch_kick": {
-          const sProgress = Math.min(1, t / 15);
+          const sProgress = Math.min(1, t / 18);
           const sweepWave = Math.sin(sProgress * Math.PI);
           defaultPose.torso.y = -36;
           defaultPose.torso.angle = -0.38 * sweepWave;
@@ -5751,7 +5751,7 @@
           return defaultPose;
         }
         case "ranged_attack": {
-          const rProgress = Math.min(1, t / 14);
+          const rProgress = Math.min(1, t / 16);
           const blastWave = Math.sin(rProgress * Math.PI);
           const isAntiAir = char && char.currentAction && char.currentAction.name.includes("\u5C0D\u7A7A");
           const isHeavy = char && char.currentAction && char.currentAction.name.includes("\u91CD\u7832");
@@ -6834,10 +6834,10 @@
       }
       const prevY = char.y;
       if (!char.isGrounded) {
-        char.vy += 1.05;
+        char.vy += 0.78;
         if (input && Math.abs(input.x || 0) > 0.1) {
-          char.vx += (input.x || 0) * 1.1;
-          char.vx = Math.max(-9.5, Math.min(9.5, char.vx));
+          char.vx += (input.x || 0) * 0.7;
+          char.vx = Math.max(-6.2, Math.min(6.2, char.vx));
         }
         char.x += char.vx;
         char.y += char.vy;
@@ -7016,8 +7016,8 @@
       if (moveY < -0.35 && char.isGrounded) {
         char.isGrounded = false;
         char.currentPlatform = null;
-        char.vy = -18.5;
-        char.vx = moveX * 9.2;
+        char.vy = -14.8;
+        char.vx = moveX * 5.8;
         char.state = "jump";
         char.stateTime = 0;
         char.isGuarding = false;
@@ -7033,11 +7033,11 @@
         const speedMod = char.frostTimer && char.frostTimer > 0 ? 0.55 : 1;
         const isMovingFwd = char.facing === 1 && moveX > 0 || char.facing === -1 && moveX < 0;
         if (isMovingFwd) {
-          char.x += char.facing * 9.6 * speedMod;
+          char.x += char.facing * 6 * speedMod;
           char.state = "walk_fwd";
           char.isGuarding = false;
         } else {
-          char.x -= char.facing * 8.2 * speedMod;
+          char.x -= char.facing * 4.6 * speedMod;
           char.state = "walk_back";
           char.isGuarding = false;
         }
@@ -7084,14 +7084,14 @@
       char.isGuarding = false;
       char.state = "light_punch";
       char.stateTime = 0;
-      char.stateDuration = 9;
+      char.stateDuration = 14;
       const meta = getSkinAttackMeta(char.skin, "light_punch");
       char.currentAction = {
         name: meta.name || "\u523A\u62F3\u6253\u64CA",
-        startup: 3,
-        // 3 幀秒出
-        active: 3,
-        recovery: 3,
+        startup: 4,
+        // 4 幀出拳
+        active: 4,
+        recovery: 6,
         damage: 80,
         guardType: "all",
         hitChecked: false,
@@ -7104,14 +7104,14 @@
       char.isGuarding = false;
       char.state = "heavy_kick";
       char.stateTime = 0;
-      char.stateDuration = 13;
+      char.stateDuration = 18;
       const meta = getSkinAttackMeta(char.skin, "heavy_kick");
       char.currentAction = {
         name: meta.name || "\u91CD\u529B\u731B\u8E22",
-        startup: 5,
-        // 5 幀迅猛出踢
-        active: 4,
-        recovery: 4,
+        startup: 6,
+        // 6 幀重擊前搖
+        active: 5,
+        recovery: 7,
         damage: 145,
         guardType: "all",
         hitChecked: false,
@@ -7124,13 +7124,13 @@
       char.isGuarding = false;
       char.state = "crouch_punch";
       char.stateTime = 0;
-      char.stateDuration = 9;
+      char.stateDuration = 13;
       const meta = getSkinAttackMeta(char.skin, "crouch_punch");
       char.currentAction = {
         name: meta.name || "\u4E0B\u8E72\u523A\u62F3",
-        startup: 3,
-        active: 3,
-        recovery: 3,
+        startup: 4,
+        active: 4,
+        recovery: 5,
         damage: 85,
         guardType: "all",
         hitChecked: false,
@@ -7143,13 +7143,13 @@
       char.isGuarding = false;
       char.state = "crouch_kick";
       char.stateTime = 0;
-      char.stateDuration = 14;
+      char.stateDuration = 18;
       const meta = getSkinAttackMeta(char.skin, "crouch_kick");
       char.currentAction = {
         name: meta.name || "\u4E0B\u8E72\u6383\u5802\u817F",
-        startup: 4,
-        active: 4,
-        recovery: 6,
+        startup: 5,
+        active: 5,
+        recovery: 8,
         damage: 135,
         guardType: "crouch_only",
         // 下段判定：站防無效，必須蹲防！
@@ -7166,12 +7166,12 @@
       char.isGuarding = false;
       char.state = "jump";
       char.stateTime = 0;
-      char.stateDuration = 10;
+      char.stateDuration = 15;
       char.currentAction = {
         name: type === "kick" ? "\u8E8D\u7A7A\u91CD\u98DB\u8E22" : "\u8DF3\u8E8D\u523A\u62F3",
-        startup: 2,
-        active: 4,
-        recovery: 4,
+        startup: 3,
+        active: 6,
+        recovery: 6,
         damage: type === "kick" ? 155 : 90,
         guardType: "stand_only",
         // 空中打擊視為中段，不可蹲防！
@@ -7186,13 +7186,13 @@
       char.isGuarding = false;
       char.state = "ranged_attack";
       char.stateTime = 0;
-      char.stateDuration = 12;
-      char.rangedCooldown = 18;
+      char.stateDuration = 16;
+      char.rangedCooldown = 22;
       char.currentAction = {
         name: "\u91CF\u5B50\u76F4\u5C04\u5149\u5F48",
-        startup: 2,
+        startup: 4,
         active: 4,
-        recovery: 6,
+        recovery: 8,
         damage: 110,
         guardType: "all",
         isRanged: true,
@@ -7205,26 +7205,26 @@
         name: "\u91CF\u5B50\u76F4\u5C04\u5149\u5F48",
         x: char.x + char.facing * 42,
         y: char.y - 74,
-        vx: char.facing * 15,
+        vx: char.facing * 10.5,
         vy: 0,
         radius: 9,
         damage: 110,
         guardType: "all",
         skin: char.skin,
-        life: 80
+        life: 90
       });
     }
     _executeCrouchRangedAttack(char, opp) {
       char.isGuarding = false;
       char.state = "crouch_punch";
       char.stateTime = 0;
-      char.stateDuration = 14;
-      char.rangedCooldown = 22;
+      char.stateDuration = 16;
+      char.rangedCooldown = 24;
       char.currentAction = {
         name: "\u5730\u88C2\u722C\u884C\u9707\u6CE2",
-        startup: 3,
+        startup: 4,
         active: 4,
-        recovery: 7,
+        recovery: 8,
         damage: 135,
         guardType: "crouch_only",
         // 下段判定！站立防禦無效，必須蹲防或翻越！
@@ -7239,26 +7239,26 @@
         name: "\u5730\u88C2\u722C\u884C\u9707\u6CE2",
         x: char.x + char.facing * 36,
         y: this.floorY - 14,
-        vx: char.facing * 12,
+        vx: char.facing * 8.5,
         vy: 0,
         radius: 13,
         damage: 135,
         guardType: "crouch_only",
         knockdown: true,
         skin: char.skin,
-        life: 85
+        life: 95
       });
     }
     _executeHeavyRangedAttack(char, opp) {
       char.isGuarding = false;
       char.state = "ranged_attack";
       char.stateTime = 0;
-      char.stateDuration = 16;
-      char.rangedCooldown = 26;
+      char.stateDuration = 18;
+      char.rangedCooldown = 28;
       char.currentAction = {
         name: "\u8D85\u8F09\u7A7F\u900F\u91CD\u7832",
-        startup: 4,
-        active: 4,
+        startup: 5,
+        active: 5,
         recovery: 8,
         damage: 160,
         guardType: "all",
@@ -7275,27 +7275,27 @@
         name: "\u8D85\u8F09\u7A7F\u900F\u91CD\u7832",
         x: char.x + char.facing * 46,
         y: char.y - 74,
-        vx: char.facing * 18,
+        vx: char.facing * 12,
         vy: 0,
         radius: 16,
         damage: 160,
         guardType: "all",
         knockdown: true,
         skin: char.skin,
-        life: 75
+        life: 85
       });
     }
     _executeAntiAirRangedAttack(char, opp) {
       char.isGuarding = false;
       char.state = "ranged_attack";
       char.stateTime = 0;
-      char.stateDuration = 13;
-      char.rangedCooldown = 20;
+      char.stateDuration = 15;
+      char.rangedCooldown = 22;
       char.currentAction = {
         name: "\u5C0D\u7A7A\u9AD8\u5C04\u96E2\u5B50\u5F48",
-        startup: 3,
+        startup: 4,
         active: 4,
-        recovery: 6,
+        recovery: 7,
         damage: 120,
         guardType: "all",
         isRanged: true,
@@ -7308,26 +7308,26 @@
         name: "\u5C0D\u7A7A\u9AD8\u5C04\u96E2\u5B50\u5F48",
         x: char.x + char.facing * 40,
         y: char.y - 88,
-        vx: char.facing * 11,
-        vy: -11,
+        vx: char.facing * 8,
+        vy: -8.5,
         radius: 10,
         damage: 120,
         guardType: "all",
         skin: char.skin,
-        life: 80
+        life: 90
       });
     }
     _executeAirRangedAttack(char, opp) {
       char.isGuarding = false;
       char.state = "jump";
       char.stateTime = 0;
-      char.stateDuration = 10;
-      char.rangedCooldown = 18;
+      char.stateDuration = 14;
+      char.rangedCooldown = 20;
       char.currentAction = {
         name: "\u8E8D\u7A7A\u4FEF\u885D\u5149\u5F48",
-        startup: 2,
-        active: 4,
-        recovery: 4,
+        startup: 3,
+        active: 5,
+        recovery: 6,
         damage: 115,
         guardType: "all",
         isRanged: true,
@@ -7340,26 +7340,26 @@
         name: "\u8E8D\u7A7A\u4FEF\u885D\u5149\u5F48",
         x: char.x + char.facing * 42,
         y: char.y - 50,
-        vx: char.facing * 14,
-        vy: 3.2,
+        vx: char.facing * 9.5,
+        vy: 2.2,
         radius: 9,
         damage: 115,
         guardType: "all",
         skin: char.skin,
-        life: 80
+        life: 90
       });
     }
     _executeAirBombAttack(char, opp) {
       char.isGuarding = false;
       char.state = "jump";
       char.stateTime = 0;
-      char.stateDuration = 12;
-      char.rangedCooldown = 22;
+      char.stateDuration = 15;
+      char.rangedCooldown = 24;
       char.currentAction = {
         name: "\u7A7A\u5C0D\u5730\u96E2\u5B50\u7206\u5F48",
-        startup: 2,
-        active: 4,
-        recovery: 6,
+        startup: 3,
+        active: 5,
+        recovery: 7,
         damage: 145,
         guardType: "stand_only",
         // 中段落雷判定，不可蹲防！
@@ -7374,14 +7374,14 @@
         name: "\u7A7A\u5C0D\u5730\u96E2\u5B50\u7206\u5F48",
         x: char.x + char.facing * 25,
         y: char.y - 30,
-        vx: char.facing * 5,
-        vy: 12,
+        vx: char.facing * 4,
+        vy: 8.5,
         radius: 12,
         damage: 145,
         guardType: "stand_only",
         knockdown: true,
         skin: char.skin,
-        life: 70
+        life: 80
       });
     }
     // ─── 10 大核心技能執行 ───
@@ -7404,18 +7404,18 @@
         case "SK-02":
           char.invincibleTimer = skill.invincibleFrames || 4;
           char.isGrounded = false;
-          char.vy = -17;
-          char.vx = char.facing * 5;
+          char.vy = -14.2;
+          char.vx = char.facing * 3.8;
           soundEngine.playHit("dp");
           break;
         case "SK-03":
-          char.vx = char.facing * 24;
+          char.vx = char.facing * 14;
           soundEngine.playHit("slide");
           break;
         case "SK-04":
           char.isGrounded = false;
-          char.vy = -14;
-          char.vx = char.facing * 8;
+          char.vy = -11.5;
+          char.vx = char.facing * 5.5;
           soundEngine.playHit("dp");
           break;
         case "SK-05":
@@ -7425,7 +7425,7 @@
           soundEngine.playHit("teleport");
           break;
         case "SK-07":
-          char.vx = char.facing * 12;
+          char.vx = char.facing * 8;
           soundEngine.playHit("punch");
           break;
         case "SK-08":
@@ -7820,7 +7820,7 @@
         opp.hp = Math.max(0, opp.hp - damage);
         soundEngine.playHit("guard");
         this._triggerHaptic(25);
-        opp.vx = char.facing * 4.5;
+        opp.vx = char.facing * 3.2;
         char.frameAdvantage = -4;
         this.hitStop = Math.max(this.hitStop, 2);
         this.triggerScreenShake(2);
@@ -7876,20 +7876,20 @@
       if (action.knockdown) {
         opp.state = "knockdown";
         opp.stateTime = 0;
-        opp.vx = char.facing * 12;
-        opp.vy = -6;
+        opp.vx = char.facing * 8.5;
+        opp.vy = -5;
         opp.isGrounded = false;
       } else if (!opp.isGrounded) {
         opp.state = "hit_stun";
         opp.stateTime = 0;
         opp.stateDuration = 22;
-        opp.vy = -5.5;
-        opp.vx = char.facing * 4.5;
+        opp.vy = -4.5;
+        opp.vx = char.facing * 3.6;
       } else {
         opp.state = "hit_stun";
         opp.stateTime = 0;
         opp.stateDuration = isCounter ? 22 : 16;
-        opp.vx = char.facing * 6;
+        opp.vx = char.facing * 4.5;
       }
       if (isCounter) {
         this.floatingTexts.push({
@@ -8337,14 +8337,14 @@
         const p1Pushing = p1.state === "walk_fwd";
         const p2Pushing = p2.state === "walk_fwd";
         if (p1Pushing && !p2Pushing) {
-          p1.x += p1.facing * 3.8;
-          p2.x -= p1.facing * 1.2;
+          p1.x += p1.facing * 2.4;
+          p2.x -= p1.facing * 0.8;
         } else if (p2Pushing && !p1Pushing) {
-          p2.x += p2.facing * 3.8;
-          p1.x -= p2.facing * 1.2;
+          p2.x += p2.facing * 2.4;
+          p1.x -= p2.facing * 0.8;
         } else if (p1Pushing && p2Pushing) {
-          p1.x += p1.facing * 2.8;
-          p2.x += p2.facing * 2.8;
+          p1.x += p1.facing * 1.8;
+          p2.x += p2.facing * 1.8;
         } else {
           const push = (minDistance - dist) / 2;
           if (dx >= 0) {
@@ -8402,11 +8402,11 @@
       if (!aiChar.isGrounded && this.bufferedDecision.y < 0) {
         this.bufferedDecision.y = 0;
       }
-      let targetDelay = 15;
-      if (this.difficulty === "easy") targetDelay = 24;
-      else if (this.difficulty === "normal") targetDelay = 14;
-      else if (this.difficulty === "hard") targetDelay = 6;
-      else if (this.difficulty === "nightmare") targetDelay = 2;
+      let targetDelay = 18;
+      if (this.difficulty === "easy") targetDelay = 32;
+      else if (this.difficulty === "normal") targetDelay = 18;
+      else if (this.difficulty === "hard") targetDelay = 9;
+      else if (this.difficulty === "nightmare") targetDelay = 4;
       this.currentDelay++;
       if (this.currentDelay >= targetDelay) {
         this.currentDelay = 0;

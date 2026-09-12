@@ -37,11 +37,11 @@ export class AiController {
     }
 
     // 4. 依據難度設定地面反應幀數 (毫秒級人類反應延遲模擬，保持競技手感與擬真度)
-    let targetDelay = 15;
-    if (this.difficulty === 'easy') targetDelay = 24;      // 簡單：反應稍緩，給新手充裕博弈空間
-    else if (this.difficulty === 'normal') targetDelay = 14; // 普通：平均人類反應 (~230ms)
-    else if (this.difficulty === 'hard') targetDelay = 6;   // 困難：高階選手反應 (~100ms)
-    else if (this.difficulty === 'nightmare') targetDelay = 2; // 惡夢：極限電競神經反應 (~33ms)
+    let targetDelay = 18;
+    if (this.difficulty === 'easy') targetDelay = 32;        // 簡單：反應餘裕充沛，給新手充裕博弈空間
+    else if (this.difficulty === 'normal') targetDelay = 18; // 普通：自然舒適節奏 (~300ms)
+    else if (this.difficulty === 'hard') targetDelay = 9;    // 困難：高階選手反應 (~150ms)
+    else if (this.difficulty === 'nightmare') targetDelay = 4; // 惡夢：極限電競神經反應 (~66ms)
 
     this.currentDelay++;
     if (this.currentDelay >= targetDelay) {
