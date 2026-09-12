@@ -6,6 +6,7 @@
  */
 
 import { specialSkinsRenderer } from './special_skins_renderer.js';
+import { getSkinAttackStyle } from '../data/skins.js';
 
 export class CharacterRenderer {
   constructor() {
@@ -277,7 +278,7 @@ export class CharacterRenderer {
       }
 
       case 'crouch_punch': {
-        // 下蹲刺拳 (2LP)：身體壓低避開上段，前手向前方低處刺出快速直拳
+        const style = getSkinAttackStyle(char ? char.skin : null);
         const pProgress = Math.min(1, t / 11);
         const reach = Math.sin(pProgress * Math.PI);
         defaultPose.torso.y = -48;
@@ -287,6 +288,55 @@ export class CharacterRenderer {
         defaultPose.frontLeg.shinAngle = 2.1;
         defaultPose.backLeg.thighAngle = -1.2;
         defaultPose.backLeg.shinAngle = 2.0;
+
+        if (style === 'bow') {
+          // 下蹲射箭姿態
+          defaultPose.frontArm.upperAngle = 0.2 - reach * 0.4;
+          defaultPose.frontArm.foreAngle = 0.05;
+          defaultPose.frontArm.holdingWeapon = 'bow';
+          defaultPose.frontArm.drawingArrow = reach > 0.2;
+          defaultPose.backArm.upperAngle = 0.1;
+          defaultPose.backArm.foreAngle = 1.2;
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'bow_arrow', progress: reach, x: 50, y: -50 };
+          }
+          return defaultPose;
+        } else if (style === 'gun') {
+          // 下蹲戰術速射
+          defaultPose.frontArm.upperAngle = 0.1 - reach * 0.3;
+          defaultPose.frontArm.foreAngle = 0.05;
+          defaultPose.frontArm.holdingWeapon = 'gun';
+          defaultPose.backArm.upperAngle = 0.2;
+          defaultPose.backArm.foreAngle = 0.3;
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'gun_bullet', progress: reach, x: 52, y: -50 };
+          }
+          return defaultPose;
+        } else if (style === 'sword') {
+          // 下蹲貼地斬
+          defaultPose.frontArm.upperAngle = -0.4 + reach * 1.1;
+          defaultPose.frontArm.foreAngle = 0.1;
+          defaultPose.frontArm.holdingWeapon = 'sword';
+          defaultPose.backArm.upperAngle = 0.5;
+          defaultPose.backArm.foreAngle = 0.9;
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'sword_slash_vfx', progress: reach, x: 52, y: -50 };
+          }
+          return defaultPose;
+        } else if (style === 'shield') {
+          // 下段盾擊
+          defaultPose.frontArm.upperAngle = 0.1 - reach * 0.5;
+          defaultPose.frontArm.foreAngle = 0.3;
+          defaultPose.frontArm.holdingWeapon = 'shield';
+          defaultPose.backArm.upperAngle = 0.6;
+          defaultPose.backArm.foreAngle = 0.8;
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'shield_strike', progress: reach, x: 50, y: -50 };
+          }
+          return defaultPose;
+        }
+
+        // 預設下蹲刺拳
         defaultPose.frontArm.upperAngle = 0.3 - reach * 0.7; // 向前低位刺出
         defaultPose.frontArm.foreAngle = 1.2 - reach * 1.1;
         defaultPose.backArm.upperAngle = 0.7;
@@ -341,9 +391,220 @@ export class CharacterRenderer {
       }
 
       case 'light_punch': {
-        // 刺拳：前手閃電般直刺出擊，手肘由屈至直，腰部轉動
+        const style = getSkinAttackStyle(char ? char.skin : null);
         const pProgress = Math.min(1, t / 14);
         const reach = Math.sin(pProgress * Math.PI);
+
+        if (style === 'bow') {
+          // ══════════════════════════════════════════════════
+          // 拉弓射擊姿態 (Bow Draw & Shoot Pose)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = -0.12 * reach;
+          defaultPose.frontArm.upperAngle = -0.25 - reach * 0.12;
+          defaultPose.frontArm.foreAngle = 0.05;
+          defaultPose.frontArm.holdingWeapon = 'bow';
+          defaultPose.frontArm.drawingArrow = reach > 0.2;
+
+          // 前半段拉滿弓弦至臉頰側後方，後半段鬆弦射出箭矢
+          if (pProgress < 0.55) {
+            const drawRatio = pProgress / 0.55;
+            defaultPose.backArm.upperAngle = -0.55 * drawRatio;
+            defaultPose.backArm.foreAngle = 1.55 * drawRatio;
+            defaultPose.backArm.drawingArrow = true;
+          } else {
+            const releaseRatio = (pProgress - 0.55) / 0.45;
+            defaultPose.backArm.upperAngle = -0.55 + releaseRatio * 0.85;
+            defaultPose.backArm.foreAngle = 1.55 - releaseRatio * 0.95;
+          }
+
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'bow_arrow', progress: reach, x: 54, y: -74 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'gun') {
+          // ══════════════════════════════════════════════════
+          // 雙手戰術持槍瞄準急速射擊 (Tactical Gunfire Stance)
+          // ══════════════════════════════════════════════════
+          const recoil = Math.sin(pProgress * Math.PI);
+          defaultPose.torso.angle = 0.08 * recoil;
+          defaultPose.frontArm.upperAngle = -0.2 - recoil * 0.12; // 槍口微後坐力上揚
+          defaultPose.frontArm.foreAngle = 0.05;
+          defaultPose.frontArm.holdingWeapon = 'gun';
+          defaultPose.backArm.upperAngle = -0.18 - recoil * 0.1;
+          defaultPose.backArm.foreAngle = 0.18;
+
+          if (reach > 0.2) {
+            defaultPose.vfx = { type: 'gun_bullet', progress: reach, x: 56, y: -74 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'shield') {
+          // ══════════════════════════════════════════════════
+          // 汎合金圓盾破陣撞擊 (Shield Slam / Bash)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = 0.22 * reach;
+          defaultPose.frontArm.upperAngle = -0.15 - reach * 0.7;
+          defaultPose.frontArm.foreAngle = 0.35;
+          defaultPose.frontArm.holdingWeapon = 'shield';
+          defaultPose.backArm.upperAngle = 0.5;
+          defaultPose.backArm.foreAngle = 1.1;
+
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'shield_strike', progress: reach, x: 52, y: -74 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'hammer') {
+          // ══════════════════════════════════════════════════
+          // 雷神之鎚天雷落劈 (Mjolnir Thunder Strike)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = 0.18 * reach;
+          defaultPose.frontArm.upperAngle = -1.15 + reach * 1.5;
+          defaultPose.frontArm.foreAngle = 0.1;
+          defaultPose.frontArm.holdingWeapon = 'hammer';
+          defaultPose.backArm.upperAngle = 0.6;
+          defaultPose.backArm.foreAngle = 1.2;
+
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'thor_lightning', progress: reach, x: 52, y: -74 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'sword') {
+          // ══════════════════════════════════════════════════
+          // 勇者之劍次元拔刀斬 (Sword Slash)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = 0.25 * reach;
+          defaultPose.frontArm.upperAngle = -0.85 + reach * 1.45;
+          defaultPose.frontArm.foreAngle = 0.1;
+          defaultPose.frontArm.holdingWeapon = 'sword';
+          defaultPose.backArm.upperAngle = 0.5;
+          defaultPose.backArm.foreAngle = 1.0;
+
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'sword_slash_vfx', progress: reach, x: 54, y: -76 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'repulsor') {
+          // ══════════════════════════════════════════════════
+          // 鋼鐵人掌心脈衝等離子砲 (Palm Repulsor Blast)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = 0.14 * reach;
+          defaultPose.frontArm.upperAngle = -0.22 - reach * 0.45;
+          defaultPose.frontArm.foreAngle = -0.12;
+          defaultPose.backArm.upperAngle = 0.5;
+          defaultPose.backArm.foreAngle = 1.2;
+
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'repulsor_blast', progress: reach, x: 52, y: -76 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'web_shot') {
+          // ══════════════════════════════════════════════════
+          // 蜘蛛人雙指手勢腕射蛛絲 (Web-Shooter Thwip)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = 0.14 * reach;
+          defaultPose.frontArm.upperAngle = -0.18 - reach * 0.45;
+          defaultPose.frontArm.foreAngle = 0.05;
+          defaultPose.backArm.upperAngle = 0.4;
+          defaultPose.backArm.foreAngle = 1.2;
+
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'web_stream', progress: reach, x: 50, y: -76 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'kamehameha') {
+          // ══════════════════════════════════════════════════
+          // 超賽龜派氣功合掌推擊 (Kamehameha Blast)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = 0.2 * reach;
+          defaultPose.frontArm.upperAngle = -0.15 - reach * 0.5;
+          defaultPose.frontArm.foreAngle = 0.05;
+          defaultPose.backArm.upperAngle = -0.1 - reach * 0.45;
+          defaultPose.backArm.foreAngle = 0.1;
+
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'kamehameha_vfx', progress: reach, x: 54, y: -74 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'final_flash') {
+          // ══════════════════════════════════════════════════
+          // 賽亞人王子大霹靂閃光 (Big Bang / Final Flash)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = 0.18 * reach;
+          defaultPose.frontArm.upperAngle = -0.2 - reach * 0.6;
+          defaultPose.frontArm.foreAngle = 0.02;
+          defaultPose.backArm.upperAngle = 0.6;
+          defaultPose.backArm.foreAngle = 1.1;
+
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'final_flash_vfx', progress: reach, x: 54, y: -74 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'death_beam') {
+          // ══════════════════════════════════════════════════
+          // 黃金弗利沙單指死亡光線 (Death Beam)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = 0.1 * reach;
+          defaultPose.frontArm.upperAngle = -0.2 - reach * 0.35;
+          defaultPose.frontArm.foreAngle = 0.02;
+          defaultPose.backArm.upperAngle = 0.4;
+          defaultPose.backArm.foreAngle = 1.2;
+
+          if (reach > 0.2) {
+            defaultPose.vfx = { type: 'death_beam_vfx', progress: reach, x: 54, y: -75 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'namek_arm') {
+          // ══════════════════════════════════════════════════
+          // 比克那美克星魔臂伸縮突刺 (Namekian Elastic Arm)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = 0.18 * reach;
+          defaultPose.frontArm.upperAngle = -0.1 - reach * 0.5;
+          defaultPose.frontArm.foreAngle = 0.02;
+          defaultPose.backArm.upperAngle = 0.5;
+          defaultPose.backArm.foreAngle = 1.2;
+
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'namek_arm_vfx', progress: reach, x: 54, y: -76 };
+          }
+          return defaultPose;
+        }
+
+        if (style === 'infinity_strike') {
+          // ══════════════════════════════════════════════════
+          // 薩諾斯無限手套毀滅重拳 (Infinity Gauntlet Strike)
+          // ══════════════════════════════════════════════════
+          defaultPose.torso.angle = 0.22 * reach;
+          defaultPose.frontArm.upperAngle = 0.1 - reach * 0.8;
+          defaultPose.frontArm.foreAngle = 1.0 - reach * 0.9;
+          defaultPose.backArm.upperAngle = 0.5;
+          defaultPose.backArm.foreAngle = 1.3;
+
+          if (reach > 0.25) {
+            defaultPose.vfx = { type: 'infinity_vfx', progress: reach, x: 52, y: -74 };
+          }
+          return defaultPose;
+        }
+
+        // 預設格鬥刺拳 (Standard Brawler Jab)
         defaultPose.torso.angle = 0.15 * reach;
         defaultPose.frontArm.upperAngle = 0.2 - reach * 0.9;
         defaultPose.frontArm.foreAngle = 1.2 - reach * 1.1; // 伸直
@@ -357,6 +618,7 @@ export class CharacterRenderer {
 
       case 'heavy_kick': {
         // 重力猛踢：踢擊腿大角度破空踢擊，上身反向後仰平衡
+        const style = getSkinAttackStyle(char ? char.skin : null);
         const kProgress = Math.min(1, t / 18);
         const kickWave = Math.sin(kProgress * Math.PI);
         defaultPose.torso.angle = -0.3 * kickWave; // 上身反向後仰
@@ -364,6 +626,19 @@ export class CharacterRenderer {
         defaultPose.frontLeg.shinAngle = 0.1 - kickWave * 0.4;
         defaultPose.frontArm.upperAngle = -0.4;
         defaultPose.frontArm.foreAngle = 0.5;
+
+        if (style === 'bow') {
+          defaultPose.frontArm.holdingWeapon = 'bow';
+        } else if (style === 'gun') {
+          defaultPose.frontArm.holdingWeapon = 'gun';
+        } else if (style === 'shield') {
+          defaultPose.frontArm.holdingWeapon = 'shield';
+        } else if (style === 'hammer') {
+          defaultPose.frontArm.holdingWeapon = 'hammer';
+        } else if (style === 'sword') {
+          defaultPose.frontArm.holdingWeapon = 'sword';
+        }
+
         if (kickWave > 0.4) {
           defaultPose.vfx = { type: 'kick', progress: kickWave, x: 54, y: -60 };
         }
@@ -825,6 +1100,112 @@ export class CharacterRenderer {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(-3, 16, 6, 4);
 
+    // 武器道具渲染 (非特殊外觀之武器道具如弓、槍、刀、盾、錘)
+    if (!isBack && arm.holdingWeapon) {
+      this._drawWeaponProp(ctx, arm.holdingWeapon, skin, arm);
+    }
+
+    ctx.restore();
+  }
+
+  _drawWeaponProp(ctx, weapon, skin, arm) {
+    ctx.save();
+    ctx.translate(0, 18);
+
+    if (weapon === 'bow') {
+      // 科技弓
+      ctx.strokeStyle = skin.themeColor || '#a855f7';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(8, -14, 4, -26);
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(8, 14, 4, 26);
+      ctx.stroke();
+
+      // 弓弦
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (arm.drawingArrow) {
+        ctx.moveTo(4, -26);
+        ctx.lineTo(-12, 0);
+        ctx.lineTo(4, 26);
+      } else {
+        ctx.moveTo(4, -26);
+        ctx.lineTo(-1, 0);
+        ctx.lineTo(4, 26);
+      }
+      ctx.stroke();
+
+      // 能量箭矢
+      if (arm.drawingArrow) {
+        ctx.strokeStyle = skin.secondaryColor || '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-14, 0);
+        ctx.lineTo(24, 0);
+        ctx.stroke();
+      }
+    } else if (weapon === 'gun') {
+      // 科技手槍/戰術爆能槍
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = skin.themeColor || '#38bdf8';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.roundRect(-2, -4, 18, 7, 2);
+      ctx.fill();
+      ctx.stroke();
+      // 握把
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-2, -2, 4, 12);
+      // 激光瞄準線
+      ctx.strokeStyle = skin.themeColor || '#ef4444';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(16, 0);
+      ctx.lineTo(32, 0);
+      ctx.stroke();
+    } else if (weapon === 'sword') {
+      // 科技光刃/太刀
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(-2, 0, 4, 12); // 劍柄
+      ctx.fillStyle = skin.themeColor || '#cbd5e1';
+      ctx.fillRect(-7, -2, 14, 3); // 護手
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = skin.themeColor || '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-3, -2);
+      ctx.lineTo(-2, -34);
+      ctx.lineTo(0, -40);
+      ctx.lineTo(2, -34);
+      ctx.lineTo(3, -2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else if (weapon === 'shield') {
+      // 科技能量盾
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.strokeStyle = skin.themeColor || '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    } else if (weapon === 'hammer') {
+      // 科技戰錘
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(-2, -2, 4, 16);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.strokeStyle = skin.themeColor || '#94a3b8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(-8, -12, 16, 10, 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
     ctx.restore();
   }
 
@@ -1037,6 +1418,133 @@ export class CharacterRenderer {
       ctx.lineWidth = 3.5;
       ctx.strokeStyle = skin.secondaryColor || '#ffffff';
       ctx.stroke();
+    } else if (vfx.type === 'bow_arrow') {
+      // 科技穿甲箭矢破空光軌與箭頭
+      ctx.strokeStyle = skin.themeColor || '#a855f7';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 26, vfx.y);
+      ctx.lineTo(vfx.x + 8, vfx.y);
+      ctx.stroke();
+
+      // 尖銳箭鏃
+      ctx.fillStyle = skin.secondaryColor || '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(vfx.x + 8, vfx.y - 3.5);
+      ctx.lineTo(vfx.x + 16, vfx.y);
+      ctx.lineTo(vfx.x + 8, vfx.y + 3.5);
+      ctx.closePath();
+      ctx.fill();
+
+      // 箭尾羽
+      ctx.fillStyle = skin.themeColor || '#a855f7';
+      ctx.fillRect(vfx.x - 26, vfx.y - 2.5, 6, 1.5);
+      ctx.fillRect(vfx.x - 26, vfx.y + 1, 6, 1.5);
+
+      // 音速氣環
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(vfx.x - 6, vfx.y, 7, -Math.PI * 0.4, Math.PI * 0.4);
+      ctx.stroke();
+    } else if (vfx.type === 'gun_bullet') {
+      // 戰術槍火槍口閃焰與穿甲彈道
+      ctx.fillStyle = '#ffedd5';
+      ctx.beginPath();
+      ctx.arc(vfx.x - 12, vfx.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = skin.secondaryColor || '#facc15';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 12, vfx.y);
+      ctx.lineTo(vfx.x + 16, vfx.y);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(vfx.x + 10, vfx.y - 1.5, 6, 3);
+    } else if (vfx.type === 'sword_slash_vfx') {
+      // 居合斬次元破空光弧
+      ctx.strokeStyle = skin.secondaryColor || '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(vfx.x - 8, vfx.y, 28, -Math.PI * 0.4, Math.PI * 0.4);
+      ctx.stroke();
+
+      ctx.strokeStyle = skin.themeColor || '#38bdf8';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(vfx.x - 8, vfx.y, 28, -Math.PI * 0.35, Math.PI * 0.35);
+      ctx.stroke();
+    } else if (vfx.type === 'shield_strike') {
+      // 盾擊擴散衝擊波
+      ctx.strokeStyle = skin.themeColor || '#38bdf8';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 22, -Math.PI * 0.4, Math.PI * 0.4);
+      ctx.stroke();
+      ctx.fillStyle = skin.secondaryColor || '#ffffff';
+      ctx.beginPath();
+      ctx.arc(vfx.x + 6, vfx.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (vfx.type === 'thor_lightning') {
+      // 雷電折線
+      ctx.strokeStyle = skin.themeColor || '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 12, vfx.y - 14);
+      ctx.lineTo(vfx.x - 2, vfx.y - 2);
+      ctx.lineTo(vfx.x - 6, vfx.y + 2);
+      ctx.lineTo(vfx.x + 12, vfx.y + 14);
+      ctx.stroke();
+    } else if (vfx.type === 'repulsor_blast') {
+      // 等離子束
+      ctx.strokeStyle = skin.themeColor || '#38bdf8';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 16, vfx.y);
+      ctx.lineTo(vfx.x + 16, vfx.y);
+      ctx.stroke();
+    } else if (vfx.type === 'web_stream') {
+      // 蛛絲
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 24, vfx.y);
+      ctx.lineTo(vfx.x + 12, vfx.y);
+      ctx.stroke();
+    } else if (vfx.type === 'kamehameha_vfx' || vfx.type === 'final_flash_vfx') {
+      // 氣功波
+      ctx.fillStyle = skin.themeColor || '#fde047';
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (vfx.type === 'death_beam_vfx') {
+      // 死亡射線
+      ctx.strokeStyle = skin.themeColor || '#ef4444';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 20, vfx.y);
+      ctx.lineTo(vfx.x + 20, vfx.y);
+      ctx.stroke();
+    } else if (vfx.type === 'namek_arm_vfx') {
+      // 伸長手臂衝擊
+      ctx.strokeStyle = skin.themeColor || '#22c55e';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 24, vfx.y);
+      ctx.lineTo(vfx.x + 10, vfx.y);
+      ctx.stroke();
+    } else if (vfx.type === 'infinity_vfx') {
+      // 原石衝擊
+      ctx.fillStyle = skin.themeColor || '#facc15';
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 12, 0, Math.PI * 2);
+      ctx.fill();
     } else if (vfx.type === 'sweep') {
       // 下蹲掃堂腿貼地旋風與擦地光軌
       ctx.beginPath();

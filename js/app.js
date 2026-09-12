@@ -650,6 +650,8 @@ class CyberStrikerApp {
     // 戰鬥前確保畫布尺寸與擂台邊界自適應當前螢幕
     this._resizeCanvas();
     this.matchEndTimer = 0;
+    this._lastFrameTime = 0;
+    this._timeAccumulator = 0;
 
     combatEngine.initMatch(p1Data, p2Data, this.matchMode === 'training');
 
@@ -714,48 +716,70 @@ class CyberStrikerApp {
     }
   }
 
-  _runBattleLoop() {
+  _runBattleLoop(timestamp = 0) {
     if (!this.isFighting) return;
 
-    // 1. 採集 1P 輸入 (對局結束時停止採集，勝者保持勝利姿態)
-    const inputP1 = combatEngine.isOver
-      ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false }
-      : this._gatherInputsP1();
-
-    // 2. 採集 2P / AI 輸入
-    let inputP2 = null;
-    if (combatEngine.isOver) {
-      inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
-    } else if (this.matchMode === 'local_2p') {
-      inputP2 = this._gatherInputsP2();
-    } else {
-      inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
+    if (!this._lastFrameTime) {
+      this._lastFrameTime = timestamp || performance.now();
+      this._timeAccumulator = 0;
     }
 
-    // 3. 戰鬥物理推進 1 幀
-    combatEngine.update(inputP1, inputP2);
+    const now = timestamp || performance.now();
+    let delta = now - this._lastFrameTime;
+    this._lastFrameTime = now;
 
-    // 4. 渲染戰鬥畫面
+    // 防止切換分頁或背景休眠產生過大時間差
+    if (delta > 100) delta = 100;
+    this._timeAccumulator += delta;
+
+    const FIXED_STEP = 1000 / 60; // 16.6667ms 標準 60 FPS 物理週期
+    let steps = 0;
+
+    // 限制每渲染幀最多執行 3 次物理步進，確保高刷新率（120Hz/144Hz）或低幀率下均極致順暢
+    while (this._timeAccumulator >= FIXED_STEP && steps < 3) {
+      // 1. 採集 1P 輸入 (對局結束時停止採集，勝者保持勝利姿態)
+      const inputP1 = combatEngine.isOver
+        ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false }
+        : this._gatherInputsP1();
+
+      // 2. 採集 2P / AI 輸入
+      let inputP2 = null;
+      if (combatEngine.isOver) {
+        inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      } else if (this.matchMode === 'local_2p') {
+        inputP2 = this._gatherInputsP2();
+      } else {
+        inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
+      }
+
+      // 3. 戰鬥物理精準推進 1 幀 (60 FPS 確定性週期)
+      combatEngine.update(inputP1, inputP2);
+
+      // 4. 檢查對局結算與勝利姿態慶祝展示計時
+      if (combatEngine.isOver && !combatEngine.isTraining) {
+        if (!this.matchEndTimer) {
+          this.matchEndTimer = 1;
+        } else {
+          this.matchEndTimer++;
+        }
+
+        // 勝利慶祝展示 110 幀 (~1.8 秒) 後彈出結算對話框，背景姿態動畫持續播放
+        if (this.matchEndTimer === 110) {
+          this._showMatchEndModal();
+        }
+      }
+
+      this._timeAccumulator -= FIXED_STEP;
+      steps++;
+    }
+
+    // 5. 渲染戰鬥畫面 (隨螢幕更新率即時呈現，消除撕裂與微卡頓)
     this._renderBattleFrame();
 
     // 6. 更新戰鬥 HUD
     this._updateBattleHUD();
 
-    // 7. 檢查對局結算與勝利姿態慶祝展示
-    if (combatEngine.isOver && !combatEngine.isTraining) {
-      if (!this.matchEndTimer) {
-        this.matchEndTimer = 1;
-      } else {
-        this.matchEndTimer++;
-      }
-
-      // 勝利慶祝展示 110 幀 (~1.8 秒) 後彈出結算對話框，背景姿態動畫持續播放
-      if (this.matchEndTimer === 110) {
-        this._showMatchEndModal();
-      }
-    }
-
-    requestAnimationFrame(() => this._runBattleLoop());
+    requestAnimationFrame((ts) => this._runBattleLoop(ts));
   }
 
   _gatherInputsP1() {

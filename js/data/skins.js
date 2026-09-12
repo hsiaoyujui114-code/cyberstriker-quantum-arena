@@ -512,6 +512,32 @@ export const SKINS = [
     },
     creator: 'Marvel Studios Tribute'
   },
+  {
+    id: 'skin_hawkeye',
+    name: '鷹眼・克林特巴頓',
+    title: '復仇者傳奇神箭手',
+    category: 'shop',
+    series: '漫威宇宙',
+    price: 2500,
+    isDefault: false,
+    attackStyle: 'bow',
+    themeColor: '#8b5cf6',
+    secondaryColor: '#1e1b4b',
+    glowColor: 'rgba(139, 92, 246, 0.75)',
+    accentColor: '#a78bfa',
+    armorColor: '#180d24',
+    visorColor: '#c084fc',
+    coreColor: '#8b5cf6',
+    desc: '真實還原復仇者聯盟神箭手！身穿暗紫黑戰術射手服，背負高科技箭筒，手持精密複合反曲弓，百步穿楊一箭封喉。',
+    vfx: {
+      punchTrail: '紫電破空箭影、拉弓流光軌跡',
+      sk1: '貫穿全場之高能光子爆破箭',
+      sk2: '凌空翻騰引箭向天落雨射擊',
+      guardShield: '戰術反曲複合弓格擋護壁',
+      hitEffect: '銳利箭簇破空紫芒'
+    },
+    creator: 'Marvel Studios Tribute'
+  },
 
   // ── 七龍珠超正宗傳奇系列 (Dragon Ball Super) ──
   {
@@ -640,3 +666,173 @@ export const SKINS = [
     creator: 'Dragon Ball Tribute'
   }
 ];
+
+// ─── 角色專屬攻擊風格與武器動作映射 (Character-Specific Attack Styles) ───
+export function getSkinAttackStyle(skin) {
+  if (!skin) return 'brawler';
+  if (skin.attackStyle) return skin.attackStyle;
+  const map = {
+    skin_hawkeye: 'bow',
+    skin_cryo_maiden: 'bow',
+    skin_volt_ranger: 'bow',
+    skin_dark_hacker: 'gun',
+    skin_abyssal_ghost: 'gun',
+    skin_nano_cyborg: 'gun',
+    skin_iron_man: 'repulsor',
+    skin_spiderman: 'web_shot',
+    skin_captain_america: 'shield',
+    skin_thor: 'hammer',
+    skin_thanos: 'infinity_strike',
+    skin_goku_ssj: 'kamehameha',
+    skin_vegeta_ssj: 'final_flash',
+    skin_trunks_future: 'sword',
+    skin_cosmic_ronin: 'sword',
+    skin_piccolo: 'namek_arm',
+    skin_golden_frieza: 'death_beam',
+    skin_pulse_enforcer: 'baton',
+    skin_neon_shadow: 'kunai',
+    skin_solar_valkyrie: 'spear'
+  };
+  return map[skin.id] || 'brawler';
+}
+
+export function getSkinAttackMeta(skin, attackType = 'light_punch') {
+  const style = getSkinAttackStyle(skin);
+  const isKick = attackType === 'heavy_kick' || attackType === 'crouch_kick';
+
+  const metas = {
+    bow: {
+      lightName: '複合神弓・急速箭矢',
+      heavyName: '高能光子・重箭穿甲射擊',
+      crouchName: '下伏獵手・貼地滑箭',
+      sweepName: '下伏獵手・貼地箭勁掃堂',
+      sound: 'bow_shot',
+      vfxType: 'bow_arrow'
+    },
+    gun: {
+      lightName: '量子手槍・急速射擊',
+      heavyName: '戰術爆能・過熱連射',
+      crouchName: '下蹲滑行・低位速射',
+      sweepName: '戰術滑鏟・低位掃射',
+      sound: 'gun_shot',
+      vfxType: 'gun_bullet'
+    },
+    repulsor: {
+      lightName: '掌心等離子脈衝砲',
+      heavyName: '全功率納米推進重擊',
+      crouchName: '低空納米微彈射擊',
+      sweepName: '低空等離子微爆掃堂',
+      sound: 'laser',
+      vfxType: 'repulsor_blast'
+    },
+    shield: {
+      lightName: '汎合金星盾・破陣撞擊',
+      heavyName: '傳奇星盾・迴旋飛擲',
+      crouchName: '下盤盾面・橫掃崩敵',
+      sweepName: '下盤盾面・橫掃崩敵',
+      sound: 'shield_hit',
+      vfxType: 'shield_strike'
+    },
+    hammer: {
+      lightName: '雷神之鎚・天雷轟擊',
+      heavyName: '阿斯嘉狂雷・落雷重劈',
+      crouchName: '地裂雷暴・貼地錘擊',
+      sweepName: '地裂雷暴・貼地錘擊',
+      sound: 'thunder',
+      vfxType: 'thor_lightning'
+    },
+    infinity_strike: {
+      lightName: '無限手套・原石天命巨拳',
+      heavyName: '六原石爆發・泰坦毀滅',
+      crouchName: '力量原石・地動山搖',
+      sweepName: '力量原石・貼地震擊',
+      sound: 'burst',
+      vfxType: 'infinity_vfx'
+    },
+    web_shot: {
+      lightName: '靈動蛛絲・急速腕射',
+      heavyName: '蛛絲擺盪・迴旋爆破踢',
+      crouchName: '貼地蛛絲・絆倒牽引',
+      sweepName: '貼地蛛絲・絆倒牽引',
+      sound: 'web_thwip',
+      vfxType: 'web_stream'
+    },
+    kamehameha: {
+      lightName: '超賽龜派氣功・掌心爆發',
+      heavyName: '瞬影金光・龍拳破空踢',
+      crouchName: '氣焰突進・下段掃堂',
+      sweepName: '氣焰突進・下段掃堂',
+      sound: 'ki_blast',
+      vfxType: 'kamehameha_vfx'
+    },
+    final_flash: {
+      lightName: '賽亞傲氣・大霹靂閃光',
+      heavyName: '王者傲慢・最終閃光戰斧踢',
+      crouchName: '下段氣勁・貼地破防',
+      sweepName: '下段氣勁・貼地破防',
+      sound: 'ki_blast',
+      vfxType: 'final_flash_vfx'
+    },
+    sword: {
+      lightName: '勇者之劍・破空居合斬',
+      heavyName: '閃耀聖劍・次元雙重切',
+      crouchName: '地走劍氣・貼地迴旋',
+      sweepName: '地走劍氣・貼地拔刀斬',
+      sound: 'sword_slash',
+      vfxType: 'sword_slash_vfx'
+    },
+    namek_arm: {
+      lightName: '那美克星・伸長魔臂破空刺',
+      heavyName: '魔貫光殺砲・破邪衝擊',
+      crouchName: '魔臂掃堂・低位橫掃',
+      sweepName: '魔臂掃堂・低位橫掃',
+      sound: 'punch',
+      vfxType: 'namek_arm_vfx'
+    },
+    death_beam: {
+      lightName: '帝皇死亡光線・指尖貫穿',
+      heavyName: '黃金帝皇・超新星狂暴踢',
+      crouchName: '猩紅射線・貼地刺擊',
+      sweepName: '猩紅射線・貼地橫掃',
+      sound: 'laser',
+      vfxType: 'death_beam_vfx'
+    },
+    baton: {
+      lightName: '脈衝防暴電擊・鎮壓直刺',
+      heavyName: '高壓重力・重裝撼地擊',
+      crouchName: '下身掃堂・防暴絆摔',
+      sweepName: '下身掃堂・防暴絆摔',
+      sound: 'punch',
+      vfxType: 'punch'
+    },
+    kunai: {
+      lightName: '暗影苦無・瞬影雙刺',
+      heavyName: '疾風暗刃・騰空迴旋踢',
+      crouchName: '地影無痕・下段暗襲',
+      sweepName: '地影無痕・下段暗襲',
+      sound: 'sword_slash',
+      vfxType: 'punch'
+    },
+    brawler: {
+      lightName: '刺拳打擊',
+      heavyName: '重力猛踢',
+      crouchName: '下蹲刺拳',
+      sweepName: '下蹲掃堂腿',
+      sound: isKick ? 'kick' : 'punch',
+      vfxType: isKick ? 'kick' : 'punch'
+    }
+  };
+
+  const meta = metas[style] || metas.brawler;
+  let name = meta.lightName;
+  if (attackType === 'heavy_kick') name = meta.heavyName;
+  else if (attackType === 'crouch_punch') name = meta.crouchName;
+  else if (attackType === 'crouch_kick') name = meta.sweepName || '下蹲掃堂腿';
+
+  return {
+    style,
+    name,
+    sound: meta.sound,
+    vfxType: meta.vfxType
+  };
+}

@@ -934,6 +934,32 @@
       },
       creator: "Marvel Studios Tribute"
     },
+    {
+      id: "skin_hawkeye",
+      name: "\u9DF9\u773C\u30FB\u514B\u6797\u7279\u5DF4\u9813",
+      title: "\u5FA9\u4EC7\u8005\u50B3\u5947\u795E\u7BAD\u624B",
+      category: "shop",
+      series: "\u6F2B\u5A01\u5B87\u5B99",
+      price: 2500,
+      isDefault: false,
+      attackStyle: "bow",
+      themeColor: "#8b5cf6",
+      secondaryColor: "#1e1b4b",
+      glowColor: "rgba(139, 92, 246, 0.75)",
+      accentColor: "#a78bfa",
+      armorColor: "#180d24",
+      visorColor: "#c084fc",
+      coreColor: "#8b5cf6",
+      desc: "\u771F\u5BE6\u9084\u539F\u5FA9\u4EC7\u8005\u806F\u76DF\u795E\u7BAD\u624B\uFF01\u8EAB\u7A7F\u6697\u7D2B\u9ED1\u6230\u8853\u5C04\u624B\u670D\uFF0C\u80CC\u8CA0\u9AD8\u79D1\u6280\u7BAD\u7B52\uFF0C\u624B\u6301\u7CBE\u5BC6\u8907\u5408\u53CD\u66F2\u5F13\uFF0C\u767E\u6B65\u7A7F\u694A\u4E00\u7BAD\u5C01\u5589\u3002",
+      vfx: {
+        punchTrail: "\u7D2B\u96FB\u7834\u7A7A\u7BAD\u5F71\u3001\u62C9\u5F13\u6D41\u5149\u8ECC\u8DE1",
+        sk1: "\u8CAB\u7A7F\u5168\u5834\u4E4B\u9AD8\u80FD\u5149\u5B50\u7206\u7834\u7BAD",
+        sk2: "\u51CC\u7A7A\u7FFB\u9A30\u5F15\u7BAD\u5411\u5929\u843D\u96E8\u5C04\u64CA",
+        guardShield: "\u6230\u8853\u53CD\u66F2\u8907\u5408\u5F13\u683C\u64CB\u8B77\u58C1",
+        hitEffect: "\u92B3\u5229\u7BAD\u7C07\u7834\u7A7A\u7D2B\u8292"
+      },
+      creator: "Marvel Studios Tribute"
+    },
     // ── 七龍珠超正宗傳奇系列 (Dragon Ball Super) ──
     {
       id: "skin_goku_ssj",
@@ -1061,6 +1087,170 @@
       creator: "Dragon Ball Tribute"
     }
   ];
+  function getSkinAttackStyle(skin) {
+    if (!skin) return "brawler";
+    if (skin.attackStyle) return skin.attackStyle;
+    const map = {
+      skin_hawkeye: "bow",
+      skin_cryo_maiden: "bow",
+      skin_volt_ranger: "bow",
+      skin_dark_hacker: "gun",
+      skin_abyssal_ghost: "gun",
+      skin_nano_cyborg: "gun",
+      skin_iron_man: "repulsor",
+      skin_spiderman: "web_shot",
+      skin_captain_america: "shield",
+      skin_thor: "hammer",
+      skin_thanos: "infinity_strike",
+      skin_goku_ssj: "kamehameha",
+      skin_vegeta_ssj: "final_flash",
+      skin_trunks_future: "sword",
+      skin_cosmic_ronin: "sword",
+      skin_piccolo: "namek_arm",
+      skin_golden_frieza: "death_beam",
+      skin_pulse_enforcer: "baton",
+      skin_neon_shadow: "kunai",
+      skin_solar_valkyrie: "spear"
+    };
+    return map[skin.id] || "brawler";
+  }
+  function getSkinAttackMeta(skin, attackType = "light_punch") {
+    const style = getSkinAttackStyle(skin);
+    const isKick = attackType === "heavy_kick" || attackType === "crouch_kick";
+    const metas = {
+      bow: {
+        lightName: "\u8907\u5408\u795E\u5F13\u30FB\u6025\u901F\u7BAD\u77E2",
+        heavyName: "\u9AD8\u80FD\u5149\u5B50\u30FB\u91CD\u7BAD\u7A7F\u7532\u5C04\u64CA",
+        crouchName: "\u4E0B\u4F0F\u7375\u624B\u30FB\u8CBC\u5730\u6ED1\u7BAD",
+        sweepName: "\u4E0B\u4F0F\u7375\u624B\u30FB\u8CBC\u5730\u7BAD\u52C1\u6383\u5802",
+        sound: "bow_shot",
+        vfxType: "bow_arrow"
+      },
+      gun: {
+        lightName: "\u91CF\u5B50\u624B\u69CD\u30FB\u6025\u901F\u5C04\u64CA",
+        heavyName: "\u6230\u8853\u7206\u80FD\u30FB\u904E\u71B1\u9023\u5C04",
+        crouchName: "\u4E0B\u8E72\u6ED1\u884C\u30FB\u4F4E\u4F4D\u901F\u5C04",
+        sweepName: "\u6230\u8853\u6ED1\u93DF\u30FB\u4F4E\u4F4D\u6383\u5C04",
+        sound: "gun_shot",
+        vfxType: "gun_bullet"
+      },
+      repulsor: {
+        lightName: "\u638C\u5FC3\u7B49\u96E2\u5B50\u8108\u885D\u7832",
+        heavyName: "\u5168\u529F\u7387\u7D0D\u7C73\u63A8\u9032\u91CD\u64CA",
+        crouchName: "\u4F4E\u7A7A\u7D0D\u7C73\u5FAE\u5F48\u5C04\u64CA",
+        sweepName: "\u4F4E\u7A7A\u7B49\u96E2\u5B50\u5FAE\u7206\u6383\u5802",
+        sound: "laser",
+        vfxType: "repulsor_blast"
+      },
+      shield: {
+        lightName: "\u6C4E\u5408\u91D1\u661F\u76FE\u30FB\u7834\u9663\u649E\u64CA",
+        heavyName: "\u50B3\u5947\u661F\u76FE\u30FB\u8FF4\u65CB\u98DB\u64F2",
+        crouchName: "\u4E0B\u76E4\u76FE\u9762\u30FB\u6A6B\u6383\u5D29\u6575",
+        sweepName: "\u4E0B\u76E4\u76FE\u9762\u30FB\u6A6B\u6383\u5D29\u6575",
+        sound: "shield_hit",
+        vfxType: "shield_strike"
+      },
+      hammer: {
+        lightName: "\u96F7\u795E\u4E4B\u939A\u30FB\u5929\u96F7\u8F5F\u64CA",
+        heavyName: "\u963F\u65AF\u5609\u72C2\u96F7\u30FB\u843D\u96F7\u91CD\u5288",
+        crouchName: "\u5730\u88C2\u96F7\u66B4\u30FB\u8CBC\u5730\u9318\u64CA",
+        sweepName: "\u5730\u88C2\u96F7\u66B4\u30FB\u8CBC\u5730\u9318\u64CA",
+        sound: "thunder",
+        vfxType: "thor_lightning"
+      },
+      infinity_strike: {
+        lightName: "\u7121\u9650\u624B\u5957\u30FB\u539F\u77F3\u5929\u547D\u5DE8\u62F3",
+        heavyName: "\u516D\u539F\u77F3\u7206\u767C\u30FB\u6CF0\u5766\u6BC0\u6EC5",
+        crouchName: "\u529B\u91CF\u539F\u77F3\u30FB\u5730\u52D5\u5C71\u6416",
+        sweepName: "\u529B\u91CF\u539F\u77F3\u30FB\u8CBC\u5730\u9707\u64CA",
+        sound: "burst",
+        vfxType: "infinity_vfx"
+      },
+      web_shot: {
+        lightName: "\u9748\u52D5\u86DB\u7D72\u30FB\u6025\u901F\u8155\u5C04",
+        heavyName: "\u86DB\u7D72\u64FA\u76EA\u30FB\u8FF4\u65CB\u7206\u7834\u8E22",
+        crouchName: "\u8CBC\u5730\u86DB\u7D72\u30FB\u7D46\u5012\u727D\u5F15",
+        sweepName: "\u8CBC\u5730\u86DB\u7D72\u30FB\u7D46\u5012\u727D\u5F15",
+        sound: "web_thwip",
+        vfxType: "web_stream"
+      },
+      kamehameha: {
+        lightName: "\u8D85\u8CFD\u9F9C\u6D3E\u6C23\u529F\u30FB\u638C\u5FC3\u7206\u767C",
+        heavyName: "\u77AC\u5F71\u91D1\u5149\u30FB\u9F8D\u62F3\u7834\u7A7A\u8E22",
+        crouchName: "\u6C23\u7130\u7A81\u9032\u30FB\u4E0B\u6BB5\u6383\u5802",
+        sweepName: "\u6C23\u7130\u7A81\u9032\u30FB\u4E0B\u6BB5\u6383\u5802",
+        sound: "ki_blast",
+        vfxType: "kamehameha_vfx"
+      },
+      final_flash: {
+        lightName: "\u8CFD\u4E9E\u50B2\u6C23\u30FB\u5927\u9739\u9742\u9583\u5149",
+        heavyName: "\u738B\u8005\u50B2\u6162\u30FB\u6700\u7D42\u9583\u5149\u6230\u65A7\u8E22",
+        crouchName: "\u4E0B\u6BB5\u6C23\u52C1\u30FB\u8CBC\u5730\u7834\u9632",
+        sweepName: "\u4E0B\u6BB5\u6C23\u52C1\u30FB\u8CBC\u5730\u7834\u9632",
+        sound: "ki_blast",
+        vfxType: "final_flash_vfx"
+      },
+      sword: {
+        lightName: "\u52C7\u8005\u4E4B\u528D\u30FB\u7834\u7A7A\u5C45\u5408\u65AC",
+        heavyName: "\u9583\u8000\u8056\u528D\u30FB\u6B21\u5143\u96D9\u91CD\u5207",
+        crouchName: "\u5730\u8D70\u528D\u6C23\u30FB\u8CBC\u5730\u8FF4\u65CB",
+        sweepName: "\u5730\u8D70\u528D\u6C23\u30FB\u8CBC\u5730\u62D4\u5200\u65AC",
+        sound: "sword_slash",
+        vfxType: "sword_slash_vfx"
+      },
+      namek_arm: {
+        lightName: "\u90A3\u7F8E\u514B\u661F\u30FB\u4F38\u9577\u9B54\u81C2\u7834\u7A7A\u523A",
+        heavyName: "\u9B54\u8CAB\u5149\u6BBA\u7832\u30FB\u7834\u90AA\u885D\u64CA",
+        crouchName: "\u9B54\u81C2\u6383\u5802\u30FB\u4F4E\u4F4D\u6A6B\u6383",
+        sweepName: "\u9B54\u81C2\u6383\u5802\u30FB\u4F4E\u4F4D\u6A6B\u6383",
+        sound: "punch",
+        vfxType: "namek_arm_vfx"
+      },
+      death_beam: {
+        lightName: "\u5E1D\u7687\u6B7B\u4EA1\u5149\u7DDA\u30FB\u6307\u5C16\u8CAB\u7A7F",
+        heavyName: "\u9EC3\u91D1\u5E1D\u7687\u30FB\u8D85\u65B0\u661F\u72C2\u66B4\u8E22",
+        crouchName: "\u7329\u7D05\u5C04\u7DDA\u30FB\u8CBC\u5730\u523A\u64CA",
+        sweepName: "\u7329\u7D05\u5C04\u7DDA\u30FB\u8CBC\u5730\u6A6B\u6383",
+        sound: "laser",
+        vfxType: "death_beam_vfx"
+      },
+      baton: {
+        lightName: "\u8108\u885D\u9632\u66B4\u96FB\u64CA\u30FB\u93AE\u58D3\u76F4\u523A",
+        heavyName: "\u9AD8\u58D3\u91CD\u529B\u30FB\u91CD\u88DD\u64BC\u5730\u64CA",
+        crouchName: "\u4E0B\u8EAB\u6383\u5802\u30FB\u9632\u66B4\u7D46\u6454",
+        sweepName: "\u4E0B\u8EAB\u6383\u5802\u30FB\u9632\u66B4\u7D46\u6454",
+        sound: "punch",
+        vfxType: "punch"
+      },
+      kunai: {
+        lightName: "\u6697\u5F71\u82E6\u7121\u30FB\u77AC\u5F71\u96D9\u523A",
+        heavyName: "\u75BE\u98A8\u6697\u5203\u30FB\u9A30\u7A7A\u8FF4\u65CB\u8E22",
+        crouchName: "\u5730\u5F71\u7121\u75D5\u30FB\u4E0B\u6BB5\u6697\u8972",
+        sweepName: "\u5730\u5F71\u7121\u75D5\u30FB\u4E0B\u6BB5\u6697\u8972",
+        sound: "sword_slash",
+        vfxType: "punch"
+      },
+      brawler: {
+        lightName: "\u523A\u62F3\u6253\u64CA",
+        heavyName: "\u91CD\u529B\u731B\u8E22",
+        crouchName: "\u4E0B\u8E72\u523A\u62F3",
+        sweepName: "\u4E0B\u8E72\u6383\u5802\u817F",
+        sound: isKick ? "kick" : "punch",
+        vfxType: isKick ? "kick" : "punch"
+      }
+    };
+    const meta = metas[style] || metas.brawler;
+    let name = meta.lightName;
+    if (attackType === "heavy_kick") name = meta.heavyName;
+    else if (attackType === "crouch_punch") name = meta.crouchName;
+    else if (attackType === "crouch_kick") name = meta.sweepName || "\u4E0B\u8E72\u6383\u5802\u817F";
+    return {
+      style,
+      name,
+      sound: meta.sound,
+      vfxType: meta.vfxType
+    };
+  }
 
   // js/save_system.js
   var STORAGE_KEY_CURRENT = "cyberstriker_current_session";
@@ -1911,6 +2101,119 @@
           osc.stop(t + 0.18);
           break;
         }
+        case "bow_shot": {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(520, t);
+          osc.frequency.exponentialRampToValueAtTime(210, t + 0.09);
+          gain.gain.setValueAtTime(0.75, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.09);
+          this._playNoise(t + 0.02, 0.11, 2400, 0.45);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.09);
+          break;
+        }
+        case "gun_shot": {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(1050, t);
+          osc.frequency.exponentialRampToValueAtTime(140, t + 0.08);
+          gain.gain.setValueAtTime(0.85, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+          this._playNoise(t, 0.05, 1600, 0.65);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.08);
+          break;
+        }
+        case "shield_hit": {
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc1.type = "sine";
+          osc1.frequency.setValueAtTime(920, t);
+          osc1.frequency.exponentialRampToValueAtTime(540, t + 0.16);
+          osc2.type = "triangle";
+          osc2.frequency.setValueAtTime(1480, t);
+          osc2.frequency.exponentialRampToValueAtTime(720, t + 0.16);
+          gain.gain.setValueAtTime(0.85, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+          this._playNoise(t, 0.06, 800, 0.5);
+          osc1.connect(gain);
+          osc2.connect(gain);
+          gain.connect(this.sfxGain);
+          osc1.start(t);
+          osc2.start(t);
+          osc1.stop(t + 0.18);
+          osc2.stop(t + 0.18);
+          break;
+        }
+        case "thunder": {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(240, t);
+          osc.frequency.exponentialRampToValueAtTime(32, t + 0.35);
+          gain.gain.setValueAtTime(0.95, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+          this._playNoise(t, 0.28, 900, 0.75);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.35);
+          break;
+        }
+        case "sword_slash": {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(820, t);
+          osc.frequency.exponentialRampToValueAtTime(320, t + 0.1);
+          gain.gain.setValueAtTime(0.7, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+          this._playNoise(t, 0.12, 2800, 0.55);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.1);
+          break;
+        }
+        case "web_thwip": {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(960, t);
+          osc.frequency.exponentialRampToValueAtTime(360, t + 0.06);
+          gain.gain.setValueAtTime(0.7, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.07);
+          this._playNoise(t, 0.05, 3200, 0.5);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.07);
+          break;
+        }
+        case "ki_blast": {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(260, t);
+          osc.frequency.linearRampToValueAtTime(740, t + 0.06);
+          osc.frequency.exponentialRampToValueAtTime(90, t + 0.22);
+          gain.gain.setValueAtTime(0.85, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.22);
+          this._playNoise(t, 0.15, 1100, 0.6);
+          osc.connect(gain);
+          gain.connect(this.sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.22);
+          break;
+        }
         case "anti_air":
         case "dp": {
           const osc = this.ctx.createOscillator();
@@ -2249,6 +2552,7 @@
         "skin_captain_america",
         "skin_thor",
         "skin_thanos",
+        "skin_hawkeye",
         "skin_goku_ssj",
         "skin_vegeta_ssj",
         "skin_trunks_future",
@@ -2429,6 +2733,24 @@
         ctx.globalAlpha = 0.5 + Math.sin(t * 0.3) * 0.3;
         ctx.beginPath();
         ctx.arc(0, -45, 34 + Math.sin(t * 0.2) * 4, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (id === "skin_hawkeye") {
+        ctx.shadowColor = "#a855f7";
+        ctx.shadowBlur = 12;
+        ctx.strokeStyle = "rgba(168, 85, 247, 0.45)";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(0, -60, 22 + Math.sin(t * 0.1) * 3, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-8, -60);
+        ctx.lineTo(-4, -60);
+        ctx.moveTo(4, -60);
+        ctx.lineTo(8, -60);
+        ctx.moveTo(0, -68);
+        ctx.lineTo(0, -64);
+        ctx.moveTo(0, -56);
+        ctx.lineTo(0, -52);
         ctx.stroke();
       }
       ctx.restore();
@@ -2737,6 +3059,63 @@
           ctx.fillRect(8, -4, 3.5, 2);
           ctx.fillStyle = "#4c1d95";
           ctx.fillRect(6, -6, 7, 1.5);
+          return true;
+        }
+        // ══════════════════════════════════════════════════
+        // 5.5 鷹眼・克林特巴頓 (Hawkeye Clint Barton)
+        // ══════════════════════════════════════════════════
+        case "skin_hawkeye": {
+          ctx.fillStyle = "#27272a";
+          ctx.strokeStyle = "#18181b";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(-12, 4);
+          ctx.lineTo(-14, -14);
+          ctx.lineTo(2, -18);
+          ctx.lineTo(12, -14);
+          ctx.lineTo(14, -6);
+          ctx.lineTo(6, -16);
+          ctx.lineTo(-4, -15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fed7aa";
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(2, -14);
+          ctx.lineTo(13, -10);
+          ctx.lineTo(14, 0);
+          ctx.lineTo(12, 9);
+          ctx.lineTo(6, 16);
+          ctx.lineTo(-2, 15);
+          ctx.lineTo(-8, 6);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#581c87";
+          ctx.strokeStyle = "#3b0764";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-6, -4);
+          ctx.lineTo(14, -4);
+          ctx.lineTo(13, 3);
+          ctx.lineTo(-4, 3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#c084fc";
+          ctx.beginPath();
+          ctx.moveTo(4, -12);
+          ctx.lineTo(8, -7);
+          ctx.lineTo(5, -7);
+          ctx.lineTo(2, -10);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#facc15";
+          ctx.fillRect(7, -2, 4, 2);
+          ctx.fillStyle = "#581c87";
+          ctx.fillRect(9, -2, 2, 2);
           return true;
         }
         // ══════════════════════════════════════════════════
@@ -3307,6 +3686,74 @@
           break;
         }
         // ══════════════════════════════════════════════════
+        // 5.5 鷹眼・克林特巴頓 (Hawkeye Clint Barton)
+        // ══════════════════════════════════════════════════
+        case "skin_hawkeye": {
+          ctx.fillStyle = "#18181b";
+          ctx.strokeStyle = "#27272a";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(-16, -23);
+          ctx.lineTo(16, -23);
+          ctx.lineTo(12, 16);
+          ctx.lineTo(-12, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#7e22ce";
+          ctx.strokeStyle = "#a855f7";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(-10, -22);
+          ctx.lineTo(10, -22);
+          ctx.lineTo(0, -6);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#9333ea";
+          ctx.beginPath();
+          ctx.moveTo(-7, -22);
+          ctx.lineTo(7, -22);
+          ctx.lineTo(0, -10);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#581c87";
+          ctx.beginPath();
+          ctx.moveTo(-14, -20);
+          ctx.lineTo(12, 14);
+          ctx.lineTo(8, 16);
+          ctx.lineTo(-16, -17);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#27272a";
+          ctx.strokeStyle = "#581c87";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.roundRect(-18, -26, 8, 28, 2);
+          ctx.fill();
+          ctx.stroke();
+          const arrowColors = ["#a855f7", "#c084fc", "#38bdf8", "#ef4444"];
+          for (let i = 0; i < 4; i++) {
+            const ax = -17 + i * 2;
+            ctx.strokeStyle = "#cbd5e1";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(ax, -26);
+            ctx.lineTo(ax - 2, -34);
+            ctx.stroke();
+            ctx.fillStyle = arrowColors[i];
+            ctx.fillRect(ax - 3.5, -34, 3, 4);
+          }
+          ctx.fillStyle = "#27272a";
+          ctx.fillRect(-12, 16, 24, 10);
+          ctx.fillStyle = "#9333ea";
+          ctx.fillRect(-3, 18, 6, 6);
+          ctx.fillStyle = "#18181b";
+          ctx.fillRect(-10, 18, 4, 6);
+          ctx.fillRect(6, 18, 4, 6);
+          break;
+        }
+        // ══════════════════════════════════════════════════
         // 6. 孫悟空・超級賽亞人 (Son Goku SSJ)
         // ══════════════════════════════════════════════════
         case "skin_goku_ssj": {
@@ -3611,6 +4058,31 @@
           ctx.fillRect(-5, 10, 10, 3.5);
           ctx.fillStyle = "#e2e8f0";
           ctx.fillRect(-1.5, 10.5, 3, 2.5);
+          if (!isBack && (arm.holdingWeapon === "shield" || arm.holdingWeapon === void 0)) {
+            ctx.save();
+            ctx.translate(0, 12);
+            ctx.fillStyle = "#dc2626";
+            ctx.strokeStyle = "#991b1b";
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.arc(0, 0, 17, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = "#f8fafc";
+            ctx.beginPath();
+            ctx.arc(0, 0, 13.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#dc2626";
+            ctx.beginPath();
+            ctx.arc(0, 0, 9.8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#1e3a8a";
+            ctx.beginPath();
+            ctx.arc(0, 0, 6.2, 0, Math.PI * 2);
+            ctx.fill();
+            this._drawStar(ctx, 0, 0, 5, 5.5, 2.4, "#ffffff", "#cbd5e1", 0.6);
+            ctx.restore();
+          }
           break;
         }
         // ══════════════════════════════════════════════════
@@ -3644,6 +4116,46 @@
           ctx.arc(0, 19, 2.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
+          if (!isBack || arm.holdingWeapon === "hammer") {
+            ctx.save();
+            ctx.translate(0, 19);
+            ctx.fillStyle = "#78350f";
+            ctx.fillRect(-2, -3, 4, 18);
+            ctx.fillStyle = "#cbd5e1";
+            ctx.fillRect(-3, 14, 6, 3);
+            ctx.strokeStyle = "#78350f";
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(0, 17, 3, 0, Math.PI);
+            ctx.stroke();
+            ctx.fillStyle = "#e2e8f0";
+            ctx.strokeStyle = "#94a3b8";
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.roundRect(-10, -14, 20, 12, 2.5);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = "#cbd5e1";
+            ctx.fillRect(-8, -12, 16, 8);
+            ctx.strokeStyle = "#38bdf8";
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(-5, -8);
+            ctx.lineTo(0, -11);
+            ctx.lineTo(5, -8);
+            ctx.stroke();
+            ctx.shadowColor = "#38bdf8";
+            ctx.shadowBlur = 8;
+            ctx.strokeStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.moveTo(-11, -9);
+            ctx.lineTo(-14, -12);
+            ctx.lineTo(-12, -15);
+            ctx.moveTo(11, -9);
+            ctx.lineTo(15, -7);
+            ctx.stroke();
+            ctx.restore();
+          }
           break;
         }
         // ══════════════════════════════════════════════════
@@ -3702,6 +4214,86 @@
             ctx.beginPath();
             ctx.arc(4.2, 14, 1.8, 0, Math.PI * 2);
             ctx.fill();
+            ctx.restore();
+          }
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 5.5 鷹眼・克林特巴頓 (Hawkeye Clint Barton)
+        // ══════════════════════════════════════════════════
+        case "skin_hawkeye": {
+          ctx.fillStyle = isBack ? "#18181b" : "#27272a";
+          ctx.strokeStyle = "#581c87";
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-4, 0, 8, 22, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#9333ea";
+          ctx.fillRect(-3, 2, 6, 4);
+          ctx.translate(0, 20);
+          ctx.rotate(arm.foreAngle);
+          ctx.fillStyle = isBack ? "#27272a" : "#3f3f46";
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 22, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#a855f7";
+          ctx.fillRect(-3, 6, 6, 2);
+          ctx.fillRect(-3, 10, 6, 2);
+          ctx.fillRect(-3, 14, 6, 2);
+          ctx.fillStyle = "#18181b";
+          ctx.fillRect(-4, 18, 8, 4);
+          if (!isBack || arm.holdingWeapon === "bow") {
+            ctx.save();
+            ctx.translate(0, 18);
+            ctx.fillStyle = "#18181b";
+            ctx.strokeStyle = "#7e22ce";
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(8, -14, 4, -28);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(8, 14, 4, 28);
+            ctx.stroke();
+            ctx.fillStyle = "#c084fc";
+            ctx.beginPath();
+            ctx.arc(4, -28, 3.5, 0, Math.PI * 2);
+            ctx.arc(4, 28, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#f5d0fe";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            if (arm.drawingArrow) {
+              ctx.moveTo(4, -28);
+              ctx.lineTo(-14, 0);
+              ctx.lineTo(4, 28);
+            } else {
+              ctx.moveTo(4, -28);
+              ctx.lineTo(-2, 0);
+              ctx.lineTo(4, 28);
+            }
+            ctx.stroke();
+            if (arm.holdingWeapon === "bow" || arm.drawingArrow) {
+              ctx.strokeStyle = "#e9d5ff";
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(-16, 0);
+              ctx.lineTo(24, 0);
+              ctx.stroke();
+              ctx.fillStyle = "#9333ea";
+              ctx.beginPath();
+              ctx.moveTo(24, -3);
+              ctx.lineTo(30, 0);
+              ctx.lineTo(24, 3);
+              ctx.closePath();
+              ctx.fill();
+              ctx.fillStyle = "#c084fc";
+              ctx.fillRect(-16, -2.5, 5, 1.2);
+              ctx.fillRect(-16, 1.3, 5, 1.2);
+            }
             ctx.restore();
           }
           break;
@@ -3795,6 +4387,51 @@
           ctx.beginPath();
           ctx.roundRect(-5, 10, 10, 12, 3);
           ctx.fill();
+          if (!isBack || arm.holdingWeapon === "sword") {
+            ctx.save();
+            ctx.translate(0, 18);
+            ctx.fillStyle = "#1e3a8a";
+            ctx.fillRect(-2, -2, 4, 15);
+            ctx.fillStyle = "#f59e0b";
+            ctx.beginPath();
+            ctx.arc(0, 14, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#f59e0b";
+            ctx.strokeStyle = "#b45309";
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.roundRect(-9, -4, 18, 5, 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = "#f8fafc";
+            ctx.strokeStyle = "#94a3b8";
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(-4, -4);
+            ctx.lineTo(-3, -38);
+            ctx.lineTo(0, -44);
+            ctx.lineTo(3, -38);
+            ctx.lineTo(4, -4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.strokeStyle = "#cbd5e1";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, -4);
+            ctx.lineTo(0, -36);
+            ctx.stroke();
+            ctx.shadowColor = "#60a5fa";
+            ctx.shadowBlur = 8;
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(-3, -30);
+            ctx.lineTo(0, -44);
+            ctx.lineTo(3, -30);
+            ctx.stroke();
+            ctx.restore();
+          }
           break;
         }
         // ══════════════════════════════════════════════════
@@ -4022,6 +4659,40 @@
           if (leg.footAngle) ctx.rotate(leg.footAngle);
           ctx.fillStyle = "#d97706";
           ctx.fillRect(-5, 0, 18, 8);
+          break;
+        }
+        // ══════════════════════════════════════════════════
+        // 5.5 鷹眼・克林特巴頓 (Hawkeye Clint Barton)
+        // ══════════════════════════════════════════════════
+        case "skin_hawkeye": {
+          ctx.fillStyle = isBack ? "#18181b" : "#27272a";
+          ctx.strokeStyle = "#581c87";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 26, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#3f3f46";
+          ctx.fillRect(-4, 8, 8, 10);
+          ctx.fillStyle = "#9333ea";
+          ctx.fillRect(-4, 7, 8, 2);
+          ctx.translate(0, 24);
+          ctx.rotate(leg.shinAngle);
+          ctx.fillStyle = isBack ? "#18181b" : "#27272a";
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#7e22ce";
+          ctx.beginPath();
+          ctx.roundRect(-4, 0, 8, 8, 2);
+          ctx.fill();
+          ctx.translate(0, 24);
+          if (leg.footAngle) ctx.rotate(leg.footAngle);
+          ctx.fillStyle = "#18181b";
+          ctx.fillRect(-5, 0, 18, 8);
+          ctx.fillStyle = "#9333ea";
+          ctx.fillRect(-5, 6, 18, 3);
           break;
         }
         // ══════════════════════════════════════════════════
@@ -4277,6 +4948,22 @@
           ctx.restore();
           return true;
         }
+        // 鷹眼：複合神弓高能偏折護盾 (Tactical Bow Parrying Forcefield)
+        case "skin_hawkeye": {
+          ctx.shadowColor = "#a855f7";
+          ctx.shadowBlur = 18;
+          ctx.strokeStyle = "#c084fc";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(28, shieldY, 34 * pulse, -Math.PI * 0.35, Math.PI * 0.35);
+          ctx.stroke();
+          ctx.fillStyle = "#e9d5ff";
+          ctx.beginPath();
+          ctx.arc(32, shieldY, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          return true;
+        }
         // 孫悟空 & 貝吉塔：超級賽亞人球形氣功防護罩 (Ki Spherical Barrier)
         case "skin_goku_ssj":
         case "skin_vegeta_ssj": {
@@ -4359,82 +5046,213 @@
     }
     // ─── 7. 特殊打擊專屬 VFX (Attack VFX) ───
     drawAttackVFX(ctx, vfx, skin) {
-      if (!this.isSpecial(skin) || vfx.type !== "punch") return false;
+      if (!this.isSpecial(skin)) return false;
       const id = skin.id;
+      const type = vfx.type;
       ctx.save();
-      if (id === "skin_iron_man") {
-        ctx.shadowColor = "#38bdf8";
-        ctx.shadowBlur = 14;
-        ctx.strokeStyle = "#38bdf8";
+      if (type === "bow_arrow" || id === "skin_hawkeye") {
+        ctx.shadowColor = "#a855f7";
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = "#e9d5ff";
         ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(vfx.x, vfx.y, 13, 0, Math.PI * 2);
+        ctx.moveTo(vfx.x - 30, vfx.y);
+        ctx.lineTo(vfx.x + 8, vfx.y);
         ctx.stroke();
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#c084fc";
         ctx.beginPath();
-        ctx.arc(vfx.x, vfx.y, 4, 0, Math.PI * 2);
+        ctx.moveTo(vfx.x + 8, vfx.y - 4);
+        ctx.lineTo(vfx.x + 18, vfx.y);
+        ctx.lineTo(vfx.x + 8, vfx.y + 4);
+        ctx.closePath();
         ctx.fill();
+        ctx.fillStyle = "#7e22ce";
+        ctx.fillRect(vfx.x - 30, vfx.y - 3.2, 7, 2);
+        ctx.fillRect(vfx.x - 30, vfx.y + 1.2, 7, 2);
+        ctx.strokeStyle = "rgba(168, 85, 247, 0.6)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(vfx.x - 10, vfx.y, 9, -Math.PI * 0.4, Math.PI * 0.4);
+        ctx.stroke();
         ctx.restore();
         return true;
-      } else if (id === "skin_spiderman") {
-        this._drawSpiderWebOnHead(ctx, vfx.x, vfx.y, 16, "#ffffff");
+      }
+      if (type === "repulsor_blast" || id === "skin_iron_man" && type === "punch") {
+        ctx.shadowColor = "#38bdf8";
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 22, vfx.y);
+        ctx.lineTo(vfx.x + 16, vfx.y);
+        ctx.stroke();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 20, vfx.y);
+        ctx.lineTo(vfx.x + 16, vfx.y);
+        ctx.stroke();
+        ctx.strokeStyle = "#7dd3fc";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(vfx.x + 14, vfx.y, 11, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
         return true;
-      } else if (id === "skin_captain_america") {
+      }
+      if (type === "web_stream" || id === "skin_spiderman" && type === "punch") {
+        ctx.shadowColor = "#ffffff";
+        ctx.shadowBlur = 14;
+        ctx.strokeStyle = "#f8fafc";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 28, vfx.y);
+        ctx.lineTo(vfx.x + 10, vfx.y);
+        ctx.stroke();
+        this._drawSpiderWebOnHead(ctx, vfx.x + 10, vfx.y, 16, "#ffffff");
+        ctx.restore();
+        return true;
+      }
+      if (type === "shield_strike" || id === "skin_captain_america" && type === "punch") {
+        ctx.shadowColor = "#dc2626";
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = "#dc2626";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 20, -Math.PI * 0.45, Math.PI * 0.45);
+        ctx.stroke();
+        ctx.strokeStyle = "#f8fafc";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(vfx.x - 4, vfx.y, 15, -Math.PI * 0.4, Math.PI * 0.4);
+        ctx.stroke();
         this._drawStar(ctx, vfx.x, vfx.y, 5, 12, 4.5, "#ffffff", "#dc2626", 1.5);
         ctx.restore();
         return true;
-      } else if (id === "skin_thor") {
+      }
+      if (type === "thor_lightning" || id === "skin_thor" && type === "punch") {
         ctx.shadowColor = "#38bdf8";
-        ctx.shadowBlur = 16;
+        ctx.shadowBlur = 20;
         ctx.strokeStyle = "#67e8f9";
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(vfx.x - 12, vfx.y - 12);
-        ctx.lineTo(vfx.x - 2, vfx.y - 2);
-        ctx.lineTo(vfx.x - 8, vfx.y + 4);
-        ctx.lineTo(vfx.x + 10, vfx.y + 12);
+        ctx.moveTo(vfx.x - 16, vfx.y - 18);
+        ctx.lineTo(vfx.x - 4, vfx.y - 4);
+        ctx.lineTo(vfx.x - 10, vfx.y + 4);
+        ctx.lineTo(vfx.x + 12, vfx.y + 16);
+        ctx.stroke();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 4, vfx.y - 4);
+        ctx.lineTo(vfx.x + 8, vfx.y - 10);
+        ctx.moveTo(vfx.x - 10, vfx.y + 4);
+        ctx.lineTo(vfx.x - 18, vfx.y + 12);
         ctx.stroke();
         ctx.restore();
         return true;
-      } else if (id === "skin_thanos") {
+      }
+      if (type === "infinity_vfx" || id === "skin_thanos" && type === "punch") {
         const colors = ["#facc15", "#a855f7", "#3b82f6", "#ef4444", "#f97316", "#22c55e"];
         for (let i = 0; i < 6; i++) {
           const ang = Math.PI / 3 * i;
+          ctx.shadowColor = colors[i];
+          ctx.shadowBlur = 14;
           ctx.fillStyle = colors[i];
           ctx.beginPath();
-          ctx.arc(vfx.x + Math.cos(ang) * 11, vfx.y + Math.sin(ang) * 11, 2.5, 0, Math.PI * 2);
+          ctx.arc(vfx.x + Math.cos(ang) * 14, vfx.y + Math.sin(ang) * 14, 3.5, 0, Math.PI * 2);
           ctx.fill();
         }
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 6, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
         return true;
-      } else if (id === "skin_goku_ssj" || id === "skin_vegeta_ssj") {
-        const isVegeta = id === "skin_vegeta_ssj";
-        ctx.shadowColor = isVegeta ? "#60a5fa" : "#fde047";
-        ctx.shadowBlur = 18;
-        ctx.strokeStyle = isVegeta ? "#60a5fa" : "#fde047";
-        ctx.lineWidth = 3;
+      }
+      if (type === "kamehameha_vfx" || id === "skin_goku_ssj" && type === "punch") {
+        ctx.shadowColor = "#fde047";
+        ctx.shadowBlur = 22;
+        ctx.fillStyle = "#fde047";
         ctx.beginPath();
-        ctx.arc(vfx.x, vfx.y, 14, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.arc(vfx.x, vfx.y, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#38bdf8";
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 10, 0, Math.PI * 2);
+        ctx.fill();
         ctx.fillStyle = "#ffffff";
         ctx.beginPath();
         ctx.arc(vfx.x, vfx.y, 5, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
         return true;
-      } else if (id === "skin_golden_frieza") {
-        ctx.shadowColor = "#ef4444";
-        ctx.shadowBlur = 18;
-        ctx.strokeStyle = "#ef4444";
-        ctx.lineWidth = 2.5;
+      }
+      if (type === "final_flash_vfx" || id === "skin_vegeta_ssj" && type === "punch") {
+        ctx.shadowColor = "#60a5fa";
+        ctx.shadowBlur = 22;
+        ctx.strokeStyle = "#facc15";
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(vfx.x - 14, vfx.y);
-        ctx.lineTo(vfx.x + 14, vfx.y);
+        ctx.arc(vfx.x, vfx.y, 18, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = "#60a5fa";
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return true;
+      }
+      if (type === "sword_slash_vfx" || id === "skin_trunks_future" && type === "punch") {
+        ctx.shadowColor = "#60a5fa";
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = "#93c5fd";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(vfx.x - 10, vfx.y, 32, -Math.PI * 0.35, Math.PI * 0.35);
+        ctx.stroke();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(vfx.x - 10, vfx.y, 32, -Math.PI * 0.35, Math.PI * 0.35);
+        ctx.stroke();
+        ctx.restore();
+        return true;
+      }
+      if (type === "namek_arm_vfx" || id === "skin_piccolo" && type === "punch") {
+        ctx.shadowColor = "#22c55e";
+        ctx.shadowBlur = 16;
+        ctx.strokeStyle = "#22c55e";
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 26, vfx.y);
+        ctx.lineTo(vfx.x + 10, vfx.y);
+        ctx.stroke();
+        ctx.strokeStyle = "#fb7185";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 18, vfx.y);
+        ctx.lineTo(vfx.x + 4, vfx.y);
+        ctx.stroke();
+        ctx.restore();
+        return true;
+      }
+      if (type === "death_beam_vfx" || id === "skin_golden_frieza" && type === "punch") {
+        ctx.shadowColor = "#ef4444";
+        ctx.shadowBlur = 20;
+        ctx.strokeStyle = "#ef4444";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 24, vfx.y);
+        ctx.lineTo(vfx.x + 20, vfx.y);
         ctx.stroke();
         ctx.fillStyle = "#ffd700";
         ctx.beginPath();
-        ctx.arc(vfx.x, vfx.y, 4, 0, Math.PI * 2);
+        ctx.arc(vfx.x + 18, vfx.y, 4.5, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
         return true;
@@ -4648,6 +5466,7 @@
           return defaultPose;
         }
         case "crouch_punch": {
+          const style = getSkinAttackStyle(char ? char.skin : null);
           const pProgress = Math.min(1, t / 11);
           const reach = Math.sin(pProgress * Math.PI);
           defaultPose.torso.y = -48;
@@ -4657,6 +5476,48 @@
           defaultPose.frontLeg.shinAngle = 2.1;
           defaultPose.backLeg.thighAngle = -1.2;
           defaultPose.backLeg.shinAngle = 2;
+          if (style === "bow") {
+            defaultPose.frontArm.upperAngle = 0.2 - reach * 0.4;
+            defaultPose.frontArm.foreAngle = 0.05;
+            defaultPose.frontArm.holdingWeapon = "bow";
+            defaultPose.frontArm.drawingArrow = reach > 0.2;
+            defaultPose.backArm.upperAngle = 0.1;
+            defaultPose.backArm.foreAngle = 1.2;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "bow_arrow", progress: reach, x: 50, y: -50 };
+            }
+            return defaultPose;
+          } else if (style === "gun") {
+            defaultPose.frontArm.upperAngle = 0.1 - reach * 0.3;
+            defaultPose.frontArm.foreAngle = 0.05;
+            defaultPose.frontArm.holdingWeapon = "gun";
+            defaultPose.backArm.upperAngle = 0.2;
+            defaultPose.backArm.foreAngle = 0.3;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "gun_bullet", progress: reach, x: 52, y: -50 };
+            }
+            return defaultPose;
+          } else if (style === "sword") {
+            defaultPose.frontArm.upperAngle = -0.4 + reach * 1.1;
+            defaultPose.frontArm.foreAngle = 0.1;
+            defaultPose.frontArm.holdingWeapon = "sword";
+            defaultPose.backArm.upperAngle = 0.5;
+            defaultPose.backArm.foreAngle = 0.9;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "sword_slash_vfx", progress: reach, x: 52, y: -50 };
+            }
+            return defaultPose;
+          } else if (style === "shield") {
+            defaultPose.frontArm.upperAngle = 0.1 - reach * 0.5;
+            defaultPose.frontArm.foreAngle = 0.3;
+            defaultPose.frontArm.holdingWeapon = "shield";
+            defaultPose.backArm.upperAngle = 0.6;
+            defaultPose.backArm.foreAngle = 0.8;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "shield_strike", progress: reach, x: 50, y: -50 };
+            }
+            return defaultPose;
+          }
           defaultPose.frontArm.upperAngle = 0.3 - reach * 0.7;
           defaultPose.frontArm.foreAngle = 1.2 - reach * 1.1;
           defaultPose.backArm.upperAngle = 0.7;
@@ -4704,8 +5565,156 @@
           return defaultPose;
         }
         case "light_punch": {
+          const style = getSkinAttackStyle(char ? char.skin : null);
           const pProgress = Math.min(1, t / 14);
           const reach = Math.sin(pProgress * Math.PI);
+          if (style === "bow") {
+            defaultPose.torso.angle = -0.12 * reach;
+            defaultPose.frontArm.upperAngle = -0.25 - reach * 0.12;
+            defaultPose.frontArm.foreAngle = 0.05;
+            defaultPose.frontArm.holdingWeapon = "bow";
+            defaultPose.frontArm.drawingArrow = reach > 0.2;
+            if (pProgress < 0.55) {
+              const drawRatio = pProgress / 0.55;
+              defaultPose.backArm.upperAngle = -0.55 * drawRatio;
+              defaultPose.backArm.foreAngle = 1.55 * drawRatio;
+              defaultPose.backArm.drawingArrow = true;
+            } else {
+              const releaseRatio = (pProgress - 0.55) / 0.45;
+              defaultPose.backArm.upperAngle = -0.55 + releaseRatio * 0.85;
+              defaultPose.backArm.foreAngle = 1.55 - releaseRatio * 0.95;
+            }
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "bow_arrow", progress: reach, x: 54, y: -74 };
+            }
+            return defaultPose;
+          }
+          if (style === "gun") {
+            const recoil = Math.sin(pProgress * Math.PI);
+            defaultPose.torso.angle = 0.08 * recoil;
+            defaultPose.frontArm.upperAngle = -0.2 - recoil * 0.12;
+            defaultPose.frontArm.foreAngle = 0.05;
+            defaultPose.frontArm.holdingWeapon = "gun";
+            defaultPose.backArm.upperAngle = -0.18 - recoil * 0.1;
+            defaultPose.backArm.foreAngle = 0.18;
+            if (reach > 0.2) {
+              defaultPose.vfx = { type: "gun_bullet", progress: reach, x: 56, y: -74 };
+            }
+            return defaultPose;
+          }
+          if (style === "shield") {
+            defaultPose.torso.angle = 0.22 * reach;
+            defaultPose.frontArm.upperAngle = -0.15 - reach * 0.7;
+            defaultPose.frontArm.foreAngle = 0.35;
+            defaultPose.frontArm.holdingWeapon = "shield";
+            defaultPose.backArm.upperAngle = 0.5;
+            defaultPose.backArm.foreAngle = 1.1;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "shield_strike", progress: reach, x: 52, y: -74 };
+            }
+            return defaultPose;
+          }
+          if (style === "hammer") {
+            defaultPose.torso.angle = 0.18 * reach;
+            defaultPose.frontArm.upperAngle = -1.15 + reach * 1.5;
+            defaultPose.frontArm.foreAngle = 0.1;
+            defaultPose.frontArm.holdingWeapon = "hammer";
+            defaultPose.backArm.upperAngle = 0.6;
+            defaultPose.backArm.foreAngle = 1.2;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "thor_lightning", progress: reach, x: 52, y: -74 };
+            }
+            return defaultPose;
+          }
+          if (style === "sword") {
+            defaultPose.torso.angle = 0.25 * reach;
+            defaultPose.frontArm.upperAngle = -0.85 + reach * 1.45;
+            defaultPose.frontArm.foreAngle = 0.1;
+            defaultPose.frontArm.holdingWeapon = "sword";
+            defaultPose.backArm.upperAngle = 0.5;
+            defaultPose.backArm.foreAngle = 1;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "sword_slash_vfx", progress: reach, x: 54, y: -76 };
+            }
+            return defaultPose;
+          }
+          if (style === "repulsor") {
+            defaultPose.torso.angle = 0.14 * reach;
+            defaultPose.frontArm.upperAngle = -0.22 - reach * 0.45;
+            defaultPose.frontArm.foreAngle = -0.12;
+            defaultPose.backArm.upperAngle = 0.5;
+            defaultPose.backArm.foreAngle = 1.2;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "repulsor_blast", progress: reach, x: 52, y: -76 };
+            }
+            return defaultPose;
+          }
+          if (style === "web_shot") {
+            defaultPose.torso.angle = 0.14 * reach;
+            defaultPose.frontArm.upperAngle = -0.18 - reach * 0.45;
+            defaultPose.frontArm.foreAngle = 0.05;
+            defaultPose.backArm.upperAngle = 0.4;
+            defaultPose.backArm.foreAngle = 1.2;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "web_stream", progress: reach, x: 50, y: -76 };
+            }
+            return defaultPose;
+          }
+          if (style === "kamehameha") {
+            defaultPose.torso.angle = 0.2 * reach;
+            defaultPose.frontArm.upperAngle = -0.15 - reach * 0.5;
+            defaultPose.frontArm.foreAngle = 0.05;
+            defaultPose.backArm.upperAngle = -0.1 - reach * 0.45;
+            defaultPose.backArm.foreAngle = 0.1;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "kamehameha_vfx", progress: reach, x: 54, y: -74 };
+            }
+            return defaultPose;
+          }
+          if (style === "final_flash") {
+            defaultPose.torso.angle = 0.18 * reach;
+            defaultPose.frontArm.upperAngle = -0.2 - reach * 0.6;
+            defaultPose.frontArm.foreAngle = 0.02;
+            defaultPose.backArm.upperAngle = 0.6;
+            defaultPose.backArm.foreAngle = 1.1;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "final_flash_vfx", progress: reach, x: 54, y: -74 };
+            }
+            return defaultPose;
+          }
+          if (style === "death_beam") {
+            defaultPose.torso.angle = 0.1 * reach;
+            defaultPose.frontArm.upperAngle = -0.2 - reach * 0.35;
+            defaultPose.frontArm.foreAngle = 0.02;
+            defaultPose.backArm.upperAngle = 0.4;
+            defaultPose.backArm.foreAngle = 1.2;
+            if (reach > 0.2) {
+              defaultPose.vfx = { type: "death_beam_vfx", progress: reach, x: 54, y: -75 };
+            }
+            return defaultPose;
+          }
+          if (style === "namek_arm") {
+            defaultPose.torso.angle = 0.18 * reach;
+            defaultPose.frontArm.upperAngle = -0.1 - reach * 0.5;
+            defaultPose.frontArm.foreAngle = 0.02;
+            defaultPose.backArm.upperAngle = 0.5;
+            defaultPose.backArm.foreAngle = 1.2;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "namek_arm_vfx", progress: reach, x: 54, y: -76 };
+            }
+            return defaultPose;
+          }
+          if (style === "infinity_strike") {
+            defaultPose.torso.angle = 0.22 * reach;
+            defaultPose.frontArm.upperAngle = 0.1 - reach * 0.8;
+            defaultPose.frontArm.foreAngle = 1 - reach * 0.9;
+            defaultPose.backArm.upperAngle = 0.5;
+            defaultPose.backArm.foreAngle = 1.3;
+            if (reach > 0.25) {
+              defaultPose.vfx = { type: "infinity_vfx", progress: reach, x: 52, y: -74 };
+            }
+            return defaultPose;
+          }
           defaultPose.torso.angle = 0.15 * reach;
           defaultPose.frontArm.upperAngle = 0.2 - reach * 0.9;
           defaultPose.frontArm.foreAngle = 1.2 - reach * 1.1;
@@ -4717,6 +5726,7 @@
           return defaultPose;
         }
         case "heavy_kick": {
+          const style = getSkinAttackStyle(char ? char.skin : null);
           const kProgress = Math.min(1, t / 18);
           const kickWave = Math.sin(kProgress * Math.PI);
           defaultPose.torso.angle = -0.3 * kickWave;
@@ -4724,6 +5734,17 @@
           defaultPose.frontLeg.shinAngle = 0.1 - kickWave * 0.4;
           defaultPose.frontArm.upperAngle = -0.4;
           defaultPose.frontArm.foreAngle = 0.5;
+          if (style === "bow") {
+            defaultPose.frontArm.holdingWeapon = "bow";
+          } else if (style === "gun") {
+            defaultPose.frontArm.holdingWeapon = "gun";
+          } else if (style === "shield") {
+            defaultPose.frontArm.holdingWeapon = "shield";
+          } else if (style === "hammer") {
+            defaultPose.frontArm.holdingWeapon = "hammer";
+          } else if (style === "sword") {
+            defaultPose.frontArm.holdingWeapon = "sword";
+          }
           if (kickWave > 0.4) {
             defaultPose.vfx = { type: "kick", progress: kickWave, x: 54, y: -60 };
           }
@@ -5087,6 +6108,96 @@
       ctx.stroke();
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(-3, 16, 6, 4);
+      if (!isBack && arm.holdingWeapon) {
+        this._drawWeaponProp(ctx, arm.holdingWeapon, skin, arm);
+      }
+      ctx.restore();
+    }
+    _drawWeaponProp(ctx, weapon, skin, arm) {
+      ctx.save();
+      ctx.translate(0, 18);
+      if (weapon === "bow") {
+        ctx.strokeStyle = skin.themeColor || "#a855f7";
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(8, -14, 4, -26);
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(8, 14, 4, 26);
+        ctx.stroke();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (arm.drawingArrow) {
+          ctx.moveTo(4, -26);
+          ctx.lineTo(-12, 0);
+          ctx.lineTo(4, 26);
+        } else {
+          ctx.moveTo(4, -26);
+          ctx.lineTo(-1, 0);
+          ctx.lineTo(4, 26);
+        }
+        ctx.stroke();
+        if (arm.drawingArrow) {
+          ctx.strokeStyle = skin.secondaryColor || "#ffffff";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-14, 0);
+          ctx.lineTo(24, 0);
+          ctx.stroke();
+        }
+      } else if (weapon === "gun") {
+        ctx.fillStyle = "#1e293b";
+        ctx.strokeStyle = skin.themeColor || "#38bdf8";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(-2, -4, 18, 7, 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(-2, -2, 4, 12);
+        ctx.strokeStyle = skin.themeColor || "#ef4444";
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(16, 0);
+        ctx.lineTo(32, 0);
+        ctx.stroke();
+      } else if (weapon === "sword") {
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(-2, 0, 4, 12);
+        ctx.fillStyle = skin.themeColor || "#cbd5e1";
+        ctx.fillRect(-7, -2, 14, 3);
+        ctx.fillStyle = "#f8fafc";
+        ctx.strokeStyle = skin.themeColor || "#38bdf8";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-3, -2);
+        ctx.lineTo(-2, -34);
+        ctx.lineTo(0, -40);
+        ctx.lineTo(2, -34);
+        ctx.lineTo(3, -2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else if (weapon === "shield") {
+        ctx.fillStyle = "rgba(56, 189, 248, 0.35)";
+        ctx.strokeStyle = skin.themeColor || "#38bdf8";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else if (weapon === "hammer") {
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(-2, -2, 4, 16);
+        ctx.fillStyle = "#e2e8f0";
+        ctx.strokeStyle = skin.themeColor || "#94a3b8";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(-8, -12, 16, 10, 2);
+        ctx.fill();
+        ctx.stroke();
+      }
       ctx.restore();
     }
     drawLimb(ctx, leg, skin, layer) {
@@ -5267,6 +6378,113 @@
         ctx.lineWidth = 3.5;
         ctx.strokeStyle = skin.secondaryColor || "#ffffff";
         ctx.stroke();
+      } else if (vfx.type === "bow_arrow") {
+        ctx.strokeStyle = skin.themeColor || "#a855f7";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 26, vfx.y);
+        ctx.lineTo(vfx.x + 8, vfx.y);
+        ctx.stroke();
+        ctx.fillStyle = skin.secondaryColor || "#ffffff";
+        ctx.beginPath();
+        ctx.moveTo(vfx.x + 8, vfx.y - 3.5);
+        ctx.lineTo(vfx.x + 16, vfx.y);
+        ctx.lineTo(vfx.x + 8, vfx.y + 3.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = skin.themeColor || "#a855f7";
+        ctx.fillRect(vfx.x - 26, vfx.y - 2.5, 6, 1.5);
+        ctx.fillRect(vfx.x - 26, vfx.y + 1, 6, 1.5);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(vfx.x - 6, vfx.y, 7, -Math.PI * 0.4, Math.PI * 0.4);
+        ctx.stroke();
+      } else if (vfx.type === "gun_bullet") {
+        ctx.fillStyle = "#ffedd5";
+        ctx.beginPath();
+        ctx.arc(vfx.x - 12, vfx.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = skin.secondaryColor || "#facc15";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 12, vfx.y);
+        ctx.lineTo(vfx.x + 16, vfx.y);
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(vfx.x + 10, vfx.y - 1.5, 6, 3);
+      } else if (vfx.type === "sword_slash_vfx") {
+        ctx.strokeStyle = skin.secondaryColor || "#ffffff";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(vfx.x - 8, vfx.y, 28, -Math.PI * 0.4, Math.PI * 0.4);
+        ctx.stroke();
+        ctx.strokeStyle = skin.themeColor || "#38bdf8";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(vfx.x - 8, vfx.y, 28, -Math.PI * 0.35, Math.PI * 0.35);
+        ctx.stroke();
+      } else if (vfx.type === "shield_strike") {
+        ctx.strokeStyle = skin.themeColor || "#38bdf8";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 22, -Math.PI * 0.4, Math.PI * 0.4);
+        ctx.stroke();
+        ctx.fillStyle = skin.secondaryColor || "#ffffff";
+        ctx.beginPath();
+        ctx.arc(vfx.x + 6, vfx.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (vfx.type === "thor_lightning") {
+        ctx.strokeStyle = skin.themeColor || "#38bdf8";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 12, vfx.y - 14);
+        ctx.lineTo(vfx.x - 2, vfx.y - 2);
+        ctx.lineTo(vfx.x - 6, vfx.y + 2);
+        ctx.lineTo(vfx.x + 12, vfx.y + 14);
+        ctx.stroke();
+      } else if (vfx.type === "repulsor_blast") {
+        ctx.strokeStyle = skin.themeColor || "#38bdf8";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 16, vfx.y);
+        ctx.lineTo(vfx.x + 16, vfx.y);
+        ctx.stroke();
+      } else if (vfx.type === "web_stream") {
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 24, vfx.y);
+        ctx.lineTo(vfx.x + 12, vfx.y);
+        ctx.stroke();
+      } else if (vfx.type === "kamehameha_vfx" || vfx.type === "final_flash_vfx") {
+        ctx.fillStyle = skin.themeColor || "#fde047";
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (vfx.type === "death_beam_vfx") {
+        ctx.strokeStyle = skin.themeColor || "#ef4444";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 20, vfx.y);
+        ctx.lineTo(vfx.x + 20, vfx.y);
+        ctx.stroke();
+      } else if (vfx.type === "namek_arm_vfx") {
+        ctx.strokeStyle = skin.themeColor || "#22c55e";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(vfx.x - 24, vfx.y);
+        ctx.lineTo(vfx.x + 10, vfx.y);
+        ctx.stroke();
+      } else if (vfx.type === "infinity_vfx") {
+        ctx.fillStyle = skin.themeColor || "#facc15";
+        ctx.beginPath();
+        ctx.arc(vfx.x, vfx.y, 12, 0, Math.PI * 2);
+        ctx.fill();
       } else if (vfx.type === "sweep") {
         ctx.beginPath();
         ctx.ellipse(vfx.x - 8, vfx.y, 45, 12, 0, -Math.PI / 6, Math.PI);
@@ -5867,58 +7085,68 @@
       char.state = "light_punch";
       char.stateTime = 0;
       char.stateDuration = 9;
+      const meta = getSkinAttackMeta(char.skin, "light_punch");
       char.currentAction = {
-        name: "\u523A\u62F3\u6253\u64CA",
+        name: meta.name || "\u523A\u62F3\u6253\u64CA",
         startup: 3,
         // 3 幀秒出
         active: 3,
         recovery: 3,
         damage: 80,
         guardType: "all",
-        hitChecked: false
+        hitChecked: false,
+        style: meta.style,
+        vfxType: meta.vfxType
       };
-      soundEngine.playHit("whiff_punch");
+      soundEngine.playHit(meta.sound || "whiff_punch");
     }
     _executeHeavyKick(char, opp) {
       char.isGuarding = false;
       char.state = "heavy_kick";
       char.stateTime = 0;
       char.stateDuration = 13;
+      const meta = getSkinAttackMeta(char.skin, "heavy_kick");
       char.currentAction = {
-        name: "\u91CD\u529B\u731B\u8E22",
+        name: meta.name || "\u91CD\u529B\u731B\u8E22",
         startup: 5,
         // 5 幀迅猛出踢
         active: 4,
         recovery: 4,
         damage: 145,
         guardType: "all",
-        hitChecked: false
+        hitChecked: false,
+        style: meta.style,
+        vfxType: meta.vfxType
       };
-      soundEngine.playHit("whiff_kick");
+      soundEngine.playHit(meta.sound || "whiff_kick");
     }
     _executeCrouchPunch(char, opp) {
       char.isGuarding = false;
       char.state = "crouch_punch";
       char.stateTime = 0;
       char.stateDuration = 9;
+      const meta = getSkinAttackMeta(char.skin, "crouch_punch");
       char.currentAction = {
-        name: "\u4E0B\u8E72\u523A\u62F3",
+        name: meta.name || "\u4E0B\u8E72\u523A\u62F3",
         startup: 3,
         active: 3,
         recovery: 3,
         damage: 85,
         guardType: "all",
-        hitChecked: false
+        hitChecked: false,
+        style: meta.style,
+        vfxType: meta.vfxType
       };
-      soundEngine.playHit("whiff_punch");
+      soundEngine.playHit(meta.sound || "whiff_punch");
     }
     _executeCrouchKick(char, opp) {
       char.isGuarding = false;
       char.state = "crouch_kick";
       char.stateTime = 0;
       char.stateDuration = 14;
+      const meta = getSkinAttackMeta(char.skin, "crouch_kick");
       char.currentAction = {
-        name: "\u4E0B\u8E72\u6383\u5802\u817F",
+        name: meta.name || "\u4E0B\u8E72\u6383\u5802\u817F",
         startup: 4,
         active: 4,
         recovery: 6,
@@ -5927,10 +7155,12 @@
         // 下段判定：站防無效，必須蹲防！
         knockdown: true,
         // 命中掃翻倒地！
-        hitChecked: false
+        hitChecked: false,
+        style: meta.style,
+        vfxType: meta.vfxType
       };
       soundEngine.playHit("sweep");
-      soundEngine.playHit("whiff_kick");
+      soundEngine.playHit(meta.sound || "whiff_kick");
     }
     _executeAirAttack(char, opp, type) {
       char.isGuarding = false;
@@ -7977,6 +9207,8 @@
       };
       this._resizeCanvas();
       this.matchEndTimer = 0;
+      this._lastFrameTime = 0;
+      this._timeAccumulator = 0;
       combatEngine.initMatch(p1Data, p2Data, this.matchMode === "training");
       this.isFighting = true;
       soundEngine.playUI("fight");
@@ -8042,31 +9274,46 @@
         trainingBar.style.display = this.matchMode === "training" ? "flex" : "none";
       }
     }
-    _runBattleLoop() {
+    _runBattleLoop(timestamp = 0) {
       if (!this.isFighting) return;
-      const inputP1 = combatEngine.isOver ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false } : this._gatherInputsP1();
-      let inputP2 = null;
-      if (combatEngine.isOver) {
-        inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
-      } else if (this.matchMode === "local_2p") {
-        inputP2 = this._gatherInputsP2();
-      } else {
-        inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
+      if (!this._lastFrameTime) {
+        this._lastFrameTime = timestamp || performance.now();
+        this._timeAccumulator = 0;
       }
-      combatEngine.update(inputP1, inputP2);
+      const now = timestamp || performance.now();
+      let delta = now - this._lastFrameTime;
+      this._lastFrameTime = now;
+      if (delta > 100) delta = 100;
+      this._timeAccumulator += delta;
+      const FIXED_STEP = 1e3 / 60;
+      let steps = 0;
+      while (this._timeAccumulator >= FIXED_STEP && steps < 3) {
+        const inputP1 = combatEngine.isOver ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false } : this._gatherInputsP1();
+        let inputP2 = null;
+        if (combatEngine.isOver) {
+          inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+        } else if (this.matchMode === "local_2p") {
+          inputP2 = this._gatherInputsP2();
+        } else {
+          inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
+        }
+        combatEngine.update(inputP1, inputP2);
+        if (combatEngine.isOver && !combatEngine.isTraining) {
+          if (!this.matchEndTimer) {
+            this.matchEndTimer = 1;
+          } else {
+            this.matchEndTimer++;
+          }
+          if (this.matchEndTimer === 110) {
+            this._showMatchEndModal();
+          }
+        }
+        this._timeAccumulator -= FIXED_STEP;
+        steps++;
+      }
       this._renderBattleFrame();
       this._updateBattleHUD();
-      if (combatEngine.isOver && !combatEngine.isTraining) {
-        if (!this.matchEndTimer) {
-          this.matchEndTimer = 1;
-        } else {
-          this.matchEndTimer++;
-        }
-        if (this.matchEndTimer === 110) {
-          this._showMatchEndModal();
-        }
-      }
-      requestAnimationFrame(() => this._runBattleLoop());
+      requestAnimationFrame((ts) => this._runBattleLoop(ts));
     }
     _gatherInputsP1() {
       const k = this.keys;

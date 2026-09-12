@@ -201,6 +201,157 @@ class SoundEngine {
         break;
       }
 
+      case 'bow_shot': {
+        // 神弓拉滿撒弦與破空箭鳴 (Bowstring Twang & Arrow Whistle)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(520, t);
+        osc.frequency.exponentialRampToValueAtTime(210, t + 0.09);
+
+        gain.gain.setValueAtTime(0.75, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.09);
+
+        this._playNoise(t + 0.02, 0.11, 2400, 0.45); // 破空呼嘯
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.09);
+        break;
+      }
+
+      case 'gun_shot': {
+        // 戰術槍械開火爆能聲與機械撞針 (Blaster Gunshot & Recoil)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1050, t);
+        osc.frequency.exponentialRampToValueAtTime(140, t + 0.08);
+
+        gain.gain.setValueAtTime(0.85, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+
+        this._playNoise(t, 0.05, 1600, 0.65); // 槍口槍焰衝擊
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.08);
+        break;
+      }
+
+      case 'shield_hit': {
+        // 汎合金圓盾破陣金屬沉重敲擊 (Vibranium Shield Clank)
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(920, t);
+        osc1.frequency.exponentialRampToValueAtTime(540, t + 0.16);
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1480, t);
+        osc2.frequency.exponentialRampToValueAtTime(720, t + 0.16);
+
+        gain.gain.setValueAtTime(0.85, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+
+        this._playNoise(t, 0.06, 800, 0.5);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(this.sfxGain);
+
+        osc1.start(t);
+        osc2.start(t);
+        osc1.stop(t + 0.18);
+        osc2.stop(t + 0.18);
+        break;
+      }
+
+      case 'thunder': {
+        // 阿斯嘉天雷轟頂暴鳴 (Thunder & Lightning Crack)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(240, t);
+        osc.frequency.exponentialRampToValueAtTime(32, t + 0.35);
+
+        gain.gain.setValueAtTime(0.95, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+
+        this._playNoise(t, 0.28, 900, 0.75); // 滾滾雷聲
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.35);
+        break;
+      }
+
+      case 'sword_slash': {
+        // 勇者利刃超音速撕裂空氣 (Blade Slice Whoosh)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(820, t);
+        osc.frequency.exponentialRampToValueAtTime(320, t + 0.1);
+
+        gain.gain.setValueAtTime(0.7, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+
+        this._playNoise(t, 0.12, 2800, 0.55); // 劍鋒破風
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.1);
+        break;
+      }
+
+      case 'web_thwip': {
+        // 蜘蛛人經典雙發氣動吐絲聲 (Pneumatic Web Thwip)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(960, t);
+        osc.frequency.exponentialRampToValueAtTime(360, t + 0.06);
+
+        gain.gain.setValueAtTime(0.7, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.07);
+
+        this._playNoise(t, 0.05, 3200, 0.5);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.07);
+        break;
+      }
+
+      case 'ki_blast': {
+        // 七龍珠正宗氣功波聚能轟擊 (Dragon Ball Ki Blast Surge)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(260, t);
+        osc.frequency.linearRampToValueAtTime(740, t + 0.06);
+        osc.frequency.exponentialRampToValueAtTime(90, t + 0.22);
+
+        gain.gain.setValueAtTime(0.85, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.22);
+
+        this._playNoise(t, 0.15, 1100, 0.6);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.22);
+        break;
+      }
+
       case 'anti_air':
       case 'dp': {
         // 升龍昇空氣浪與撕裂聲

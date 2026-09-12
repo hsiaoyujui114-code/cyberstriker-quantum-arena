@@ -26,6 +26,7 @@ export class SpecialSkinsRenderer {
       'skin_captain_america',
       'skin_thor',
       'skin_thanos',
+      'skin_hawkeye',
       'skin_goku_ssj',
       'skin_vegeta_ssj',
       'skin_trunks_future',
@@ -232,6 +233,22 @@ export class SpecialSkinsRenderer {
 
       ctx.beginPath();
       ctx.arc(0, -45, 34 + Math.sin(t * 0.2) * 4, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (id === 'skin_hawkeye') {
+      // ── 鷹眼：頂級神射手專注紫芒與戰術瞄準十字光圈 ──
+      ctx.shadowColor = '#a855f7';
+      ctx.shadowBlur = 12;
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.45)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, -60, 22 + Math.sin(t * 0.1) * 3, 0, Math.PI * 2);
+      ctx.stroke();
+      // 戰術瞄準十字刻度
+      ctx.beginPath();
+      ctx.moveTo(-8, -60); ctx.lineTo(-4, -60);
+      ctx.moveTo(4, -60); ctx.lineTo(8, -60);
+      ctx.moveTo(0, -68); ctx.lineTo(0, -64);
+      ctx.moveTo(0, -56); ctx.lineTo(0, -52);
       ctx.stroke();
     }
 
@@ -606,6 +623,73 @@ export class SpecialSkinsRenderer {
         ctx.fillRect(8, -4, 3.5, 2);
         ctx.fillStyle = '#4c1d95';
         ctx.fillRect(6, -6, 7, 1.5); // 沉重眉脊
+        return true;
+      }
+
+      // ══════════════════════════════════════════════════
+      // 5.5 鷹眼・克林特巴頓 (Hawkeye Clint Barton)
+      // ══════════════════════════════════════════════════
+      case 'skin_hawkeye': {
+        // (A) 帥氣俐落深褐黑削邊髮型 (Tactical Undercut Hair)
+        ctx.fillStyle = '#27272a';
+        ctx.strokeStyle = '#18181b';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(-12, 4);
+        ctx.lineTo(-14, -14);
+        ctx.lineTo(2, -18);
+        ctx.lineTo(12, -14);
+        ctx.lineTo(14, -6);
+        ctx.lineTo(6, -16);
+        ctx.lineTo(-4, -15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // (B) 神射手面龐 (Sharp Archer Face)
+        ctx.fillStyle = '#fed7aa';
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(2, -14);
+        ctx.lineTo(13, -10);
+        ctx.lineTo(14, 0);
+        ctx.lineTo(12, 9);
+        ctx.lineTo(6, 16);
+        ctx.lineTo(-2, 15);
+        ctx.lineTo(-8, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // (C) 標誌性復仇者紫色戰術面罩護目鏡 / 頭帶 (Tactical Archer Cowl & Mask)
+        ctx.fillStyle = '#581c87';
+        ctx.strokeStyle = '#3b0764';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-6, -4);
+        ctx.lineTo(14, -4);
+        ctx.lineTo(13, 3);
+        ctx.lineTo(-4, 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 鷹眼紫色箭頭人字紋章 (Purple Arrow Chevron Emblem on forehead)
+        ctx.fillStyle = '#c084fc';
+        ctx.beginPath();
+        ctx.moveTo(4, -12);
+        ctx.lineTo(8, -7);
+        ctx.lineTo(5, -7);
+        ctx.lineTo(2, -10);
+        ctx.closePath();
+        ctx.fill();
+
+        // (D) 鷹眼銳利鷹隼之眼 (Focused Eagle Eyes)
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(7, -2, 4, 2);
+        ctx.fillStyle = '#581c87';
+        ctx.fillRect(9, -2, 2, 2); // 瞳孔
         return true;
       }
 
@@ -1322,6 +1406,89 @@ export class SpecialSkinsRenderer {
       }
 
       // ══════════════════════════════════════════════════
+      // 5.5 鷹眼・克林特巴頓 (Hawkeye Clint Barton)
+      // ══════════════════════════════════════════════════
+      case 'skin_hawkeye': {
+        // (A) 深黑碳纖維戰術背心 (Charcoal Tactical Vest)
+        ctx.fillStyle = '#18181b';
+        ctx.strokeStyle = '#27272a';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(-16, -23);
+        ctx.lineTo(16, -23);
+        ctx.lineTo(12, 16);
+        ctx.lineTo(-12, 16);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // (B) 標誌性經典紫色 V 字箭頭胸甲嵌板 (Iconic Purple Chevron Panel)
+        ctx.fillStyle = '#7e22ce';
+        ctx.strokeStyle = '#a855f7';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(-10, -22);
+        ctx.lineTo(10, -22);
+        ctx.lineTo(0, -6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#9333ea';
+        ctx.beginPath();
+        ctx.moveTo(-7, -22);
+        ctx.lineTo(7, -22);
+        ctx.lineTo(0, -10);
+        ctx.closePath();
+        ctx.fill();
+
+        // (C) 斜挎箭筒皮革肩帶 (Diagonal Leather Quiver Harness)
+        ctx.fillStyle = '#581c87';
+        ctx.beginPath();
+        ctx.moveTo(-14, -20);
+        ctx.lineTo(12, 14);
+        ctx.lineTo(8, 16);
+        ctx.lineTo(-16, -17);
+        ctx.closePath();
+        ctx.fill();
+
+        // (D) 背後背負的高科技特種箭筒 (Tactical Quiver with Trick Arrows)
+        ctx.fillStyle = '#27272a';
+        ctx.strokeStyle = '#581c87';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(-18, -26, 8, 28, 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 露出的 4 支紫色羽毛特種箭 (4 Trick Arrows with Purple Fletching)
+        const arrowColors = ['#a855f7', '#c084fc', '#38bdf8', '#ef4444'];
+        for (let i = 0; i < 4; i++) {
+          const ax = -17 + i * 2;
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(ax, -26);
+          ctx.lineTo(ax - 2, -34);
+          ctx.stroke();
+
+          // 箭羽
+          ctx.fillStyle = arrowColors[i];
+          ctx.fillRect(ax - 3.5, -34, 3, 4);
+        }
+
+        // 戰術多功能腰帶 (Utility Belt)
+        ctx.fillStyle = '#27272a';
+        ctx.fillRect(-12, 16, 24, 10);
+        ctx.fillStyle = '#9333ea';
+        ctx.fillRect(-3, 18, 6, 6); // 紫色金屬扣
+        ctx.fillStyle = '#18181b';
+        ctx.fillRect(-10, 18, 4, 6);
+        ctx.fillRect(6, 18, 4, 6);
+        break;
+      }
+
+      // ══════════════════════════════════════════════════
       // 6. 孫悟空・超級賽亞人 (Son Goku SSJ)
       // ══════════════════════════════════════════════════
       case 'skin_goku_ssj': {
@@ -1705,6 +1872,42 @@ export class SpecialSkinsRenderer {
         ctx.fillRect(-5, 10, 10, 3.5);
         ctx.fillStyle = '#e2e8f0';
         ctx.fillRect(-1.5, 10.5, 3, 2.5);
+
+        // 汎合金圓盾 (Vibranium Shield in Hand / on Forearm)
+        if (!isBack && (arm.holdingWeapon === 'shield' || arm.holdingWeapon === undefined)) {
+          ctx.save();
+          ctx.translate(0, 12);
+          // 1. 最外層紅環
+          ctx.fillStyle = '#dc2626';
+          ctx.strokeStyle = '#991b1b';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(0, 0, 17, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // 2. 第二層白銀環
+          ctx.fillStyle = '#f8fafc';
+          ctx.beginPath();
+          ctx.arc(0, 0, 13.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 3. 第三層紅環
+          ctx.fillStyle = '#dc2626';
+          ctx.beginPath();
+          ctx.arc(0, 0, 9.8, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 4. 核心深藍圓盤
+          ctx.fillStyle = '#1e3a8a';
+          ctx.beginPath();
+          ctx.arc(0, 0, 6.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 5. 核心純白五角星
+          this._drawStar(ctx, 0, 0, 5, 5.5, 2.4, '#ffffff', '#cbd5e1', 0.6);
+          ctx.restore();
+        }
         break;
       }
 
@@ -1747,6 +1950,59 @@ export class SpecialSkinsRenderer {
         ctx.arc(0, 19, 2.5, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
+
+        // 標誌性雷神之鎚 (Mjolnir in Front Hand)
+        if (!isBack || arm.holdingWeapon === 'hammer') {
+          ctx.save();
+          ctx.translate(0, 19);
+          // 鎚柄 (Leather-wrapped handle)
+          ctx.fillStyle = '#78350f';
+          ctx.fillRect(-2, -3, 4, 18);
+          // 柄首鋼箍 (Steel pommel)
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillRect(-3, 14, 6, 3);
+          // 皮製手腕帶
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(0, 17, 3, 0, Math.PI);
+          ctx.stroke();
+
+          // 鎚頭 (Silver Mjolnir Head)
+          ctx.fillStyle = '#e2e8f0';
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(-10, -14, 20, 12, 2.5);
+          ctx.fill();
+          ctx.stroke();
+
+          // 鎚面斜角 (Beveled Inset)
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillRect(-8, -12, 16, 8);
+
+          // 阿斯嘉如尼符文與雷電火花 (Runic engravings & lightning arcs)
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-5, -8);
+          ctx.lineTo(0, -11);
+          ctx.lineTo(5, -8);
+          ctx.stroke();
+
+          // 縈繞電弧
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 8;
+          ctx.strokeStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.moveTo(-11, -9);
+          ctx.lineTo(-14, -12);
+          ctx.lineTo(-12, -15);
+          ctx.moveTo(11, -9);
+          ctx.lineTo(15, -7);
+          ctx.stroke();
+          ctx.restore();
+        }
         break;
       }
 
@@ -1828,6 +2084,118 @@ export class SpecialSkinsRenderer {
           ctx.beginPath();
           ctx.arc(4.2, 14, 1.8, 0, Math.PI * 2);
           ctx.fill();
+
+          ctx.restore();
+        }
+        break;
+      }
+
+      // ══════════════════════════════════════════════════
+      // 5.5 鷹眼・克林特巴頓 (Hawkeye Clint Barton)
+      // ══════════════════════════════════════════════════
+      case 'skin_hawkeye': {
+        // 上臂：無袖戰術深灰紫配色與肌肉線條
+        ctx.fillStyle = isBack ? '#18181b' : '#27272a';
+        ctx.strokeStyle = '#581c87';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.roundRect(-4, 0, 8, 22, 3);
+        ctx.fill();
+        ctx.stroke();
+
+        // 紫色戰術肩章
+        ctx.fillStyle = '#9333ea';
+        ctx.fillRect(-3, 2, 6, 4);
+
+        // 前臂：戰術射手護臂 (Archer Bracer)
+        ctx.translate(0, 20);
+        ctx.rotate(arm.foreAngle);
+
+        ctx.fillStyle = isBack ? '#27272a' : '#3f3f46';
+        ctx.beginPath();
+        ctx.roundRect(-5, 0, 10, 22, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        // 護臂上三道紫色箭道凹槽與加固條
+        ctx.fillStyle = '#a855f7';
+        ctx.fillRect(-3, 6, 6, 2);
+        ctx.fillRect(-3, 10, 6, 2);
+        ctx.fillRect(-3, 14, 6, 2);
+
+        // 手套與射手三指皮革指套
+        ctx.fillStyle = '#18181b';
+        ctx.fillRect(-4, 18, 8, 4);
+
+        // ══════════════════════════════════════════════════
+        // 標誌性高科技戰術複合弓 (Tactical Compound Bow)
+        // ══════════════════════════════════════════════════
+        if (!isBack || arm.holdingWeapon === 'bow') {
+          ctx.save();
+          ctx.translate(0, 18);
+          // 弓身握把
+          ctx.fillStyle = '#18181b';
+          ctx.strokeStyle = '#7e22ce';
+          ctx.lineWidth = 2.2;
+
+          // 1. 上弓臂 (Upper Limb)
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(8, -14, 4, -28);
+          ctx.stroke();
+
+          // 2. 下弓臂 (Lower Limb)
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(8, 14, 4, 28);
+          ctx.stroke();
+
+          // 3. 雙滑輪偏心輪 (Compound Cams)
+          ctx.fillStyle = '#c084fc';
+          ctx.beginPath();
+          ctx.arc(4, -28, 3.5, 0, Math.PI * 2);
+          ctx.arc(4, 28, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 4. 戰術高張力弓弦 (Bowstring)
+          ctx.strokeStyle = '#f5d0fe';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          if (arm.drawingArrow) {
+            // 被拉滿的弓弦，頂點向後延伸
+            ctx.moveTo(4, -28);
+            ctx.lineTo(-14, 0);
+            ctx.lineTo(4, 28);
+          } else {
+            ctx.moveTo(4, -28);
+            ctx.lineTo(-2, 0);
+            ctx.lineTo(4, 28);
+          }
+          ctx.stroke();
+
+          // 5. 若正在射擊或拉弦：搭在箭台上的紫色能量穿甲箭！
+          if (arm.holdingWeapon === 'bow' || arm.drawingArrow) {
+            ctx.strokeStyle = '#e9d5ff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-16, 0);
+            ctx.lineTo(24, 0);
+            ctx.stroke();
+
+            // 箭鏃 (High-Tech Arrowhead)
+            ctx.fillStyle = '#9333ea';
+            ctx.beginPath();
+            ctx.moveTo(24, -3);
+            ctx.lineTo(30, 0);
+            ctx.lineTo(24, 3);
+            ctx.closePath();
+            ctx.fill();
+
+            // 箭羽 (Fletching)
+            ctx.fillStyle = '#c084fc';
+            ctx.fillRect(-16, -2.5, 5, 1.2);
+            ctx.fillRect(-16, 1.3, 5, 1.2);
+          }
 
           ctx.restore();
         }
@@ -1950,6 +2318,63 @@ export class SpecialSkinsRenderer {
         ctx.beginPath();
         ctx.roundRect(-5, 10, 10, 12, 3);
         ctx.fill();
+
+        // 標誌性勇者之劍 (Brave Sword / Tapion Sword in Front Hand)
+        if (!isBack || arm.holdingWeapon === 'sword') {
+          ctx.save();
+          ctx.translate(0, 18);
+          // 劍柄 (Blue wrapped hilt)
+          ctx.fillStyle = '#1e3a8a';
+          ctx.fillRect(-2, -2, 4, 15);
+          // 金色圓形劍首 (Golden Pommel)
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          ctx.arc(0, 14, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 金色寬幅護手 (Golden Crossguard)
+          ctx.fillStyle = '#f59e0b';
+          ctx.strokeStyle = '#b45309';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.roundRect(-9, -4, 18, 5, 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // 雙刃銀白鋒芒劍身 (Double-edged Silver Blade)
+          ctx.fillStyle = '#f8fafc';
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(-4, -4);
+          ctx.lineTo(-3, -38);
+          ctx.lineTo(0, -44); // 銳利劍尖
+          ctx.lineTo(3, -38);
+          ctx.lineTo(4, -4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // 劍身中央血槽 (Fuller Ridge)
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, -4);
+          ctx.lineTo(0, -36);
+          ctx.stroke();
+
+          // 劍刃流轉的次元劍氣白芒
+          ctx.shadowColor = '#60a5fa';
+          ctx.shadowBlur = 8;
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-3, -30);
+          ctx.lineTo(0, -44);
+          ctx.lineTo(3, -30);
+          ctx.stroke();
+          ctx.restore();
+        }
         break;
       }
 
@@ -2247,6 +2672,51 @@ export class SpecialSkinsRenderer {
         if (leg.footAngle) ctx.rotate(leg.footAngle);
         ctx.fillStyle = '#d97706';
         ctx.fillRect(-5, 0, 18, 8);
+        break;
+      }
+
+      // ══════════════════════════════════════════════════
+      // 5.5 鷹眼・克林特巴頓 (Hawkeye Clint Barton)
+      // ══════════════════════════════════════════════════
+      case 'skin_hawkeye': {
+        // 大腿：深灰戰術工裝長褲與紫色側邊縫線
+        ctx.fillStyle = isBack ? '#18181b' : '#27272a';
+        ctx.strokeStyle = '#581c87';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(-5, 0, 10, 26, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        // 紫色工裝側袋
+        ctx.fillStyle = '#3f3f46';
+        ctx.fillRect(-4, 8, 8, 10);
+        ctx.fillStyle = '#9333ea';
+        ctx.fillRect(-4, 7, 8, 2);
+
+        // 小腿：加固戰術護膝與黑色特勤戰靴 (Tactical Boots with Purple Soles)
+        ctx.translate(0, 24);
+        ctx.rotate(leg.shinAngle);
+
+        ctx.fillStyle = isBack ? '#18181b' : '#27272a';
+        ctx.beginPath();
+        ctx.roundRect(-5, 0, 10, 28, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        // 紫色戰術護膝
+        ctx.fillStyle = '#7e22ce';
+        ctx.beginPath();
+        ctx.roundRect(-4, 0, 8, 8, 2);
+        ctx.fill();
+
+        // 腳掌特勤戰靴與紫色鞋底
+        ctx.translate(0, 24);
+        if (leg.footAngle) ctx.rotate(leg.footAngle);
+        ctx.fillStyle = '#18181b';
+        ctx.fillRect(-5, 0, 18, 8);
+        ctx.fillStyle = '#9333ea';
+        ctx.fillRect(-5, 6, 18, 3);
         break;
       }
 
@@ -2572,6 +3042,27 @@ export class SpecialSkinsRenderer {
         return true;
       }
 
+      // 鷹眼：複合神弓高能偏折護盾 (Tactical Bow Parrying Forcefield)
+      case 'skin_hawkeye': {
+        ctx.shadowColor = '#a855f7';
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 3;
+
+        // 弧形高能量偏轉偏光盾
+        ctx.beginPath();
+        ctx.arc(28, shieldY, 34 * pulse, -Math.PI * 0.35, Math.PI * 0.35);
+        ctx.stroke();
+
+        // 交叉十字瞄準刻線
+        ctx.fillStyle = '#e9d5ff';
+        ctx.beginPath();
+        ctx.arc(32, shieldY, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return true;
+      }
+
       // 孫悟空 & 貝吉塔：超級賽亞人球形氣功防護罩 (Ki Spherical Barrier)
       case 'skin_goku_ssj':
       case 'skin_vegeta_ssj': {
@@ -2671,91 +3162,280 @@ export class SpecialSkinsRenderer {
 
   // ─── 7. 特殊打擊專屬 VFX (Attack VFX) ───
   drawAttackVFX(ctx, vfx, skin) {
-    if (!this.isSpecial(skin) || vfx.type !== 'punch') return false;
+    if (!this.isSpecial(skin)) return false;
     const id = skin.id;
+    const type = vfx.type;
 
     ctx.save();
 
-    if (id === 'skin_iron_man') {
-      // 鋼鐵人：掌心脈衝等離子爆發火花
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 14;
-      ctx.strokeStyle = '#38bdf8';
+    // 1. 鷹眼・克林特巴頓：高科技穿甲神箭 (Hawkeye Tactical Arrow Streak)
+    if (type === 'bow_arrow' || id === 'skin_hawkeye') {
+      ctx.shadowColor = '#a855f7';
+      ctx.shadowBlur = 18;
+
+      // 超音速穿甲碳纖箭桿
+      ctx.strokeStyle = '#e9d5ff';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.arc(vfx.x, vfx.y, 13, 0, Math.PI * 2);
+      ctx.moveTo(vfx.x - 30, vfx.y);
+      ctx.lineTo(vfx.x + 8, vfx.y);
       ctx.stroke();
-      ctx.fillStyle = '#ffffff';
+
+      // 特種箭頭爆裂光芒
+      ctx.fillStyle = '#c084fc';
       ctx.beginPath();
-      ctx.arc(vfx.x, vfx.y, 4, 0, Math.PI * 2);
+      ctx.moveTo(vfx.x + 8, vfx.y - 4);
+      ctx.lineTo(vfx.x + 18, vfx.y);
+      ctx.lineTo(vfx.x + 8, vfx.y + 4);
+      ctx.closePath();
       ctx.fill();
+
+      // 箭尾羽 (Purple Fletching)
+      ctx.fillStyle = '#7e22ce';
+      ctx.fillRect(vfx.x - 30, vfx.y - 3.2, 7, 2);
+      ctx.fillRect(vfx.x - 30, vfx.y + 1.2, 7, 2);
+
+      // 音爆氣環 (Sonic Vapor Cone)
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(vfx.x - 10, vfx.y, 9, -Math.PI * 0.4, Math.PI * 0.4);
+      ctx.stroke();
       ctx.restore();
       return true;
-    } else if (id === 'skin_spiderman') {
-      // 蜘蛛人：蛛網爆裂衝擊波
-      this._drawSpiderWebOnHead(ctx, vfx.x, vfx.y, 16, '#ffffff');
+    }
+
+    // 2. 鋼鐵人：掌心等離子脈衝砲 (Palm Repulsor Blast)
+    if (type === 'repulsor_blast' || (id === 'skin_iron_man' && type === 'punch')) {
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 18;
+      // 推進等離子束 (Plasma Beam)
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 22, vfx.y);
+      ctx.lineTo(vfx.x + 16, vfx.y);
+      ctx.stroke();
+
+      // 白光高溫光心
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 20, vfx.y);
+      ctx.lineTo(vfx.x + 16, vfx.y);
+      ctx.stroke();
+
+      // 前端同心擴散衝擊光環
+      ctx.strokeStyle = '#7dd3fc';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(vfx.x + 14, vfx.y, 11, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.restore();
       return true;
-    } else if (id === 'skin_captain_america') {
-      // 美國隊長：汎合金盾牌星芒衝擊
+    }
+
+    // 3. 蜘蛛人：蛛網爆裂衝擊 (Web Stream & Burst)
+    if (type === 'web_stream' || (id === 'skin_spiderman' && type === 'punch')) {
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 14;
+      // 蛛絲彈射主線
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 28, vfx.y);
+      ctx.lineTo(vfx.x + 10, vfx.y);
+      ctx.stroke();
+
+      // 前端爆裂蛛網陣 (Spider Web Impact)
+      this._drawSpiderWebOnHead(ctx, vfx.x + 10, vfx.y, 16, '#ffffff');
+      ctx.restore();
+      return true;
+    }
+
+    // 4. 美國隊長：汎合金盾牌破空星芒撞擊 (Vibranium Shield Slam)
+    if (type === 'shield_strike' || (id === 'skin_captain_america' && type === 'punch')) {
+      ctx.shadowColor = '#dc2626';
+      ctx.shadowBlur = 18;
+
+      // 外層紅白衝擊弧波
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 20, -Math.PI * 0.45, Math.PI * 0.45);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(vfx.x - 4, vfx.y, 15, -Math.PI * 0.4, Math.PI * 0.4);
+      ctx.stroke();
+
+      // 核心星芒衝擊
       this._drawStar(ctx, vfx.x, vfx.y, 5, 12, 4.5, '#ffffff', '#dc2626', 1.5);
       ctx.restore();
       return true;
-    } else if (id === 'skin_thor') {
-      // 雷神：天雷狂暴折線電光
+    }
+
+    // 5. 雷神索爾：天雷怒擊與阿斯嘉電弧 (Mjolnir Thunder Strike)
+    if (type === 'thor_lightning' || (id === 'skin_thor' && type === 'punch')) {
       ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = 20;
       ctx.strokeStyle = '#67e8f9';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
+
+      // 狂暴折線天雷
       ctx.beginPath();
-      ctx.moveTo(vfx.x - 12, vfx.y - 12);
-      ctx.lineTo(vfx.x - 2, vfx.y - 2);
-      ctx.lineTo(vfx.x - 8, vfx.y + 4);
-      ctx.lineTo(vfx.x + 10, vfx.y + 12);
+      ctx.moveTo(vfx.x - 16, vfx.y - 18);
+      ctx.lineTo(vfx.x - 4, vfx.y - 4);
+      ctx.lineTo(vfx.x - 10, vfx.y + 4);
+      ctx.lineTo(vfx.x + 12, vfx.y + 16);
+      ctx.stroke();
+
+      // 分支電光
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 4, vfx.y - 4);
+      ctx.lineTo(vfx.x + 8, vfx.y - 10);
+      ctx.moveTo(vfx.x - 10, vfx.y + 4);
+      ctx.lineTo(vfx.x - 18, vfx.y + 12);
       ctx.stroke();
       ctx.restore();
       return true;
-    } else if (id === 'skin_thanos') {
-      // 薩諾斯：6 彩無限寶石光芒爆裂
+    }
+
+    // 6. 薩諾斯：6 彩無限寶石毀滅巨拳 (Infinity Gauntlet Cosmic Strike)
+    if (type === 'infinity_vfx' || (id === 'skin_thanos' && type === 'punch')) {
       const colors = ['#facc15', '#a855f7', '#3b82f6', '#ef4444', '#f97316', '#22c55e'];
       for (let i = 0; i < 6; i++) {
         const ang = (Math.PI / 3) * i;
+        ctx.shadowColor = colors[i];
+        ctx.shadowBlur = 14;
         ctx.fillStyle = colors[i];
         ctx.beginPath();
-        ctx.arc(vfx.x + Math.cos(ang) * 11, vfx.y + Math.sin(ang) * 11, 2.5, 0, Math.PI * 2);
+        ctx.arc(vfx.x + Math.cos(ang) * 14, vfx.y + Math.sin(ang) * 14, 3.5, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 6, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
       return true;
-    } else if (id === 'skin_goku_ssj' || id === 'skin_vegeta_ssj') {
-      // 悟空 & 貝吉塔：賽亞人聚能氣爆
-      const isVegeta = id === 'skin_vegeta_ssj';
-      ctx.shadowColor = isVegeta ? '#60a5fa' : '#fde047';
-      ctx.shadowBlur = 18;
-      ctx.strokeStyle = isVegeta ? '#60a5fa' : '#fde047';
-      ctx.lineWidth = 3;
+    }
+
+    // 7. 孫悟空：超級賽亞人龜派氣功聚能爆發 (Kamehameha Ki Wave)
+    if (type === 'kamehameha_vfx' || (id === 'skin_goku_ssj' && type === 'punch')) {
+      ctx.shadowColor = '#fde047';
+      ctx.shadowBlur = 22;
+
+      // 金色氣焰衝擊波主體
+      ctx.fillStyle = '#fde047';
       ctx.beginPath();
-      ctx.arc(vfx.x, vfx.y, 14, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.arc(vfx.x, vfx.y, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 蔚藍高能聚能核
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 10, 0, Math.PI * 2);
+      ctx.fill();
+
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
       ctx.arc(vfx.x, vfx.y, 5, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
       return true;
-    } else if (id === 'skin_golden_frieza') {
-      // 黃金弗利沙：猩紅死亡光線火花
-      ctx.shadowColor = '#ef4444';
-      ctx.shadowBlur = 18;
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 2.5;
+    }
+
+    // 8. 貝吉塔：賽亞人王子大霹靂閃光 (Big Bang / Final Flash Strike)
+    if (type === 'final_flash_vfx' || (id === 'skin_vegeta_ssj' && type === 'punch')) {
+      ctx.shadowColor = '#60a5fa';
+      ctx.shadowBlur = 22;
+
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(vfx.x - 14, vfx.y);
-      ctx.lineTo(vfx.x + 14, vfx.y);
+      ctx.arc(vfx.x, vfx.y, 18, 0, Math.PI * 2);
       ctx.stroke();
+
+      ctx.fillStyle = '#60a5fa';
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 11, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(vfx.x, vfx.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      return true;
+    }
+
+    // 9. 未來特南克斯：勇者之劍次元斬光弧 (Brave Sword Slash)
+    if (type === 'sword_slash_vfx' || (id === 'skin_trunks_future' && type === 'punch')) {
+      ctx.shadowColor = '#60a5fa';
+      ctx.shadowBlur = 18;
+
+      // 藍白破空劍弧
+      ctx.strokeStyle = '#93c5fd';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(vfx.x - 10, vfx.y, 32, -Math.PI * 0.35, Math.PI * 0.35);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(vfx.x - 10, vfx.y, 32, -Math.PI * 0.35, Math.PI * 0.35);
+      ctx.stroke();
+      ctx.restore();
+      return true;
+    }
+
+    // 10. 比克大魔王：那美克星魔臂伸縮突刺衝擊 (Namekian Elastic Strike)
+    if (type === 'namek_arm_vfx' || (id === 'skin_piccolo' && type === 'punch')) {
+      ctx.shadowColor = '#22c55e';
+      ctx.shadowBlur = 16;
+
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 26, vfx.y);
+      ctx.lineTo(vfx.x + 10, vfx.y);
+      ctx.stroke();
+
+      // 粉紅肌肉紋理
+      ctx.strokeStyle = '#fb7185';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 18, vfx.y);
+      ctx.lineTo(vfx.x + 4, vfx.y);
+      ctx.stroke();
+      ctx.restore();
+      return true;
+    }
+
+    // 11. 黃金弗利沙：帝皇猩紅死亡光線 (Death Beam Piercing Ray)
+    if (type === 'death_beam_vfx' || (id === 'skin_golden_frieza' && type === 'punch')) {
+      ctx.shadowColor = '#ef4444';
+      ctx.shadowBlur = 20;
+
+      // 極細極銳利貫穿光線
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(vfx.x - 24, vfx.y);
+      ctx.lineTo(vfx.x + 20, vfx.y);
+      ctx.stroke();
+
+      // 金色高溫閃芒
       ctx.fillStyle = '#ffd700';
       ctx.beginPath();
-      ctx.arc(vfx.x, vfx.y, 4, 0, Math.PI * 2);
+      ctx.arc(vfx.x + 18, vfx.y, 4.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
       return true;

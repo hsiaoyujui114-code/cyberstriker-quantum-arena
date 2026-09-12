@@ -6,6 +6,7 @@
  */
 
 import { SKILLS } from '../data/skills.js';
+import { getSkinAttackMeta } from '../data/skins.js';
 import { soundEngine } from './audio.js';
 
 export class CombatEngine {
@@ -599,16 +600,19 @@ export class CombatEngine {
     char.state = 'light_punch';
     char.stateTime = 0;
     char.stateDuration = 9; // 9 幀極速出拳收招
+    const meta = getSkinAttackMeta(char.skin, 'light_punch');
     char.currentAction = {
-      name: '刺拳打擊',
+      name: meta.name || '刺拳打擊',
       startup: 3, // 3 幀秒出
       active: 3,
       recovery: 3,
       damage: 80,
       guardType: 'all',
-      hitChecked: false
+      hitChecked: false,
+      style: meta.style,
+      vfxType: meta.vfxType
     };
-    soundEngine.playHit('whiff_punch');
+    soundEngine.playHit(meta.sound || 'whiff_punch');
   }
 
   _executeHeavyKick(char, opp) {
@@ -616,16 +620,19 @@ export class CombatEngine {
     char.state = 'heavy_kick';
     char.stateTime = 0;
     char.stateDuration = 13; // 13 幀破空重踢
+    const meta = getSkinAttackMeta(char.skin, 'heavy_kick');
     char.currentAction = {
-      name: '重力猛踢',
+      name: meta.name || '重力猛踢',
       startup: 5, // 5 幀迅猛出踢
       active: 4,
       recovery: 4,
       damage: 145,
       guardType: 'all',
-      hitChecked: false
+      hitChecked: false,
+      style: meta.style,
+      vfxType: meta.vfxType
     };
-    soundEngine.playHit('whiff_kick');
+    soundEngine.playHit(meta.sound || 'whiff_kick');
   }
 
   _executeCrouchPunch(char, opp) {
@@ -633,16 +640,19 @@ export class CombatEngine {
     char.state = 'crouch_punch';
     char.stateTime = 0;
     char.stateDuration = 9; // 9 幀低位秒刺
+    const meta = getSkinAttackMeta(char.skin, 'crouch_punch');
     char.currentAction = {
-      name: '下蹲刺拳',
+      name: meta.name || '下蹲刺拳',
       startup: 3,
       active: 3,
       recovery: 3,
       damage: 85,
       guardType: 'all',
-      hitChecked: false
+      hitChecked: false,
+      style: meta.style,
+      vfxType: meta.vfxType
     };
-    soundEngine.playHit('whiff_punch');
+    soundEngine.playHit(meta.sound || 'whiff_punch');
   }
 
   _executeCrouchKick(char, opp) {
@@ -650,18 +660,21 @@ export class CombatEngine {
     char.state = 'crouch_kick';
     char.stateTime = 0;
     char.stateDuration = 14; // 14 幀破空旋掃
+    const meta = getSkinAttackMeta(char.skin, 'crouch_kick');
     char.currentAction = {
-      name: '下蹲掃堂腿',
+      name: meta.name || '下蹲掃堂腿',
       startup: 4,
       active: 4,
       recovery: 6,
       damage: 135,
       guardType: 'crouch_only', // 下段判定：站防無效，必須蹲防！
       knockdown: true, // 命中掃翻倒地！
-      hitChecked: false
+      hitChecked: false,
+      style: meta.style,
+      vfxType: meta.vfxType
     };
     soundEngine.playHit('sweep');
-    soundEngine.playHit('whiff_kick');
+    soundEngine.playHit(meta.sound || 'whiff_kick');
   }
 
   _executeAirAttack(char, opp, type) {
