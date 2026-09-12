@@ -628,7 +628,7 @@ export class CombatEngine {
       startup: 3, // 3 幀秒出
       active: 3,
       recovery: 3,
-      damage: 40,
+      damage: 80,
       guardType: 'all',
       hitChecked: false
     };
@@ -645,7 +645,7 @@ export class CombatEngine {
       startup: 5, // 5 幀迅猛出踢
       active: 4,
       recovery: 4,
-      damage: 80,
+      damage: 145,
       guardType: 'all',
       hitChecked: false
     };
@@ -662,7 +662,7 @@ export class CombatEngine {
       startup: 3,
       active: 3,
       recovery: 3,
-      damage: 42,
+      damage: 85,
       guardType: 'all',
       hitChecked: false
     };
@@ -679,7 +679,7 @@ export class CombatEngine {
       startup: 4,
       active: 4,
       recovery: 6,
-      damage: 75,
+      damage: 135,
       guardType: 'crouch_only', // 下段判定：站防無效，必須蹲防！
       knockdown: true, // 命中掃翻倒地！
       hitChecked: false
@@ -698,7 +698,7 @@ export class CombatEngine {
       startup: 2,
       active: 4,
       recovery: 4,
-      damage: type === 'kick' ? 90 : 48,
+      damage: type === 'kick' ? 155 : 90,
       guardType: 'stand_only', // 空中打擊視為中段，不可蹲防！
       knockdown: type === 'kick', // 空中重飛踢擊倒對手
       hitChecked: false
@@ -718,7 +718,7 @@ export class CombatEngine {
       startup: 2,
       active: 4,
       recovery: 6,
-      damage: 55,
+      damage: 110,
       guardType: 'all',
       isRanged: true,
       hitChecked: true
@@ -734,7 +734,7 @@ export class CombatEngine {
       vx: char.facing * 15,
       vy: 0,
       radius: 9,
-      damage: 55,
+      damage: 110,
       guardType: 'all',
       skin: char.skin,
       life: 80
@@ -752,7 +752,7 @@ export class CombatEngine {
       startup: 3,
       active: 4,
       recovery: 7,
-      damage: 65,
+      damage: 135,
       guardType: 'crouch_only', // 下段判定！站立防禦無效，必須蹲防或翻越！
       knockdown: true,
       isRanged: true,
@@ -769,7 +769,7 @@ export class CombatEngine {
       vx: char.facing * 12,
       vy: 0,
       radius: 13,
-      damage: 65,
+      damage: 135,
       guardType: 'crouch_only',
       knockdown: true,
       skin: char.skin,
@@ -788,7 +788,7 @@ export class CombatEngine {
       startup: 4,
       active: 4,
       recovery: 8,
-      damage: 78,
+      damage: 160,
       guardType: 'all',
       knockdown: true, // 命中直接擊倒！
       isRanged: true,
@@ -806,7 +806,7 @@ export class CombatEngine {
       vx: char.facing * 18,
       vy: 0,
       radius: 16,
-      damage: 78,
+      damage: 160,
       guardType: 'all',
       knockdown: true,
       skin: char.skin,
@@ -825,7 +825,7 @@ export class CombatEngine {
       startup: 3,
       active: 4,
       recovery: 6,
-      damage: 60,
+      damage: 120,
       guardType: 'all',
       isRanged: true,
       hitChecked: true
@@ -841,7 +841,7 @@ export class CombatEngine {
       vx: char.facing * 11,
       vy: -11,
       radius: 10,
-      damage: 60,
+      damage: 120,
       guardType: 'all',
       skin: char.skin,
       life: 80
@@ -859,7 +859,7 @@ export class CombatEngine {
       startup: 2,
       active: 4,
       recovery: 4,
-      damage: 55,
+      damage: 115,
       guardType: 'all',
       isRanged: true,
       hitChecked: true
@@ -875,7 +875,7 @@ export class CombatEngine {
       vx: char.facing * 14,
       vy: 3.2,
       radius: 9,
-      damage: 55,
+      damage: 115,
       guardType: 'all',
       skin: char.skin,
       life: 80
@@ -893,7 +893,7 @@ export class CombatEngine {
       startup: 2,
       active: 4,
       recovery: 6,
-      damage: 70,
+      damage: 145,
       guardType: 'stand_only', // 中段落雷判定，不可蹲防！
       knockdown: true,
       isRanged: true,
@@ -910,7 +910,7 @@ export class CombatEngine {
       vx: char.facing * 5,
       vy: 12,
       radius: 12,
-      damage: 70,
+      damage: 145,
       guardType: 'stand_only',
       knockdown: true,
       skin: char.skin,
@@ -1090,7 +1090,7 @@ export class CombatEngine {
           vx: char.facing * (9 + m * 1.5),
           vy: (m - 1) * 2.8,
           radius: 8,
-          damage: 45,
+          damage: 70,
           guardType: 'all',
           skin: char.skin,
           life: 95
@@ -1168,7 +1168,7 @@ export class CombatEngine {
         vx: char.facing * 4.5,
         vy: 0,
         radius: 26,
-        damage: 25,
+        damage: 48,
         tickCooldown: 0,
         guardType: 'all',
         skin: char.skin,
@@ -1216,7 +1216,7 @@ export class CombatEngine {
           vx: Math.cos(ang) * 15 * char.facing,
           vy: Math.sin(ang) * 15,
           radius: 7,
-          damage: 35,
+          damage: 50,
           guardType: 'all',
           skin: char.skin,
           life: 40
@@ -1322,7 +1322,7 @@ export class CombatEngine {
         hasHitForward: false,
         hasHitReturn: false,
         radius: 14,
-        damage: 78,
+        damage: 115,
         guardType: 'all',
         skin: char.skin,
         life: 85
@@ -1714,7 +1714,7 @@ export class CombatEngine {
               vx: owner.facing * 20,
               vy: 0,
               radius: 6,
-              damage: 48,
+              damage: 75,
               guardType: 'all',
               skin: p.skin,
               life: 38
@@ -1748,7 +1748,7 @@ export class CombatEngine {
           if (target && Math.abs(target.x - p.x) < (p.radius || 48) && Math.abs(target.y - p.y) < 35 && target.invincibleTimer <= 0) {
             this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
               name: '燃燒火海灼傷',
-              damage: p.damage || 18,
+              damage: p.damage || 38,
               guardType: 'low',
               chipRatio: 0.5
             });
@@ -1785,7 +1785,7 @@ export class CombatEngine {
           vx: 0,
           vy: 0,
           radius: 52,
-          damage: 18,
+          damage: 38,
           guardType: 'low',
           skin: p.skin,
           life: 150,

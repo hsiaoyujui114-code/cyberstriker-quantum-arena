@@ -10,7 +10,7 @@
       typeName: "\u76F4\u7DDA\u5C04\u64CA / \u9060\u7A0B\u6B66\u5668",
       cd: 0.8,
       // 快速冷卻：迅捷壓制
-      damage: 120,
+      damage: 185,
       startup: 5,
       active: 60,
       recovery: 6,
@@ -29,7 +29,7 @@
       typeName: "\u8CAB\u7A7F\u5DE8\u7832 / \u9060\u7A0B\u6B66\u5668",
       cd: 2.5,
       // 快速冷卻
-      damage: 260,
+      damage: 340,
       startup: 10,
       active: 16,
       recovery: 12,
@@ -48,7 +48,7 @@
       type: "homing_missiles",
       typeName: "\u5C0E\u5F15\u98DB\u5F48 / \u9060\u7A0B\u6B66\u5668",
       cd: 1.4,
-      damage: 135,
+      damage: 210,
       startup: 4,
       active: 70,
       recovery: 6,
@@ -66,7 +66,7 @@
       type: "bouncing_laser",
       typeName: "\u5F48\u5C04\u6FC0\u5149 / \u9060\u7A0B\u6B66\u5668",
       cd: 1.2,
-      damage: 140,
+      damage: 215,
       startup: 3,
       active: 75,
       recovery: 6,
@@ -84,7 +84,7 @@
       type: "orbital_strike",
       typeName: "\u8ECC\u9053\u91CD\u7832 / \u9060\u7A0B\u6B66\u5668",
       cd: 2,
-      damage: 175,
+      damage: 255,
       startup: 8,
       active: 18,
       recovery: 8,
@@ -104,7 +104,7 @@
       type: "gravity_vortex",
       typeName: "\u9ED1\u6D1E\u529B\u5834 / \u9060\u7A0B\u6B66\u5668",
       cd: 2.2,
-      damage: 125,
+      damage: 200,
       startup: 5,
       active: 90,
       recovery: 8,
@@ -122,7 +122,7 @@
       type: "sniper_railgun",
       typeName: "\u6975\u901F\u72D9\u64CA / \u9060\u7A0B\u6B66\u5668",
       cd: 1.1,
-      damage: 165,
+      damage: 245,
       startup: 3,
       active: 45,
       recovery: 7,
@@ -141,7 +141,7 @@
       type: "plasma_shotgun",
       typeName: "\u6247\u5F62\u9730\u5F48 / \u9060\u7A0B\u6B66\u5668",
       cd: 1.3,
-      damage: 175,
+      damage: 250,
       startup: 4,
       active: 50,
       recovery: 8,
@@ -159,7 +159,7 @@
       type: "drone_funnel",
       typeName: "\u81EA\u52D5\u6D6E\u6E38 / \u9060\u7A0B\u6B66\u5668",
       cd: 1.8,
-      damage: 145,
+      damage: 225,
       startup: 3,
       active: 85,
       recovery: 6,
@@ -177,7 +177,7 @@
       type: "cryo_arrow",
       typeName: "\u6E1B\u901F\u51B0\u7BAD / \u9060\u7A0B\u6B66\u5668",
       cd: 1.4,
-      damage: 135,
+      damage: 205,
       startup: 4,
       active: 65,
       recovery: 6,
@@ -195,7 +195,7 @@
       type: "incendiary_grenade",
       typeName: "\u62CB\u7269\u69B4\u5F48 / \u9060\u7A0B\u6B66\u5668",
       cd: 1.6,
-      damage: 150,
+      damage: 220,
       startup: 5,
       active: 80,
       recovery: 8,
@@ -213,7 +213,7 @@
       type: "boomerang_blade",
       typeName: "\u8FF4\u65CB\u98DB\u93E2 / \u9060\u7A0B\u6B66\u5668",
       cd: 1.2,
-      damage: 155,
+      damage: 230,
       startup: 3,
       active: 70,
       recovery: 6,
@@ -233,7 +233,7 @@
       typeName: "\u5C0D\u7A7A\u7A81\u9032 / \u8FD1\u6230\u6B66\u6280",
       cd: 1.2,
       // 快速冷卻
-      damage: 160,
+      damage: 235,
       startup: 3,
       active: 12,
       recovery: 10,
@@ -253,7 +253,7 @@
       typeName: "\u4E0B\u6BB5\u7A81\u9032 / \u8FD1\u6230\u6B66\u6280",
       cd: 1,
       // 快速冷卻
-      damage: 130,
+      damage: 190,
       startup: 4,
       active: 14,
       recovery: 6,
@@ -273,7 +273,7 @@
       typeName: "\u4E2D\u6BB5\u7834\u9632 / \u8FD1\u6230\u6B66\u6280",
       cd: 1.3,
       // 快速冷卻
-      damage: 170,
+      damage: 240,
       startup: 8,
       active: 10,
       recovery: 8,
@@ -293,7 +293,7 @@
       typeName: "\u67B6\u62DB\u53CD\u5236 / \u6230\u8853\u6B66\u88DD",
       cd: 1.5,
       // 快速冷卻
-      damage: 190,
+      damage: 275,
       startup: 1,
       active: 22,
       recovery: 6,
@@ -312,7 +312,7 @@
       typeName: "\u4F4D\u79FB\u5947\u8972 / \u6230\u8853\u6B66\u88DD",
       cd: 1.8,
       // 快速冷卻
-      damage: 150,
+      damage: 225,
       startup: 5,
       active: 8,
       recovery: 8,
@@ -331,7 +331,7 @@
       typeName: "\u9AD8\u6BB5\u58D3\u5236 / \u8FD1\u6230\u6B66\u6280",
       cd: 1.2,
       // 快速冷卻
-      damage: 180,
+      damage: 260,
       startup: 4,
       active: 20,
       recovery: 6,
@@ -350,7 +350,7 @@
       typeName: "\u6307\u4EE4\u6454\u6280 / \u8FD1\u6230\u6B66\u88DD",
       cd: 1.6,
       // 快速冷卻
-      damage: 210,
+      damage: 290,
       startup: 4,
       active: 6,
       recovery: 8,
@@ -371,7 +371,7 @@
       typeName: "\u64CA\u9000\u9632\u8B77 / \u6230\u8853\u6B66\u88DD",
       cd: 1.8,
       // 快速冷卻
-      damage: 100,
+      damage: 175,
       startup: 3,
       active: 10,
       recovery: 6,
@@ -5893,7 +5893,7 @@
         // 3 幀秒出
         active: 3,
         recovery: 3,
-        damage: 40,
+        damage: 80,
         guardType: "all",
         hitChecked: false
       };
@@ -5910,7 +5910,7 @@
         // 5 幀迅猛出踢
         active: 4,
         recovery: 4,
-        damage: 80,
+        damage: 145,
         guardType: "all",
         hitChecked: false
       };
@@ -5926,7 +5926,7 @@
         startup: 3,
         active: 3,
         recovery: 3,
-        damage: 42,
+        damage: 85,
         guardType: "all",
         hitChecked: false
       };
@@ -5942,7 +5942,7 @@
         startup: 4,
         active: 4,
         recovery: 6,
-        damage: 75,
+        damage: 135,
         guardType: "crouch_only",
         // 下段判定：站防無效，必須蹲防！
         knockdown: true,
@@ -5962,7 +5962,7 @@
         startup: 2,
         active: 4,
         recovery: 4,
-        damage: type === "kick" ? 90 : 48,
+        damage: type === "kick" ? 155 : 90,
         guardType: "stand_only",
         // 空中打擊視為中段，不可蹲防！
         knockdown: type === "kick",
@@ -5983,7 +5983,7 @@
         startup: 2,
         active: 4,
         recovery: 6,
-        damage: 55,
+        damage: 110,
         guardType: "all",
         isRanged: true,
         hitChecked: true
@@ -5998,7 +5998,7 @@
         vx: char.facing * 15,
         vy: 0,
         radius: 9,
-        damage: 55,
+        damage: 110,
         guardType: "all",
         skin: char.skin,
         life: 80
@@ -6015,7 +6015,7 @@
         startup: 3,
         active: 4,
         recovery: 7,
-        damage: 65,
+        damage: 135,
         guardType: "crouch_only",
         // 下段判定！站立防禦無效，必須蹲防或翻越！
         knockdown: true,
@@ -6032,7 +6032,7 @@
         vx: char.facing * 12,
         vy: 0,
         radius: 13,
-        damage: 65,
+        damage: 135,
         guardType: "crouch_only",
         knockdown: true,
         skin: char.skin,
@@ -6050,7 +6050,7 @@
         startup: 4,
         active: 4,
         recovery: 8,
-        damage: 78,
+        damage: 160,
         guardType: "all",
         knockdown: true,
         // 命中直接擊倒！
@@ -6068,7 +6068,7 @@
         vx: char.facing * 18,
         vy: 0,
         radius: 16,
-        damage: 78,
+        damage: 160,
         guardType: "all",
         knockdown: true,
         skin: char.skin,
@@ -6086,7 +6086,7 @@
         startup: 3,
         active: 4,
         recovery: 6,
-        damage: 60,
+        damage: 120,
         guardType: "all",
         isRanged: true,
         hitChecked: true
@@ -6101,7 +6101,7 @@
         vx: char.facing * 11,
         vy: -11,
         radius: 10,
-        damage: 60,
+        damage: 120,
         guardType: "all",
         skin: char.skin,
         life: 80
@@ -6118,7 +6118,7 @@
         startup: 2,
         active: 4,
         recovery: 4,
-        damage: 55,
+        damage: 115,
         guardType: "all",
         isRanged: true,
         hitChecked: true
@@ -6133,7 +6133,7 @@
         vx: char.facing * 14,
         vy: 3.2,
         radius: 9,
-        damage: 55,
+        damage: 115,
         guardType: "all",
         skin: char.skin,
         life: 80
@@ -6150,7 +6150,7 @@
         startup: 2,
         active: 4,
         recovery: 6,
-        damage: 70,
+        damage: 145,
         guardType: "stand_only",
         // 中段落雷判定，不可蹲防！
         knockdown: true,
@@ -6167,7 +6167,7 @@
         vx: char.facing * 5,
         vy: 12,
         radius: 12,
-        damage: 70,
+        damage: 145,
         guardType: "stand_only",
         knockdown: true,
         skin: char.skin,
@@ -6310,7 +6310,7 @@
             vx: char.facing * (9 + m * 1.5),
             vy: (m - 1) * 2.8,
             radius: 8,
-            damage: 45,
+            damage: 70,
             guardType: "all",
             skin: char.skin,
             life: 95
@@ -6382,7 +6382,7 @@
           vx: char.facing * 4.5,
           vy: 0,
           radius: 26,
-          damage: 25,
+          damage: 48,
           tickCooldown: 0,
           guardType: "all",
           skin: char.skin,
@@ -6426,7 +6426,7 @@
             vx: Math.cos(ang) * 15 * char.facing,
             vy: Math.sin(ang) * 15,
             radius: 7,
-            damage: 35,
+            damage: 50,
             guardType: "all",
             skin: char.skin,
             life: 40
@@ -6524,7 +6524,7 @@
           hasHitForward: false,
           hasHitReturn: false,
           radius: 14,
-          damage: 78,
+          damage: 115,
           guardType: "all",
           skin: char.skin,
           life: 85
@@ -6847,7 +6847,7 @@
                 vx: owner.facing * 20,
                 vy: 0,
                 radius: 6,
-                damage: 48,
+                damage: 75,
                 guardType: "all",
                 skin: p.skin,
                 life: 38
@@ -6880,7 +6880,7 @@
             if (target && Math.abs(target.x - p.x) < (p.radius || 48) && Math.abs(target.y - p.y) < 35 && target.invincibleTimer <= 0) {
               this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
                 name: "\u71C3\u71D2\u706B\u6D77\u707C\u50B7",
-                damage: p.damage || 18,
+                damage: p.damage || 38,
                 guardType: "low",
                 chipRatio: 0.5
               });
@@ -6912,7 +6912,7 @@
             vx: 0,
             vy: 0,
             radius: 52,
-            damage: 18,
+            damage: 38,
             guardType: "low",
             skin: p.skin,
             life: 150,
