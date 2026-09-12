@@ -1091,6 +1091,23 @@
     const safeB64 = utf8ToBase64(clean).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
     return "cs_u_" + safeB64;
   }
+  function safeGetItem(key) {
+    try {
+      if (typeof localStorage !== "undefined" && localStorage) {
+        return localStorage.getItem(key);
+      }
+    } catch (e) {
+    }
+    return null;
+  }
+  function safeSetItem(key, val) {
+    try {
+      if (typeof localStorage !== "undefined" && localStorage) {
+        localStorage.setItem(key, val);
+      }
+    } catch (e) {
+    }
+  }
   var SaveSystem = class {
     constructor() {
       this.currentUser = null;
@@ -1122,17 +1139,43 @@
     }
     _loadAccountsFromStorage() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
+        const raw = safeGetItem(STORAGE_KEY_ACCOUNTS);
         if (raw) {
           const parsed = JSON.parse(raw);
+          const defaultStarterSkins = ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"];
+          const shopOnlyMarvelDB = [
+            "skin_iron_man",
+            "skin_spiderman",
+            "skin_captain_america",
+            "skin_thor",
+            "skin_thanos",
+            "skin_goku_ssj",
+            "skin_vegeta_ssj",
+            "skin_trunks_future",
+            "skin_piccolo",
+            "skin_golden_frieza"
+          ];
           for (const email in parsed) {
-            if (parsed[email] && Array.isArray(parsed[email].skins)) {
-              const desired = ["skin_iron_man", "skin_spiderman", "skin_goku_ssj", "skin_vegeta_ssj"];
-              desired.forEach((s) => {
-                if (!parsed[email].skins.includes(s)) parsed[email].skins.push(s);
-              });
-              if ((parsed[email].credits || 0) < 2e4) {
+            if (parsed[email]) {
+              if ((parsed[email].credits || 0) < 3e4) {
                 parsed[email].credits = 5e4;
+              }
+              if (!Array.isArray(parsed[email].purchasedSkins)) {
+                parsed[email].purchasedSkins = [];
+              }
+              if (Array.isArray(parsed[email].skins)) {
+                parsed[email].skins = parsed[email].skins.filter((sid) => {
+                  if (shopOnlyMarvelDB.includes(sid)) {
+                    return parsed[email].purchasedSkins.includes(sid);
+                  }
+                  return true;
+                });
+                defaultStarterSkins.forEach((sid) => {
+                  if (!parsed[email].skins.includes(sid)) parsed[email].skins.push(sid);
+                });
+                if (!parsed[email].skins.includes(parsed[email].equippedSkin)) {
+                  parsed[email].equippedSkin = "skin_cyber_warrior";
+                }
               }
             }
           }
@@ -1152,20 +1195,10 @@
           skins: [
             "skin_cyber_warrior",
             "skin_neon_shadow",
-            "skin_pulse_enforcer",
-            "skin_dark_hacker",
-            "skin_iron_man",
-            "skin_spiderman",
-            "skin_captain_america",
-            "skin_thor",
-            "skin_thanos",
-            "skin_goku_ssj",
-            "skin_vegeta_ssj",
-            "skin_trunks_future",
-            "skin_piccolo",
-            "skin_golden_frieza"
+            "skin_pulse_enforcer"
           ],
-          equippedSkin: "skin_goku_ssj",
+          purchasedSkins: [],
+          equippedSkin: "skin_cyber_warrior",
           loadout: ["SK-01", "SK-02", "SK-09"],
           stats: { total: 18, wins: 14, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: false } },
           preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -1182,21 +1215,10 @@
           skins: [
             "skin_cyber_warrior",
             "skin_neon_shadow",
-            "skin_pulse_enforcer",
-            "skin_dark_hacker",
-            "skin_solar_valkyrie",
-            "skin_iron_man",
-            "skin_spiderman",
-            "skin_captain_america",
-            "skin_thor",
-            "skin_thanos",
-            "skin_goku_ssj",
-            "skin_vegeta_ssj",
-            "skin_trunks_future",
-            "skin_piccolo",
-            "skin_golden_frieza"
+            "skin_pulse_enforcer"
           ],
-          equippedSkin: "skin_iron_man",
+          purchasedSkins: [],
+          equippedSkin: "skin_cyber_warrior",
           loadout: ["SK-03", "SK-04", "SK-07"],
           stats: { total: 42, wins: 38, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: true } },
           preferences: { bgmVol: 0.5, sfxVol: 0.85, haptics: true },
@@ -1204,12 +1226,12 @@
           updatedAt: new Date(Date.now() - 864e5).toISOString()
         }
       };
-      localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(initialAccounts));
+      safeSetItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(initialAccounts));
       return initialAccounts;
     }
     _saveAccountsToStorage() {
       try {
-        localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(this.accounts));
+        safeSetItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(this.accounts));
       } catch (e) {
         console.error("Failed to persist accounts:", e);
       }
@@ -1219,7 +1241,7 @@
      */
     init() {
       try {
-        const lastSession = localStorage.getItem(STORAGE_KEY_CURRENT);
+        const lastSession = safeGetItem(STORAGE_KEY_CURRENT);
         if (lastSession) {
           const sessionData = JSON.parse(lastSession);
           if (sessionData.isGuest) {
@@ -1323,10 +1345,35 @@
       if (!local) return cloud;
       const cloudTime = new Date(cloud.updatedAt || 0).getTime();
       const localTime = new Date(local.updatedAt || 0).getTime();
-      const allSkins = Array.from(/* @__PURE__ */ new Set([
+      const mergedPurchased = Array.from(/* @__PURE__ */ new Set([
+        ...Array.isArray(cloud.purchasedSkins) ? cloud.purchasedSkins : [],
+        ...Array.isArray(local.purchasedSkins) ? local.purchasedSkins : []
+      ]));
+      const shopOnlyMarvelDB = [
+        "skin_iron_man",
+        "skin_spiderman",
+        "skin_captain_america",
+        "skin_thor",
+        "skin_thanos",
+        "skin_goku_ssj",
+        "skin_vegeta_ssj",
+        "skin_trunks_future",
+        "skin_piccolo",
+        "skin_golden_frieza"
+      ];
+      const rawSkins = Array.from(/* @__PURE__ */ new Set([
         ...Array.isArray(cloud.skins) ? cloud.skins : [],
         ...Array.isArray(local.skins) ? local.skins : []
       ]));
+      const allSkins = rawSkins.filter((sid) => {
+        if (shopOnlyMarvelDB.includes(sid)) {
+          return mergedPurchased.includes(sid);
+        }
+        return true;
+      });
+      ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"].forEach((sid) => {
+        if (!allSkins.includes(sid)) allSkins.push(sid);
+      });
       const newerAcc = cloudTime >= localTime ? cloud : local;
       let equipped = newerAcc.equippedSkin;
       if (!allSkins.includes(equipped)) {
@@ -1352,6 +1399,7 @@
         avatar: cloud.avatar || local.avatar,
         credits,
         eventTokens,
+        purchasedSkins: mergedPurchased,
         skins: allSkins,
         equippedSkin: equipped,
         loadout: Array.isArray(newerAcc.loadout) && newerAcc.loadout.length === 3 ? newerAcc.loadout : local.loadout || ["SK-01", "SK-02", "SK-09"],
@@ -1445,19 +1493,10 @@
           skins: [
             "skin_cyber_warrior",
             "skin_neon_shadow",
-            "skin_pulse_enforcer",
-            "skin_iron_man",
-            "skin_spiderman",
-            "skin_captain_america",
-            "skin_thor",
-            "skin_thanos",
-            "skin_goku_ssj",
-            "skin_vegeta_ssj",
-            "skin_trunks_future",
-            "skin_piccolo",
-            "skin_golden_frieza"
+            "skin_pulse_enforcer"
           ],
-          equippedSkin: "skin_goku_ssj",
+          purchasedSkins: [],
+          equippedSkin: "skin_cyber_warrior",
           loadout: ["SK-01", "SK-02", "SK-09"],
           stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
           preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -1505,19 +1544,10 @@
         skins: [
           "skin_cyber_warrior",
           "skin_neon_shadow",
-          "skin_pulse_enforcer",
-          "skin_iron_man",
-          "skin_spiderman",
-          "skin_captain_america",
-          "skin_thor",
-          "skin_thanos",
-          "skin_goku_ssj",
-          "skin_vegeta_ssj",
-          "skin_trunks_future",
-          "skin_piccolo",
-          "skin_golden_frieza"
+          "skin_pulse_enforcer"
         ],
-        equippedSkin: "skin_goku_ssj",
+        purchasedSkins: [],
+        equippedSkin: "skin_cyber_warrior",
         loadout: ["SK-01", "SK-02", "SK-09"],
         stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
         preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -1603,9 +1633,15 @@
         return { success: false, reason: "\u5DF2\u64C1\u6709\u6B64\u9020\u578B" };
       }
       if (this.currentUser.credits < price) {
-        return { success: false, reason: "\u80FD\u91CF\u5E63\u9918\u984D\u4E0D\u8DB3" };
+        return { success: false, reason: "\u80FD\u91CF\u5E63\u9918\u984D\u4E0D\u8DB3\uFF08\u53EF\u9818\u53D6\u4E0A\u65B9\u6BCF\u65E5\u6230\u5099\u88DC\u7D66\u7372\u5F97 +1,500 \u5E63\uFF09" };
       }
       this.currentUser.credits -= price;
+      if (!Array.isArray(this.currentUser.purchasedSkins)) {
+        this.currentUser.purchasedSkins = [];
+      }
+      if (!this.currentUser.purchasedSkins.includes(skinId)) {
+        this.currentUser.purchasedSkins.push(skinId);
+      }
       this.currentUser.skins.push(skinId);
       this.currentUser.equippedSkin = skinId;
       this.currentUser.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
@@ -1641,7 +1677,7 @@
     }
     _persistSession() {
       try {
-        localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify({
+        safeSetItem(STORAGE_KEY_CURRENT, JSON.stringify({
           isGuest: this.isGuest,
           email: this.currentUser ? this.currentUser.email : null,
           user: this.currentUser
@@ -7728,32 +7764,38 @@
       }
       container.innerHTML = forSaleSkins.map((s) => {
         const isOwned = owned.includes(s.id);
+        const isMarvel = s.series === "\u6F2B\u5A01\u5B87\u5B99";
+        const isDB = s.series === "\u4E03\u9F8D\u73E0\u8D85";
         return `
         <div class="skin-card">
           <div class="skin-header">
             <div>
-              <div class="skin-name" style="color: ${s.themeColor}">${s.name}</div>
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                ${isMarvel ? '<span style="font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px; background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid #ef4444;">\u{1F9B8} \u6F2B\u5A01\u5B87\u5B99</span>' : ""}
+                ${isDB ? '<span style="font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px; background: rgba(234,179,8,0.2); color: #fde047; border: 1px solid #eab308;">\u{1F409} \u4E03\u9F8D\u73E0\u8D85</span>' : ""}
+                <span class="skin-name" style="color: ${s.themeColor}">${s.name}</span>
+              </div>
               <div style="font-size: 11px; color: #94a3b8;">${s.title} | ${s.series || "\u6230\u8853\u5916\u88DD"}</div>
             </div>
-            <span class="stat-capsule" style="font-size: 13px;">\u{1FA99} ${s.price.toLocaleString()}</span>
+            <span class="stat-capsule" style="font-size: 13px; font-weight: 800; color: #ffd700; border-color: #ffd700;">\u{1FA99} ${s.price.toLocaleString()}</span>
           </div>
           <div class="skin-desc">${s.desc}</div>
           <div class="skin-vfx-box">
             <div><strong>\u26A1 \u5C08\u5C6C\u5149\u8ECC\uFF1A</strong>${s.vfx.punchTrail}</div>
             <div><strong>\u{1F6E1}\uFE0F \u5C08\u5C6C\u8B77\u76FE\uFF1A</strong>${s.vfx.guardShield}</div>
           </div>
-          <div style="font-size: 11px; color: #64748b;">\u{1F3A8} \u5275\u4F5C\u8005\uFF1A${s.creator || "\u5B98\u65B9\u793E\u7FA4"}</div>
+          <div style="font-size: 11px; color: #64748b;">\u{1F3A8} \u5B98\u65B9\u7D93\u5178\u9084\u539F\uFF1A${s.creator || "\u5B98\u65B9\u7D93\u5178"}</div>
           <div style="display: flex; gap: 8px; margin-top: 8px;">
             <button class="nav-tab-btn try-on-btn" data-id="${s.id}" style="flex: 1; justify-content: center; border-color: ${s.themeColor}; color: ${s.themeColor}">
               <i class="fa-solid fa-eye"></i> \u8A66\u7A7F\u6F14\u793A
             </button>
             ${isOwned ? `
-              <button class="nav-tab-btn" disabled style="flex: 1; justify-content: center; color: #10b981; border-color: #10b981;">
+              <button class="nav-tab-btn" disabled style="flex: 1; justify-content: center; color: #10b981; border-color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.1);">
                 <i class="fa-solid fa-check"></i> \u5DF2\u64C1\u6709
               </button>
             ` : `
-              <button class="nav-tab-btn buy-skin-btn" data-id="${s.id}" data-price="${s.price}" style="flex: 1; justify-content: center; background: linear-gradient(135deg, #00f3ff, #ff007f); color: #fff;">
-                <i class="fa-solid fa-cart-shopping"></i> \u8CFC\u8CB7
+              <button class="nav-tab-btn buy-skin-btn" data-id="${s.id}" data-price="${s.price}" style="flex: 1; justify-content: center; background: linear-gradient(135deg, #00f3ff, #ff007f); color: #fff; font-weight: 800; box-shadow: 0 0 10px rgba(0,243,255,0.4);">
+                <i class="fa-solid fa-cart-shopping"></i> \u8CFC\u8CB7 (\u{1FA99} ${s.price.toLocaleString()})
               </button>
             `}
           </div>
@@ -7775,10 +7817,13 @@
         btn.addEventListener("click", () => {
           const id = btn.dataset.id;
           const price = parseInt(btn.dataset.price, 10);
+          const skinObj = SKINS.find((s) => s.id === id);
+          const skinName = skinObj ? skinObj.name : "\u9020\u578B";
           const res = saveSystem.purchaseSkin(id, price);
           if (res.success) {
             soundEngine.playUI("equip");
-            alert(`\u{1F389} \u606D\u559C\u6210\u529F\u89E3\u9396\u9020\u578B\u3010${SKINS.find((s) => s.id === id).name}\u3011\uFF01\u5DF2\u76F4\u63A5\u70BA\u60A8\u51FA\u6230\u88DD\u5099\u3002`);
+            this.pedestalSkin = this.getEquippedSkin();
+            alert(`\u{1F389} \u606D\u559C\u6210\u529F\u8CFC\u8CB7\u89E3\u9396\u3010${skinName}\u3011\uFF01\u5DF2\u76F4\u63A5\u70BA\u60A8\u51FA\u6230\u88DD\u5099\uFF0C\u53EF\u524D\u5F80\u300C\u6211\u7684\u5916\u89C0\u300D\u67E5\u770B\uFF01`);
             this.renderShopCatalog(filterSeries);
             this.renderSkinsInventory();
             this.updateUserHUD();

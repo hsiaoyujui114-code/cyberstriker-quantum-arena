@@ -48,6 +48,23 @@ function emailToCloudKey(email) {
   return "cs_u_" + safeB64;
 }
 
+function safeGetItem(key) {
+  try {
+    if (typeof localStorage !== "undefined" && localStorage) {
+      return localStorage.getItem(key);
+    }
+  } catch (e) {}
+  return null;
+}
+
+function safeSetItem(key, val) {
+  try {
+    if (typeof localStorage !== "undefined" && localStorage) {
+      localStorage.setItem(key, val);
+    }
+  } catch (e) {}
+}
+
 export class SaveSystem {
   constructor() {
     this.currentUser = null;
@@ -82,17 +99,40 @@ export class SaveSystem {
 
   _loadAccountsFromStorage() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
+      const raw = safeGetItem(STORAGE_KEY_ACCOUNTS);
       if (raw) {
         const parsed = JSON.parse(raw);
+        const defaultStarterSkins = ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"];
+        const shopOnlyMarvelDB = [
+          "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
+          "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
+        ];
+
         for (const email in parsed) {
-          if (parsed[email] && Array.isArray(parsed[email].skins)) {
-            const desired = ["skin_iron_man", "skin_spiderman", "skin_goku_ssj", "skin_vegeta_ssj"];
-            desired.forEach(s => {
-              if (!parsed[email].skins.includes(s)) parsed[email].skins.push(s);
-            });
-            if ((parsed[email].credits || 0) < 20000) {
+          if (parsed[email]) {
+            // 確保玩家擁有足夠能量幣 (50,000) 可隨心於商城選購漫威與七龍珠角色
+            if ((parsed[email].credits || 0) < 30000) {
               parsed[email].credits = 50000;
+            }
+            if (!Array.isArray(parsed[email].purchasedSkins)) {
+              parsed[email].purchasedSkins = [];
+            }
+            // 漫威與七龍珠角色必須在商城購買：非購買所得之快取造型移出已擁有名單
+            if (Array.isArray(parsed[email].skins)) {
+              parsed[email].skins = parsed[email].skins.filter(sid => {
+                if (shopOnlyMarvelDB.includes(sid)) {
+                  return parsed[email].purchasedSkins.includes(sid);
+                }
+                return true;
+              });
+              // 確保 3 套初始預設外觀都在
+              defaultStarterSkins.forEach(sid => {
+                if (!parsed[email].skins.includes(sid)) parsed[email].skins.push(sid);
+              });
+              // 穿戴外觀若未擁有則切回預設賽博武者
+              if (!parsed[email].skins.includes(parsed[email].equippedSkin)) {
+                parsed[email].equippedSkin = "skin_cyber_warrior";
+              }
             }
           }
         }
@@ -111,11 +151,10 @@ export class SaveSystem {
         credits: 50000,
         eventTokens: 120,
         skins: [
-          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer", "skin_dark_hacker",
-          "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
-          "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
+          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"
         ],
-        equippedSkin: "skin_goku_ssj",
+        purchasedSkins: [],
+        equippedSkin: "skin_cyber_warrior",
         loadout: ["SK-01", "SK-02", "SK-09"],
         stats: { total: 18, wins: 14, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: false } },
         preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -130,11 +169,10 @@ export class SaveSystem {
         credits: 50000,
         eventTokens: 350,
         skins: [
-          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer", "skin_dark_hacker", "skin_solar_valkyrie",
-          "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
-          "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
+          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"
         ],
-        equippedSkin: "skin_iron_man",
+        purchasedSkins: [],
+        equippedSkin: "skin_cyber_warrior",
         loadout: ["SK-03", "SK-04", "SK-07"],
         stats: { total: 42, wins: 38, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: true } },
         preferences: { bgmVol: 0.5, sfxVol: 0.85, haptics: true },
@@ -143,13 +181,13 @@ export class SaveSystem {
       }
     };
 
-    localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(initialAccounts));
+    safeSetItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(initialAccounts));
     return initialAccounts;
   }
 
   _saveAccountsToStorage() {
     try {
-      localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(this.accounts));
+      safeSetItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(this.accounts));
     } catch (e) {
       console.error("Failed to persist accounts:", e);
     }
@@ -160,7 +198,7 @@ export class SaveSystem {
    */
   init() {
     try {
-      const lastSession = localStorage.getItem(STORAGE_KEY_CURRENT);
+      const lastSession = safeGetItem(STORAGE_KEY_CURRENT);
       if (lastSession) {
         const sessionData = JSON.parse(lastSession);
         if (sessionData.isGuest) {
@@ -279,11 +317,31 @@ export class SaveSystem {
     const cloudTime = new Date(cloud.updatedAt || 0).getTime();
     const localTime = new Date(local.updatedAt || 0).getTime();
 
-    // 外觀集合（兩邊所有的外觀全部保留）
-    const allSkins = Array.from(new Set([
+    // 購買紀錄合併（兩邊購買過的項目皆完整繼承）
+    const mergedPurchased = Array.from(new Set([
+      ...(Array.isArray(cloud.purchasedSkins) ? cloud.purchasedSkins : []),
+      ...(Array.isArray(local.purchasedSkins) ? local.purchasedSkins : [])
+    ]));
+
+    const shopOnlyMarvelDB = [
+      "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
+      "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
+    ];
+
+    // 外觀集合（漫威與七龍珠角色必須為購買項目，預設造型永遠擁有）
+    const rawSkins = Array.from(new Set([
       ...(Array.isArray(cloud.skins) ? cloud.skins : []),
       ...(Array.isArray(local.skins) ? local.skins : [])
     ]));
+    const allSkins = rawSkins.filter(sid => {
+      if (shopOnlyMarvelDB.includes(sid)) {
+        return mergedPurchased.includes(sid);
+      }
+      return true;
+    });
+    ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"].forEach(sid => {
+      if (!allSkins.includes(sid)) allSkins.push(sid);
+    });
 
     // 當前穿戴外觀（依較新紀錄，或保證在擁有名單內）
     const newerAcc = cloudTime >= localTime ? cloud : local;
@@ -316,6 +374,7 @@ export class SaveSystem {
       avatar: cloud.avatar || local.avatar,
       credits: credits,
       eventTokens: eventTokens,
+      purchasedSkins: mergedPurchased,
       skins: allSkins,
       equippedSkin: equipped,
       loadout: (Array.isArray(newerAcc.loadout) && newerAcc.loadout.length === 3) ? newerAcc.loadout : (local.loadout || ["SK-01", "SK-02", "SK-09"]),
@@ -421,11 +480,10 @@ export class SaveSystem {
         credits: 50000,
         eventTokens: 0,
         skins: [
-          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer",
-          "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
-          "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
+          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"
         ],
-        equippedSkin: "skin_goku_ssj",
+        purchasedSkins: [],
+        equippedSkin: "skin_cyber_warrior",
         loadout: ["SK-01", "SK-02", "SK-09"],
         stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
         preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -479,11 +537,10 @@ export class SaveSystem {
       credits: 50000,
       eventTokens: 0,
       skins: [
-        "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer",
-        "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
-        "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
+        "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"
       ],
-      equippedSkin: "skin_goku_ssj",
+      purchasedSkins: [],
+      equippedSkin: "skin_cyber_warrior",
       loadout: ["SK-01", "SK-02", "SK-09"],
       stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
       preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
@@ -577,9 +634,15 @@ export class SaveSystem {
       return { success: false, reason: "已擁有此造型" };
     }
     if (this.currentUser.credits < price) {
-      return { success: false, reason: "能量幣餘額不足" };
+      return { success: false, reason: "能量幣餘額不足（可領取上方每日戰備補給獲得 +1,500 幣）" };
     }
     this.currentUser.credits -= price;
+    if (!Array.isArray(this.currentUser.purchasedSkins)) {
+      this.currentUser.purchasedSkins = [];
+    }
+    if (!this.currentUser.purchasedSkins.includes(skinId)) {
+      this.currentUser.purchasedSkins.push(skinId);
+    }
     this.currentUser.skins.push(skinId);
     this.currentUser.equippedSkin = skinId;
     this.currentUser.updatedAt = new Date().toISOString();
@@ -621,7 +684,7 @@ export class SaveSystem {
 
   _persistSession() {
     try {
-      localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify({
+      safeSetItem(STORAGE_KEY_CURRENT, JSON.stringify({
         isGuest: this.isGuest,
         email: this.currentUser ? this.currentUser.email : null,
         user: this.currentUser

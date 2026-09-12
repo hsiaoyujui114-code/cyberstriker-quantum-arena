@@ -372,32 +372,39 @@ class CyberStrikerApp {
 
     container.innerHTML = forSaleSkins.map(s => {
       const isOwned = owned.includes(s.id);
+      const isMarvel = s.series === '漫威宇宙';
+      const isDB = s.series === '七龍珠超';
+
       return `
         <div class="skin-card">
           <div class="skin-header">
             <div>
-              <div class="skin-name" style="color: ${s.themeColor}">${s.name}</div>
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                ${isMarvel ? '<span style="font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px; background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid #ef4444;">🦸 漫威宇宙</span>' : ''}
+                ${isDB ? '<span style="font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px; background: rgba(234,179,8,0.2); color: #fde047; border: 1px solid #eab308;">🐉 七龍珠超</span>' : ''}
+                <span class="skin-name" style="color: ${s.themeColor}">${s.name}</span>
+              </div>
               <div style="font-size: 11px; color: #94a3b8;">${s.title} | ${s.series || '戰術外裝'}</div>
             </div>
-            <span class="stat-capsule" style="font-size: 13px;">🪙 ${s.price.toLocaleString()}</span>
+            <span class="stat-capsule" style="font-size: 13px; font-weight: 800; color: #ffd700; border-color: #ffd700;">🪙 ${s.price.toLocaleString()}</span>
           </div>
           <div class="skin-desc">${s.desc}</div>
           <div class="skin-vfx-box">
             <div><strong>⚡ 專屬光軌：</strong>${s.vfx.punchTrail}</div>
             <div><strong>🛡️ 專屬護盾：</strong>${s.vfx.guardShield}</div>
           </div>
-          <div style="font-size: 11px; color: #64748b;">🎨 創作者：${s.creator || '官方社群'}</div>
+          <div style="font-size: 11px; color: #64748b;">🎨 官方經典還原：${s.creator || '官方經典'}</div>
           <div style="display: flex; gap: 8px; margin-top: 8px;">
             <button class="nav-tab-btn try-on-btn" data-id="${s.id}" style="flex: 1; justify-content: center; border-color: ${s.themeColor}; color: ${s.themeColor}">
               <i class="fa-solid fa-eye"></i> 試穿演示
             </button>
             ${isOwned ? `
-              <button class="nav-tab-btn" disabled style="flex: 1; justify-content: center; color: #10b981; border-color: #10b981;">
+              <button class="nav-tab-btn" disabled style="flex: 1; justify-content: center; color: #10b981; border-color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.1);">
                 <i class="fa-solid fa-check"></i> 已擁有
               </button>
             ` : `
-              <button class="nav-tab-btn buy-skin-btn" data-id="${s.id}" data-price="${s.price}" style="flex: 1; justify-content: center; background: linear-gradient(135deg, #00f3ff, #ff007f); color: #fff;">
-                <i class="fa-solid fa-cart-shopping"></i> 購買
+              <button class="nav-tab-btn buy-skin-btn" data-id="${s.id}" data-price="${s.price}" style="flex: 1; justify-content: center; background: linear-gradient(135deg, #00f3ff, #ff007f); color: #fff; font-weight: 800; box-shadow: 0 0 10px rgba(0,243,255,0.4);">
+                <i class="fa-solid fa-cart-shopping"></i> 購買 (🪙 ${s.price.toLocaleString()})
               </button>
             `}
           </div>
@@ -421,10 +428,13 @@ class CyberStrikerApp {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         const price = parseInt(btn.dataset.price, 10);
+        const skinObj = SKINS.find(s => s.id === id);
+        const skinName = skinObj ? skinObj.name : '造型';
         const res = saveSystem.purchaseSkin(id, price);
         if (res.success) {
           soundEngine.playUI('equip');
-          alert(`🎉 恭喜成功解鎖造型【${SKINS.find(s=>s.id===id).name}】！已直接為您出戰裝備。`);
+          this.pedestalSkin = this.getEquippedSkin();
+          alert(`🎉 恭喜成功購買解鎖【${skinName}】！已直接為您出戰裝備，可前往「我的外觀」查看！`);
           this.renderShopCatalog(filterSeries);
           this.renderSkinsInventory();
           this.updateUserHUD();
