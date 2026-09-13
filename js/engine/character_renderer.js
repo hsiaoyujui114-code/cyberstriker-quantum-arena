@@ -53,6 +53,7 @@ export class CharacterRenderer {
 
     // 計算 12 種姿態骨骼角度
     const pose = this.calculatePose(state, t, char);
+    this._anchorHeadToTorso(pose);
 
     // 0. 專屬特殊角色、荒野亂鬥英雄與科幻戰將氣場光環
     specialSkinsRenderer.drawAura(ctx, char, skin, t);
@@ -65,6 +66,9 @@ export class CharacterRenderer {
 
     // 2. 繪製軀幹、骨盆與量子反應爐
     this.drawTorso(ctx, pose.torso, skin, t);
+
+    // 2.5 繪製頸部連接柱 (Anatomical Neck Connector) 徹底杜絕任何頭身分離
+    this.drawNeck(ctx, pose, skin);
 
     // 3. 繪製頭部與全息目鏡
     this.drawHead(ctx, pose.head, skin);
@@ -706,6 +710,7 @@ export class CharacterRenderer {
         defaultPose.head.y = -16;
         defaultPose.head.x = -32;
         defaultPose.head.angle = -Math.PI / 2;
+        defaultPose.head.lockedAbsolute = true;
         defaultPose.frontLeg.thighAngle = -Math.PI / 2;
         defaultPose.frontLeg.shinAngle = 0.2;
         defaultPose.backLeg.thighAngle = -Math.PI / 2;
@@ -721,6 +726,7 @@ export class CharacterRenderer {
         defaultPose.head.y = -16 - wRatio * 82;
         defaultPose.torso.angle = -Math.PI / 2 * (1 - wRatio);
         defaultPose.head.angle = -Math.PI / 2 * (1 - wRatio);
+        defaultPose.head.lockedAbsolute = true;
         return defaultPose;
       }
 
@@ -845,6 +851,98 @@ export class CharacterRenderer {
       default:
         return defaultPose;
     }
+  }
+
+  // ─── 人體骨骼動態約束：頭部頸關節自動鏈接 ───
+  _anchorHeadToTorso(pose) {
+    if (!pose || !pose.torso || !pose.head) return pose;
+    // 若特定姿勢（如倒地平躺 knockdown / wakeup）已手動指定絕對座標，則尊重其設定
+    if (pose.head.lockedAbsolute) return pose;
+
+    // 人體脊椎頸關節自然約束：頸關節位於軀幹頂部（距離軀幹中心 24px）
+    // 隨軀幹位置 (torso.x, torso.y) 與軀幹前傾/後仰角度 (torso.angle) 自動精準旋轉鏈接
+    const neckDist = 24;
+    const sinA = Math.sin(pose.torso.angle || 0);
+    const cosA = Math.cos(pose.torso.angle || 0);
+
+    pose.head.x = (pose.torso.x || 0) - sinA * neckDist;
+    pose.head.y = (pose.torso.y || -74) - cosA * neckDist;
+    return pose;
+  }
+
+  // ─── 頸部連接柱 (Anatomical Neck Connector) ───
+  drawNeck(ctx, pose, skin) {
+    if (!pose || !pose.torso || !pose.head || pose.head.lockedAbsolute) return;
+    ctx.save();
+    const torsoTopX = (pose.torso.x || 0) - Math.sin(pose.torso.angle || 0) * 18;
+    const torsoTopY = (pose.torso.y || -74) - Math.cos(pose.torso.angle || 0) * 18;
+    const headBaseX = pose.head.x || 0;
+    const headBaseY = (pose.head.y || -98) + 8;
+
+    const neckColor = this._getNeckColor(skin);
+    const strokeColor = this._getNeckStrokeColor(skin);
+
+    ctx.fillStyle = neckColor;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 1.4;
+
+    const angle = Math.atan2(headBaseY - torsoTopY, headBaseX - torsoTopX);
+    const perpX = Math.sin(angle);
+    const perpY = -Math.cos(angle);
+
+    const wBottom = 6.5;
+    const wTop = 5.0;
+
+    ctx.beginPath();
+    ctx.moveTo(torsoTopX - perpX * wBottom, torsoTopY - perpY * wBottom);
+    ctx.lineTo(torsoTopX + perpX * wBottom, torsoTopY + perpY * wBottom);
+    ctx.lineTo(headBaseX + perpX * wTop, headBaseY + perpY * wTop);
+    ctx.lineTo(headBaseX - perpX * wTop, headBaseY - perpY * wTop);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // 頸部兩側胸鎖乳突肌立體陰影 (Sternocleidomastoid Shading)
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.18)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(headBaseX - 2, headBaseY);
+    ctx.lineTo(torsoTopX - 3.5, torsoTopY);
+    ctx.moveTo(headBaseX + 2, headBaseY);
+    ctx.lineTo(torsoTopX + 3.5, torsoTopY);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  _getNeckColor(skin) {
+    if (!skin || !skin.id) return '#0f172a';
+    const id = skin.id;
+    if (id === 'skin_brawl_shelly' || id === 'skin_brawl_colt') return '#fed7aa';
+    if (id === 'skin_brawl_spike') return '#22c55e';
+    if (id === 'skin_brawl_el_primo') return '#f59e0b';
+    if (id === 'skin_brawl_crow') return '#0f172a';
+    if (id === 'skin_brawl_leon') return '#10b981';
+    if (id === 'skin_goku_ssj' || id === 'skin_vegeta_ssj' || id === 'skin_hawkeye' || id === 'skin_thor') return '#fed7aa';
+    if (id === 'skin_piccolo') return '#15803d';
+    if (id === 'skin_golden_frieza') return '#fbbf24';
+    if (id === 'skin_thanos') return '#7c3aed';
+    if (id === 'skin_iron_man') return '#991b1b';
+    if (id === 'skin_spiderman') return '#dc2626';
+    if (id === 'skin_captain_america') return '#1e3a8a';
+    return skin.armorColor || '#090d16';
+  }
+
+  _getNeckStrokeColor(skin) {
+    if (!skin || !skin.id) return '#00f3ff';
+    const id = skin.id;
+    if (id === 'skin_brawl_shelly' || id === 'skin_brawl_colt') return '#ea580c';
+    if (id === 'skin_brawl_spike') return '#14532d';
+    if (id === 'skin_brawl_el_primo') return '#92400e';
+    if (id === 'skin_brawl_crow') return '#1e293b';
+    if (id === 'skin_brawl_leon') return '#065f46';
+    if (id === 'skin_piccolo') return '#14532d';
+    return skin.themeColor || '#00f3ff';
   }
 
   // ─── 肢體繪製方法 ───

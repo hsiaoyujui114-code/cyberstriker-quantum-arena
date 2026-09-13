@@ -7548,6 +7548,14 @@
       }
       return fallbackColor;
     }
+    _setLineDash(ctx, pattern) {
+      if (ctx && typeof ctx.setLineDash === "function") {
+        try {
+          ctx.setLineDash(pattern);
+        } catch (e) {
+        }
+      }
+    }
     // ─── 輔助繪圖工具 ───
     _drawStar(ctx, cx, cy, spikes, outerR, innerR, fillStyle, strokeStyle = null, lineWidth = 1) {
       let rot = Math.PI / 2 * 3;
@@ -7593,12 +7601,12 @@
         ctx.beginPath();
         ctx.ellipse(x, y, size, size * 1.25, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.strokeStyle = "rgba(15, 23, 42, 0.45)";
         ctx.lineWidth = 1;
         ctx.stroke();
         ctx.fillStyle = pupilColor;
         ctx.beginPath();
-        ctx.ellipse(x + 1, y, size * 0.65, size * 0.85, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + 1, y, size * 0.65, size * 0.88, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = highlightColor;
         ctx.beginPath();
@@ -7607,6 +7615,11 @@
         ctx.beginPath();
         ctx.arc(x + size * 0.4, y + size * 0.3, size * 0.18, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.arc(x, y - 0.5, size * 1.05, -0.9 * Math.PI, -0.1 * Math.PI);
+        ctx.stroke();
       }
       ctx.restore();
     }
@@ -7708,9 +7721,6 @@
     drawHead(ctx, head, skin) {
       if (!this.isBrawl(skin)) return false;
       const id = skin.id;
-      ctx.save();
-      ctx.translate(head.x, head.y);
-      ctx.rotate(head.angle);
       switch (id) {
         // ══════════════════════════════════════════════════
         // 1. 雪莉・散彈獵手 (Shelly)
@@ -7723,19 +7733,27 @@
             16,
             16,
             [
-              [0, "#a855f7"],
-              [0.5, "#7e22ce"],
-              [1, "#581c87"]
+              [0, "#c084fc"],
+              [0.35, "#9333ea"],
+              [0.75, "#6b21a8"],
+              [1, "#4c1d95"]
             ],
             "#7e22ce"
           );
           ctx.fillStyle = hairGrad;
           ctx.beginPath();
-          ctx.arc(-10, -5, 12, 0, Math.PI * 2);
-          ctx.arc(-14, 4, 9, 0, Math.PI * 2);
-          ctx.arc(-8, -12, 10, 0, Math.PI * 2);
-          ctx.arc(4, -14, 11, 0, Math.PI * 2);
+          ctx.arc(-10, -5, 12.5, 0, Math.PI * 2);
+          ctx.arc(-14, 4, 9.5, 0, Math.PI * 2);
+          ctx.arc(-8, -12, 10.5, 0, Math.PI * 2);
+          ctx.arc(4, -14, 11.5, 0, Math.PI * 2);
           ctx.fill();
+          ctx.strokeStyle = "#e9d5ff";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(-9, -10, 6, 0.4 * Math.PI, 1.2 * Math.PI);
+          ctx.moveTo(1, -12);
+          ctx.arc(3, -12, 7, 0.6 * Math.PI, 1.4 * Math.PI);
+          ctx.stroke();
           const skinGrad = this._safeLinearGrad(
             ctx,
             0,
@@ -7743,7 +7761,8 @@
             0,
             14,
             [
-              [0, "#fed7aa"],
+              [0, "#ffedd5"],
+              [0.6, "#fed7aa"],
               [1, "#fdba74"]
             ],
             "#fed7aa"
@@ -7760,6 +7779,11 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
+          ctx.fillStyle = "rgba(251, 146, 60, 0.45)";
+          ctx.beginPath();
+          ctx.ellipse(-4, 4, 3.5, 2, 0.1, 0, Math.PI * 2);
+          ctx.ellipse(6, 4, 3.8, 2.2, -0.1, 0, Math.PI * 2);
+          ctx.fill();
           ctx.fillStyle = "#9333ea";
           ctx.beginPath();
           ctx.moveTo(-6, -12);
@@ -7769,6 +7793,11 @@
           ctx.closePath();
           ctx.fill();
           this._drawEyes(ctx, 4, 0, 5, "#581c87", "#ffffff");
+          ctx.strokeStyle = "#c2410c";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(3, 8, 2.5, 0.1 * Math.PI, 0.8 * Math.PI);
+          ctx.stroke();
           const scarfGrad = this._safeLinearGrad(
             ctx,
             -8,
@@ -7776,7 +7805,8 @@
             12,
             18,
             [
-              [0, "#fde047"],
+              [0, "#fef08a"],
+              [0.4, "#fde047"],
               [1, "#ca8a04"]
             ],
             "#fde047"
@@ -7793,10 +7823,20 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
-          ctx.fillStyle = "#fef08a";
+          ctx.fillStyle = "#fde047";
           ctx.beginPath();
           ctx.arc(3, 14, 2.5, 0, Math.PI * 2);
           ctx.fill();
+          ctx.strokeStyle = "#854d0e";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(161, 98, 7, 0.5)";
+          this._setLineDash(ctx, [2, 2]);
+          ctx.beginPath();
+          ctx.moveTo(-5, 12);
+          ctx.lineTo(2, 17);
+          ctx.stroke();
+          this._setLineDash(ctx, []);
           break;
         }
         // ══════════════════════════════════════════════════
@@ -7812,12 +7852,12 @@
             [
               [0, "#f87171"],
               [0.4, "#ef4444"],
-              [1, "#b91c1c"]
+              [1, "#991b1b"]
             ],
             "#ef4444"
           );
           ctx.fillStyle = pompadourGrad;
-          ctx.strokeStyle = "#991b1b";
+          ctx.strokeStyle = "#7f1d1d";
           ctx.lineWidth = 1.4;
           ctx.beginPath();
           ctx.moveTo(-11, -5);
@@ -7829,7 +7869,7 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
           ctx.lineWidth = 1.8;
           ctx.beginPath();
           ctx.moveTo(-2, -20);
@@ -7857,7 +7897,8 @@
           ctx.arc(5, 11, 4, 0.1 * Math.PI, 0.9 * Math.PI);
           ctx.stroke();
           ctx.fillStyle = "#ffffff";
-          ctx.fillRect(4, 10, 3, 2);
+          ctx.fillRect(4, 10, 3.5, 2);
+          this._drawStar(ctx, 7.5, 9.5, 4, 2.5, 1, "#ffffff", null, 0);
           break;
         }
         // ══════════════════════════════════════════════════
@@ -7873,8 +7914,9 @@
             0,
             16,
             [
-              [0, "#86efac"],
-              [0.6, "#22c55e"],
+              [0, "#bbf7d0"],
+              [0.35, "#4ade80"],
+              [0.75, "#22c55e"],
               [1, "#15803d"]
             ],
             "#22c55e"
@@ -7886,6 +7928,11 @@
           ctx.arc(0, 0, 15, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
+          ctx.fillStyle = "#f472b6";
+          ctx.beginPath();
+          ctx.ellipse(-6, 3, 3.2, 1.8, 0, 0, Math.PI * 2);
+          ctx.ellipse(6, 3, 3.2, 1.8, 0, 0, Math.PI * 2);
+          ctx.fill();
           ctx.fillStyle = "#0f172a";
           const spikes = [
             { x: -14, y: -4, r: -0.4 },
@@ -7899,37 +7946,75 @@
             ctx.translate(s.x, s.y);
             ctx.rotate(s.r);
             ctx.beginPath();
-            ctx.moveTo(-1.5, 0);
-            ctx.lineTo(0, -4.5);
-            ctx.lineTo(1.5, 0);
+            ctx.moveTo(0, -1.8);
+            ctx.lineTo(4.5, 0);
+            ctx.lineTo(0, 1.8);
             ctx.closePath();
             ctx.fill();
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(3.5, -0.5, 1.2, 1);
             ctx.restore();
           });
-          ctx.fillStyle = "#0f172a";
+          ctx.fillStyle = "#020617";
           ctx.beginPath();
-          ctx.arc(-4, 0, 3.8, 0, Math.PI * 2);
-          ctx.arc(5, 0, 3.8, 0, Math.PI * 2);
+          ctx.ellipse(-5, -2, 2.5, 3.5, -0.1, 0, Math.PI * 2);
           ctx.fill();
           ctx.beginPath();
-          ctx.moveTo(0, 5);
-          ctx.lineTo(3, 8);
-          ctx.lineTo(-3, 8);
+          ctx.ellipse(5, -2, 2.5, 3.5, 0.1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(-4.2, -3.2, 0.8, 0, Math.PI * 2);
+          ctx.arc(5.8, -3.2, 0.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#020617";
+          ctx.beginPath();
+          ctx.arc(0, 5, 3.5, 0, Math.PI);
           ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#fb7185";
+          ctx.beginPath();
+          ctx.arc(0, 6.5, 2, 0, Math.PI);
           ctx.fill();
           ctx.save();
           ctx.translate(0, -15);
-          ctx.fillStyle = "#ec4899";
           for (let p = 0; p < 5; p++) {
             const pAng = p * Math.PI * 2 / 5;
+            const px = Math.cos(pAng) * 5.2;
+            const py = Math.sin(pAng) * 5.2;
+            const petalGrad = this._safeRadialGrad(
+              ctx,
+              px * 0.5,
+              py * 0.5,
+              1,
+              px,
+              py,
+              4.5,
+              [
+                [0, "#f472b6"],
+                [0.7, "#ec4899"],
+                [1, "#be185d"]
+              ],
+              "#ec4899"
+            );
+            ctx.fillStyle = petalGrad;
             ctx.beginPath();
-            ctx.arc(Math.cos(pAng) * 5, Math.sin(pAng) * 5, 4, 0, Math.PI * 2);
+            ctx.arc(px, py, 4.2, 0, Math.PI * 2);
             ctx.fill();
+            ctx.strokeStyle = "#fbcfe8";
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(px * 1.2, py * 1.2);
+            ctx.stroke();
           }
           ctx.fillStyle = "#fde047";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 0.8;
           ctx.beginPath();
-          ctx.arc(0, 0, 3.2, 0, Math.PI * 2);
+          ctx.arc(0, 0, 3.4, 0, Math.PI * 2);
           ctx.fill();
+          ctx.stroke();
           ctx.restore();
           break;
         }
@@ -7944,8 +8029,9 @@
             14,
             14,
             [
-              [0, "#3b82f6"],
-              [0.5, "#2563eb"],
+              [0, "#60a5fa"],
+              [0.35, "#3b82f6"],
+              [0.75, "#2563eb"],
               [1, "#1d4ed8"]
             ],
             "#2563eb"
@@ -7963,21 +8049,40 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
-          this._drawStar(ctx, 0, -9, 4, 5.5, 2.4, "#ffd700", "#b45309", 1);
+          this._drawStar(ctx, 0, -9, 4, 6, 2.5, "#ffd700", "#b45309", 1.2);
+          ctx.fillStyle = "#ef4444";
+          ctx.beginPath();
+          ctx.arc(0, -9, 1.4, 0, Math.PI * 2);
+          ctx.fill();
           ctx.fillStyle = "#ffd700";
           ctx.strokeStyle = "#d97706";
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.ellipse(-4, -1, 5, 3.5, -0.2, 0, Math.PI * 2);
-          ctx.ellipse(5, -1, 5, 3.5, 0.2, 0, Math.PI * 2);
+          ctx.ellipse(-4, -1, 5.5, 3.8, -0.2, 0, Math.PI * 2);
+          ctx.ellipse(5, -1, 5.5, 3.8, 0.2, 0, Math.PI * 2);
           ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#f59e0b";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(9, -1);
+          ctx.lineTo(13, -4);
+          ctx.moveTo(-8, -1);
+          ctx.lineTo(-12, -4);
           ctx.stroke();
           ctx.fillStyle = "#ffffff";
           ctx.beginPath();
-          ctx.arc(-3, -1, 2.2, 0, Math.PI * 2);
-          ctx.arc(4, -1, 2.2, 0, Math.PI * 2);
+          ctx.arc(-3, -1, 2.3, 0, Math.PI * 2);
+          ctx.arc(4, -1, 2.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#0f172a";
+          ctx.beginPath();
+          ctx.arc(-2.6, -1, 1.2, 0, Math.PI * 2);
+          ctx.arc(4.4, -1, 1.2, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#f59e0b";
+          ctx.strokeStyle = "#92400e";
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(-5, 7);
           ctx.lineTo(6, 7);
@@ -7985,6 +8090,7 @@
           ctx.lineTo(-3, 15);
           ctx.closePath();
           ctx.fill();
+          ctx.stroke();
           ctx.strokeStyle = "#78350f";
           ctx.lineWidth = 1.4;
           ctx.beginPath();
@@ -7997,8 +8103,22 @@
         // 5. 黑鴉・暗影劇毒刺客 (Crow)
         // ══════════════════════════════════════════════════
         case "skin_brawl_crow": {
-          ctx.fillStyle = "#0f172a";
-          ctx.strokeStyle = "#1e293b";
+          const crowFeatherGrad = this._safeLinearGrad(
+            ctx,
+            -14,
+            -22,
+            14,
+            14,
+            [
+              [0, "#312e81"],
+              [0.4, "#1e1b4b"],
+              [0.7, "#0f172a"],
+              [1, "#020617"]
+            ],
+            "#0f172a"
+          );
+          ctx.fillStyle = crowFeatherGrad;
+          ctx.strokeStyle = "#334155";
           ctx.lineWidth = 1.4;
           ctx.beginPath();
           ctx.moveTo(-7, -2);
@@ -8009,10 +8129,17 @@
           ctx.lineTo(2, -22);
           ctx.lineTo(6, -14);
           ctx.lineTo(12, -6);
-          ctx.lineTo(6, 8);
-          ctx.lineTo(-4, 7);
+          ctx.lineTo(6, 12);
+          ctx.lineTo(-4, 12);
           ctx.closePath();
           ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(129, 140, 248, 0.4)";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-2, -15);
+          ctx.lineTo(2, -21);
+          ctx.lineTo(5, -13);
           ctx.stroke();
           const beakGrad = this._safeLinearGrad(
             ctx,
@@ -8021,8 +8148,9 @@
             18,
             5,
             [
-              [0, "#fde047"],
-              [0.6, "#eab308"],
+              [0, "#fef08a"],
+              [0.35, "#fde047"],
+              [0.75, "#eab308"],
               [1, "#ca8a04"]
             ],
             "#eab308"
@@ -8037,21 +8165,27 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(7, -3);
+          ctx.quadraticCurveTo(13, -3, 17, 2);
+          ctx.stroke();
           ctx.fillStyle = "#713f12";
           ctx.beginPath();
           ctx.arc(8, -1, 1, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#ef4444";
           ctx.beginPath();
-          ctx.ellipse(2, -3, 4, 3, 0.2, 0, Math.PI * 2);
+          ctx.ellipse(2, -3, 4.2, 3.2, 0.2, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#facc15";
           ctx.beginPath();
-          ctx.arc(2.5, -3, 2.2, 0, Math.PI * 2);
+          ctx.arc(2.5, -3, 2.4, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#020617";
           ctx.beginPath();
-          ctx.ellipse(3, -3, 1, 2, 0.1, 0, Math.PI * 2);
+          ctx.ellipse(3, -3, 1, 2.2, 0.1, 0, Math.PI * 2);
           ctx.fill();
           break;
         }
@@ -8066,8 +8200,9 @@
             14,
             14,
             [
-              [0, "#34d399"],
-              [0.5, "#10b981"],
+              [0, "#6ee7b7"],
+              [0.35, "#34d399"],
+              [0.75, "#10b981"],
               [1, "#059669"]
             ],
             "#10b981"
@@ -8085,30 +8220,41 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
-          ctx.fillStyle = "#facc15";
+          ctx.fillStyle = "#fde047";
           ctx.strokeStyle = "#ca8a04";
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 1.2;
           ctx.beginPath();
-          ctx.arc(-5, -14, 5, 0, Math.PI * 2);
+          ctx.arc(-5, -14, 5.2, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
           ctx.fillStyle = "#020617";
           ctx.beginPath();
-          ctx.ellipse(-5, -14, 1.6, 3.8, 0.1, 0, Math.PI * 2);
+          ctx.ellipse(-5, -14, 3.8, 1.6, 0, 0, Math.PI * 2);
           ctx.fill();
-          ctx.fillStyle = "#facc15";
-          ctx.strokeStyle = "#ca8a04";
+          ctx.fillStyle = "#ffffff";
           ctx.beginPath();
-          ctx.arc(5, -14, 5, 0, Math.PI * 2);
+          ctx.arc(-6, -15.5, 1.2, 0, Math.PI * 2);
+          ctx.arc(-3.5, -13, 0.7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#fde047";
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(5, -14, 5.2, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
           ctx.fillStyle = "#020617";
           ctx.beginPath();
-          ctx.ellipse(5, -14, 1.6, 3.8, -0.1, 0, Math.PI * 2);
+          ctx.ellipse(5, -14, 3.8, 1.6, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(4, -15.5, 1.2, 0, Math.PI * 2);
+          ctx.arc(6.5, -13, 0.7, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#064e3b";
           ctx.beginPath();
-          ctx.arc(0, 0, 10, 0.1 * Math.PI, 0.9 * Math.PI);
+          ctx.arc(0, 0, 10, 0.05 * Math.PI, 0.95 * Math.PI);
           ctx.fill();
           ctx.fillStyle = "#fed7aa";
           ctx.beginPath();
@@ -8117,6 +8263,16 @@
           ctx.lineTo(3, 12);
           ctx.lineTo(-3, 12);
           ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#020617";
+          ctx.beginPath();
+          ctx.ellipse(-2.5, 3, 1.6, 2, 0, 0, Math.PI * 2);
+          ctx.ellipse(3.5, 3, 1.6, 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(-2, 2.5, 0.7, 0, Math.PI * 2);
+          ctx.arc(4, 2.5, 0.7, 0, Math.PI * 2);
           ctx.fill();
           ctx.strokeStyle = "#b45309";
           ctx.lineWidth = 1.2;
@@ -8131,17 +8287,23 @@
           ctx.stroke();
           ctx.fillStyle = "#f43f5e";
           ctx.beginPath();
-          ctx.arc(13, 12, 3.5, 0, Math.PI * 2);
+          ctx.arc(13, 12, 3.8, 0, Math.PI * 2);
           ctx.fill();
+          ctx.strokeStyle = "#be123c";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
           ctx.strokeStyle = "#ffffff";
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(13, 12, 2, 0, Math.PI * 1.5);
+          ctx.arc(13, 12, 2.2, 0, Math.PI * 1.6);
           ctx.stroke();
+          ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+          ctx.beginPath();
+          ctx.arc(12, 10.5, 1, 0, Math.PI * 2);
+          ctx.fill();
           break;
         }
       }
-      ctx.restore();
       return true;
     }
     // ─── 3. 角色服裝與軀幹 (Detailed Outfits & Torsos) ───
@@ -8156,13 +8318,31 @@
         // 1. 雪莉・散彈獵手 (Shelly)
         // ══════════════════════════════════════════════════
         case "skin_brawl_shelly": {
-          ctx.fillStyle = "#1e3a8a";
+          const denimGrad = this._safeLinearGrad(
+            ctx,
+            -14,
+            -18,
+            14,
+            14,
+            [
+              [0, "#2563eb"],
+              [0.4, "#1d4ed8"],
+              [1, "#1e3a8a"]
+            ],
+            "#1d4ed8"
+          );
+          ctx.fillStyle = denimGrad;
           ctx.strokeStyle = "#172554";
           ctx.lineWidth = 1.8;
           ctx.beginPath();
           ctx.roundRect(-14, -18, 28, 32, 6);
           ctx.fill();
           ctx.stroke();
+          ctx.strokeStyle = "#60a5fa";
+          ctx.lineWidth = 0.8;
+          this._setLineDash(ctx, [2, 1.5]);
+          ctx.strokeRect(-12.5, -16.5, 25, 29);
+          this._setLineDash(ctx, []);
           ctx.fillStyle = "#f8fafc";
           ctx.beginPath();
           ctx.moveTo(-7, -18);
@@ -8170,24 +8350,112 @@
           ctx.lineTo(0, -9);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#78350f";
-          ctx.fillRect(-12, -4, 24, 6);
+          ctx.strokeStyle = "#e2e8f0";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(-3, -15);
+          ctx.lineTo(0, -11);
+          ctx.stroke();
+          const bandGrad = this._safeLinearGrad(
+            ctx,
+            -14,
+            -6,
+            14,
+            2,
+            [
+              [0, "#92400e"],
+              [0.5, "#78350f"],
+              [1, "#451a03"]
+            ],
+            "#78350f"
+          );
+          ctx.fillStyle = bandGrad;
+          ctx.fillRect(-13, -5, 26, 7);
+          ctx.strokeStyle = "#d97706";
+          ctx.lineWidth = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(-13, -4.5);
+          ctx.lineTo(13, -4.5);
+          ctx.moveTo(-13, 1.5);
+          ctx.lineTo(13, 1.5);
+          ctx.stroke();
           for (let s = 0; s < 4; s++) {
-            const sx = -9 + s * 6;
-            ctx.fillStyle = "#dc2626";
-            ctx.fillRect(sx, -6, 4, 8);
-            ctx.fillStyle = "#fbbf24";
-            ctx.fillRect(sx, 0, 4, 3);
+            const sx = -9.5 + s * 6.2;
+            const shellGrad = this._safeLinearGrad(
+              ctx,
+              sx,
+              -7,
+              sx + 4.5,
+              -7,
+              [
+                [0, "#dc2626"],
+                [0.35, "#f87171"],
+                [0.7, "#b91c1c"],
+                [1, "#991b1b"]
+              ],
+              "#dc2626"
+            );
+            ctx.fillStyle = shellGrad;
+            ctx.fillRect(sx, -7, 4.5, 9);
+            const brassGrad = this._safeLinearGrad(
+              ctx,
+              sx,
+              0,
+              sx + 4.5,
+              0,
+              [
+                [0, "#fbbf24"],
+                [0.5, "#fef08a"],
+                [1, "#b45309"]
+              ],
+              "#fbbf24"
+            );
+            ctx.fillStyle = brassGrad;
+            ctx.fillRect(sx, 0, 4.5, 3.5);
+            ctx.fillStyle = "#78350f";
+            ctx.beginPath();
+            ctx.arc(sx + 2.25, 1.8, 0.8, 0, Math.PI * 2);
+            ctx.fill();
           }
           ctx.fillStyle = "#451a03";
           ctx.fillRect(-15, 14, 30, 8);
+          ctx.strokeStyle = "#78350f";
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(-15, 14, 30, 8);
+          ctx.fillStyle = "#78350f";
+          ctx.beginPath();
+          ctx.roundRect(-14, 13, 6, 8, 1.5);
+          ctx.fill();
+          ctx.strokeStyle = "#451a03";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
           ctx.fillStyle = "#fbbf24";
-          ctx.strokeStyle = "#b45309";
+          ctx.beginPath();
+          ctx.arc(-11, 17, 0.9, 0, Math.PI * 2);
+          ctx.fill();
+          const buckleGrad = this._safeRadialGrad(
+            ctx,
+            0,
+            18,
+            1,
+            0,
+            18,
+            5.5,
+            [
+              [0, "#fef08a"],
+              [0.6, "#fbbf24"],
+              [1, "#b45309"]
+            ],
+            "#fbbf24"
+          );
+          ctx.fillStyle = buckleGrad;
+          ctx.strokeStyle = "#78350f";
           ctx.lineWidth = 1.2;
           ctx.beginPath();
-          ctx.arc(0, 18, 5, 0, Math.PI * 2);
+          ctx.arc(0, 18, 5.2, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
+          this._drawStar(ctx, 0, 18, 5, 2.5, 1.1, "#78350f");
           break;
         }
         // ══════════════════════════════════════════════════
@@ -8196,21 +8464,43 @@
         case "skin_brawl_colt": {
           ctx.fillStyle = "#f8fafc";
           ctx.fillRect(-12, -18, 24, 30);
+          ctx.fillStyle = "#e2e8f0";
+          ctx.beginPath();
+          ctx.moveTo(-4, -18);
+          ctx.lineTo(4, -18);
+          ctx.lineTo(0, -13);
+          ctx.closePath();
+          ctx.fill();
           ctx.fillStyle = "#0f172a";
           ctx.beginPath();
           ctx.moveTo(-2, -16);
           ctx.lineTo(2, -16);
-          ctx.lineTo(3, -4);
-          ctx.lineTo(0, -1);
-          ctx.lineTo(-3, -4);
+          ctx.lineTo(3.2, -4);
+          ctx.lineTo(0, -0.5);
+          ctx.lineTo(-3.2, -4);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#1d4ed8";
-          ctx.strokeStyle = "#1e3a8a";
-          ctx.lineWidth = 1.8;
+          ctx.fillStyle = "#e2e8f0";
+          ctx.fillRect(-2.5, -8, 5, 1.2);
+          const vestGrad = this._safeLinearGrad(
+            ctx,
+            -13,
+            -18,
+            13,
+            14,
+            [
+              [0, "#2563eb"],
+              [0.5, "#1d4ed8"],
+              [1, "#1e3a8a"]
+            ],
+            "#1d4ed8"
+          );
+          ctx.fillStyle = vestGrad;
+          ctx.strokeStyle = "#172554";
+          ctx.lineWidth = 1.6;
           ctx.beginPath();
           ctx.moveTo(-13, -18);
-          ctx.lineTo(-4, -18);
+          ctx.lineTo(-3.5, -18);
           ctx.lineTo(-2, 14);
           ctx.lineTo(-13, 14);
           ctx.closePath();
@@ -8218,31 +8508,64 @@
           ctx.stroke();
           ctx.beginPath();
           ctx.moveTo(13, -18);
-          ctx.lineTo(4, -18);
+          ctx.lineTo(3.5, -18);
           ctx.lineTo(2, 14);
           ctx.lineTo(13, 14);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
-          this._drawStar(ctx, -7, -8, 6, 4.2, 2.2, "#ffd700", "#b45309", 0.8);
-          ctx.fillStyle = "#78350f";
+          ctx.strokeStyle = "#fbbf24";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-3.5, -18);
+          ctx.lineTo(-2, 14);
+          ctx.moveTo(3.5, -18);
+          ctx.lineTo(2, 14);
+          ctx.stroke();
+          ctx.strokeStyle = "#facc15";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(3, -2);
+          ctx.quadraticCurveTo(8, 4, 10, 6);
+          ctx.stroke();
+          this._drawStar(ctx, -7.5, -7, 6, 4.8, 2.4, "#ffd700", "#b45309", 1);
+          ctx.fillStyle = "#dc2626";
+          ctx.beginPath();
+          ctx.arc(-7.5, -7, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#5c2b0c";
           ctx.fillRect(-15, 14, 30, 8);
-          this._drawStar(ctx, 0, 18, 5, 5.5, 2.6, "#ffd700", "#b45309", 1);
+          ctx.strokeStyle = "#381604";
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(-15, 14, 30, 8);
+          for (let b = 0; b < 5; b++) {
+            const bx = -11 + b * 5.5;
+            if (Math.abs(bx) < 3.5) continue;
+            ctx.fillStyle = "#fbbf24";
+            ctx.fillRect(bx, 15, 2.2, 6);
+            ctx.fillStyle = "#92400e";
+            ctx.fillRect(bx, 15, 2.2, 1.5);
+          }
+          this._drawStar(ctx, 0, 18, 5, 5.8, 2.8, "#ffd700", "#78350f", 1.2);
           break;
         }
         // ══════════════════════════════════════════════════
         // 3. 斯派克・傳奇仙人掌 (Spike)
         // ══════════════════════════════════════════════════
         case "skin_brawl_spike": {
-          const cBodyGrad = this._safeLinearGrad(
+          const cBodyGrad = this._safeRadialGrad(
             ctx,
+            -4,
+            -6,
+            2,
             0,
-            -18,
             0,
-            18,
+            22,
             [
-              [0, "#22c55e"],
-              [1, "#15803d"]
+              [0, "#4ade80"],
+              [0.4, "#22c55e"],
+              [0.85, "#16a34a"],
+              [1, "#14532d"]
             ],
             "#22c55e"
           );
@@ -8253,29 +8576,85 @@
           ctx.roundRect(-15, -18, 30, 34, 10);
           ctx.fill();
           ctx.stroke();
-          ctx.fillStyle = "#0f172a";
+          ctx.strokeStyle = "rgba(20, 83, 45, 0.4)";
+          ctx.lineWidth = 1.2;
           ctx.beginPath();
-          ctx.moveTo(-12, -4);
-          ctx.lineTo(-15, -6);
-          ctx.lineTo(-12, -8);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(12, 2);
-          ctx.lineTo(15, 0);
-          ctx.lineTo(12, -2);
-          ctx.fill();
-          ctx.fillStyle = "#7e22ce";
+          ctx.moveTo(-6, -18);
+          ctx.quadraticCurveTo(-8, 0, -6, 16);
+          ctx.moveTo(6, -18);
+          ctx.quadraticCurveTo(8, 0, 6, 16);
+          ctx.stroke();
+          const spines = [
+            { x: -12, y: -4, dx: -4, dy: -2 },
+            { x: 12, y: 2, dx: 4, dy: -2 },
+            { x: -13, y: 8, dx: -3, dy: 3 },
+            { x: 11, y: 10, dx: 4, dy: 2 }
+          ];
+          spines.forEach((sp) => {
+            ctx.fillStyle = "#0f172a";
+            ctx.beginPath();
+            ctx.moveTo(sp.x, sp.y - 1.5);
+            ctx.lineTo(sp.x + sp.dx, sp.y + sp.dy);
+            ctx.lineTo(sp.x, sp.y + 1.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(sp.x + sp.dx, sp.y + sp.dy, 0.6, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          const vestGrad = this._safeLinearGrad(
+            ctx,
+            -13,
+            -12,
+            13,
+            10,
+            [
+              [0, "#9333ea"],
+              [0.5, "#7e22ce"],
+              [1, "#581c87"]
+            ],
+            "#7e22ce"
+          );
+          ctx.fillStyle = vestGrad;
           ctx.strokeStyle = "#fbbf24";
           ctx.lineWidth = 1.4;
           ctx.beginPath();
           ctx.roundRect(-13, -12, 26, 22, 6);
           ctx.fill();
           ctx.stroke();
-          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#fde047";
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(0, -4, 2, 0, Math.PI * 2);
-          ctx.arc(0, 3, 2, 0, Math.PI * 2);
-          ctx.fill();
+          for (let zx = -10; zx <= 10; zx += 4) {
+            ctx.lineTo(zx, -11);
+            ctx.lineTo(zx + 2, -9);
+          }
+          ctx.stroke();
+          [-4, 3].forEach((by) => {
+            const btnGrad = this._safeRadialGrad(
+              ctx,
+              -0.5,
+              by - 0.5,
+              0.3,
+              0,
+              by,
+              2.2,
+              [
+                [0, "#ffffff"],
+                [0.7, "#e2e8f0"],
+                [1, "#94a3b8"]
+              ],
+              "#ffffff"
+            );
+            ctx.fillStyle = btnGrad;
+            ctx.beginPath();
+            ctx.arc(0, by, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#64748b";
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          });
           break;
         }
         // ══════════════════════════════════════════════════
@@ -8289,56 +8668,114 @@
             0,
             14,
             [
-              [0, "#f59e0b"],
-              [1, "#d97706"]
+              [0, "#fbbf24"],
+              [0.35, "#f59e0b"],
+              [0.75, "#d97706"],
+              [1, "#b45309"]
             ],
             "#f59e0b"
           );
           ctx.fillStyle = skinGrad;
-          ctx.strokeStyle = "#92400e";
-          ctx.lineWidth = 1.6;
+          ctx.strokeStyle = "#78350f";
+          ctx.lineWidth = 1.8;
           ctx.beginPath();
           ctx.roundRect(-16, -18, 32, 32, 6);
           ctx.fill();
           ctx.stroke();
-          ctx.strokeStyle = "rgba(120, 53, 15, 0.4)";
-          ctx.lineWidth = 1.8;
+          ctx.strokeStyle = "rgba(120, 53, 15, 0.45)";
+          ctx.lineWidth = 1.4;
           ctx.beginPath();
-          ctx.moveTo(-11, -8);
-          ctx.quadraticCurveTo(-5, -4, 0, -8);
-          ctx.quadraticCurveTo(5, -4, 11, -8);
+          ctx.moveTo(-11, -15);
+          ctx.lineTo(-2, -13);
+          ctx.moveTo(11, -15);
+          ctx.lineTo(2, -13);
           ctx.stroke();
+          ctx.strokeStyle = "rgba(120, 53, 15, 0.6)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-12, -8);
+          ctx.quadraticCurveTo(-5, -3.5, 0, -8);
+          ctx.quadraticCurveTo(5, -3.5, 12, -8);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(254, 240, 138, 0.5)";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-10, -10);
+          ctx.quadraticCurveTo(-5, -6, -1, -10);
+          ctx.moveTo(10, -10);
+          ctx.quadraticCurveTo(5, -6, 1, -10);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(120, 53, 15, 0.55)";
+          ctx.lineWidth = 1.6;
           ctx.beginPath();
           ctx.moveTo(0, -8);
           ctx.lineTo(0, 12);
-          ctx.moveTo(-6, 2);
-          ctx.lineTo(6, 2);
-          ctx.moveTo(-5, 8);
-          ctx.lineTo(5, 8);
+          ctx.moveTo(-7, 0);
+          ctx.lineTo(7, 0);
+          ctx.moveTo(-6.5, 6);
+          ctx.lineTo(6.5, 6);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(120, 53, 15, 0.4)";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-14, -2);
+          ctx.lineTo(-10, 1);
+          ctx.moveTo(14, -2);
+          ctx.lineTo(10, 1);
           ctx.stroke();
           ctx.fillStyle = "#1e3a8a";
           ctx.fillRect(-17, 12, 34, 10);
+          ctx.strokeStyle = "#172554";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(-17, 12, 34, 10);
           const beltGrad = this._safeLinearGrad(
             ctx,
-            -10,
+            -11,
             10,
-            10,
+            11,
             22,
             [
-              [0, "#fde047"],
-              [0.5, "#eab308"],
-              [1, "#ca8a04"]
+              [0, "#fef08a"],
+              [0.3, "#facc15"],
+              [0.7, "#eab308"],
+              [1, "#92400e"]
             ],
             "#eab308"
           );
           ctx.fillStyle = beltGrad;
           ctx.strokeStyle = "#78350f";
-          ctx.lineWidth = 1.2;
+          ctx.lineWidth = 1.4;
           ctx.beginPath();
-          ctx.roundRect(-9, 11, 18, 12, 3);
+          ctx.roundRect(-10, 10.5, 20, 13, 3.5);
           ctx.fill();
           ctx.stroke();
-          this._drawStar(ctx, 0, 17, 5, 4.5, 2.2, "#ef4444", "#ffd700", 0.8);
+          ctx.fillStyle = "#ca8a04";
+          ctx.fillRect(-13, 13, 2.5, 8);
+          ctx.fillRect(10.5, 13, 2.5, 8);
+          this._drawStar(ctx, 0, 17, 8, 4.8, 2.2, "#ffd700", "#92400e", 0.8);
+          const rubyGrad = this._safeRadialGrad(
+            ctx,
+            -0.6,
+            16.4,
+            0.4,
+            0,
+            17,
+            2.6,
+            [
+              [0, "#fecaca"],
+              [0.3, "#ef4444"],
+              [0.8, "#b91c1c"],
+              [1, "#7f1d1d"]
+            ],
+            "#ef4444"
+          );
+          ctx.fillStyle = rubyGrad;
+          ctx.beginPath();
+          ctx.arc(0, 17, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#ffd700";
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
           break;
         }
         // ══════════════════════════════════════════════════
@@ -8352,46 +8789,94 @@
             0,
             18,
             [
-              [0, "#1e293b"],
+              [0, "#334155"],
+              [0.35, "#1e293b"],
+              [0.8, "#0f172a"],
               [1, "#020617"]
             ],
             "#1e293b"
           );
           ctx.fillStyle = leatherGrad;
-          ctx.strokeStyle = "#334155";
+          ctx.strokeStyle = "#475569";
           ctx.lineWidth = 1.8;
           ctx.beginPath();
           ctx.roundRect(-14, -18, 28, 34, 6);
           ctx.fill();
           ctx.stroke();
+          const shoulderHighlight = this._safeLinearGrad(
+            ctx,
+            -14,
+            -18,
+            14,
+            -12,
+            [
+              [0, "rgba(255, 255, 255, 0.15)"],
+              [0.5, "rgba(255, 255, 255, 0.0)"],
+              [1, "rgba(255, 255, 255, 0.15)"]
+            ],
+            "transparent"
+          );
+          ctx.fillStyle = shoulderHighlight;
+          ctx.fillRect(-13, -17, 26, 6);
           ctx.fillStyle = "#0f172a";
+          ctx.strokeStyle = "#334155";
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(-14, -18);
           ctx.lineTo(-4, -10);
-          ctx.lineTo(-12, -4);
+          ctx.lineTo(-12, -3);
           ctx.closePath();
           ctx.fill();
+          ctx.stroke();
           ctx.beginPath();
           ctx.moveTo(14, -18);
           ctx.lineTo(4, -10);
-          ctx.lineTo(12, -4);
+          ctx.lineTo(12, -3);
           ctx.closePath();
           ctx.fill();
-          ctx.strokeStyle = "#94a3b8";
+          ctx.stroke();
+          ctx.fillStyle = "#e2e8f0";
+          ctx.beginPath();
+          ctx.arc(-10, -5, 1, 0, Math.PI * 2);
+          ctx.arc(10, -5, 1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#cbd5e1";
           ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.moveTo(0, -10);
-          ctx.lineTo(0, 15);
+          ctx.moveTo(-2, -10);
+          ctx.lineTo(1, 15);
+          ctx.stroke();
+          ctx.strokeStyle = "#f8fafc";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(0, -3, 1.8, 0, Math.PI * 2);
           ctx.stroke();
           ctx.fillStyle = "#f8fafc";
           ctx.beginPath();
-          ctx.arc(-6, 0, 2.5, 0, Math.PI * 2);
+          ctx.ellipse(-7, 2, 3.2, 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(-9, 4);
+          ctx.lineTo(-7, 8);
+          ctx.lineTo(-5, 4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#ef4444";
+          ctx.beginPath();
+          ctx.arc(-8, 1.5, 0.9, 0, Math.PI * 2);
+          ctx.arc(-6, 1.5, 0.9, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#020617";
           ctx.fillRect(-15, 14, 30, 8);
-          ctx.fillStyle = "#cbd5e1";
+          ctx.strokeStyle = "#1e293b";
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(-15, 14, 30, 8);
           for (let i = 0; i < 4; i++) {
-            ctx.fillRect(-10 + i * 7, 16, 3, 3);
+            const px = -11 + i * 7.2;
+            ctx.fillStyle = "#f1f5f9";
+            ctx.fillRect(px, 16, 3.5, 3.5);
+            ctx.fillStyle = "#64748b";
+            ctx.fillRect(px + 1.5, 17.5, 2, 2);
           }
           break;
         }
@@ -8406,37 +8891,77 @@
             0,
             18,
             [
-              [0, "#10b981"],
+              [0, "#34d399"],
+              [0.4, "#10b981"],
+              [0.8, "#059669"],
               [1, "#047857"]
             ],
             "#10b981"
           );
           ctx.fillStyle = hoodieGrad;
-          ctx.strokeStyle = "#065f46";
+          ctx.strokeStyle = "#064e3b";
           ctx.lineWidth = 1.8;
           ctx.beginPath();
           ctx.roundRect(-14, -18, 28, 32, 6);
           ctx.fill();
           ctx.stroke();
+          ctx.strokeStyle = "#059669";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-13, -10);
+          ctx.lineTo(-9, 14);
+          ctx.moveTo(13, -10);
+          ctx.lineTo(9, 14);
+          ctx.stroke();
           ctx.strokeStyle = "#facc15";
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2.4;
           ctx.beginPath();
           ctx.moveTo(0, -16);
           ctx.lineTo(0, 14);
           ctx.stroke();
+          ctx.fillStyle = "#ca8a04";
+          ctx.fillRect(-1.5, -10, 3, 4);
+          ctx.fillStyle = "#fef08a";
+          ctx.fillRect(-1, -7, 2, 3);
           ctx.fillStyle = "#059669";
-          ctx.strokeStyle = "#047857";
+          ctx.strokeStyle = "#065f46";
           ctx.lineWidth = 1.2;
           ctx.beginPath();
-          ctx.moveTo(-10, 4);
-          ctx.lineTo(10, 4);
-          ctx.lineTo(12, 13);
-          ctx.lineTo(-12, 13);
+          ctx.moveTo(-10.5, 4);
+          ctx.lineTo(10.5, 4);
+          ctx.lineTo(12.5, 13);
+          ctx.lineTo(-12.5, 13);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
+          ctx.fillStyle = "#f59e0b";
+          ctx.beginPath();
+          ctx.arc(-9.5, 5, 0.9, 0, Math.PI * 2);
+          ctx.arc(9.5, 5, 0.9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.save();
+          ctx.strokeStyle = "#10b981";
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.arc(14, 12, 5, -Math.PI * 0.4, Math.PI * 1.3);
+          ctx.stroke();
+          ctx.strokeStyle = "#34d399";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(14, 12, 2.5, 0, Math.PI * 1.6);
+          ctx.stroke();
+          ctx.restore();
           ctx.fillStyle = "#1d4ed8";
           ctx.fillRect(-14, 14, 28, 8);
+          ctx.strokeStyle = "#1e3a8a";
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(-14, 14, 28, 8);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(-12, 14, 1.2, 8);
+          ctx.fillRect(-9.5, 14, 1.2, 8);
+          ctx.fillRect(10.8, 14, 1.2, 8);
+          ctx.fillRect(8.3, 14, 1.2, 8);
           break;
         }
       }
@@ -8510,124 +9035,305 @@
       ctx.restore();
       return true;
     }
-    // 繪製荒野亂鬥標誌性招牌武器
+    // 繪製荒野亂鬥標誌性招牌武器 (HD Signature Weapons)
     _drawBrawlWeapon(ctx, id, arm) {
       ctx.save();
       ctx.translate(0, 18);
       switch (id) {
         case "skin_brawl_shelly": {
-          ctx.fillStyle = "#92400e";
+          const woodGrad = this._safeLinearGrad(
+            ctx,
+            -12,
+            0,
+            -2,
+            12,
+            [
+              [0, "#78350f"],
+              [0.5, "#92400e"],
+              [1, "#451a03"]
+            ],
+            "#92400e"
+          );
+          ctx.fillStyle = woodGrad;
           ctx.beginPath();
-          ctx.moveTo(-4, -2);
-          ctx.lineTo(-12, 10);
+          ctx.moveTo(-3, -2);
+          ctx.lineTo(-13, 9);
           ctx.lineTo(-7, 12);
-          ctx.lineTo(-2, 3);
+          ctx.lineTo(-1, 3);
           ctx.closePath();
           ctx.fill();
+          ctx.strokeStyle = "#451a03";
+          ctx.lineWidth = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(-10, 6);
+          ctx.lineTo(-4, 0);
+          ctx.moveTo(-8, 9);
+          ctx.lineTo(-3, 2);
+          ctx.stroke();
           ctx.fillStyle = "#334155";
-          ctx.fillRect(-3, -4, 10, 8);
+          ctx.fillRect(-2, -4, 9, 8);
+          ctx.strokeStyle = "#1e293b";
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(-2, -4, 9, 8);
+          ctx.fillStyle = "#78350f";
+          ctx.fillRect(5, -2, 6, 6);
+          ctx.fillStyle = "#451a03";
+          ctx.fillRect(7, -2, 1, 6);
+          ctx.fillRect(9, -2, 1, 6);
           const barrelGrad = this._safeLinearGrad(
             ctx,
-            6,
-            -5,
-            24,
+            7,
+            -6,
+            26,
             -1,
             [
-              [0, "#64748b"],
-              [0.5, "#cbd5e1"],
-              [1, "#475569"]
+              [0, "#475569"],
+              [0.3, "#94a3b8"],
+              [0.5, "#f1f5f9"],
+              [0.7, "#64748b"],
+              [1, "#334155"]
             ],
             "#64748b"
           );
           ctx.fillStyle = barrelGrad;
-          ctx.fillRect(6, -5, 20, 4);
-          ctx.fillRect(6, -1, 20, 4);
+          ctx.fillRect(7, -5.5, 19, 4);
+          ctx.fillRect(7, -1, 19, 4);
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(7, -1.8, 19, 0.8);
+          ctx.beginPath();
+          ctx.ellipse(26, -3.5, 1.2, 2, 0, 0, Math.PI * 2);
+          ctx.ellipse(26, 1, 1.2, 2, 0, 0, Math.PI * 2);
+          ctx.fill();
           ctx.fillStyle = "#fbbf24";
-          ctx.fillRect(23, -7, 3, 2);
+          ctx.beginPath();
+          ctx.arc(24, -6.5, 1.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#b45309";
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
           break;
         }
         case "skin_brawl_colt": {
-          ctx.fillStyle = "#f1f5f9";
-          ctx.strokeStyle = "#94a3b8";
-          ctx.lineWidth = 1;
-          ctx.fillRect(2, -4, 18, 5);
-          ctx.fillStyle = "#cbd5e1";
+          const chromeGrad = this._safeLinearGrad(
+            ctx,
+            2,
+            -5,
+            22,
+            1,
+            [
+              [0, "#e2e8f0"],
+              [0.4, "#ffffff"],
+              [0.8, "#cbd5e1"],
+              [1, "#94a3b8"]
+            ],
+            "#f1f5f9"
+          );
+          ctx.fillStyle = chromeGrad;
+          ctx.strokeStyle = "#64748b";
+          ctx.lineWidth = 0.8;
+          ctx.fillRect(2, -4.5, 18, 5.5);
+          ctx.strokeRect(2, -4.5, 18, 5.5);
+          ctx.fillStyle = "#64748b";
+          ctx.fillRect(18, -6, 2, 1.6);
+          const cylGrad = this._safeRadialGrad(
+            ctx,
+            4,
+            -1.5,
+            1,
+            4,
+            -1.5,
+            5,
+            [
+              [0, "#ffffff"],
+              [0.6, "#cbd5e1"],
+              [1, "#64748b"]
+            ],
+            "#cbd5e1"
+          );
+          ctx.fillStyle = cylGrad;
           ctx.beginPath();
-          ctx.ellipse(4, -1.5, 4, 5, 0, 0, Math.PI * 2);
+          ctx.ellipse(4, -1.5, 4.5, 5.5, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
-          ctx.fillStyle = "#fef08a";
+          ctx.strokeStyle = "#475569";
+          ctx.lineWidth = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(1.5, -4);
+          ctx.lineTo(6.5, -4);
+          ctx.moveTo(1.5, 1);
+          ctx.lineTo(6.5, 1);
+          ctx.stroke();
+          const ivoryGrad = this._safeLinearGrad(
+            ctx,
+            -6,
+            0,
+            2,
+            10,
+            [
+              [0, "#fef9c3"],
+              [0.5, "#fef08a"],
+              [1, "#fde047"]
+            ],
+            "#fef08a"
+          );
+          ctx.fillStyle = ivoryGrad;
           ctx.beginPath();
           ctx.moveTo(-1, 0);
-          ctx.lineTo(-6, 9);
-          ctx.lineTo(-2, 10);
-          ctx.lineTo(2, 2);
+          ctx.lineTo(-6.5, 9.5);
+          ctx.lineTo(-2, 11);
+          ctx.lineTo(2.5, 2);
           ctx.closePath();
           ctx.fill();
-          this._drawStar(ctx, -3, 5, 5, 1.8, 0.8, "#ffd700");
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+          this._drawStar(ctx, -2.8, 5.5, 5, 2.2, 0.9, "#ffd700", "#b45309", 0.5);
+          ctx.strokeStyle = "#475569";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-1, -3);
+          ctx.lineTo(-2.5, -5);
+          ctx.moveTo(0, 1);
+          ctx.arc(1.5, 2.5, 2.5, Math.PI * 0.5, Math.PI * 1.5);
+          ctx.stroke();
           break;
         }
         case "skin_brawl_spike": {
-          ctx.fillStyle = "#22c55e";
+          const bombGrad = this._safeRadialGrad(
+            ctx,
+            6,
+            0,
+            1,
+            8,
+            2,
+            8,
+            [
+              [0, "#86efac"],
+              [0.4, "#22c55e"],
+              [0.85, "#15803d"],
+              [1, "#14532d"]
+            ],
+            "#22c55e"
+          );
+          ctx.fillStyle = bombGrad;
           ctx.strokeStyle = "#14532d";
-          ctx.lineWidth = 1.2;
+          ctx.lineWidth = 1.4;
           ctx.beginPath();
-          ctx.arc(8, 2, 7, 0, Math.PI * 2);
+          ctx.arc(8, 2, 7.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
-          ctx.fillStyle = "#0f172a";
-          ctx.fillRect(15, 1, 3, 2);
-          ctx.fillRect(8, 9, 2, 3);
-          ctx.fillRect(8, -5, 2, 3);
-          ctx.strokeStyle = "#dc2626";
-          ctx.lineWidth = 1.5;
+          const bSpines = [
+            { x: 15, y: 2, dx: 4, dy: 0 },
+            { x: 8, y: 9.5, dx: 0, dy: 3.5 },
+            { x: 8, y: -5.5, dx: 0, dy: -3.5 },
+            { x: 13, y: -3, dx: 3, dy: -3 },
+            { x: 13, y: 7, dx: 3, dy: 3 }
+          ];
+          bSpines.forEach((s) => {
+            ctx.fillStyle = "#0f172a";
+            ctx.beginPath();
+            ctx.moveTo(s.x, s.y - 1);
+            ctx.lineTo(s.x + s.dx, s.y + s.dy);
+            ctx.lineTo(s.x, s.y + 1);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(s.x + s.dx, s.y + s.dy, 0.5, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.strokeStyle = "#92400e";
+          ctx.lineWidth = 1.8;
           ctx.beginPath();
-          ctx.moveTo(8, -4);
-          ctx.quadraticCurveTo(12, -8, 14, -6);
+          ctx.moveTo(8, -5);
+          ctx.quadraticCurveTo(12, -10, 15, -7);
           ctx.stroke();
-          ctx.fillStyle = "#fbbf24";
+          ctx.shadowColor = "#f59e0b";
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = "#fef08a";
           ctx.beginPath();
-          ctx.arc(14, -6, 2, 0, Math.PI * 2);
+          ctx.arc(15, -7, 2.5, 0, Math.PI * 2);
           ctx.fill();
+          ctx.fillStyle = "#ef4444";
+          ctx.beginPath();
+          ctx.arc(15, -7, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
           break;
         }
         case "skin_brawl_crow": {
           const bladeGrad = this._safeLinearGrad(
             ctx,
             0,
-            -3,
-            18,
+            -3.5,
+            22,
             0,
             [
-              [0, "#10b981"],
-              [0.6, "#34d399"],
+              [0, "#059669"],
+              [0.3, "#10b981"],
+              [0.7, "#34d399"],
               [1, "#a7f3d0"]
             ],
             "#10b981"
           );
+          ctx.shadowColor = "#10b981";
+          ctx.shadowBlur = 8;
           ctx.fillStyle = bladeGrad;
           ctx.beginPath();
-          ctx.moveTo(2, -3);
-          ctx.lineTo(20, 0);
-          ctx.lineTo(2, 3);
+          ctx.moveTo(2, -3.5);
+          ctx.lineTo(22, 0);
+          ctx.lineTo(2, 3.5);
+          ctx.lineTo(4, 0);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#10b981";
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = "#047857";
+          ctx.lineWidth = 0.8;
           ctx.beginPath();
-          ctx.arc(22, 1, 1.5, 0, Math.PI * 2);
+          ctx.moveTo(3, 0);
+          ctx.lineTo(20, 0);
+          ctx.stroke();
+          ctx.fillStyle = "#34d399";
+          ctx.beginPath();
+          ctx.arc(24, 1.5, 1.8, 0, Math.PI * 2);
+          ctx.arc(27, 3, 1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(23.5, 1, 0.6, 0, Math.PI * 2);
           ctx.fill();
           break;
         }
         case "skin_brawl_leon": {
           ctx.save();
           ctx.translate(6, 2);
-          const rot = Date.now() / 80 % (Math.PI * 2);
+          const rot = Date.now() / 70 % (Math.PI * 2);
           ctx.rotate(rot);
-          this._drawStar(ctx, 0, 0, 4, 8, 3, "#38bdf8", "#0284c7", 1.2);
+          ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, 9.5, 0, Math.PI * 2);
+          ctx.stroke();
+          this._drawStar(ctx, 0, 0, 4, 9, 3.2, "#38bdf8", "#0284c7", 1.4);
+          ctx.fillStyle = "#e0f2fe";
+          for (let b = 0; b < 4; b++) {
+            ctx.save();
+            ctx.rotate(b * Math.PI * 0.5);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(2, -8);
+            ctx.lineTo(0, -3.2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
           ctx.fillStyle = "#ffffff";
           ctx.beginPath();
-          ctx.arc(0, 0, 2, 0, Math.PI * 2);
+          ctx.arc(0, 0, 2.2, 0, Math.PI * 2);
           ctx.fill();
+          ctx.strokeStyle = "#0284c7";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
           ctx.restore();
           break;
         }
@@ -8651,7 +9357,7 @@
         pantsColor = isBack ? "#0f172a" : "#1e293b";
         bootColor = "#78350f";
       } else if (id === "skin_brawl_spike") {
-        pantsColor = "#16a34a";
+        pantsColor = isBack ? "#15803d" : "#22c55e";
         bootColor = "#78350f";
       } else if (id === "skin_brawl_el_primo") {
         pantsColor = isBack ? "#1d4ed8" : "#2563eb";
@@ -8670,6 +9376,34 @@
       ctx.roundRect(-6, 0, 12, 28, 4);
       ctx.fill();
       ctx.stroke();
+      if (id === "skin_brawl_shelly") {
+        ctx.strokeStyle = "#60a5fa";
+        ctx.lineWidth = 0.6;
+        this._setLineDash(ctx, [2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(-4, 0);
+        ctx.lineTo(-4, 28);
+        ctx.stroke();
+        this._setLineDash(ctx, []);
+      } else if (id === "skin_brawl_colt" && !isBack) {
+        ctx.fillStyle = "#5c2b0c";
+        ctx.fillRect(-6, 12, 12, 4);
+        ctx.fillStyle = "#fbbf24";
+        ctx.fillRect(-1, 12, 2, 4);
+      } else if (id === "skin_brawl_el_primo") {
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath();
+        ctx.moveTo(-5, 4);
+        ctx.lineTo(-2, 16);
+        ctx.lineTo(-5, 26);
+        ctx.lineTo(-4, 16);
+        ctx.closePath();
+        ctx.fill();
+      } else if (id === "skin_brawl_leon") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(-5, 0, 1.5, 20);
+        ctx.fillRect(-2.5, 0, 1.5, 20);
+      }
       ctx.translate(0, 26);
       ctx.rotate(leg.shinAngle);
       ctx.fillStyle = pantsColor;
@@ -8677,6 +9411,15 @@
       ctx.roundRect(-5, 0, 10, 28, 4);
       ctx.fill();
       ctx.stroke();
+      if (id === "skin_brawl_el_primo") {
+        ctx.fillStyle = "#fbbf24";
+        ctx.strokeStyle = "#b45309";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(-5.5, -2, 11, 8, 2.5);
+        ctx.fill();
+        ctx.stroke();
+      }
       ctx.translate(0, 26);
       ctx.rotate(leg.footAngle || 0);
       ctx.fillStyle = bootColor;
@@ -8687,6 +9430,25 @@
       if (id === "skin_brawl_colt") {
         ctx.fillStyle = "#cbd5e1";
         ctx.fillRect(-8, 3, 4, 3);
+        this._drawStar(ctx, -8, 4.5, 5, 2.5, 1, "#94a3b8");
+      }
+      if (id === "skin_brawl_shelly") {
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(-4, 3, 15, 2.5);
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath();
+        ctx.arc(3, 4.2, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (id === "skin_brawl_crow") {
+        ctx.strokeStyle = "#ef4444";
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(-2, 2);
+        ctx.lineTo(6, 6);
+        ctx.moveTo(-2, 6);
+        ctx.lineTo(6, 2);
+        ctx.stroke();
       }
       ctx.restore();
       return true;
@@ -8915,12 +9677,14 @@
         ctx.globalAlpha = 0.5;
       }
       const pose = this.calculatePose(state, t, char);
+      this._anchorHeadToTorso(pose);
       specialSkinsRenderer.drawAura(ctx, char, skin, t);
       brawlSkinsRenderer.drawAura(ctx, char, skin, t);
       scifiSkinsRenderer.drawAura(ctx, char, skin, t);
       this.drawLimb(ctx, pose.backLeg, skin, "backLeg");
       this.drawArm(ctx, pose.backArm, skin, "backArm");
       this.drawTorso(ctx, pose.torso, skin, t);
+      this.drawNeck(ctx, pose, skin);
       this.drawHead(ctx, pose.head, skin);
       this.drawLimb(ctx, pose.frontLeg, skin, "frontLeg");
       this.drawArm(ctx, pose.frontArm, skin, "frontArm");
@@ -9417,6 +10181,7 @@
           defaultPose.head.y = -16;
           defaultPose.head.x = -32;
           defaultPose.head.angle = -Math.PI / 2;
+          defaultPose.head.lockedAbsolute = true;
           defaultPose.frontLeg.thighAngle = -Math.PI / 2;
           defaultPose.frontLeg.shinAngle = 0.2;
           defaultPose.backLeg.thighAngle = -Math.PI / 2;
@@ -9430,6 +10195,7 @@
           defaultPose.head.y = -16 - wRatio * 82;
           defaultPose.torso.angle = -Math.PI / 2 * (1 - wRatio);
           defaultPose.head.angle = -Math.PI / 2 * (1 - wRatio);
+          defaultPose.head.lockedAbsolute = true;
           return defaultPose;
         }
         // 招式專屬姿態
@@ -9536,6 +10302,81 @@
         default:
           return defaultPose;
       }
+    }
+    // ─── 人體骨骼動態約束：頭部頸關節自動鏈接 ───
+    _anchorHeadToTorso(pose) {
+      if (!pose || !pose.torso || !pose.head) return pose;
+      if (pose.head.lockedAbsolute) return pose;
+      const neckDist = 24;
+      const sinA = Math.sin(pose.torso.angle || 0);
+      const cosA = Math.cos(pose.torso.angle || 0);
+      pose.head.x = (pose.torso.x || 0) - sinA * neckDist;
+      pose.head.y = (pose.torso.y || -74) - cosA * neckDist;
+      return pose;
+    }
+    // ─── 頸部連接柱 (Anatomical Neck Connector) ───
+    drawNeck(ctx, pose, skin) {
+      if (!pose || !pose.torso || !pose.head || pose.head.lockedAbsolute) return;
+      ctx.save();
+      const torsoTopX = (pose.torso.x || 0) - Math.sin(pose.torso.angle || 0) * 18;
+      const torsoTopY = (pose.torso.y || -74) - Math.cos(pose.torso.angle || 0) * 18;
+      const headBaseX = pose.head.x || 0;
+      const headBaseY = (pose.head.y || -98) + 8;
+      const neckColor = this._getNeckColor(skin);
+      const strokeColor = this._getNeckStrokeColor(skin);
+      ctx.fillStyle = neckColor;
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1.4;
+      const angle = Math.atan2(headBaseY - torsoTopY, headBaseX - torsoTopX);
+      const perpX = Math.sin(angle);
+      const perpY = -Math.cos(angle);
+      const wBottom = 6.5;
+      const wTop = 5;
+      ctx.beginPath();
+      ctx.moveTo(torsoTopX - perpX * wBottom, torsoTopY - perpY * wBottom);
+      ctx.lineTo(torsoTopX + perpX * wBottom, torsoTopY + perpY * wBottom);
+      ctx.lineTo(headBaseX + perpX * wTop, headBaseY + perpY * wTop);
+      ctx.lineTo(headBaseX - perpX * wTop, headBaseY - perpY * wTop);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(headBaseX - 2, headBaseY);
+      ctx.lineTo(torsoTopX - 3.5, torsoTopY);
+      ctx.moveTo(headBaseX + 2, headBaseY);
+      ctx.lineTo(torsoTopX + 3.5, torsoTopY);
+      ctx.stroke();
+      ctx.restore();
+    }
+    _getNeckColor(skin) {
+      if (!skin || !skin.id) return "#0f172a";
+      const id = skin.id;
+      if (id === "skin_brawl_shelly" || id === "skin_brawl_colt") return "#fed7aa";
+      if (id === "skin_brawl_spike") return "#22c55e";
+      if (id === "skin_brawl_el_primo") return "#f59e0b";
+      if (id === "skin_brawl_crow") return "#0f172a";
+      if (id === "skin_brawl_leon") return "#10b981";
+      if (id === "skin_goku_ssj" || id === "skin_vegeta_ssj" || id === "skin_hawkeye" || id === "skin_thor") return "#fed7aa";
+      if (id === "skin_piccolo") return "#15803d";
+      if (id === "skin_golden_frieza") return "#fbbf24";
+      if (id === "skin_thanos") return "#7c3aed";
+      if (id === "skin_iron_man") return "#991b1b";
+      if (id === "skin_spiderman") return "#dc2626";
+      if (id === "skin_captain_america") return "#1e3a8a";
+      return skin.armorColor || "#090d16";
+    }
+    _getNeckStrokeColor(skin) {
+      if (!skin || !skin.id) return "#00f3ff";
+      const id = skin.id;
+      if (id === "skin_brawl_shelly" || id === "skin_brawl_colt") return "#ea580c";
+      if (id === "skin_brawl_spike") return "#14532d";
+      if (id === "skin_brawl_el_primo") return "#92400e";
+      if (id === "skin_brawl_crow") return "#1e293b";
+      if (id === "skin_brawl_leon") return "#065f46";
+      if (id === "skin_piccolo") return "#14532d";
+      return skin.themeColor || "#00f3ff";
     }
     // ─── 肢體繪製方法 ───
     drawTorso(ctx, torso, skin, t) {
@@ -13680,7 +14521,7 @@
     }
     _resizeCanvas() {
       if (!this.canvas) return;
-      const dpr = Math.min(typeof window !== "undefined" && window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(Math.max(typeof window !== "undefined" && window.devicePixelRatio || 1, 1), 3);
       this.dpr = dpr;
       this.logicalWidth = window.innerWidth;
       this.logicalHeight = window.innerHeight;
@@ -13688,6 +14529,10 @@
       this.canvas.height = Math.round(window.innerHeight * dpr);
       this.canvas.style.width = window.innerWidth + "px";
       this.canvas.style.height = window.innerHeight + "px";
+      if (this.ctx) {
+        this.ctx.imageSmoothingEnabled = true;
+        this.ctx.imageSmoothingQuality = "high";
+      }
       combatEngine.arenaWidth = window.innerWidth;
       const newFloorY = Math.max(380, Math.round(window.innerHeight - 130));
       combatEngine.floorY = newFloorY;
@@ -14448,6 +15293,8 @@
       const w = this.logicalWidth || window.innerWidth;
       const h = this.logicalHeight || window.innerHeight;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       ctx.clearRect(0, 0, w, h);
       stageRenderer.drawStage(ctx, this.currentStage, w, h, combatEngine.floorY);
       ctx.save();

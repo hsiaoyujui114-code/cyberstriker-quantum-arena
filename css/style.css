@@ -612,6 +612,7 @@ body {
   width: 100%;
   height: 100%;
   display: block;
+  image-rendering: -webkit-optimize-contrast;
 }
 
 /* ─── 戰鬥頂部 HUD ─── */

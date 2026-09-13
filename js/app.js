@@ -96,7 +96,7 @@ class CyberStrikerApp {
 
   _resizeCanvas() {
     if (!this.canvas) return;
-    const dpr = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, 2);
+    const dpr = Math.min(Math.max((typeof window !== 'undefined' && window.devicePixelRatio) || 1, 1), 3);
     this.dpr = dpr;
     this.logicalWidth = window.innerWidth;
     this.logicalHeight = window.innerHeight;
@@ -104,6 +104,11 @@ class CyberStrikerApp {
     this.canvas.height = Math.round(window.innerHeight * dpr);
     this.canvas.style.width = window.innerWidth + 'px';
     this.canvas.style.height = window.innerHeight + 'px';
+
+    if (this.ctx) {
+      this.ctx.imageSmoothingEnabled = true;
+      this.ctx.imageSmoothingQuality = 'high';
+    }
 
     // 戰鬥擂台寬度與高度全面自適應螢幕，無任何被擋住的不可抵達區域
     combatEngine.arenaWidth = window.innerWidth;
@@ -991,8 +996,10 @@ class CyberStrikerApp {
     const w = this.logicalWidth || window.innerWidth;
     const h = this.logicalHeight || window.innerHeight;
 
-    // 清除畫布並重設高解析度縮放矩陣
+    // 清除畫布並重設高解析度縮放矩陣與最高品質平滑反鋸齒
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0, 0, w, h);
 
     // 1. 繪製多主題經典戰鬥場景 (Multi-Themed Battle Stage: 天下第一武道會、斯塔克大樓天台、那美克星、賽博矩陣)
