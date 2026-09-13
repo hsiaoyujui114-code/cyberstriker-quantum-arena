@@ -11499,12 +11499,12 @@
     updatePlatforms(arenaWidth = this.arenaWidth, floorY = this.floorY) {
       this.arenaWidth = arenaWidth;
       this.floorY = floorY;
-      const w = Math.min(260, Math.max(180, Math.round(arenaWidth * 0.22)));
-      const leftX = Math.round(arenaWidth * 0.14);
-      const rightX = Math.round(arenaWidth * 0.86 - w);
+      const w = Math.min(280, Math.max(190, Math.round(arenaWidth * 0.23)));
+      const leftX = Math.round(arenaWidth * 0.13);
+      const rightX = Math.round(arenaWidth * 0.87 - w);
       const centerX = Math.round((arenaWidth - w) / 2);
-      const lowerY = Math.round(floorY - 145);
-      const upperY = Math.round(floorY - 265);
+      const lowerY = Math.round(floorY - 120);
+      const upperY = Math.round(floorY - 225);
       this.platforms = [
         { id: "plat_left", x: leftX, y: lowerY, width: w, height: 18, color: "#00f3ff" },
         { id: "plat_right", x: rightX, y: lowerY, width: w, height: 18, color: "#ff007f" },
@@ -11548,6 +11548,10 @@
         facing: id === 1 ? 1 : -1,
         isGrounded: true,
         currentPlatform: null,
+        hasDoubleJump: true,
+        dropThroughCooldown: 0,
+        lastDownTapTimer: 0,
+        prevDownInput: false,
         maxHp: 1e3,
         hp: 1e3,
         state: "idle",
@@ -11746,32 +11750,49 @@
           char.comboDamage = 0;
         }
       }
+      if (char.dropThroughCooldown > 0) char.dropThroughCooldown--;
+      if (char.lastDownTapTimer > 0) char.lastDownTapTimer--;
       const moveY = input ? input.y || 0 : 0;
-      if (char.isGrounded && char.currentPlatform && moveY > 0.55) {
+      const moveX = input ? input.x || 0 : 0;
+      const isDownInput = input && (input.down || moveY > 0.35);
+      if (isDownInput && !char.prevDownInput) {
+        if (char.lastDownTapTimer > 0) {
+          char.doubleTapDown = true;
+        }
+        char.lastDownTapTimer = 16;
+      }
+      char.prevDownInput = isDownInput;
+      const isJumpInput = input && (input.jump || moveY < -0.35);
+      const wantDrop = input && (input.dropThrough || isDownInput && isJumpInput || char.doubleTapDown);
+      char.doubleTapDown = false;
+      if (char.isGrounded && char.currentPlatform && wantDrop) {
         char.isGrounded = false;
-        char.y += 6;
-        char.vy = 2;
+        char.y += 8;
+        char.vy = 2.5;
         char.currentPlatform = null;
+        char.dropThroughCooldown = 18;
+        soundEngine.playHit("slide");
       }
       const prevY = char.y;
       if (!char.isGrounded) {
-        char.vy += 0.66;
-        if (input && Math.abs(input.x || 0) > 0.1) {
-          char.vx += (input.x || 0) * 0.55;
-          char.vx = Math.max(-5, Math.min(5, char.vx));
+        char.vy += 0.64;
+        if (input && Math.abs(moveX) > 0.1) {
+          char.vx += moveX * 0.55;
+          char.vx = Math.max(-5.2, Math.min(5.2, char.vx));
         }
         char.x += char.vx;
         char.y += char.vy;
         let landedOnPlatform = false;
-        if (char.vy >= 0) {
+        if (char.vy >= 0 && (!char.dropThroughCooldown || char.dropThroughCooldown <= 0)) {
           for (const plat of this.platforms) {
-            const inX = char.x >= plat.x - 12 && char.x <= plat.x + plat.width + 12;
-            if (inX && prevY <= plat.y + 4 && char.y >= plat.y) {
+            const inX = char.x >= plat.x - 14 && char.x <= plat.x + plat.width + 14;
+            if (inX && prevY <= plat.y + 6 && char.y >= plat.y && char.y <= plat.y + Math.max(24, char.vy + 8)) {
               char.y = plat.y;
               char.vy = 0;
               char.vx *= 0.6;
               char.isGrounded = true;
               char.currentPlatform = plat;
+              char.hasDoubleJump = true;
               char.facing = char.x < opp.x ? 1 : -1;
               if (char.state === "jump") {
                 char.state = "idle";
@@ -11789,6 +11810,7 @@
           char.vx = 0;
           char.isGrounded = true;
           char.currentPlatform = null;
+          char.hasDoubleJump = true;
           char.facing = char.x < opp.x ? 1 : -1;
           if (char.state === "jump") {
             char.state = "idle";
@@ -11799,9 +11821,16 @@
       } else {
         if (char.currentPlatform) {
           const plat = char.currentPlatform;
-          if (char.x < plat.x - 16 || char.x > plat.x + plat.width + 16) {
+          char.y = plat.y;
+          char.hasDoubleJump = true;
+          if (char.x < plat.x - 12 || char.x > plat.x + plat.width + 12) {
             char.isGrounded = false;
             char.currentPlatform = null;
+            char.vy = 0.5;
+            if (char.state === "idle" || char.state === "walk_fwd" || char.state === "walk_back") {
+              char.state = "jump";
+              char.stateTime = 0;
+            }
           }
         }
         char.x += char.vx;
@@ -11825,6 +11854,24 @@
         case "jump":
           if (!char.currentAction) {
             char.facing = char.x < opp.x ? 1 : -1;
+          }
+          const isAirJumpInput = input && (input.jump || moveY < -0.35);
+          if (isAirJumpInput && char.hasDoubleJump && !char.currentAction && char.stateTime >= 6) {
+            char.hasDoubleJump = false;
+            char.vy = -13.8;
+            if (Math.abs(moveX) > 0.1) {
+              char.vx = moveX * 4.8;
+            }
+            char.stateTime = 0;
+            soundEngine.playHit("dp");
+            this.shockwaves.push({
+              x: char.x,
+              y: char.y,
+              width: 70,
+              height: 18,
+              color: char.skin && char.skin.themeColor ? char.skin.themeColor : "#00f3ff",
+              duration: 14
+            });
           }
           if (input) {
             if (input.skill1 && char.cooldowns[0] <= 0) {
@@ -11941,11 +11988,13 @@
         }
         return;
       }
-      if (moveY < -0.35 && char.isGrounded) {
+      const isJumpPressed = moveY < -0.35 || input && input.jump && !input.down;
+      if (isJumpPressed && char.isGrounded) {
         char.isGrounded = false;
         char.currentPlatform = null;
-        char.vy = -13.6;
-        char.vx = moveX * 4.6;
+        char.hasDoubleJump = true;
+        char.vy = -14.4;
+        char.vx = moveX * 4.8;
         char.state = "jump";
         char.stateTime = 0;
         char.isGuarding = false;
@@ -12272,7 +12321,8 @@
         type: "ground_wave",
         name: "\u5730\u88C2\u722C\u884C\u9707\u6CE2",
         x: char.x + char.facing * 36,
-        y: this.floorY - 14,
+        y: (char.currentPlatform ? char.currentPlatform.y : this.floorY) - 14,
+        platform: char.currentPlatform || null,
         vx: char.facing * 7,
         vy: 0,
         radius: 13,
@@ -12803,7 +12853,8 @@
           duration: 16
         });
         const isInFront = char.facing === 1 && opp.x > char.x || char.facing === -1 && opp.x < char.x;
-        if (isInFront && opp.y >= this.floorY - 120) {
+        const isBeamY = Math.abs(char.y - 74 - (opp.y - 50)) <= 75;
+        if (isInFront && isBeamY) {
           this._applyHit(char, opp, action);
         }
         return;
@@ -13070,7 +13121,14 @@
             }
           }
         } else if (p.type === "ground_wave") {
-          p.y = this.floorY - 14;
+          if (p.platform) {
+            p.y = p.platform.y - 14;
+            if (p.x < p.platform.x - 10 || p.x > p.platform.x + p.platform.width + 10) {
+              p.platform = null;
+            }
+          } else {
+            p.y = this.floorY - 14;
+          }
         } else if (p.type === "vortex" && target) {
           const dist2 = Math.abs(p.x - target.x);
           if (dist2 < 220) {
@@ -13352,7 +13410,7 @@
       const dy = Math.abs(p1.y - p2.y);
       const p1Air = !p1.isGrounded;
       const p2Air = !p2.isGrounded;
-      if ((p1Air || p2Air) && dy > 35) {
+      if (dy > 35) {
         p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
         p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
         return;
@@ -13915,9 +13973,20 @@
       this.currentDelay++;
       if (this.currentDelay >= targetDelay) {
         this.currentDelay = 0;
-        this.bufferedDecision = this._makeDecision(aiChar, playerChar, combatEngine2);
+        this.bufferedDecision = this._filterPlatformEdges(aiChar, this._makeDecision(aiChar, playerChar, combatEngine2));
       }
       return this.bufferedDecision;
+    }
+    /**
+     * 在浮空平台上平穩作戰，防止地面走位時無意識滑落平台
+     */
+    _filterPlatformEdges(ai, input) {
+      if (ai && ai.currentPlatform && input && input.y >= 0 && !input.punch && !input.kick && !input.skill1 && !input.skill2 && !input.skill3 && !input.dropThrough) {
+        const plat = ai.currentPlatform;
+        if (ai.x <= plat.x + 18 && input.x < 0) input.x = 0;
+        if (ai.x >= plat.x + plat.width - 18 && input.x > 0) input.x = 0;
+      }
+      return input;
     }
     /**
      * 空中戰鬥決策 (Airborne Combat Execution)
@@ -13928,7 +13997,13 @@
       const dist = Math.abs(ai.x - player.x);
       const dirToPlayer = ai.x < player.x ? 1 : -1;
       input.x = dirToPlayer;
-      if (dist < 175 && !ai.currentAction) {
+      if (ai.hasDoubleJump && player.y < ai.y - 45 && ai.vy > -3) {
+        input.jump = true;
+        input.y = -1;
+        input.x = dirToPlayer;
+        return input;
+      }
+      if (dist < 175 && Math.abs(ai.y - player.y) < 125 && !ai.currentAction) {
         let attackChance = 0.5;
         if (this.difficulty === "nightmare") attackChance = 0.95;
         else if (this.difficulty === "hard") attackChance = 0.85;
@@ -13964,6 +14039,34 @@
         }
         return false;
       });
+      if (player.y < ai.y - 45) {
+        const targetPlat = engine?.platforms?.find((p) => Math.abs(p.y - player.y) < 20 && player.x >= p.x - 30 && player.x <= p.x + p.width + 30) || engine?.platforms?.find((p) => p.y < ai.y - 30 && Math.abs(player.x - (p.x + p.width / 2)) < p.width * 0.9);
+        const platTargetX = targetPlat ? targetPlat.x + targetPlat.width / 2 : player.x;
+        const distToPlatX = Math.abs(ai.x - platTargetX);
+        if (distToPlatX > 90) {
+          input.x = ai.x < platTargetX ? 1 : -1;
+          return input;
+        } else {
+          input.y = -1;
+          input.jump = true;
+          input.x = dirToPlayer;
+          return input;
+        }
+      } else if (ai.currentPlatform && (!player.currentPlatform || player.y > ai.y + 45)) {
+        if (Math.random() < 0.6) {
+          input.y = -1;
+          input.jump = true;
+          input.x = dirToPlayer;
+          input.kick = true;
+          return input;
+        } else {
+          input.down = true;
+          input.jump = true;
+          input.dropThrough = true;
+          input.y = 1;
+          return input;
+        }
+      }
       if (this.difficulty === "nightmare") {
         if (ai.state === "hit_stun" && ai.burstMeter >= ai.burstMax && ai.burstAvailable) {
           input.burst = true;
@@ -15248,13 +15351,18 @@
       let y = 0;
       if (k["KeyA"] || k["ArrowLeft"]) x -= 1;
       if (k["KeyD"] || k["ArrowRight"]) x += 1;
-      if (k["KeyW"] || k["ArrowUp"] || k["Space"]) y -= 1;
-      if (k["KeyS"] || k["ArrowDown"]) y += 1;
+      const isUp = !!(k["KeyW"] || k["ArrowUp"] || k["Space"] || m.jump || m.y < -0.35);
+      const isDown = !!(k["KeyS"] || k["ArrowDown"] || m.down || m.y > 0.35);
+      if (isUp && !isDown) y -= 1;
+      if (isDown && !isUp) y += 1;
       if (Math.abs(m.x) > 0.1) x = m.x;
-      if (Math.abs(m.y) > 0.1) y = m.y;
+      const dropThrough = isDown && isUp;
       return {
         x,
-        y,
+        y: dropThrough ? 1 : y,
+        jump: isUp,
+        down: isDown,
+        dropThrough,
         punch: !!(k["KeyJ"] || m.punch),
         kick: !!(k["KeyK"] || m.kick),
         guard: !!(k["KeyL"] || k["ShiftLeft"] || k["ShiftRight"] || m.guard),
@@ -15271,11 +15379,17 @@
       let y = 0;
       if (k["ArrowLeft"]) x -= 1;
       if (k["ArrowRight"]) x += 1;
-      if (k["ArrowUp"]) y -= 1;
-      if (k["ArrowDown"]) y += 1;
+      const isUp = !!(k["ArrowUp"] || k["Numpad8"]);
+      const isDown = !!(k["ArrowDown"] || k["Numpad5"]);
+      if (isUp && !isDown) y -= 1;
+      if (isDown && !isUp) y += 1;
+      const dropThrough = isDown && isUp;
       return {
         x,
-        y,
+        y: dropThrough ? 1 : y,
+        jump: isUp,
+        down: isDown,
+        dropThrough,
         punch: !!(k["Numpad1"] || k["Digit1"]),
         kick: !!(k["Numpad2"] || k["Digit2"]),
         guard: !!(k["Numpad0"] || k["NumpadDecimal"]),

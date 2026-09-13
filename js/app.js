@@ -944,16 +944,23 @@ class CyberStrikerApp {
     let y = 0;
     if (k['KeyA'] || k['ArrowLeft']) x -= 1;
     if (k['KeyD'] || k['ArrowRight']) x += 1;
-    if (k['KeyW'] || k['ArrowUp'] || k['Space']) y -= 1;
-    if (k['KeyS'] || k['ArrowDown']) y += 1;
+    const isUp = !!(k['KeyW'] || k['ArrowUp'] || k['Space'] || m.jump || (m.y < -0.35));
+    const isDown = !!(k['KeyS'] || k['ArrowDown'] || m.down || (m.y > 0.35));
+
+    if (isUp && !isDown) y -= 1;
+    if (isDown && !isUp) y += 1;
 
     // 疊加行動端觸控搖桿
     if (Math.abs(m.x) > 0.1) x = m.x;
-    if (Math.abs(m.y) > 0.1) y = m.y;
+
+    const dropThrough = isDown && isUp;
 
     return {
       x,
-      y,
+      y: dropThrough ? 1 : y,
+      jump: isUp,
+      down: isDown,
+      dropThrough,
       punch: !!(k['KeyJ'] || m.punch),
       kick: !!(k['KeyK'] || m.kick),
       guard: !!(k['KeyL'] || k['ShiftLeft'] || k['ShiftRight'] || m.guard),
@@ -972,12 +979,20 @@ class CyberStrikerApp {
     let y = 0;
     if (k['ArrowLeft']) x -= 1;
     if (k['ArrowRight']) x += 1;
-    if (k['ArrowUp']) y -= 1;
-    if (k['ArrowDown']) y += 1;
+    const isUp = !!(k['ArrowUp'] || k['Numpad8']);
+    const isDown = !!(k['ArrowDown'] || k['Numpad5']);
+
+    if (isUp && !isDown) y -= 1;
+    if (isDown && !isUp) y += 1;
+
+    const dropThrough = isDown && isUp;
 
     return {
       x,
-      y,
+      y: dropThrough ? 1 : y,
+      jump: isUp,
+      down: isDown,
+      dropThrough,
       punch: !!(k['Numpad1'] || k['Digit1']),
       kick: !!(k['Numpad2'] || k['Digit2']),
       guard: !!(k['Numpad0'] || k['NumpadDecimal']),

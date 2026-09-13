@@ -52,12 +52,12 @@ export class CombatEngine {
   updatePlatforms(arenaWidth = this.arenaWidth, floorY = this.floorY) {
     this.arenaWidth = arenaWidth;
     this.floorY = floorY;
-    const w = Math.min(260, Math.max(180, Math.round(arenaWidth * 0.22)));
-    const leftX = Math.round(arenaWidth * 0.14);
-    const rightX = Math.round(arenaWidth * 0.86 - w);
+    const w = Math.min(280, Math.max(190, Math.round(arenaWidth * 0.23)));
+    const leftX = Math.round(arenaWidth * 0.13);
+    const rightX = Math.round(arenaWidth * 0.87 - w);
     const centerX = Math.round((arenaWidth - w) / 2);
-    const lowerY = Math.round(floorY - 145);
-    const upperY = Math.round(floorY - 265);
+    const lowerY = Math.round(floorY - 120);
+    const upperY = Math.round(floorY - 225);
 
     this.platforms = [
       { id: 'plat_left', x: leftX, y: lowerY, width: w, height: 18, color: '#00f3ff' },
@@ -110,6 +110,10 @@ export class CombatEngine {
       facing: id === 1 ? 1 : -1,
       isGrounded: true,
       currentPlatform: null,
+      hasDoubleJump: true,
+      dropThroughCooldown: 0,
+      lastDownTapTimer: 0,
+      prevDownInput: false,
       maxHp: 1000,
       hp: 1000,
       state: 'idle', // idle, walk_fwd, walk_back, jump, crouch, high_guard, low_guard, light_punch, heavy_kick, ranged_attack, skill, hit_stun, knockdown, wakeup, super_move
@@ -340,39 +344,59 @@ export class CombatEngine {
       }
     }
 
-    // 平台下跳判定 (在平台上按住下 + 跳躍或下鍵可穿透跳下)
+    if (char.dropThroughCooldown > 0) char.dropThroughCooldown--;
+    if (char.lastDownTapTimer > 0) char.lastDownTapTimer--;
+
     const moveY = input ? (input.y || 0) : 0;
-    if (char.isGrounded && char.currentPlatform && moveY > 0.55) {
+    const moveX = input ? (input.x || 0) : 0;
+    const isDownInput = input && (input.down || moveY > 0.35);
+    if (isDownInput && !char.prevDownInput) {
+      if (char.lastDownTapTimer > 0) {
+        char.doubleTapDown = true;
+      }
+      char.lastDownTapTimer = 16;
+    }
+    char.prevDownInput = isDownInput;
+
+    const isJumpInput = input && (input.jump || moveY < -0.35);
+    const wantDrop = input && (input.dropThrough || (isDownInput && isJumpInput) || char.doubleTapDown);
+    char.doubleTapDown = false;
+
+    // 平台下跳判定 (在浮空平台上：按住「下 + 跳躍」或快速雙擊「下」穿透跳下；單純按住「下」則正常下蹲與下段攻防)
+    if (char.isGrounded && char.currentPlatform && wantDrop) {
       char.isGrounded = false;
-      char.y += 6;
-      char.vy = 2;
+      char.y += 8;
+      char.vy = 2.5;
       char.currentPlatform = null;
+      char.dropThroughCooldown = 18;
+      soundEngine.playHit('slide');
     }
 
     const prevY = char.y;
 
     // 重力與空中運動物理 (爽快回彈，起跳下落節奏敏捷扎實)
     if (!char.isGrounded) {
-      char.vy += 0.66; // 敏捷自然重力
+      char.vy += 0.64; // 敏捷自然重力
       // 空中水平操縱轉向 (Air Control)
-      if (input && Math.abs(input.x || 0) > 0.1) {
-        char.vx += (input.x || 0) * 0.55;
-        char.vx = Math.max(-5.0, Math.min(5.0, char.vx));
+      if (input && Math.abs(moveX) > 0.1) {
+        char.vx += moveX * 0.55;
+        char.vx = Math.max(-5.2, Math.min(5.2, char.vx));
       }
       char.x += char.vx;
       char.y += char.vy;
 
-      // 1. 懸浮空中平台著陸檢測 (下落時 vy >= 0)
+      // 1. 懸浮空中平台著陸檢測 (下落時 vy >= 0 且非下跳穿透冷卻中)
       let landedOnPlatform = false;
-      if (char.vy >= 0) {
+      if (char.vy >= 0 && (!char.dropThroughCooldown || char.dropThroughCooldown <= 0)) {
         for (const plat of this.platforms) {
-          const inX = char.x >= plat.x - 12 && char.x <= plat.x + plat.width + 12;
-          if (inX && prevY <= plat.y + 4 && char.y >= plat.y) {
+          const inX = char.x >= plat.x - 14 && char.x <= plat.x + plat.width + 14;
+          if (inX && prevY <= plat.y + 6 && char.y >= plat.y && char.y <= plat.y + Math.max(24, char.vy + 8)) {
             char.y = plat.y;
             char.vy = 0;
             char.vx *= 0.6;
             char.isGrounded = true;
             char.currentPlatform = plat;
+            char.hasDoubleJump = true; // 著陸重置空中二段跳
             char.facing = char.x < opp.x ? 1 : -1;
             if (char.state === 'jump') {
               char.state = 'idle';
@@ -392,6 +416,7 @@ export class CombatEngine {
         char.vx = 0;
         char.isGrounded = true;
         char.currentPlatform = null;
+        char.hasDoubleJump = true; // 著陸重置空中二段跳
         char.facing = char.x < opp.x ? 1 : -1; // 落地確保面向對手
         if (char.state === 'jump') {
           char.state = 'idle';
@@ -400,13 +425,20 @@ export class CombatEngine {
         }
       }
     } else {
-      // 在地面或平台上：
+      // 在地面或浮空平台上：
       if (char.currentPlatform) {
         const plat = char.currentPlatform;
-        // 走出平台邊緣，進入下落
-        if (char.x < plat.x - 16 || char.x > plat.x + plat.width + 16) {
+        char.y = plat.y; // 鎖定在平台表面，平整站立與戰鬥
+        char.hasDoubleJump = true;
+        // 走出平台邊緣，進入空中下落
+        if (char.x < plat.x - 12 || char.x > plat.x + plat.width + 12) {
           char.isGrounded = false;
           char.currentPlatform = null;
+          char.vy = 0.5;
+          if (char.state === 'idle' || char.state === 'walk_fwd' || char.state === 'walk_back') {
+            char.state = 'jump';
+            char.stateTime = 0;
+          }
         }
       }
       char.x += char.vx;
@@ -439,6 +471,26 @@ export class CombatEngine {
         // 空中自動朝向對手（若無正在出招）
         if (!char.currentAction) {
           char.facing = char.x < opp.x ? 1 : -1;
+        }
+
+        // 0. 空中二段跳 (Double Jump / Air Jump)
+        const isAirJumpInput = input && (input.jump || moveY < -0.35);
+        if (isAirJumpInput && char.hasDoubleJump && !char.currentAction && char.stateTime >= 6) {
+          char.hasDoubleJump = false;
+          char.vy = -13.8; // 爽快二段跳升空
+          if (Math.abs(moveX) > 0.1) {
+            char.vx = moveX * 4.8;
+          }
+          char.stateTime = 0;
+          soundEngine.playHit('dp');
+          this.shockwaves.push({
+            x: char.x,
+            y: char.y,
+            width: 70,
+            height: 18,
+            color: char.skin && char.skin.themeColor ? char.skin.themeColor : '#00f3ff',
+            duration: 14
+          });
         }
 
         // 1. 在空中發動技能 (Air Skill Trigger!)
@@ -578,12 +630,14 @@ export class CombatEngine {
       return;
     }
 
-    // 4. 起跳 (爽快敏捷起跳弧度，手感扎實有力)
-    if (moveY < -0.35 && char.isGrounded) {
+    // 4. 起跳 (爽快敏捷起跳弧度，手感扎實有力，支援從地面或浮空平台起跳)
+    const isJumpPressed = (moveY < -0.35 || (input && input.jump && !input.down));
+    if (isJumpPressed && char.isGrounded) {
       char.isGrounded = false;
       char.currentPlatform = null;
-      char.vy = -13.6; // 敏捷爽快起跳
-      char.vx = moveX * 4.6; // 流暢前跳/後跳位移
+      char.hasDoubleJump = true; // 起跳後賦予空中二段跳
+      char.vy = -14.4; // 敏捷爽快起跳，輕鬆躍上浮空平台
+      char.vx = moveX * 4.8; // 流暢前跳/後跳位移
       char.state = 'jump';
       char.stateTime = 0;
       char.isGuarding = false;
@@ -944,7 +998,8 @@ export class CombatEngine {
       type: 'ground_wave',
       name: '地裂爬行震波',
       x: char.x + char.facing * 36,
-      y: this.floorY - 14,
+      y: (char.currentPlatform ? char.currentPlatform.y : this.floorY) - 14,
+      platform: char.currentPlatform || null,
       vx: char.facing * 7.0,
       vy: 0,
       radius: 13,
@@ -1539,9 +1594,10 @@ export class CombatEngine {
         color: char.skin.themeColor,
         duration: 16
       });
-      // 判定對手是否在前方
+      // 判定對手是否在前方且處於巨光束高度範圍內
       const isInFront = (char.facing === 1 && opp.x > char.x) || (char.facing === -1 && opp.x < char.x);
-      if (isInFront && opp.y >= this.floorY - 120) {
+      const isBeamY = Math.abs((char.y - 74) - (opp.y - 50)) <= 75;
+      if (isInFront && isBeamY) {
         this._applyHit(char, opp, action);
       }
       return;
@@ -1870,8 +1926,15 @@ export class CombatEngine {
           }
         }
       } else if (p.type === 'ground_wave') {
-        // 地裂爬行波貼地滑行
-        p.y = this.floorY - 14;
+        // 地裂爬行波貼地滑行 (若在浮空平台上則貼平台表面，離台後自然落至擂台地面)
+        if (p.platform) {
+          p.y = p.platform.y - 14;
+          if (p.x < p.platform.x - 10 || p.x > p.platform.x + p.platform.width + 10) {
+            p.platform = null;
+          }
+        } else {
+          p.y = this.floorY - 14;
+        }
       } else if (p.type === 'vortex' && target) {
         // 虛空引力黑洞：將對手緩慢吸引向球心
         const dist = Math.abs(p.x - target.x);
@@ -2176,13 +2239,13 @@ export class CombatEngine {
       return;
     }
 
-    // 2. 空中越頂跳躍檢測 (Jump Over / Cross-up)
+    // 2. 高低差身位與空中越頂檢測 (一人在浮空平台上、一人在地面，或空中躍頂跳躍)
     const dy = Math.abs(p1.y - p2.y);
     const p1Air = !p1.isGrounded;
     const p2Air = !p2.isGrounded;
 
-    // 若有角色在空中且高度差超過 35px，代表處於越頂身位，完全不阻擋 X 軸移動，順暢越過對手頭頂換邊
-    if ((p1Air || p2Air) && dy > 35) {
+    // 若雙方高度差超過 35px，代表處於不同高低平面或空中越頂身位，完全不阻擋 X 軸移動，順暢交錯
+    if (dy > 35) {
       p1.x = Math.max(50, Math.min(this.arenaWidth - 50, p1.x));
       p2.x = Math.max(50, Math.min(this.arenaWidth - 50, p2.x));
       return;

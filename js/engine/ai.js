@@ -46,10 +46,22 @@ export class AiController {
     this.currentDelay++;
     if (this.currentDelay >= targetDelay) {
       this.currentDelay = 0;
-      this.bufferedDecision = this._makeDecision(aiChar, playerChar, combatEngine);
+      this.bufferedDecision = this._filterPlatformEdges(aiChar, this._makeDecision(aiChar, playerChar, combatEngine));
     }
 
     return this.bufferedDecision;
+  }
+
+  /**
+   * 在浮空平台上平穩作戰，防止地面走位時無意識滑落平台
+   */
+  _filterPlatformEdges(ai, input) {
+    if (ai && ai.currentPlatform && input && input.y >= 0 && !input.punch && !input.kick && !input.skill1 && !input.skill2 && !input.skill3 && !input.dropThrough) {
+      const plat = ai.currentPlatform;
+      if (ai.x <= plat.x + 18 && input.x < 0) input.x = 0;
+      if (ai.x >= plat.x + plat.width - 18 && input.x > 0) input.x = 0;
+    }
+    return input;
   }
 
   /**
@@ -64,8 +76,16 @@ export class AiController {
     // 空中朝對手方向維持壓迫走位慣性
     input.x = dirToPlayer;
 
+    // 若玩家處於更高處 (例如高空懸浮平台)，且 AI 尚具備空中二段跳，適時發動二段跳追擊
+    if (ai.hasDoubleJump && player.y < ai.y - 45 && ai.vy > -3) {
+      input.jump = true;
+      input.y = -1;
+      input.x = dirToPlayer;
+      return input;
+    }
+
     // 接近對手時主動發動空中打擊 (跃空重飞踢為中段判定，不可蹲防且強制擊倒！)
-    if (dist < 175 && !ai.currentAction) {
+    if (dist < 175 && Math.abs(ai.y - player.y) < 125 && !ai.currentAction) {
       let attackChance = 0.5;
       if (this.difficulty === 'nightmare') attackChance = 0.95;
       else if (this.difficulty === 'hard') attackChance = 0.85;
@@ -119,6 +139,44 @@ export class AiController {
       }
       return false;
     });
+
+    // ─── 浮空平台自主導航與跨層追擊 (Platform Navigation & Pursuit) ───
+    if (player.y < ai.y - 45) {
+      // 玩家在上方浮空平台上，AI 智能尋路起跳躍上平台
+      const targetPlat = engine?.platforms?.find(p => Math.abs(p.y - player.y) < 20 && player.x >= p.x - 30 && player.x <= p.x + p.width + 30)
+                         || engine?.platforms?.find(p => p.y < ai.y - 30 && Math.abs(player.x - (p.x + p.width / 2)) < p.width * 0.9);
+      
+      const platTargetX = targetPlat ? (targetPlat.x + targetPlat.width / 2) : player.x;
+      const distToPlatX = Math.abs(ai.x - platTargetX);
+
+      // 若 AI 尚未進入跳台下方起跳範圍，先快步移動到跳台下方
+      if (distToPlatX > 90) {
+        input.x = ai.x < platTargetX ? 1 : -1;
+        return input;
+      } else {
+        // 到達跳台下方，強力起跳躍上浮空平台
+        input.y = -1;
+        input.jump = true;
+        input.x = dirToPlayer;
+        return input;
+      }
+    } else if (ai.currentPlatform && (!player.currentPlatform || player.y > ai.y + 45)) {
+      // AI 在浮空平台上，而玩家在下方地面
+      // 60% 機率發動俯衝躍空飛踢，40% 穿透跳下追擊
+      if (Math.random() < 0.6) {
+        input.y = -1;
+        input.jump = true;
+        input.x = dirToPlayer;
+        input.kick = true;
+        return input;
+      } else {
+        input.down = true;
+        input.jump = true;
+        input.dropThrough = true;
+        input.y = 1;
+        return input;
+      }
+    }
 
     // ──────────────────────────────────────────
     // 1. 惡夢 (Nightmare) AI：極致反應、完美反凹、跳入進攻與全防護罩體系
