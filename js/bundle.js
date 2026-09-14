@@ -1,15 +1,14 @@
 (() => {
   // js/data/skills.js
   var SKILLS = [
-    // ─── 核心飛行道具 & 遠程武器 (Ranged Weapons Arsenal) ───
+    // ─── 15 大飛行道具與遠程神兵武器 (Ranged Weapons Arsenal - 15 款純攻擊) ───
     {
       id: "SK-01",
       name: "\u80FD\u91CF\u8108\u885D\u5F48",
       category: "ranged",
       type: "projectile",
-      typeName: "\u76F4\u7DDA\u5C04\u64CA / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u76F4\u7DDA\u5C04\u64CA / \u9060\u7A0B\u795E\u5175",
       cd: 0.8,
-      // 快速冷卻：迅捷壓制
       damage: 185,
       startup: 5,
       active: 60,
@@ -23,12 +22,11 @@
     },
     {
       id: "SK-10",
-      name: "\u8D85\u8F09\u7D42\u7D50\u7832",
+      name: "\u8D85\u8F09\u96E2\u5B50\u5DE8\u7832",
       category: "ranged",
       type: "ultimate_beam",
-      typeName: "\u8CAB\u7A7F\u5DE8\u7832 / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u8CAB\u7A7F\u5DE8\u7832 / \u9060\u7A0B\u795E\u5175",
       cd: 2.5,
-      // 快速冷卻
       damage: 340,
       startup: 10,
       active: 16,
@@ -46,7 +44,7 @@
       name: "\u8FFD\u8E64\u5FAE\u578B\u98DB\u5F48\u7FA4",
       category: "ranged",
       type: "homing_missiles",
-      typeName: "\u5C0E\u5F15\u98DB\u5F48 / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u5C0E\u5F15\u98DB\u5F48 / \u9060\u7A0B\u795E\u5175",
       cd: 1.4,
       damage: 210,
       startup: 4,
@@ -64,7 +62,7 @@
       name: "\u6298\u5C04\u7A1C\u93E1\u6FC0\u5149",
       category: "ranged",
       type: "bouncing_laser",
-      typeName: "\u5F48\u5C04\u6FC0\u5149 / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u5F48\u5C04\u6FC0\u5149 / \u9060\u7A0B\u795E\u5175",
       cd: 1.2,
       damage: 215,
       startup: 3,
@@ -73,7 +71,7 @@
       guardType: "all",
       chipRatio: 0.5,
       description: "\u767C\u5C04\u8D85\u9AD8\u901F\u5E7E\u4F55\u7A1C\u93E1\u5149\u675F\uFF0C\u78B0\u89F8\u908A\u754C\u64C2\u53F0\u8207\u5730\u9762\u6642\u81EA\u52D5\u6298\u5C04\u53CD\u5F48\uFF01",
-      counterGuide: "\u6CE8\u610F\u5149\u675F\u5F48\u5C04\u89D2\u5EA6\uFF0C\u5728\u53CD\u5F48\u8DEF\u5F91\u524D\u63D0\u524D\u958B\u555F\u9632\u8B77\u7F69\u6216\u8D77\u8DF3\u9A30\u7A7A\u3002",
+      counterGuide: "\u6CE8\u610F\u5149\u675F\u5F48\u5C04\u89D2\u5EA6\uFF0C\u5728\u53CD\u5F48\u8DEF\u5F91\u524D\u63D0\u524D\u8D77\u8DF3\u9A30\u7A7A\u6216\u9632\u79A6\u3002",
       icon: "fa-solid fa-bolt-lightning",
       color: "#a855f7"
     },
@@ -82,14 +80,13 @@
       name: "\u5929\u9802\u8ECC\u9053\u6253\u64CA",
       category: "ranged",
       type: "orbital_strike",
-      typeName: "\u8ECC\u9053\u91CD\u7832 / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u8ECC\u9053\u91CD\u7832 / \u9060\u7A0B\u795E\u5175",
       cd: 2,
       damage: 255,
       startup: 8,
       active: 18,
       recovery: 8,
       guardType: "stand_only",
-      // 天頂直擊中段判定，破蹲防！
       chipRatio: 0.5,
       knockdown: true,
       description: "\u547C\u53EB\u885B\u661F\u8ECC\u9053\u70AE\uFF0C\u9396\u5B9A\u5C0D\u624B\u5EA7\u6A19\u5F15\u5C0E\u5DE8\u578B\u96E2\u5B50\u5929\u96F7\u5782\u76F4\u8F5F\u64CA\uFF01\u4E0B\u8E72\u9632\u79A6\u7121\u6548\uFF01",
@@ -102,7 +99,7 @@
       name: "\u865B\u7A7A\u5F15\u529B\u9ED1\u6D1E\u7403",
       category: "ranged",
       type: "gravity_vortex",
-      typeName: "\u9ED1\u6D1E\u529B\u5834 / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u9ED1\u6D1E\u529B\u5834 / \u9060\u7A0B\u795E\u5175",
       cd: 2.2,
       damage: 200,
       startup: 5,
@@ -120,7 +117,7 @@
       name: "\u9AD8\u65AF\u72D9\u64CA\u7A7F\u7532\u91CD\u69CD",
       category: "ranged",
       type: "sniper_railgun",
-      typeName: "\u6975\u901F\u72D9\u64CA / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u6975\u901F\u72D9\u64CA / \u9060\u7A0B\u795E\u5175",
       cd: 1.1,
       damage: 245,
       startup: 3,
@@ -139,7 +136,7 @@
       name: "\u64F4\u6563\u5F0F\u96FB\u6F3F\u9730\u5F48\u69CD",
       category: "ranged",
       type: "plasma_shotgun",
-      typeName: "\u6247\u5F62\u9730\u5F48 / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u6247\u5F62\u9730\u5F48 / \u9060\u7A0B\u795E\u5175",
       cd: 1.3,
       damage: 250,
       startup: 4,
@@ -157,7 +154,7 @@
       name: "\u8108\u885D\u96FB\u78C1\u6D6E\u6E38\u7832",
       category: "ranged",
       type: "drone_funnel",
-      typeName: "\u81EA\u52D5\u6D6E\u6E38 / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u81EA\u52D5\u6D6E\u6E38 / \u9060\u7A0B\u795E\u5175",
       cd: 1.8,
       damage: 225,
       startup: 3,
@@ -166,7 +163,7 @@
       guardType: "all",
       chipRatio: 0.5,
       description: "\u53EC\u559A 2 \u67B6\u9AD8\u79D1\u6280\u6D6E\u6E38\u7121\u4EBA\u50DA\u6A5F\u74B0\u7E5E\u96A8\u884C\uFF0C\u81EA\u52D5\u5411\u5C0D\u624B\u767C\u5C04\u9023\u7E8C\u9AD8\u983B\u8108\u885D\u6FC0\u5149\uFF01",
-      counterGuide: "\u6D6E\u6E38\u6A5F\u6301\u7E8C\u5C04\u64CA\uFF0C\u5207\u5FCC\u76F2\u76EE\u6436\u653B\uFF0C\u5229\u7528\u9632\u8B77\u7F69\u64CB\u4E0B\u524D\u6CE2\u6FC0\u5149\u5F8C\u8FC5\u901F\u8FD1\u8EAB\u58D3\u5236\u3002",
+      counterGuide: "\u6D6E\u6E38\u6A5F\u6301\u7E8C\u5C04\u64CA\uFF0C\u5207\u5FCC\u76F2\u76EE\u6436\u653B\uFF0C\u5229\u7528\u9632\u5B88\u5316\u89E3\u524D\u6CE2\u6FC0\u5149\u5F8C\u8FC5\u901F\u8FD1\u8EAB\u58D3\u5236\u3002",
       icon: "fa-solid fa-satellite",
       color: "#10b981"
     },
@@ -175,7 +172,7 @@
       name: "\u6975\u51CD\u51B0\u971C\u7A7F\u900F\u7BAD",
       category: "ranged",
       type: "cryo_arrow",
-      typeName: "\u6E1B\u901F\u51B0\u7BAD / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u6E1B\u901F\u51B0\u7BAD / \u9060\u7A0B\u795E\u5175",
       cd: 1.4,
       damage: 205,
       startup: 4,
@@ -193,7 +190,7 @@
       name: "\u707C\u71B1\u71C3\u71D2\u69B4\u5F48\u69CD",
       category: "ranged",
       type: "incendiary_grenade",
-      typeName: "\u62CB\u7269\u69B4\u5F48 / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u62CB\u7269\u69B4\u5F48 / \u9060\u7A0B\u795E\u5175",
       cd: 1.6,
       damage: 220,
       startup: 5,
@@ -211,7 +208,7 @@
       name: "\u8FF4\u65CB\u96F7\u9706\u5149\u5203\u93E2",
       category: "ranged",
       type: "boomerang_blade",
-      typeName: "\u8FF4\u65CB\u98DB\u93E2 / \u9060\u7A0B\u6B66\u5668",
+      typeName: "\u8FF4\u65CB\u98DB\u93E2 / \u9060\u7A0B\u795E\u5175",
       cd: 1.2,
       damage: 230,
       startup: 3,
@@ -224,15 +221,68 @@
       icon: "fa-solid fa-compact-disc",
       color: "#eab308"
     },
-    // ─── 核心近戰武裝與體術 (Melee & Martial Skills) ───
+    {
+      id: "SK-21",
+      name: "\u5F71\u5206\u8EAB\u5341\u5B57\u624B\u88E1\u528D",
+      category: "ranged",
+      type: "multi_shuriken",
+      typeName: "\u4E09\u5411\u98DB\u5203 / \u9060\u7A0B\u795E\u5175",
+      cd: 1.1,
+      damage: 220,
+      startup: 3,
+      active: 65,
+      recovery: 6,
+      guardType: "all",
+      chipRatio: 0.5,
+      description: "\u540C\u6642\u5411\u524D\u65B9\u76F4\u7DDA\u8207\u659C\u5411\u98DB\u64F2 3 \u679A\u9AD8\u901F\u5F71\u5203\u624B\u88E1\u528D\uFF0C\u6247\u9762\u5C01\u9396\u8D77\u8DF3\u8207\u885D\u523A\uFF01",
+      counterGuide: "\u4E0A\u4E0B\u5F27\u5EA6\u5206\u4F48\u5747\u52FB\uFF0C\u9700\u5728\u4E2D\u8DDD\u96E2\u8E72\u9632\u6216\u7ACB\u9AD4\u8D70\u4F4D\u5C0B\u627E\u7A7A\u9699\u7A81\u9032\u3002",
+      icon: "fa-solid fa-asterisk",
+      color: "#818cf8"
+    },
+    {
+      id: "SK-24",
+      name: "\u96FB\u78C1\u5F15\u529B\u7206\u7E2E\u96F7",
+      category: "ranged",
+      type: "emp_mine",
+      typeName: "\u6D6E\u6E38\u5F15\u529B\u96F7 / \u9060\u7A0B\u795E\u5175",
+      cd: 1.7,
+      damage: 235,
+      startup: 4,
+      active: 90,
+      recovery: 7,
+      guardType: "all",
+      chipRatio: 0.5,
+      description: "\u5411\u524D\u6295\u64F2\u61F8\u6D6E\u96FB\u78C1\u529B\u5834\u96F7\uFF0C\u89F8\u78B0\u5C0D\u624B\u6216 2.5 \u79D2\u5F8C\u5287\u70C8\u7206\u7E2E\u8F5F\u98DB\u76EE\u6A19\uFF01",
+      counterGuide: "\u5207\u52FF\u8E0F\u5165\u5F15\u529B\u96F7\u534A\u5F91\uFF0C\u53EF\u5F15\u5C0E\u5C0D\u624B\u79FB\u958B\u6216\u7528\u9060\u7A0B\u5B50\u5F48\u63D0\u524D\u5F15\u7206\u3002",
+      icon: "fa-solid fa-land-mine-on",
+      color: "#c084fc"
+    },
+    {
+      id: "SK-28",
+      name: "\u91CF\u5B50\u6563\u88C2\u9AD8\u7206\u5F48",
+      category: "ranged",
+      type: "cluster_bomb",
+      typeName: "\u7A7A\u7206\u6563\u88C2 / \u9060\u7A0B\u795E\u5175",
+      cd: 1.5,
+      damage: 240,
+      startup: 4,
+      active: 75,
+      recovery: 7,
+      guardType: "all",
+      chipRatio: 0.5,
+      description: "\u5C04\u51FA\u9AD8\u7206\u91CF\u5B50\u706B\u7BAD\u5F48\uFF0C\u98DB\u884C\u9014\u4E2D\u6563\u88C2\u70BA\u591A\u679A\u5FAE\u805A\u80FD\u7206\u8F5F\u5B50\u6BCD\u5F48\uFF0C\u7C60\u7F69\u5EE3\u57DF\u7A7A\u5730\uFF01",
+      counterGuide: "\u5B50\u6BCD\u5F48\u6563\u843D\u7BC4\u570D\u5EE3\uFF0C\u9632\u5B88\u6642\u9700\u4FDD\u6301\u683C\u64CB\u59FF\u52E2\u76F4\u81F3\u591A\u6BB5\u7206\u7834\u5B8C\u5168\u7D50\u675F\u3002",
+      icon: "fa-solid fa-bomb",
+      color: "#fb923c"
+    },
+    // ─── 15 大近戰打擊與格鬥武藝 (Melee Martial Skills - 15 款純攻擊) ───
     {
       id: "SK-02",
       name: "\u5347\u9F8D\u885D\u5929\u64CA",
       category: "melee",
       type: "anti_air",
-      typeName: "\u5C0D\u7A7A\u7A81\u9032 / \u8FD1\u6230\u6B66\u6280",
+      typeName: "\u5C0D\u7A7A\u7A81\u9032 / \u8FD1\u6230\u6B66\u85DD",
       cd: 1.2,
-      // 快速冷卻
       damage: 235,
       startup: 3,
       active: 12,
@@ -250,9 +300,8 @@
       name: "\u97F3\u901F\u6ED1\u8E22",
       category: "melee",
       type: "low",
-      typeName: "\u4E0B\u6BB5\u7A81\u9032 / \u8FD1\u6230\u6B66\u6280",
+      typeName: "\u4E0B\u6BB5\u7A81\u9032 / \u8FD1\u6230\u6B66\u85DD",
       cd: 1,
-      // 快速冷卻
       damage: 190,
       startup: 4,
       active: 14,
@@ -270,9 +319,8 @@
       name: "\u8E8D\u7A7A\u9707\u5730\u7838",
       category: "melee",
       type: "overhead",
-      typeName: "\u4E2D\u6BB5\u7834\u9632 / \u8FD1\u6230\u6B66\u6280",
+      typeName: "\u4E2D\u6BB5\u7834\u9632 / \u8FD1\u6230\u6B66\u85DD",
       cd: 1.3,
-      // 快速冷卻
       damage: 240,
       startup: 8,
       active: 10,
@@ -287,21 +335,20 @@
     },
     {
       id: "SK-05",
-      name: "\u5E7B\u5F71\u53CD\u64CA\u58C1",
+      name: "\u5E7B\u5F71\u75BE\u98A8\u7834\u7532\u523A",
       category: "melee",
-      type: "parry",
-      typeName: "\u67B6\u62DB\u53CD\u5236 / \u6230\u8853\u6B66\u88DD",
-      cd: 1.5,
-      // 快速冷卻
-      damage: 275,
-      startup: 1,
-      active: 22,
+      type: "pierce_thrust",
+      typeName: "\u7834\u7532\u76F4\u523A / \u8FD1\u6230\u6B66\u85DD",
+      cd: 1.2,
+      damage: 255,
+      startup: 3,
+      active: 12,
       recovery: 6,
-      guardType: "none",
-      chipRatio: 0.5,
-      description: "\u5C55\u958B 22 \u5E40\u7684\u53CD\u64CA\u529B\u5834\u3002\u53D7\u8FD1\u8EAB\u8089\u640F\u6642\u76F4\u63A5\u5438\u6536\u50B7\u5BB3\u4E26\u53CD\u64CA\u64CA\u6688\u5C0D\u624B\u3002",
-      counterGuide: "\u770B\u898B\u67B6\u62DB\u529B\u5834\u5207\u52FF\u51FA\u62F3\uFF0C\u76F4\u63A5\u4F7F\u7528\u6307\u4EE4\u6454\u6280\uFF08SK-08\uFF09\u6216\u5F8C\u64A4\u7B49\u5F85\u6536\u62DB\u3002",
-      icon: "fa-solid fa-shield-halved",
+      guardType: "all",
+      chipRatio: 0.65,
+      description: "\u8EAB\u5316\u75BE\u5F71\u8D85\u9AD8\u901F\u5411\u524D\u7A81\u523A\uFF0C\u9644\u5E36\u8D85\u9AD8\u524A\u97CC\u7834\u7532\u503C\uFF0C\u5927\u5E45\u58D3\u8FEB\u5C0D\u624B\u9632\u79A6\uFF01",
+      counterGuide: "\u7A81\u523A\u901F\u5EA6\u6975\u5FEB\uFF0C\u88AB\u58D3\u5236\u6642\u4E0D\u53EF\u96A8\u610F\u51FA\u62F3\uFF0C\u9700\u5C0B\u627E\u523A\u64CA\u6536\u62DB\u7A7A\u6A94\u53CD\u64CA\u3002",
+      icon: "fa-solid fa-bolt",
       color: "#ec4899"
     },
     {
@@ -309,9 +356,8 @@
       name: "\u865B\u7A7A\u6298\u8E8D\u65AC",
       category: "melee",
       type: "teleport",
-      typeName: "\u4F4D\u79FB\u5947\u8972 / \u6230\u8853\u6B66\u88DD",
+      typeName: "\u4F4D\u79FB\u5947\u8972 / \u8FD1\u6230\u6B66\u85DD",
       cd: 1.8,
-      // 快速冷卻
       damage: 225,
       startup: 5,
       active: 8,
@@ -328,9 +374,8 @@
       name: "\u767E\u88C2\u9023\u64CA\u885D",
       category: "melee",
       type: "rush",
-      typeName: "\u9AD8\u6BB5\u58D3\u5236 / \u8FD1\u6230\u6B66\u6280",
+      typeName: "\u9AD8\u6BB5\u58D3\u5236 / \u8FD1\u6230\u6B66\u85DD",
       cd: 1.2,
-      // 快速冷卻
       damage: 260,
       startup: 4,
       active: 20,
@@ -347,9 +392,8 @@
       name: "\u78C1\u66B4\u91CD\u6454\u6295",
       category: "melee",
       type: "command_grab",
-      typeName: "\u6307\u4EE4\u6454\u6280 / \u8FD1\u6230\u6B66\u88DD",
+      typeName: "\u6307\u4EE4\u6454\u6280 / \u8FD1\u6230\u6B66\u85DD",
       cd: 1.6,
-      // 快速冷卻
       damage: 290,
       startup: 4,
       active: 6,
@@ -365,67 +409,198 @@
     },
     {
       id: "SK-09",
-      name: "\u5948\u7C73\u9707\u6CE2\u7F69",
+      name: "\u96F7\u9706\u9707\u6CE2\u88C2\u7A7A\u638C",
       category: "melee",
       type: "radial_blast",
-      typeName: "\u64CA\u9000\u9632\u8B77 / \u6230\u8853\u6B66\u88DD",
-      cd: 1.8,
-      // 快速冷卻
-      damage: 175,
+      typeName: "\u9707\u6CE2\u8F5F\u64CA / \u8FD1\u6230\u6B66\u85DD",
+      cd: 1.5,
+      damage: 215,
       startup: 3,
       active: 10,
       recovery: 6,
       guardType: "all",
       chipRatio: 0.5,
       knockback: 280,
-      description: "\u5468\u8EAB\u5411\u5916\u8FF8\u767C\u74B0\u5F62\u8108\u885D\u885D\u64CA\u6CE2\uFF0C\u5F37\u884C\u63A8\u958B\u8CBC\u8EAB\u5C0D\u624B\uFF0C\u5316\u89E3\u7248\u908A\u58D3\u5236\u5371\u6A5F\u3002",
-      counterGuide: "\u50B7\u5BB3\u8F03\u4F4E\u4F46\u64CA\u9000\u8DDD\u96E2\u6975\u9060\uFF0C\u907F\u514D\u8CBC\u8EAB\u8CAA\u5200\uFF0C\u4FDD\u6301\u4E2D\u8DDD\u96E2\u62C9\u626F\u3002",
-      icon: "fa-solid fa-atom",
+      description: "\u6C89\u8170\u84C4\u52E2\u5411\u524D\u65B9\u62CD\u51FA\u7206\u767C\u6027\u74B0\u5F62\u885D\u64CA\u6CE2\uFF0C\u4EE5\u5F37\u52C1\u6C23\u52C1\u91CD\u64CA\u4E26\u64CA\u9000\u8CBC\u8EAB\u5C0D\u624B\uFF01",
+      counterGuide: "\u64CA\u9000\u8DDD\u96E2\u6975\u9060\uFF0C\u907F\u514D\u5728\u7248\u908A\u76F2\u76EE\u8CBC\u8EAB\u6436\u653B\uFF0C\u4FDD\u6301\u4E2D\u8DDD\u96E2\u7ACB\u56DE\u62C9\u626F\u3002",
+      icon: "fa-solid fa-hand-holding-hand",
       color: "#14b8a6"
+    },
+    {
+      id: "SK-22",
+      name: "\u71BE\u708E\u70C8\u5730\u6CE2",
+      category: "melee",
+      type: "ground_fissure",
+      typeName: "\u5730\u88C2\u706B\u6D77 / \u8FD1\u6230\u6B66\u85DD",
+      cd: 1.3,
+      damage: 230,
+      startup: 5,
+      active: 16,
+      recovery: 7,
+      guardType: "crouch_only",
+      chipRatio: 0.5,
+      knockdown: true,
+      description: "\u731B\u64CA\u5730\u9762\u5D29\u88C2\u5730\u8868\uFF0C\u6CBF\u8457\u5730\u8868\u5674\u6E67\u4E00\u9053\u5411\u524D\u5954\u9A30\u7684\u70C8\u7130\u5730\u88C2\u885D\u64CA\u6CE2\uFF01",
+      counterGuide: "\u4E0B\u6BB5\u5730\u88C2\u653B\u64CA\uFF01\u7AD9\u7ACB\u9632\u79A6\u7121\u6548\uFF0C\u9700\u8D77\u8DF3\u8E8D\u904E\u6216\u7ACB\u5373\u4E0B\u8E72\u683C\u64CB\u3002",
+      icon: "fa-solid fa-volcano",
+      color: "#f97316"
+    },
+    {
+      id: "SK-23",
+      name: "\u75BE\u98A8\u9023\u74B0\u8FF4\u65CB\u8E22",
+      category: "melee",
+      type: "cyclone_kick",
+      typeName: "\u65CB\u98A8\u98DB\u8E22 / \u8FD1\u6230\u6B66\u85DD",
+      cd: 1.1,
+      damage: 245,
+      startup: 4,
+      active: 18,
+      recovery: 6,
+      guardType: "all",
+      chipRatio: 0.5,
+      description: "\u51CC\u7A7A\u5411\u524D\u65CB\u8F49\u6253\u51FA\u4E09\u6BB5\u75BE\u98A8\u70C8\u8E22\uFF0C\u7A7A\u4E2D\u5730\u9762\u5168\u8986\u84CB\uFF0C\u5177\u6709\u6975\u5F37\u7684\u6D6E\u7A7A\u8FFD\u64CA\u5224\u5B9A\uFF01",
+      counterGuide: "\u591A\u6BB5\u5224\u5B9A\u6301\u7E8C\u63A8\u9032\uFF0C\u9700\u5C08\u6CE8\u683C\u64CB\u76F4\u81F3\u7B2C\u4E09\u8173\u843D\u5730\u65B9\u53EF\u78BA\u53CD\u3002",
+      icon: "fa-solid fa-wind",
+      color: "#34d399"
+    },
+    {
+      id: "SK-25",
+      name: "\u87BA\u65CB\u97F3\u901F\u9738\u9AD4\u885D",
+      category: "melee",
+      type: "armor_charge",
+      typeName: "\u9738\u9AD4\u885D\u649E / \u8FD1\u6230\u6B66\u85DD",
+      cd: 1.4,
+      damage: 260,
+      startup: 3,
+      active: 14,
+      recovery: 8,
+      armor: true,
+      guardType: "all",
+      chipRatio: 0.5,
+      knockdown: true,
+      description: "\u8D77\u6B65\u5168\u8EAB\u8986\u84CB\u5F37\u97CC\u9738\u9AD4\u529B\u5834\uFF0C\u786C\u625B\u5C0D\u624B\u4E00\u6B21\u666E\u901A\u653B\u64CA\u4E26\u66B4\u529B\u649E\u98DB\u524D\u65B9\u5C0D\u624B\uFF01",
+      counterGuide: "\u9738\u9AD4\u671F\u9593\u514D\u75AB\u5E38\u898F\u786C\u76F4\uFF0C\u61C9\u5229\u7528\u6307\u4EE4\u6454\u6280\u6216\u8D77\u8DF3\u9583\u907F\u4F7F\u5176\u885D\u649E\u843D\u7A7A\u3002",
+      icon: "fa-solid fa-shield-virus",
+      color: "#e879f9"
+    },
+    {
+      id: "SK-26",
+      name: "\u6697\u5F71\u9396\u93C8\u91CD\u9328\u64CA",
+      category: "melee",
+      type: "chain_anchor",
+      typeName: "\u93C8\u5203\u91CD\u64CA / \u8FD1\u6230\u6B66\u85DD",
+      cd: 1.3,
+      damage: 250,
+      startup: 4,
+      active: 12,
+      recovery: 7,
+      guardType: "stand_only",
+      chipRatio: 0.5,
+      knockdown: true,
+      description: "\u7529\u52D5\u9AD8\u78B3\u92FC\u6A5F\u68B0\u6697\u5F71\u9396\u93C8\u81EA\u7A7A\u4E2D\u62BD\u64CA\u800C\u4E0B\uFF0C\u91CD\u7838\u5730\u9762\u9707\u61FE\u5C0D\u624B\uFF01\u4E0B\u8E72\u9632\u79A6\u7121\u6548\uFF01",
+      counterGuide: "\u4E2D\u6BB5\u91CD\u64CA\u4E0D\u53EF\u4E0B\u8E72\u9632\u79A6\uFF01\u770B\u6E96\u7529\u93C8\u52D5\u4F5C\u7ACB\u5373\u7AD9\u7ACB\u683C\u64CB\u3002",
+      icon: "fa-solid fa-link",
+      color: "#94a3b8"
+    },
+    {
+      id: "SK-27",
+      name: "\u51B0\u6676\u5730\u523A\u66B4\u6E67",
+      category: "melee",
+      type: "ice_spikes",
+      typeName: "\u5730\u523A\u5347\u6E67 / \u8FD1\u6230\u6B66\u85DD",
+      cd: 1.4,
+      damage: 240,
+      startup: 4,
+      active: 14,
+      recovery: 7,
+      guardType: "all",
+      chipRatio: 0.5,
+      knockdown: true,
+      description: "\u5C07\u6975\u5BD2\u51B0\u80FD\u91CF\u704C\u5165\u8173\u4E0B\uFF0C\u524D\u65B9\u5730\u9762\u77AC\u9593\u66B4\u6E67\u51FA\u4E00\u6392\u5C16\u92B3\u51B0\u6676\u7A81\u523A\u91CD\u5275\u76EE\u6A19\uFF01",
+      counterGuide: "\u51B0\u523A\u5F9E\u8173\u5E95\u5411\u524D\u8513\u5EF6\uFF0C\u770B\u898B\u51B0\u9727\u524D\u594F\u61C9\u5373\u523B\u8D77\u8DF3\u6216\u62C9\u958B\u8DDD\u96E2\u3002",
+      icon: "fa-solid fa-icicles",
+      color: "#38bdf8"
+    },
+    {
+      id: "SK-29",
+      name: "\u96F7\u795E\u5929\u6975\u8F5F\u5929\u817F",
+      category: "melee",
+      type: "thunder_axe_kick",
+      typeName: "\u843D\u96F7\u4E0B\u5288 / \u8FD1\u6230\u6B66\u85DD",
+      cd: 1.4,
+      damage: 265,
+      startup: 6,
+      active: 12,
+      recovery: 8,
+      guardType: "stand_only",
+      chipRatio: 0.5,
+      knockdown: true,
+      description: "\u7E8F\u7E5E\u842C\u4E08\u91D1\u96F7\u9A30\u7A7A\u8E8D\u8D77\uFF0C\u91CD\u65A7\u822C\u7531\u4E0A\u81F3\u4E0B\u5288\u64CA\u5C0D\u624B\u982D\u9802\uFF01\u7834\u9664\u4E0B\u8E72\u9F9C\u7E2E\uFF01",
+      counterGuide: "\u4E2D\u6BB5\u7834\u8E72\u9632\uFF01\u4E0D\u53EF\u8E72\u9632\uFF0C\u9700\u7AD9\u7ACB\u683C\u64CB\u6216\u5728\u4E0B\u5288\u8D77\u8E8D\u77AC\u9593\u5411\u524D\u7A7F\u884C\u3002",
+      icon: "fa-solid fa-cloud-bolt",
+      color: "#facc15"
+    },
+    {
+      id: "SK-30",
+      name: "\u5149\u5B50\u8D85\u80FD\u9023\u74B0\u885D\u62F3",
+      category: "melee",
+      type: "photon_fists",
+      typeName: "\u5149\u5B50\u72C2\u62F3 / \u8FD1\u6230\u6B66\u85DD",
+      cd: 1.2,
+      damage: 270,
+      startup: 3,
+      active: 18,
+      recovery: 7,
+      guardType: "all",
+      chipRatio: 0.5,
+      description: "\u96D9\u62F3\u6FC0\u76EA\u5149\u5B50\u9AD8\u983B\u9707\u76EA\uFF0C\u4EE5\u8089\u773C\u96E3\u8FA8\u7684\u8D85\u97F3\u901F\u9023\u7E8C\u91CD\u62F3\u72C2\u66B4\u8F5F\u64CA\u5C0D\u624B\uFF01",
+      counterGuide: "\u72C2\u62F3\u9023\u6BB5\u6253\u64CA\u5BC6\u96C6\uFF0C\u5FC5\u9808\u4FDD\u6301\u5168\u7A0B\u683C\u64CB\uFF0C\u5728\u6700\u5F8C\u6536\u62F3\u786C\u76F4\u6642\u767C\u8D77\u731B\u70C8\u53CD\u653B\u3002",
+      icon: "fa-solid fa-hand-back-fist",
+      color: "#fb7185"
     }
   ];
   var ARCHETYPES = [
     {
       id: "wave_dp",
       name: "\u6CE2\u5347\u63A7\u5236\u6D41",
-      desc: "\u9060\u7A0B\u767C\u6CE2\u903C\u8DF3\uFF0C\u5347\u9F8D\u7A7A\u4E2D\u622A\u64CA\uFF0C\u9707\u6CE2\u5316\u89E3\u8FD1\u8EAB",
-      skills: ["SK-01", "SK-02", "SK-09"],
+      desc: "\u80FD\u91CF\u8108\u885D\u5F48\u9060\u7A0B\u903C\u8DF3\u3001\u5347\u9F8D\u7A7A\u4E2D\u622A\u64CA\u3001\u88C2\u7A7A\u638C\u9632\u8FD1\u8EAB\u3001\u97F3\u901F\u6ED1\u8E22\u7A81\u8972\u3001\u7834\u7532\u76F4\u523A\u58D3\u8FEB",
+      skills: ["SK-01", "SK-02", "SK-09", "SK-03", "SK-05"],
       badge: "\u7D93\u5178\u727D\u5236"
     },
     {
       id: "ranged_artillery",
       name: "\u5168\u57DF\u91CD\u7832\u706B\u529B\u6D41",
-      desc: "\u8FFD\u8E64\u98DB\u5F48\u9396\u5B9A\u3001\u6298\u5C04\u6FC0\u5149\u58D3\u5236\u3001\u5929\u9802\u8ECC\u9053\u91CD\u7832\u8F5F\u9802\uFF0C\u5168\u5C4F\u706B\u529B\u8986\u84CB",
-      skills: ["SK-11", "SK-12", "SK-13"],
+      desc: "\u8FFD\u8E64\u98DB\u5F48\u9396\u5B9A\u3001\u6298\u5C04\u6FC0\u5149\u58D3\u5236\u3001\u5929\u9802\u8ECC\u9053\u91CD\u7832\u3001\u5F15\u529B\u9ED1\u6D1E\u727D\u5F15\u3001\u8D85\u8F09\u5DE8\u7832\u81F4\u547D\u8F5F\u64CA",
+      skills: ["SK-11", "SK-12", "SK-13", "SK-14", "SK-10"],
       badge: "\u6975\u81F4\u5C04\u624B"
     },
     {
       id: "sniper_freeze",
       name: "\u72D9\u64CA\u51B0\u971C\u727D\u5236\u6D41",
-      desc: "\u9AD8\u65AF\u8D85\u97F3\u901F\u72D9\u64CA\u69CD\u7A7F\u900F\u3001\u6975\u51CD\u51B0\u7BAD\u6E1B\u901F\u63A7\u5834\u3001\u8FF4\u65CB\u5149\u5203\u53BB\u7A0B\u56DE\u7A0B\u96D9\u6253\u64CA",
-      skills: ["SK-15", "SK-18", "SK-20"],
+      desc: "\u9AD8\u65AF\u8D85\u97F3\u901F\u72D9\u64CA\u69CD\u7A7F\u900F\u3001\u6975\u51CD\u51B0\u7BAD\u6E1B\u901F\u3001\u8FF4\u65CB\u5149\u5203\u96D9\u91CD\u6253\u64CA\u3001\u5341\u5B57\u624B\u88E1\u528D\u58D3\u5236\u3001\u6563\u88C2\u7A7A\u7206\u5F48\u5C01\u9396",
+      skills: ["SK-15", "SK-18", "SK-20", "SK-21", "SK-28"],
       badge: "\u7A7F\u7532\u72D9\u6BBA"
     },
     {
       id: "shotgun_funnel",
       name: "\u6563\u5F48\u6D6E\u6E38\u706B\u529B\u6D41",
-      desc: "\u64F4\u6563\u9730\u5F48\u6B63\u9762\u5C01\u9396\u3001\u6D6E\u6E38\u6A5F\u81EA\u52D5\u9023\u7E8C\u96F7\u5C04\u63A9\u8B77\u3001\u71C3\u71D2\u69B4\u5F48\u5C01\u9396\u5730\u9762",
-      skills: ["SK-16", "SK-17", "SK-19"],
+      desc: "\u64F4\u6563\u9730\u5F48\u6B63\u9762\u5C01\u9396\u3001\u6D6E\u6E38\u6A5F\u81EA\u52D5\u9023\u7E8C\u96F7\u5C04\u3001\u71C3\u71D2\u69B4\u5F48\u5C01\u9396\u5730\u9762\u3001\u96FB\u78C1\u5F15\u529B\u96F7\u9810\u4F0F\u3001\u80FD\u91CF\u8108\u885D\u5F48\u63A7\u5834",
+      skills: ["SK-16", "SK-17", "SK-19", "SK-24", "SK-01"],
       badge: "\u5BC6\u96C6\u7FA4\u706B"
     },
     {
       id: "low_rush",
-      name: "\u4E0B\u6BB5\u72C2\u653B\u6D41",
-      desc: "\u4EA4\u66FF\u4F7F\u7528\u6ED1\u8E22\uFF08\u4E0B\u6BB5\uFF09\u8207\u8E8D\u7A7A\u7838\uFF08\u4E2D\u6BB5\uFF09\u7834\u58DE\u5C0D\u624B\u9632\u5B88\u91CD\u5FC3",
-      skills: ["SK-03", "SK-04", "SK-07"],
+      name: "\u4E0B\u6BB5\u72C2\u653B\u58D3\u5236\u6D41",
+      desc: "\u97F3\u901F\u6ED1\u8E22\uFF08\u4E0B\u6BB5\uFF09\u8207\u8E8D\u7A7A\u7838\uFF08\u4E2D\u6BB5\uFF09\u96D9\u64C7\u3001\u767E\u88C2\u9023\u64CA\u885D\u3001\u71BE\u708E\u70C8\u5730\u6CE2\u3001\u5730\u523A\u5347\u6E67\u5F37\u653B",
+      skills: ["SK-03", "SK-04", "SK-07", "SK-22", "SK-27"],
       badge: "\u96D9\u64C7\u7834\u9632"
     },
     {
       id: "counter_cross",
-      name: "\u5947\u8972\u53CD\u6253\u6D41",
-      desc: "\u77AC\u79FB\u7A7F\u900F\u9060\u7A0B\u6CE2\u5C0E\uFF0C\u67B6\u62DB\u53CD\u5236\u8FD1\u6230\uFF0C\u6307\u4EE4\u6454\u5F37\u5236\u7834\u9632",
-      skills: ["SK-05", "SK-06", "SK-08"],
-      badge: "\u9748\u6D3B\u53CD\u64CA"
+      name: "\u5947\u8972\u7A81\u9032\u72C2\u653B\u6D41",
+      desc: "\u865B\u7A7A\u77AC\u79FB\u7A7F\u900F\u3001\u6307\u4EE4\u6454\u7121\u8996\u9632\u79A6\u3001\u65CB\u98A8\u8FF4\u65CB\u8E22\u3001\u9738\u9AD4\u97F3\u901F\u885D\u649E\u3001\u5149\u5B50\u72C2\u62F3\u66B4\u529B\u8F5F\u6BBA",
+      skills: ["SK-06", "SK-08", "SK-23", "SK-25", "SK-30"],
+      badge: "\u7A81\u64CA\u9738\u9AD4"
     }
   ];
 
@@ -2052,7 +2227,7 @@
           ],
           purchasedSkins: [],
           equippedSkin: "skin_cyber_warrior",
-          loadout: ["SK-01", "SK-02", "SK-09"],
+          loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
           stats: { total: 18, wins: 14, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: false } },
           preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
           lastLogin: new Date(Date.now() - 36e5 * 2).toISOString(),
@@ -2072,7 +2247,7 @@
           ],
           purchasedSkins: [],
           equippedSkin: "skin_cyber_warrior",
-          loadout: ["SK-03", "SK-04", "SK-07"],
+          loadout: ["SK-03", "SK-04", "SK-07", "SK-22", "SK-27"],
           stats: { total: 42, wins: 38, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: true } },
           preferences: { bgmVol: 0.5, sfxVol: 0.85, haptics: true },
           lastLogin: new Date(Date.now() - 864e5).toISOString(),
@@ -2255,7 +2430,7 @@
         purchasedSkins: mergedPurchased,
         skins: allSkins,
         equippedSkin: equipped,
-        loadout: Array.isArray(newerAcc.loadout) && newerAcc.loadout.length === 3 ? newerAcc.loadout : local.loadout || ["SK-01", "SK-02", "SK-09"],
+        loadout: Array.isArray(newerAcc.loadout) && newerAcc.loadout.length > 0 ? newerAcc.loadout : local.loadout || ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
         stats,
         preferences: { ...cloud.preferences || {}, ...local.preferences || {} },
         lastLogin: (/* @__PURE__ */ new Date()).toISOString(),
@@ -2350,7 +2525,7 @@
           ],
           purchasedSkins: [],
           equippedSkin: "skin_cyber_warrior",
-          loadout: ["SK-01", "SK-02", "SK-09"],
+          loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
           stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
           preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
           lastLogin: (/* @__PURE__ */ new Date()).toISOString(),
@@ -2401,7 +2576,7 @@
         ],
         purchasedSkins: [],
         equippedSkin: "skin_cyber_warrior",
-        loadout: ["SK-01", "SK-02", "SK-09"],
+        loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
         stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
         preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
         lastLogin: (/* @__PURE__ */ new Date()).toISOString(),
@@ -11270,17 +11445,22 @@
       soundEngine.playHit("super");
     }
     announceKO() {
+      this.clearCombatBanners();
       this.triggerBanner({
         type: "ko",
         text: "K. O. !",
         subText: "\u2605 \u6C7A\u5B9A\u6027\u64CA\u5012 \u2605",
         color: "#ff0055",
-        duration: 70
+        duration: 50
       });
       this.speak("K. O.!", { pitch: 0.9, rate: 0.95 });
       soundEngine.playHit("ko");
     }
+    clearCombatBanners() {
+      this.activeBanners = [];
+    }
     announceVictory(winnerName) {
+      this.clearCombatBanners();
       this.speak("Winner!", { pitch: 1.1, rate: 1.05 });
     }
     // ─── 橫幅堆疊管理 ───
@@ -11536,7 +11716,12 @@
       this.p2.facing = -1;
     }
     _createFighter(id, x, data) {
-      const skillList = data.loadout && data.loadout.length === 3 ? data.loadout.map((sid) => SKILLS.find((s) => s.id === sid) || SKILLS[0]) : [SKILLS[0], SKILLS[1], SKILLS[8]];
+      const defaultSkills = [SKILLS[0], SKILLS[1], SKILLS[2], SKILLS[3], SKILLS[4]];
+      const skillList = data.loadout && Array.isArray(data.loadout) && data.loadout.length > 0 ? data.loadout.slice(0, 5).map((sid, i) => SKILLS.find((s) => s.id === sid) || defaultSkills[i] || SKILLS[0]) : defaultSkills;
+      while (skillList.length < 5) {
+        const unused = SKILLS.find((s) => !skillList.includes(s)) || SKILLS[0];
+        skillList.push(unused);
+      }
       return {
         id,
         name: data.name || (id === 1 ? "Player 1" : "Player 2"),
@@ -11575,9 +11760,9 @@
         burstAvailable: true,
         frostTimer: 0,
         // 冰凍減速計時器
-        // 3 大自選技能
+        // 5 大自選攻擊技能
         skills: skillList,
-        cooldowns: [0, 0, 0],
+        cooldowns: [0, 0, 0, 0, 0],
         // 連段統計
         comboCount: 0,
         comboDamage: 0,
@@ -11615,8 +11800,8 @@
       announcerEngine.update();
       if (this.isTraining) {
         if (this.trainingSettings.instantCd) {
-          this.p1.cooldowns = [0, 0, 0];
-          this.p2.cooldowns = [0, 0, 0];
+          this.p1.cooldowns = [0, 0, 0, 0, 0];
+          this.p2.cooldowns = [0, 0, 0, 0, 0];
         }
         if (this.p2.hp <= 150 || this.p2.hp < this.p2.maxHp && this.p2.comboCount === 0 && this.p2.state === "idle") {
           this.p2.hp = Math.min(this.p2.maxHp, this.p2.hp + 12);
@@ -11886,6 +12071,14 @@
               this._executeSkill(char, opp, 2);
               break;
             }
+            if (input.skill4 && char.cooldowns[3] <= 0) {
+              this._executeSkill(char, opp, 3);
+              break;
+            }
+            if (input.skill5 && char.cooldowns[4] <= 0) {
+              this._executeSkill(char, opp, 4);
+              break;
+            }
           }
           if (char.currentAction) {
             this._updateAttackAction(char, opp);
@@ -11952,6 +12145,14 @@
       }
       if (input.skill3 && char.cooldowns[2] <= 0) {
         this._executeSkill(char, opp, 2);
+        return;
+      }
+      if (input.skill4 && char.cooldowns[3] <= 0) {
+        this._executeSkill(char, opp, 3);
+        return;
+      }
+      if (input.skill5 && char.cooldowns[4] <= 0) {
+        this._executeSkill(char, opp, 4);
         return;
       }
       const moveX = input.x || 0;
@@ -12503,7 +12704,8 @@
           soundEngine.playHit("dp");
           break;
         case "SK-05":
-          soundEngine.playHit("guard");
+          char.vx = char.facing * 10;
+          soundEngine.playHit("dp");
           break;
         case "SK-06":
           soundEngine.playHit("teleport");
@@ -12553,6 +12755,50 @@
           break;
         case "SK-20":
           soundEngine.playHit("dp");
+          break;
+        case "SK-21":
+          soundEngine.playHit("laser");
+          break;
+        case "SK-22":
+          char.vx = char.facing * 3.5;
+          soundEngine.playHit("bomb_drop");
+          break;
+        case "SK-23":
+          char.vx = char.facing * 7.5;
+          char.vy = -3.5;
+          char.isGrounded = false;
+          soundEngine.playHit("kick");
+          break;
+        case "SK-24":
+          soundEngine.playHit("bomb_drop");
+          break;
+        case "SK-25":
+          char.invincibleTimer = 6;
+          char.vx = char.facing * 13.5;
+          soundEngine.playHit("heavy");
+          this.triggerScreenShake(3);
+          break;
+        case "SK-26":
+          char.vx = char.facing * 2;
+          soundEngine.playHit("heavy");
+          break;
+        case "SK-27":
+          soundEngine.playHit("laser");
+          this.triggerScreenShake(4);
+          break;
+        case "SK-28":
+          soundEngine.playHit("bomb_drop");
+          break;
+        case "SK-29":
+          char.vy = -9;
+          char.vx = char.facing * 4;
+          char.isGrounded = false;
+          soundEngine.playHit("thunder");
+          this.triggerScreenShake(5);
+          break;
+        case "SK-30":
+          char.vx = char.facing * 6.5;
+          soundEngine.playHit("punch");
           break;
       }
     }
@@ -12825,6 +13071,113 @@
         });
         return;
       }
+      if (action.id === "SK-21") {
+        action.hitChecked = true;
+        soundEngine.playHit("laser");
+        const angles = [0, -3.2, 3.2];
+        for (let i = 0; i < 3; i++) {
+          this.projectiles.push({
+            ownerId: char.id,
+            type: "shuriken",
+            name: "\u5F71\u5206\u8EAB\u5341\u5B57\u624B\u88E1\u528D",
+            x: char.x + char.facing * 38,
+            y: char.y - 70 + (i - 1) * 12,
+            vx: char.facing * 15,
+            vy: angles[i],
+            radius: 10,
+            damage: 75,
+            guardType: "all",
+            skin: char.skin,
+            life: 65
+          });
+        }
+        return;
+      }
+      if (action.id === "SK-22") {
+        action.hitChecked = true;
+        soundEngine.playHit("bomb_drop");
+        this.triggerScreenShake(4);
+        this.projectiles.push({
+          ownerId: char.id,
+          type: "ground_wave",
+          name: "\u71BE\u708E\u70C8\u5730\u6CE2",
+          x: char.x + char.facing * 35,
+          y: (char.currentPlatform ? char.currentPlatform.y : this.floorY) - 10,
+          platform: char.currentPlatform,
+          vx: char.facing * 12,
+          vy: 0,
+          radius: 16,
+          damage: action.damage,
+          guardType: "crouch_only",
+          knockdown: true,
+          skin: char.skin,
+          life: 55
+        });
+        return;
+      }
+      if (action.id === "SK-24") {
+        action.hitChecked = true;
+        soundEngine.playHit("bomb_drop");
+        this.projectiles.push({
+          ownerId: char.id,
+          type: "emp_mine",
+          name: "\u96FB\u78C1\u5F15\u529B\u96F7",
+          x: char.x + char.facing * 48,
+          y: char.y - 60,
+          vx: char.facing * 5.5,
+          vy: -2,
+          radius: 14,
+          damage: action.damage,
+          guardType: "all",
+          knockdown: true,
+          skin: char.skin,
+          life: 140
+        });
+        return;
+      }
+      if (action.id === "SK-27") {
+        action.hitChecked = true;
+        soundEngine.playHit("laser");
+        this.triggerScreenShake(4);
+        const spikeX = char.x + char.facing * 75;
+        const spikeY = (char.currentPlatform ? char.currentPlatform.y : this.floorY) - 15;
+        this.shockwaves.push({
+          x: spikeX,
+          y: spikeY,
+          radius: 12,
+          maxRadius: 65,
+          color: "#38bdf8",
+          duration: 18
+        });
+        if (Math.abs(opp.x - spikeX) <= 70 && Math.abs(opp.y - spikeY) <= 80 && opp.invincibleTimer <= 0) {
+          this._applyHit(char, opp, {
+            name: action.name,
+            damage: action.damage,
+            guardType: action.guardType,
+            knockdown: true
+          });
+        }
+        return;
+      }
+      if (action.id === "SK-28") {
+        action.hitChecked = true;
+        soundEngine.playHit("bomb_drop");
+        this.projectiles.push({
+          ownerId: char.id,
+          type: "cluster_bomb",
+          name: "\u91CF\u5B50\u6563\u88C2\u9AD8\u7206\u5F48",
+          x: char.x + char.facing * 42,
+          y: char.y - 70,
+          vx: char.facing * 13,
+          vy: -4.5,
+          radius: 12,
+          damage: action.damage,
+          guardType: "all",
+          skin: char.skin,
+          life: 70
+        });
+        return;
+      }
       if (action.id === "SK-09") {
         action.hitChecked = true;
         this.shockwaves.push({
@@ -12859,15 +13212,11 @@
         }
         return;
       }
-      const hitReach = action.id === "SK-03" ? 130 : action.id === "SK-08" ? 100 : 90;
+      const hitReach = action.id === "SK-03" || action.id === "SK-26" ? 135 : action.id === "SK-25" ? 125 : action.id === "SK-05" || action.id === "SK-23" || action.id === "SK-30" ? 115 : action.id === "SK-08" ? 100 : 90;
       const inRange = Math.abs(char.x - opp.x) <= hitReach && Math.abs(char.y - opp.y) <= 125;
       const isFacingOpp = char.facing === 1 && opp.x >= char.x - 20 || char.facing === -1 && opp.x <= char.x + 20;
       if (inRange && isFacingOpp) {
         action.hitChecked = true;
-        if (opp.currentAction && opp.currentAction.id === "SK-05" && action.guardType !== "unblockable") {
-          this._triggerParryCounter(opp, char);
-          return;
-        }
         this._applyHit(char, opp, action);
       }
     }
@@ -13162,8 +13511,11 @@
               });
             }
           }
-        } else if (p.type === "grenade") {
+        } else if (p.type === "grenade" || p.type === "cluster_bomb") {
           p.vy = (p.vy || 0) + 0.46;
+        } else if (p.type === "emp_mine") {
+          p.vx *= 0.95;
+          p.vy = (p.vy || 0) * 0.95;
         } else if (p.type === "boomerang") {
           p.outwardFrames = (p.outwardFrames !== void 0 ? p.outwardFrames : 30) - 1;
           if (p.outwardFrames > 0) {
@@ -13253,6 +13605,52 @@
               name: p.name || "\u7A7A\u5C0D\u5730\u96E2\u5B50\u7206\u5F48",
               damage: p.damage,
               guardType: p.guardType || "stand_only",
+              knockdown: true
+            });
+          }
+          this.projectiles.splice(i, 1);
+          continue;
+        }
+        if (p.type === "cluster_bomb" && (p.y >= this.floorY - 8 || p.vy > 0 && this._checkPlatformHit(p) || p.life <= 0)) {
+          soundEngine.playHit("bomb_drop");
+          this.triggerScreenShake(5);
+          for (let k = -1; k <= 1; k++) {
+            this.shockwaves.push({
+              x: p.x + k * 26,
+              y: p.y,
+              radius: 8,
+              maxRadius: 55,
+              color: "#fb923c",
+              duration: 16
+            });
+          }
+          if (target && Math.abs(p.x - target.x) < 75 && Math.abs(p.y - target.y) < 70 && target.invincibleTimer <= 0) {
+            this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+              name: "\u91CF\u5B50\u6563\u88C2\u9AD8\u7206\u5F48",
+              damage: p.damage,
+              guardType: "stand_only",
+              knockdown: true
+            });
+          }
+          this.projectiles.splice(i, 1);
+          continue;
+        }
+        if (p.type === "emp_mine" && (target && Math.abs(p.x - target.x) < 55 && Math.abs(p.y - target.y) < 65 || p.life <= 0)) {
+          soundEngine.playHit("burst");
+          this.triggerScreenShake(6);
+          this.shockwaves.push({
+            x: p.x,
+            y: p.y,
+            radius: 12,
+            maxRadius: 85,
+            color: "#c084fc",
+            duration: 18
+          });
+          if (target && Math.abs(p.x - target.x) < 80 && Math.abs(p.y - target.y) < 75 && target.invincibleTimer <= 0) {
+            this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+              name: "\u96FB\u78C1\u5F15\u529B\u7206\u7E2E\u96F7",
+              damage: p.damage,
+              guardType: "all",
               knockdown: true
             });
           }
@@ -13946,7 +14344,7 @@
     constructor(difficulty = "normal") {
       this.difficulty = difficulty;
       this.currentDelay = 0;
-      this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
     }
     setDifficulty(diff) {
       this.difficulty = diff;
@@ -13981,7 +14379,7 @@
      * 在浮空平台上平穩作戰，防止地面走位時無意識滑落平台
      */
     _filterPlatformEdges(ai, input) {
-      if (ai && ai.currentPlatform && input && input.y >= 0 && !input.punch && !input.kick && !input.skill1 && !input.skill2 && !input.skill3 && !input.dropThrough) {
+      if (ai && ai.currentPlatform && input && input.y >= 0 && !input.punch && !input.kick && !input.skill1 && !input.skill2 && !input.skill3 && !input.skill4 && !input.skill5 && !input.dropThrough) {
         const plat = ai.currentPlatform;
         if (ai.x <= plat.x + 18 && input.x < 0) input.x = 0;
         if (ai.x >= plat.x + plat.width - 18 && input.x > 0) input.x = 0;
@@ -13993,7 +14391,7 @@
      * 在躍空過程中根據與玩家之相對距離，執行中段破防躍空飛踢或快速刺拳
      */
     _decideAirborneCombat(ai, player, engine) {
-      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
       const dist = Math.abs(ai.x - player.x);
       const dirToPlayer = ai.x < player.x ? 1 : -1;
       input.x = dirToPlayer;
@@ -14023,7 +14421,7 @@
      * 地面主決策行為樹 (Ground AI Decision Tree)
      */
     _makeDecision(ai, player, engine) {
-      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
       const dist = Math.abs(ai.x - player.x);
       const facingPlayer = (ai.x < player.x ? 1 : -1) === ai.facing;
       const dirToPlayer = ai.x < player.x ? 1 : -1;
@@ -14133,8 +14531,14 @@
             input.y = -1;
             input.x = dirToPlayer;
             return input;
-          } else if (r < 0.65 && ai.cooldowns[0] <= 0) {
-            input.skill1 = true;
+          } else if (r < 0.65) {
+            const readySlots = [0, 1, 2, 3, 4].filter((idx) => ai.cooldowns[idx] <= 0 && ai.skills?.[idx]);
+            if (readySlots.length > 0) {
+              const slot = readySlots[Math.floor(Math.random() * readySlots.length)];
+              input[`skill${slot + 1}`] = true;
+              return input;
+            }
+            input.x = dirToPlayer;
             return input;
           } else {
             input.x = dirToPlayer;
@@ -14420,7 +14824,7 @@
      * 自由格鬥訓練營假人行為控制 (Training Dummy Behavior)
      */
     _decideTrainingDummy(dummy, player, settings) {
-      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+      const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
       if (settings.dummyReversal && dummy.state === "wakeup" && dummy.stateTime >= 13) {
         input.skill2 = true;
         return input;
@@ -14577,9 +14981,23 @@
       this.isFighting = false;
       this.matchMode = "ai";
       this.aiDifficulty = "normal";
-      this.loadoutSelection = ["SK-01", "SK-02", "SK-09"];
+      this.loadoutSelection = ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"];
       this.loadoutTimer = 15;
       this.loadoutInterval = null;
+      let savedKeys = null;
+      try {
+        savedKeys = JSON.parse(localStorage.getItem("quantum_arena_skill_keys") || "null");
+      } catch (e) {
+        savedKeys = null;
+      }
+      this.skillKeyBindings = Array.isArray(savedKeys) && savedKeys.length === 5 ? savedKeys : ["KeyU", "KeyI", "KeyO", "KeyY", "KeyH"];
+      let savedFavs = null;
+      try {
+        savedFavs = JSON.parse(localStorage.getItem("quantum_arena_favorite_skills") || "null");
+      } catch (e) {
+        savedFavs = null;
+      }
+      this.favoriteSkills = Array.isArray(savedFavs) ? savedFavs : ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"];
       this.selectedStageId = "random";
       this.currentStage = STAGES[0];
       this.arcadeMode = false;
@@ -14588,7 +15006,7 @@
       this.arcadeScore = 0;
       this.arcadeStreakWins = 0;
       this.keys = {};
-      this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false, superMove: false };
+      this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false, superMove: false };
       this.canvas = null;
       this.ctx = null;
       this.pedestalCanvas = null;
@@ -15020,18 +15438,31 @@
       const modal = document.getElementById("authModal");
       if (modal) modal.classList.remove("active");
     }
-    // ─── 賽前戰術武器與技能配置視窗 (20 款自由挑選 3 項・無時間限制) ───
+    // ─── 賽前戰術武器與技能配置視窗 (30 款純攻擊自由挑選 5 項・無時間限制) ───
     openLoadoutModal(startMatchCallback) {
       const modal = document.getElementById("loadoutModal");
       if (!modal) return;
       modal.classList.add("active");
+      if (this.pedestalAnimId) {
+        cancelAnimationFrame(this.pedestalAnimId);
+        this.pedestalAnimId = null;
+      }
       if (this.loadoutInterval) {
         clearInterval(this.loadoutInterval);
         this.loadoutInterval = null;
       }
       const u = saveSystem.currentUser;
-      this.loadoutSelection = u && u.loadout && u.loadout.length === 3 ? [...u.loadout] : ["SK-15", "SK-16", "SK-18"];
+      if (u && Array.isArray(u.loadout) && u.loadout.length > 0) {
+        this.loadoutSelection = [...u.loadout];
+      } else {
+        this.loadoutSelection = ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"];
+      }
+      while (this.loadoutSelection.length < 5) {
+        const fallback = SKILLS.find((s) => !this.loadoutSelection.includes(s.id)) || SKILLS[0];
+        this.loadoutSelection.push(fallback.id);
+      }
       this.loadoutFilter = this.loadoutFilter || "all";
+      this._updateFavCountBadge();
       document.querySelectorAll(".loadout-filter-btn").forEach((btn) => {
         btn.onclick = () => {
           document.querySelectorAll(".loadout-filter-btn").forEach((b) => {
@@ -15045,6 +15476,7 @@
           soundEngine.playUI("click");
         };
       });
+      this._renderLoadoutSlotsBar();
       this._renderLoadoutSkillsGrid();
       document.querySelectorAll(".archetype-btn").forEach((btn) => {
         btn.onclick = () => {
@@ -15052,6 +15484,7 @@
           const arch = ARCHETYPES.find((a) => a.id === archId);
           if (arch) {
             this.loadoutSelection = [...arch.skills];
+            this._renderLoadoutSlotsBar();
             this._renderLoadoutSkillsGrid();
             soundEngine.playUI("click");
           }
@@ -15064,29 +15497,131 @@
         };
       }
     }
+    isFavoriteSkill(id) {
+      return this.favoriteSkills && this.favoriteSkills.includes(id);
+    }
+    toggleFavoriteSkill(id) {
+      if (this.favoriteSkills.includes(id)) {
+        this.favoriteSkills = this.favoriteSkills.filter((x) => x !== id);
+      } else {
+        this.favoriteSkills.push(id);
+      }
+      localStorage.setItem("quantum_arena_favorite_skills", JSON.stringify(this.favoriteSkills));
+      this._updateFavCountBadge();
+      this._renderLoadoutSkillsGrid();
+      soundEngine.playUI("click");
+    }
+    _updateFavCountBadge() {
+      const el = document.getElementById("favCountBadge");
+      if (el) el.textContent = this.favoriteSkills ? this.favoriteSkills.length : 0;
+    }
+    getSkillKeyDisplayName(idx) {
+      const code = this.skillKeyBindings && this.skillKeyBindings[idx] || ["KeyU", "KeyI", "KeyO", "KeyY", "KeyH"][idx];
+      if (!code) return `K${idx + 1}`;
+      if (code.startsWith("Key")) return code.slice(3);
+      if (code.startsWith("Digit")) return code.slice(5);
+      if (code.startsWith("Numpad")) return "Num" + code.slice(6);
+      return code;
+    }
+    _renderLoadoutSlotsBar() {
+      const container = document.getElementById("loadoutSlotsContainer");
+      const countEl = document.getElementById("loadoutSelectedCount");
+      if (countEl) countEl.textContent = `\u5DF2\u9078\u64C7 ${this.loadoutSelection.length} / 5 \u62DB`;
+      if (!container) return;
+      container.innerHTML = [0, 1, 2, 3, 4].map((slotIdx) => {
+        const skillId = this.loadoutSelection[slotIdx];
+        const sk = SKILLS.find((s) => s.id === skillId);
+        const keyDisplay = this.getSkillKeyDisplayName(slotIdx);
+        if (!sk) {
+          return `
+          <div class="loadout-slot-card" style="border-style: dashed; opacity: 0.6;">
+            <span style="font-size: 10px; color: #94a3b8;">\u69FD\u4F4D ${slotIdx + 1}</span>
+            <span style="font-size: 11px; color: #64748b;">(\u672A\u9078\u5B9A)</span>
+          </div>
+        `;
+        }
+        return `
+        <div class="loadout-slot-card active" style="border-color: ${sk.color};">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <span style="font-size: 10px; color: #00f3ff; font-weight: 800;">\u69FD\u4F4D ${slotIdx + 1}</span>
+            <span class="loadout-slot-key-badge" data-slot="${slotIdx}" title="\u9EDE\u64CA\u81EA\u8A02\u6309\u9375\u7D81\u5B9A">[ ${keyDisplay} ]</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+            <i class="${sk.icon}" style="color: ${sk.color}; font-size: 13px;"></i>
+            <strong style="color: #fff; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px;">${sk.name}</strong>
+          </div>
+        </div>
+      `;
+      }).join("");
+      container.querySelectorAll(".loadout-slot-key-badge").forEach((badge) => {
+        badge.onclick = (e) => {
+          e.stopPropagation();
+          const slot = parseInt(badge.dataset.slot, 10);
+          badge.textContent = "[ \u8ACB\u6309\u9375... ]";
+          badge.style.background = "#ff007f";
+          badge.style.color = "#fff";
+          const onKeyDown = (evt) => {
+            evt.preventDefault();
+            evt.stopPropagation();
+            window.removeEventListener("keydown", onKeyDown, true);
+            if (evt.key === "Escape") {
+              this._renderLoadoutSlotsBar();
+              return;
+            }
+            this.skillKeyBindings[slot] = evt.code;
+            localStorage.setItem("quantum_arena_skill_keys", JSON.stringify(this.skillKeyBindings));
+            soundEngine.playUI("click");
+            this._renderLoadoutSlotsBar();
+            this._renderLoadoutSkillsGrid();
+          };
+          window.addEventListener("keydown", onKeyDown, { capture: true, once: true });
+        };
+      });
+    }
     _renderLoadoutSkillsGrid() {
       const container = document.getElementById("loadoutSkillsGrid");
       if (!container) return;
       const filter = this.loadoutFilter || "all";
-      const displayedSkills = SKILLS.filter((sk) => {
-        if (filter === "all") return true;
-        return sk.category === filter;
-      });
+      let displayedSkills = SKILLS;
+      if (filter === "favorites") {
+        displayedSkills = SKILLS.filter((sk) => this.isFavoriteSkill(sk.id));
+      } else if (filter === "ranged") {
+        displayedSkills = SKILLS.filter((sk) => sk.category === "ranged");
+      } else if (filter === "melee") {
+        displayedSkills = SKILLS.filter((sk) => sk.category === "melee");
+      }
+      if (filter === "favorites" && displayedSkills.length === 0) {
+        container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 45px 15px; color: #94a3b8;">
+          <div style="font-size: 42px; color: #ffd700; margin-bottom: 10px; animation: pulse-event 1.8s infinite;">\u2605</div>
+          <strong style="color: #fff; font-size: 16px;">\u76EE\u524D\u300C\u6211\u7684\u6700\u611B\u300D\u5C1A\u7121\u6536\u85CF\u62DB\u5F0F\uFF01</strong>
+          <p style="font-size: 13px; color: #64748b; margin-top: 6px;">\u9EDE\u64CA\u4EFB\u610F\u6280\u80FD\u5361\u7247\u53F3\u4E0A\u89D2\u7684 \u2B50 \u661F\u865F\uFF0C\u5373\u53EF\u5C07\u60A8\u504F\u597D\u7684\u653B\u64CA\u52A0\u5165\u6211\u7684\u6700\u611B\uFF0C\u5FEB\u901F\u51FA\u6230\u9078\u7528\uFF01</p>
+        </div>
+      `;
+        return;
+      }
       container.innerHTML = displayedSkills.map((sk) => {
         const isSelected = this.loadoutSelection.includes(sk.id);
         const slotIndex = this.loadoutSelection.indexOf(sk.id);
-        const keyName = slotIndex === 0 ? "[U]" : slotIndex === 1 ? "[I]" : slotIndex === 2 ? "[O]" : "";
+        const keyDisplay = slotIndex >= 0 ? `[${this.getSkillKeyDisplayName(slotIndex)}]` : "";
+        const slotLabel = slotIndex >= 0 ? `\u69FD\u4F4D ${slotIndex + 1}` : "";
         const isRanged = sk.category === "ranged";
+        const isFav = this.isFavoriteSkill(sk.id);
         return `
-        <div class="skill-card ${isSelected ? "selected" : ""}" data-id="${sk.id}" style="background: rgba(255,255,255,0.03); border: 1.5px solid ${isSelected ? "#00f3ff" : "rgba(255,255,255,0.1)"}; border-radius: 8px; padding: 10px; cursor: pointer; position: relative; transition: all 0.2s;">
+        <div class="skill-card ${isSelected ? "selected" : ""}" data-id="${sk.id}" style="background: rgba(255,255,255,0.03); border: 1.5px solid ${isSelected ? "#00f3ff" : "rgba(255,255,255,0.1)"}; border-radius: 8px; padding: 10px; cursor: pointer; position: relative; transition: border-color 0.15s ease, box-shadow 0.15s ease; will-change: transform;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: ${isRanged ? "rgba(56,189,248,0.2)" : "rgba(244,63,94,0.2)"}; color: ${isRanged ? "#38bdf8" : "#fb7185"}; border: 1px solid ${isRanged ? "#38bdf8" : "#fb7185"};">
-                ${isRanged ? "\u{1F3F9} \u9060\u7A0B\u6B66\u5668" : "\u2694\uFE0F \u8FD1\u6230\u6B66\u85DD"}
+                ${isRanged ? "\u{1F3F9} \u9060\u7A0B\u795E\u5175" : "\u2694\uFE0F \u8FD1\u6230\u6B66\u85DD"}
               </span>
               <strong style="color: ${sk.color}; font-size: 13px;"><i class="${sk.icon}"></i> ${sk.name}</strong>
             </div>
-            ${isSelected ? `<span style="background: #00f3ff; color: #000; font-size: 11px; font-weight: 900; padding: 1px 7px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${keyName}</span>` : ""}
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button class="fav-star-btn ${isFav ? "active" : ""}" data-fav-id="${sk.id}" title="${isFav ? "\u79FB\u51FA\u6211\u7684\u6700\u611B" : "\u52A0\u5165\u6211\u7684\u6700\u611B"}">
+                <i class="fa-${isFav ? "solid" : "regular"} fa-star"></i>
+              </button>
+              ${isSelected ? `<span style="background: #00f3ff; color: #000; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${slotLabel} ${keyDisplay}</span>` : ""}
+            </div>
           </div>
           <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">${sk.typeName} | \u50B7\u5BB3 ${sk.damage} | CD ${sk.cd}s</div>
           <div style="font-size: 11px; color: #64748b; margin-top: 4px; line-height: 1.35;">${sk.description}</div>
@@ -15094,14 +15629,21 @@
       `;
       }).join("");
       container.querySelectorAll(".skill-card").forEach((card) => {
+        const id = card.dataset.id;
+        const starBtn = card.querySelector(".fav-star-btn");
+        if (starBtn) {
+          starBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.toggleFavoriteSkill(id);
+          };
+        }
         card.addEventListener("click", () => {
-          const id = card.dataset.id;
           if (this.loadoutSelection.includes(id)) {
             if (this.loadoutSelection.length > 1) {
               this.loadoutSelection = this.loadoutSelection.filter((s) => s !== id);
             }
           } else {
-            if (this.loadoutSelection.length < 3) {
+            if (this.loadoutSelection.length < 5) {
               this.loadoutSelection.push(id);
             } else {
               this.loadoutSelection.shift();
@@ -15109,6 +15651,7 @@
             }
           }
           soundEngine.playUI("click");
+          this._renderLoadoutSlotsBar();
           this._renderLoadoutSkillsGrid();
         });
       });
@@ -15117,6 +15660,9 @@
       const modal = document.getElementById("loadoutModal");
       if (modal) modal.classList.remove("active");
       saveSystem.updateLoadout(this.loadoutSelection);
+      if (!this.isFighting && this.activeTab === "skins") {
+        this._startPedestalLoop();
+      }
       if (callback) callback();
     }
     // ─── 進入對戰系統 ───
@@ -15153,6 +15699,7 @@
       }
       const battleScreen = document.getElementById("battleScreen");
       if (battleScreen) battleScreen.classList.add("active");
+      document.body.classList.add("in-battle");
       const p1Skin = this.getEquippedSkin();
       let p2Skin = SKINS[1];
       let p2Name = `AI (${this.aiDifficulty.toUpperCase()})`;
@@ -15206,7 +15753,7 @@
       const p2Data = {
         name: p2Name,
         skin: p2Skin,
-        loadout: ["SK-01", "SK-02", "SK-09"]
+        loadout: ["SK-01", "SK-02", "SK-06", "SK-16", "SK-17"]
       };
       this._resizeCanvas();
       this.matchEndTimer = 0;
@@ -15235,29 +15782,43 @@
     _updateSkillActionBar() {
       const bar = document.getElementById("battleActionBar");
       if (!bar) return;
-      bar.innerHTML = combatEngine.p1.skills.map((sk, idx) => {
-        const hotkey = idx === 0 ? "U" : idx === 1 ? "I" : "O";
+      bar.innerHTML = (combatEngine.p1.skills || []).map((sk, idx) => {
+        const hotkey = this.getSkillKeyDisplayName(idx);
         return `
-        <div class="skill-hud-card" id="skillCard_${idx}" style="border-color: ${sk.color};">
+        <div class="skill-hud-card" id="skillCard_${idx}" style="border-color: ${sk.color}; cursor: pointer;" title="${sk.name} [${hotkey}]">
           <div class="skill-cd-overlay" id="skillCdOverlay_${idx}"></div>
-          <i class="${sk.icon}" style="font-size: 20px; color: ${sk.color};"></i>
-          <span style="font-size: 10px; font-weight: 900; color: #fff;">[${hotkey}]</span>
+          <i class="${sk.icon}" style="font-size: 18px; color: ${sk.color}; pointer-events: none;"></i>
+          <span style="font-size: 10px; font-weight: 900; color: #fff; pointer-events: none;">[${hotkey}]</span>
         </div>
       `;
       }).join("") + `
-      <div class="guard-hud-card" id="guardHudBtn" title="\u6309\u4F4F\u53EC\u559A\u91CF\u5B50\u9632\u8B77\u7F69 (\u5FEB\u6377\u9375: L / Shift)">
-        <i class="fa-solid fa-shield-halved" style="font-size: 20px; color: #38bdf8;"></i>
-        <span style="font-size: 10px; font-weight: 900; color: #38bdf8;">[L] \u8B77\u76FE</span>
+      <div class="guard-hud-card" id="guardHudBtn" title="\u6309\u4F4F\u53EC\u559A\u91CF\u5B50\u9632\u8B77\u7F69 (\u5FEB\u6377\u9375: L / Shift)" style="cursor: pointer;">
+        <i class="fa-solid fa-shield-halved" style="font-size: 18px; color: #38bdf8; pointer-events: none;"></i>
+        <span style="font-size: 10px; font-weight: 900; color: #38bdf8; pointer-events: none;">[L] \u8B77\u76FE</span>
       </div>
-      <div class="burst-hud-card" id="burstHudBtn" title="\u53D7\u64CA\u6642\u812B\u8EAB\u7206\u767C [B]">
-        <span style="font-size: 11px;">BURST</span>
-        <span style="font-size: 9px; opacity: 0.8;">[B]</span>
+      <div class="burst-hud-card" id="burstHudBtn" title="\u53D7\u64CA\u6642\u812B\u8EAB\u7206\u767C [B]" style="cursor: pointer;">
+        <span style="font-size: 11px; pointer-events: none;">BURST</span>
+        <span style="font-size: 9px; opacity: 0.8; pointer-events: none;">[B]</span>
       </div>
-      <div class="burst-hud-card" id="superHudBtn" style="background: linear-gradient(135deg, #ffd700, #ff007f); border-color: #ffd700;" title="\u6EFF\u80FD\u91CF\u6216\u6B98\u8840\u6642\u767C\u52D5\u7D42\u6975\u5967\u7FA9 [P]">
-        <span style="font-size: 11px; font-weight: 900; color: #fff;">SUPER</span>
-        <span style="font-size: 9px; opacity: 0.9; color: #ffd700;">[P] \u5967\u7FA9</span>
+      <div class="burst-hud-card" id="superHudBtn" style="background: linear-gradient(135deg, #ffd700, #ff007f); border-color: #ffd700; cursor: pointer;" title="\u6EFF\u80FD\u91CF\u6216\u6B98\u8840\u6642\u767C\u52D5\u7D42\u6975\u5967\u7FA9 [P]">
+        <span style="font-size: 11px; font-weight: 900; color: #fff; pointer-events: none;">SUPER</span>
+        <span style="font-size: 9px; opacity: 0.9; color: #ffd700; pointer-events: none;">[P] \u5967\u7FA9</span>
       </div>
     `;
+      (combatEngine.p1.skills || []).forEach((_, idx) => {
+        const card = document.getElementById(`skillCard_${idx}`);
+        if (card) {
+          const triggerSkill = (e) => {
+            e.preventDefault();
+            this.mobileInputs[`skill${idx + 1}`] = true;
+            setTimeout(() => {
+              this.mobileInputs[`skill${idx + 1}`] = false;
+            }, 90);
+          };
+          card.onmousedown = triggerSkill;
+          card.ontouchstart = triggerSkill;
+        }
+      });
       const guardBtn = document.getElementById("guardHudBtn");
       if (guardBtn) {
         guardBtn.onmousedown = (e) => {
@@ -15278,6 +15839,24 @@
         guardBtn.ontouchend = (e) => {
           e.preventDefault();
           this.mobileInputs.guard = false;
+        };
+      }
+      const burstBtn = document.getElementById("burstHudBtn");
+      if (burstBtn) {
+        burstBtn.onclick = (e) => {
+          e.preventDefault();
+          this.keys["KeyB"] = true;
+          setTimeout(() => {
+            this.keys["KeyB"] = false;
+          }, 80);
+        };
+        burstBtn.ontouchstart = (e) => {
+          e.preventDefault();
+          this.mobileInputs.burst = true;
+        };
+        burstBtn.ontouchend = (e) => {
+          e.preventDefault();
+          this.mobileInputs.burst = false;
         };
       }
       const superBtn = document.getElementById("superHudBtn");
@@ -15317,10 +15896,10 @@
       const FIXED_STEP = 1e3 / 60;
       let steps = 0;
       while (this._timeAccumulator >= FIXED_STEP && steps < 3) {
-        const inputP1 = combatEngine.isOver ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false } : this._gatherInputsP1();
+        const inputP1 = combatEngine.isOver ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false } : this._gatherInputsP1();
         let inputP2 = null;
         if (combatEngine.isOver) {
-          inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+          inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
         } else if (this.matchMode === "local_2p") {
           inputP2 = this._gatherInputsP2();
         } else {
@@ -15357,6 +15936,11 @@
       if (isDown && !isUp) y += 1;
       if (Math.abs(m.x) > 0.1) x = m.x;
       const dropThrough = isDown && isUp;
+      const k1 = this.skillKeyBindings && this.skillKeyBindings[0] || "KeyU";
+      const k2 = this.skillKeyBindings && this.skillKeyBindings[1] || "KeyI";
+      const k3 = this.skillKeyBindings && this.skillKeyBindings[2] || "KeyO";
+      const k4 = this.skillKeyBindings && this.skillKeyBindings[3] || "KeyY";
+      const k5 = this.skillKeyBindings && this.skillKeyBindings[4] || "KeyH";
       return {
         x,
         y: dropThrough ? 1 : y,
@@ -15366,9 +15950,11 @@
         punch: !!(k["KeyJ"] || m.punch),
         kick: !!(k["KeyK"] || m.kick),
         guard: !!(k["KeyL"] || k["ShiftLeft"] || k["ShiftRight"] || m.guard),
-        skill1: !!(k["KeyU"] || m.skill1),
-        skill2: !!(k["KeyI"] || m.skill2),
-        skill3: !!(k["KeyO"] || m.skill3),
+        skill1: !!(k[k1] || m.skill1),
+        skill2: !!(k[k2] || m.skill2),
+        skill3: !!(k[k3] || m.skill3),
+        skill4: !!(k[k4] || m.skill4),
+        skill5: !!(k[k5] || m.skill5),
         burst: !!(k["KeyB"] || m.burst),
         superMove: !!(k["KeyP"] || m.superMove)
       };
@@ -15396,6 +15982,8 @@
         skill1: !!(k["Numpad4"] || k["Digit4"]),
         skill2: !!(k["Numpad5"] || k["Digit5"]),
         skill3: !!(k["Numpad6"] || k["Digit6"]),
+        skill4: !!(k["Numpad7"] || k["Digit8"]),
+        skill5: !!(k["Numpad9"] || k["Digit9"]),
         burst: !!(k["NumpadPlus"] || k["NumpadEnter"] || k["Digit7"]),
         superMove: !!(k["Numpad3"] || k["Digit3"])
       };
@@ -15768,10 +16356,10 @@
       });
       ctx.restore();
       this._drawComboCounters(ctx, w, h);
+      announcerEngine.draw(ctx, w, h);
       if (combatEngine.isOver && !combatEngine.isTraining) {
         this._drawVictoryBanner(ctx, w, h);
       }
-      announcerEngine.draw(ctx, w, h);
     }
     // ─── 打擊爆裂火花與斬芒特效 (Hit Sparks & Impact Rays) ───
     _drawHitSparks(ctx) {
@@ -15789,44 +16377,27 @@
         ctx.beginPath();
         ctx.arc(spark.x, spark.y, currentRadius, 0, Math.PI * 2);
         ctx.stroke();
-        if (spark.life >= spark.maxLife - 4) {
+        if (progress < 0.35) {
           ctx.fillStyle = "#ffffff";
           ctx.shadowColor = "#ffffff";
           ctx.shadowBlur = 24;
           ctx.beginPath();
-          ctx.arc(spark.x, spark.y, (spark.coreRadius || 20) * 0.5 * (1 - progress), 0, Math.PI * 2);
+          ctx.arc(spark.x, spark.y, currentRadius * 0.45, 0, Math.PI * 2);
           ctx.fill();
         }
-        if (spark.rays && spark.rays.length > 0) {
-          ctx.strokeStyle = spark.color || "#ffd700";
-          ctx.lineWidth = Math.max(1, 2.8 * alpha);
-          ctx.shadowColor = spark.color || "#ffd700";
-          ctx.shadowBlur = 12;
-          for (const ray of spark.rays) {
-            const rayLen = ray.len * (0.6 + progress * 0.8);
-            const startDist = progress * 6;
-            const sx = spark.x + Math.cos(ray.angle) * startDist;
-            const sy = spark.y + Math.sin(ray.angle) * startDist;
-            const ex = spark.x + Math.cos(ray.angle) * (startDist + rayLen);
-            const ey = spark.y + Math.sin(ray.angle) * (startDist + rayLen);
-            ctx.beginPath();
-            ctx.moveTo(sx, sy);
-            ctx.lineTo(ex, ey);
-            ctx.stroke();
-          }
-        }
-        if (spark.particles) {
-          for (const p of spark.particles) {
-            if (p.life <= 0) continue;
-            const pAlpha = Math.max(0, p.life / p.maxLife);
-            ctx.globalAlpha = pAlpha;
-            ctx.fillStyle = p.color || spark.color;
-            ctx.shadowColor = p.color || spark.color;
-            ctx.shadowBlur = 8;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, (p.size || 2.5) * pAlpha, 0, Math.PI * 2);
-            ctx.fill();
-          }
+        const rayLen = (spark.rayLength || 40) * (0.5 + progress * 0.9);
+        ctx.lineWidth = Math.max(1.5, (1 - progress) * 3);
+        ctx.strokeStyle = spark.secondaryColor || "#ffd700";
+        ctx.shadowColor = spark.secondaryColor || "#ffd700";
+        ctx.shadowBlur = 14;
+        const angles = spark.angles || [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+        for (const ang of angles) {
+          const ax = spark.x + Math.cos(ang) * rayLen;
+          const ay = spark.y + Math.sin(ang) * rayLen;
+          ctx.beginPath();
+          ctx.moveTo(spark.x, spark.y);
+          ctx.lineTo(ax, ay);
+          ctx.stroke();
         }
         ctx.restore();
       }
@@ -15880,12 +16451,12 @@
       ctx.textBaseline = "middle";
       ctx.fillStyle = "rgba(5, 8, 20, 0.45)";
       ctx.fillRect(0, 0, w, h);
-      const cy = Math.max(160, h * 0.28);
+      const cy = Math.max(76, Math.min(94, h * 0.11));
       const bannerW = Math.min(w * 0.88, 560);
-      const bannerH = 76;
+      const bannerH = 68;
       const bx = w / 2 - bannerW / 2;
       const by = cy - bannerH / 2;
-      ctx.fillStyle = "rgba(11, 17, 32, 0.9)";
+      ctx.fillStyle = "rgba(11, 17, 32, 0.95)";
       ctx.strokeStyle = themeColor;
       ctx.lineWidth = 3;
       ctx.shadowColor = themeColor;
@@ -15899,15 +16470,15 @@
         ctx.fillRect(bx, by, bannerW, bannerH);
         ctx.strokeRect(bx, by, bannerW, bannerH);
       }
-      ctx.font = '900 32px "Orbitron", "Noto Sans TC", sans-serif';
+      ctx.font = '900 30px "Orbitron", "Noto Sans TC", sans-serif';
       ctx.fillStyle = themeColor;
       ctx.shadowColor = themeColor;
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = 18;
       ctx.fillText(winTitle, w / 2, cy - 10);
       ctx.font = '700 13px "Noto Sans TC", sans-serif';
       ctx.fillStyle = "#ffffff";
       ctx.shadowBlur = 6;
-      ctx.fillText(subTitle, w / 2, cy + 20);
+      ctx.fillText(subTitle, w / 2, cy + 18);
       ctx.restore();
     }
     // ─── 瑪利歐風格空中高低平台繪製 (Mario Style Floating Platforms) ───
@@ -16324,6 +16895,11 @@
             if (nextStageBtn) nextStageBtn.style.display = "flex";
             if (playAgainBtn) playAgainBtn.style.display = "none";
           } else {
+            this.isFighting = false;
+            if (this._battleLoopId) {
+              cancelAnimationFrame(this._battleLoopId);
+              this._battleLoopId = null;
+            }
             if (endModal) endModal.classList.remove("active");
             const trophyModal = document.getElementById("arcadeTrophyModal");
             const trophyScore = document.getElementById("arcadeTrophyScore");
@@ -16370,12 +16946,19 @@
       this.matchEndTimer = 0;
       combatEngine.isOver = true;
       soundEngine.stopBgm();
+      document.body.classList.remove("in-battle");
       const battleScreen = document.getElementById("battleScreen");
       if (battleScreen) battleScreen.classList.remove("active");
       const endModal = document.getElementById("matchEndModal");
       if (endModal) endModal.classList.remove("active");
+      const trophyModal = document.getElementById("arcadeTrophyModal");
+      if (trophyModal) trophyModal.classList.remove("active");
       const trainingBar = document.getElementById("trainingToolbar");
       if (trainingBar) trainingBar.style.display = "none";
+      this.arcadeMode = false;
+      this.arcadeStage = 1;
+      this.arcadeScore = 0;
+      this.arcadeStreakWins = 0;
       this.updateUserHUD();
     }
     playAgain() {
@@ -16403,9 +16986,7 @@
       const fab = document.getElementById("fabStartBtn");
       if (fab) {
         fab.addEventListener("click", () => {
-          const modeModal = document.getElementById("modeSelectModal");
-          if (modeModal) modeModal.classList.add("active");
-          soundEngine.playUI("click");
+          this.openModeSelectModal();
         });
       }
       document.querySelectorAll(".select-ai-btn").forEach((btn) => {
@@ -16442,6 +17023,23 @@
           if (tModal) tModal.classList.remove("active");
           this.exitBattleToLobby();
         };
+      }
+      const trophyCloseBtn = document.getElementById("arcadeTrophyCloseBtn");
+      if (trophyCloseBtn) {
+        trophyCloseBtn.onclick = () => {
+          const tModal = document.getElementById("arcadeTrophyModal");
+          if (tModal) tModal.classList.remove("active");
+          this.exitBattleToLobby();
+        };
+      }
+      const trophyModal = document.getElementById("arcadeTrophyModal");
+      if (trophyModal) {
+        trophyModal.addEventListener("click", (e) => {
+          if (e.target === trophyModal) {
+            trophyModal.classList.remove("active");
+            this.exitBattleToLobby();
+          }
+        });
       }
       document.querySelectorAll(".stage-select-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -16777,6 +17375,8 @@
       bindTouchBtn("touchSkill1Btn", "skill1");
       bindTouchBtn("touchSkill2Btn", "skill2");
       bindTouchBtn("touchSkill3Btn", "skill3");
+      bindTouchBtn("touchSkill4Btn", "skill4");
+      bindTouchBtn("touchSkill5Btn", "skill5");
       bindTouchBtn("touchBurstBtn", "burst");
       bindTouchBtn("touchSuperBtn", "superMove");
     }

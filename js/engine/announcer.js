@@ -137,18 +137,24 @@ export class AnnouncerEngine {
   }
 
   announceKO() {
+    this.clearCombatBanners();
     this.triggerBanner({
       type: 'ko',
       text: 'K. O. !',
       subText: '★ 決定性擊倒 ★',
       color: '#ff0055',
-      duration: 70
+      duration: 50
     });
     this.speak('K. O.!', { pitch: 0.9, rate: 0.95 });
     soundEngine.playHit('ko');
   }
 
+  clearCombatBanners() {
+    this.activeBanners = [];
+  }
+
   announceVictory(winnerName) {
+    this.clearCombatBanners();
     this.speak('Winner!', { pitch: 1.1, rate: 1.05 });
   }
 

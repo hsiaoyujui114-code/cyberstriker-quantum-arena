@@ -9,7 +9,7 @@ export class AiController {
   constructor(difficulty = 'normal') {
     this.difficulty = difficulty; // 'easy', 'normal', 'hard', 'nightmare'
     this.currentDelay = 0;
-    this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+    this.bufferedDecision = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
   }
 
   setDifficulty(diff) {
@@ -56,7 +56,7 @@ export class AiController {
    * 在浮空平台上平穩作戰，防止地面走位時無意識滑落平台
    */
   _filterPlatformEdges(ai, input) {
-    if (ai && ai.currentPlatform && input && input.y >= 0 && !input.punch && !input.kick && !input.skill1 && !input.skill2 && !input.skill3 && !input.dropThrough) {
+    if (ai && ai.currentPlatform && input && input.y >= 0 && !input.punch && !input.kick && !input.skill1 && !input.skill2 && !input.skill3 && !input.skill4 && !input.skill5 && !input.dropThrough) {
       const plat = ai.currentPlatform;
       if (ai.x <= plat.x + 18 && input.x < 0) input.x = 0;
       if (ai.x >= plat.x + plat.width - 18 && input.x > 0) input.x = 0;
@@ -69,7 +69,7 @@ export class AiController {
    * 在躍空過程中根據與玩家之相對距離，執行中段破防躍空飛踢或快速刺拳
    */
   _decideAirborneCombat(ai, player, engine) {
-    const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+    const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
     const dist = Math.abs(ai.x - player.x);
     const dirToPlayer = ai.x < player.x ? 1 : -1;
 
@@ -109,7 +109,7 @@ export class AiController {
    * 地面主決策行為樹 (Ground AI Decision Tree)
    */
   _makeDecision(ai, player, engine) {
-    const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+    const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
     const dist = Math.abs(ai.x - player.x);
     const facingPlayer = (ai.x < player.x ? 1 : -1) === ai.facing;
     const dirToPlayer = ai.x < player.x ? 1 : -1;
@@ -260,8 +260,14 @@ export class AiController {
           input.y = -1; // 前跳躍入進攻
           input.x = dirToPlayer;
           return input;
-        } else if (r < 0.65 && ai.cooldowns[0] <= 0) {
-          input.skill1 = true;
+        } else if (r < 0.65) {
+          const readySlots = [0, 1, 2, 3, 4].filter(idx => ai.cooldowns[idx] <= 0 && ai.skills?.[idx]);
+          if (readySlots.length > 0) {
+            const slot = readySlots[Math.floor(Math.random() * readySlots.length)];
+            input[`skill${slot + 1}`] = true;
+            return input;
+          }
+          input.x = dirToPlayer;
           return input;
         } else {
           input.x = dirToPlayer; // 靈敏前衝走位
@@ -598,7 +604,7 @@ export class AiController {
    * 自由格鬥訓練營假人行為控制 (Training Dummy Behavior)
    */
   _decideTrainingDummy(dummy, player, settings) {
-    const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+    const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
 
     // 1. 起身第一幀升龍反凹 (Reversal DP)
     if (settings.dummyReversal && dummy.state === 'wakeup' && dummy.stateTime >= 13) {

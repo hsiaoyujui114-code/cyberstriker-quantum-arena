@@ -543,6 +543,17 @@ body {
   50% { box-shadow: 0 0 32px rgba(255, 0, 127, 0.8); }
 }
 
+/* ─── 進入戰鬥場景時徹底隱藏所有開始按鈕 ─── */
+#battleScreen.active ~ #fabStartBtn,
+#battleScreen.active ~ .fab-start-btn,
+body.in-battle #fabStartBtn,
+body.in-battle .fab-start-btn {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
 /* ─── 通用對話框與彈窗 (Modals) ─── */
 .modal-overlay {
   position: fixed;
@@ -910,4 +921,91 @@ body {
   .mobile-controls-layer {
     display: block;
   }
+}
+
+/* ─── 武裝選擇面板流暢捲動與硬體加速 ─── */
+#loadoutSkillsGrid {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  will-change: scroll-position, transform;
+  transform: translateZ(0);
+}
+
+#loadoutSkillsGrid::-webkit-scrollbar {
+  width: 6px;
+}
+#loadoutSkillsGrid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+#loadoutSkillsGrid::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00f3ff, #ff007f);
+  border-radius: 4px;
+}
+
+.skill-card {
+  contain: layout paint;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* 我的最愛按鈕 */
+.fav-star-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 2px 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, transform 0.15s ease;
+  border-radius: 4px;
+}
+.fav-star-btn:hover {
+  transform: scale(1.25);
+  color: #ffd700;
+}
+.fav-star-btn.active {
+  color: #ffd700;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+}
+
+/* 5 槽位出戰配置卡 */
+.loadout-slot-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(0, 243, 255, 0.3);
+  border-radius: 6px;
+  padding: 5px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+  position: relative;
+  transition: all 0.15s ease;
+}
+.loadout-slot-card.active {
+  border-color: #00f3ff;
+  background: rgba(0, 243, 255, 0.12);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+}
+.loadout-slot-key-badge {
+  background: linear-gradient(135deg, #00f3ff, #0077ff);
+  color: #000;
+  font-weight: 900;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(0, 243, 255, 0.5);
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.loadout-slot-key-badge:hover {
+  background: #ffd700;
+  color: #000;
+  transform: scale(1.08);
 }

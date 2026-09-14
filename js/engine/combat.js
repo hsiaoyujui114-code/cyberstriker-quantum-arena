@@ -95,9 +95,14 @@ export class CombatEngine {
   }
 
   _createFighter(id, x, data) {
-    const skillList = (data.loadout && data.loadout.length === 3)
-      ? data.loadout.map(sid => SKILLS.find(s => s.id === sid) || SKILLS[0])
-      : [SKILLS[0], SKILLS[1], SKILLS[8]];
+    const defaultSkills = [SKILLS[0], SKILLS[1], SKILLS[2], SKILLS[3], SKILLS[4]];
+    const skillList = (data.loadout && Array.isArray(data.loadout) && data.loadout.length > 0)
+      ? data.loadout.slice(0, 5).map((sid, i) => SKILLS.find(s => s.id === sid) || defaultSkills[i] || SKILLS[0])
+      : defaultSkills;
+    while (skillList.length < 5) {
+      const unused = SKILLS.find(s => !skillList.includes(s)) || SKILLS[0];
+      skillList.push(unused);
+    }
 
     return {
       id,
@@ -136,9 +141,9 @@ export class CombatEngine {
       burstAvailable: true,
       frostTimer: 0, // 冰凍減速計時器
 
-      // 3 大自選技能
+      // 5 大自選攻擊技能
       skills: skillList,
-      cooldowns: [0, 0, 0],
+      cooldowns: [0, 0, 0, 0, 0],
 
       // 連段統計
       comboCount: 0,
@@ -186,8 +191,8 @@ export class CombatEngine {
     // 1. 訓練營專屬維護 (即時無冷卻與木樁血量自動回滿)
     if (this.isTraining) {
       if (this.trainingSettings.instantCd) {
-        this.p1.cooldowns = [0, 0, 0];
-        this.p2.cooldowns = [0, 0, 0];
+        this.p1.cooldowns = [0, 0, 0, 0, 0];
+        this.p2.cooldowns = [0, 0, 0, 0, 0];
       }
       if (this.p2.hp <= 150 || (this.p2.hp < this.p2.maxHp && this.p2.comboCount === 0 && this.p2.state === 'idle')) {
         this.p2.hp = Math.min(this.p2.maxHp, this.p2.hp + 12);
@@ -493,7 +498,7 @@ export class CombatEngine {
           });
         }
 
-        // 1. 在空中發動技能 (Air Skill Trigger!)
+        // 1. 在空中發動技能 (Air Skill Trigger! 支援 5 大招式)
         if (input) {
           if (input.skill1 && char.cooldowns[0] <= 0) {
             this._executeSkill(char, opp, 0);
@@ -505,6 +510,14 @@ export class CombatEngine {
           }
           if (input.skill3 && char.cooldowns[2] <= 0) {
             this._executeSkill(char, opp, 2);
+            break;
+          }
+          if (input.skill4 && char.cooldowns[3] <= 0) {
+            this._executeSkill(char, opp, 3);
+            break;
+          }
+          if (input.skill5 && char.cooldowns[4] <= 0) {
+            this._executeSkill(char, opp, 4);
             break;
           }
         }
@@ -576,7 +589,7 @@ export class CombatEngine {
       return;
     }
 
-    // 1. 技能觸發 (優先級最高)
+    // 1. 技能觸發 (優先級最高，支援 5 大招式槽位)
     if (input.skill1 && char.cooldowns[0] <= 0) {
       this._executeSkill(char, opp, 0);
       return;
@@ -587,6 +600,14 @@ export class CombatEngine {
     }
     if (input.skill3 && char.cooldowns[2] <= 0) {
       this._executeSkill(char, opp, 2);
+      return;
+    }
+    if (input.skill4 && char.cooldowns[3] <= 0) {
+      this._executeSkill(char, opp, 3);
+      return;
+    }
+    if (input.skill5 && char.cooldowns[4] <= 0) {
+      this._executeSkill(char, opp, 4);
       return;
     }
 
@@ -1194,8 +1215,9 @@ export class CombatEngine {
         soundEngine.playHit('dp');
         break;
 
-      case 'SK-05': // 幻影反擊壁 (架招)
-        soundEngine.playHit('guard');
+      case 'SK-05': // 幻影疾風破甲刺
+        char.vx = char.facing * 10.0;
+        soundEngine.playHit('dp');
         break;
 
       case 'SK-06': // 虛空折躍斬 (瞬移穿透)
@@ -1212,11 +1234,11 @@ export class CombatEngine {
         soundEngine.playHit('punch');
         break;
 
-      case 'SK-09': // 奈米震波罩
+      case 'SK-09': // 雷霆震波裂空掌
         soundEngine.playHit('burst');
         break;
 
-      case 'SK-10': // 超載終結砲
+      case 'SK-10': // 超載離子巨砲
         soundEngine.playHit('beam');
         break;
 
@@ -1260,6 +1282,60 @@ export class CombatEngine {
 
       case 'SK-20': // 迴旋雷霆光刃鏢
         soundEngine.playHit('dp');
+        break;
+
+      case 'SK-21': // 影分身十字手裡劍
+        soundEngine.playHit('laser');
+        break;
+
+      case 'SK-22': // 熾炎烈地波
+        char.vx = char.facing * 3.5;
+        soundEngine.playHit('bomb_drop');
+        break;
+
+      case 'SK-23': // 疾風連環迴旋踢
+        char.vx = char.facing * 7.5;
+        char.vy = -3.5;
+        char.isGrounded = false;
+        soundEngine.playHit('kick');
+        break;
+
+      case 'SK-24': // 電磁引力爆縮雷
+        soundEngine.playHit('bomb_drop');
+        break;
+
+      case 'SK-25': // 螺旋音速霸體衝
+        char.invincibleTimer = 6;
+        char.vx = char.facing * 13.5;
+        soundEngine.playHit('heavy');
+        this.triggerScreenShake(3);
+        break;
+
+      case 'SK-26': // 暗影鎖鏈重錨擊
+        char.vx = char.facing * 2.0;
+        soundEngine.playHit('heavy');
+        break;
+
+      case 'SK-27': // 冰晶地刺暴湧
+        soundEngine.playHit('laser');
+        this.triggerScreenShake(4);
+        break;
+
+      case 'SK-28': // 量子散裂高爆彈
+        soundEngine.playHit('bomb_drop');
+        break;
+
+      case 'SK-29': // 雷神天極轟天腿
+        char.vy = -9.0;
+        char.vx = char.facing * 4.0;
+        char.isGrounded = false;
+        soundEngine.playHit('thunder');
+        this.triggerScreenShake(5);
+        break;
+
+      case 'SK-30': // 光子超能連環衝拳
+        char.vx = char.facing * 6.5;
+        soundEngine.playHit('punch');
         break;
     }
   }
@@ -1564,7 +1640,124 @@ export class CombatEngine {
       return;
     }
 
-    // 奈米震波罩 (SK-09)：全方位圓形判定
+    // 影分身十字手裡劍 (SK-21)
+    if (action.id === 'SK-21') {
+      action.hitChecked = true;
+      soundEngine.playHit('laser');
+      const angles = [0, -3.2, 3.2];
+      for (let i = 0; i < 3; i++) {
+        this.projectiles.push({
+          ownerId: char.id,
+          type: 'shuriken',
+          name: '影分身十字手裡劍',
+          x: char.x + char.facing * 38,
+          y: char.y - 70 + (i - 1) * 12,
+          vx: char.facing * 15,
+          vy: angles[i],
+          radius: 10,
+          damage: 75,
+          guardType: 'all',
+          skin: char.skin,
+          life: 65
+        });
+      }
+      return;
+    }
+
+    // 熾炎烈地波 (SK-22)
+    if (action.id === 'SK-22') {
+      action.hitChecked = true;
+      soundEngine.playHit('bomb_drop');
+      this.triggerScreenShake(4);
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'ground_wave',
+        name: '熾炎烈地波',
+        x: char.x + char.facing * 35,
+        y: (char.currentPlatform ? char.currentPlatform.y : this.floorY) - 10,
+        platform: char.currentPlatform,
+        vx: char.facing * 12,
+        vy: 0,
+        radius: 16,
+        damage: action.damage,
+        guardType: 'crouch_only',
+        knockdown: true,
+        skin: char.skin,
+        life: 55
+      });
+      return;
+    }
+
+    // 電磁引力爆縮雷 (SK-24)
+    if (action.id === 'SK-24') {
+      action.hitChecked = true;
+      soundEngine.playHit('bomb_drop');
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'emp_mine',
+        name: '電磁引力雷',
+        x: char.x + char.facing * 48,
+        y: char.y - 60,
+        vx: char.facing * 5.5,
+        vy: -2.0,
+        radius: 14,
+        damage: action.damage,
+        guardType: 'all',
+        knockdown: true,
+        skin: char.skin,
+        life: 140
+      });
+      return;
+    }
+
+    // 冰晶地刺暴湧 (SK-27)
+    if (action.id === 'SK-27') {
+      action.hitChecked = true;
+      soundEngine.playHit('laser');
+      this.triggerScreenShake(4);
+      const spikeX = char.x + char.facing * 75;
+      const spikeY = (char.currentPlatform ? char.currentPlatform.y : this.floorY) - 15;
+      this.shockwaves.push({
+        x: spikeX,
+        y: spikeY,
+        radius: 12,
+        maxRadius: 65,
+        color: '#38bdf8',
+        duration: 18
+      });
+      if (Math.abs(opp.x - spikeX) <= 70 && Math.abs(opp.y - spikeY) <= 80 && opp.invincibleTimer <= 0) {
+        this._applyHit(char, opp, {
+          name: action.name,
+          damage: action.damage,
+          guardType: action.guardType,
+          knockdown: true
+        });
+      }
+      return;
+    }
+
+    // 量子散裂高爆彈 (SK-28)
+    if (action.id === 'SK-28') {
+      action.hitChecked = true;
+      soundEngine.playHit('bomb_drop');
+      this.projectiles.push({
+        ownerId: char.id,
+        type: 'cluster_bomb',
+        name: '量子散裂高爆彈',
+        x: char.x + char.facing * 42,
+        y: char.y - 70,
+        vx: char.facing * 13,
+        vy: -4.5,
+        radius: 12,
+        damage: action.damage,
+        guardType: 'all',
+        skin: char.skin,
+        life: 70
+      });
+      return;
+    }
+
+    // 雷霆震波裂空掌 (SK-09)：全方位圓形判定
     if (action.id === 'SK-09') {
       action.hitChecked = true;
       this.shockwaves.push({
@@ -1582,7 +1775,7 @@ export class CombatEngine {
       return;
     }
 
-    // 超載終結砲 (SK-10)：全螢幕巨光束
+    // 超載離子巨砲 (SK-10)：全螢幕巨光束
     if (action.id === 'SK-10') {
       action.hitChecked = true;
       this.shockwaves.push({
@@ -1604,19 +1797,15 @@ export class CombatEngine {
     }
 
     // 常規近戰範圍判定 (擴大垂直 Y 軸判定，使空中跳躍與平台對戰順暢命中)
-    const hitReach = action.id === 'SK-03' ? 130 : (action.id === 'SK-08' ? 100 : 90);
+    const hitReach = (action.id === 'SK-03' || action.id === 'SK-26') ? 135
+      : (action.id === 'SK-25' ? 125
+      : (action.id === 'SK-05' || action.id === 'SK-23' || action.id === 'SK-30') ? 115
+      : (action.id === 'SK-08' ? 100 : 90));
     const inRange = Math.abs(char.x - opp.x) <= hitReach && Math.abs(char.y - opp.y) <= 125;
     const isFacingOpp = (char.facing === 1 && opp.x >= char.x - 20) || (char.facing === -1 && opp.x <= char.x + 20);
 
     if (inRange && isFacingOpp) {
       action.hitChecked = true;
-
-      // 幻影反擊壁 (SK-05) 檢驗：若對手正處於反擊姿態，且非投技，對手架招成功反打！
-      if (opp.currentAction && opp.currentAction.id === 'SK-05' && action.guardType !== 'unblockable') {
-        this._triggerParryCounter(opp, char);
-        return;
-      }
-
       this._applyHit(char, opp, action);
     }
   }
@@ -1970,8 +2159,11 @@ export class CombatEngine {
             });
           }
         }
-      } else if (p.type === 'grenade') {
+      } else if (p.type === 'grenade' || p.type === 'cluster_bomb') {
         p.vy = (p.vy || 0) + 0.46; // 拋物線重力
+      } else if (p.type === 'emp_mine') {
+        p.vx *= 0.95;
+        p.vy = (p.vy || 0) * 0.95;
       } else if (p.type === 'boomerang') {
         p.outwardFrames = (p.outwardFrames !== undefined ? p.outwardFrames : 30) - 1;
         if (p.outwardFrames > 0) {
@@ -2068,6 +2260,54 @@ export class CombatEngine {
             name: p.name || '空對地離子爆彈',
             damage: p.damage,
             guardType: p.guardType || 'stand_only',
+            knockdown: true
+          });
+        }
+        this.projectiles.splice(i, 1);
+        continue;
+      }
+
+      if (p.type === 'cluster_bomb' && (p.y >= this.floorY - 8 || (p.vy > 0 && this._checkPlatformHit(p)) || p.life <= 0)) {
+        soundEngine.playHit('bomb_drop');
+        this.triggerScreenShake(5);
+        for (let k = -1; k <= 1; k++) {
+          this.shockwaves.push({
+            x: p.x + k * 26,
+            y: p.y,
+            radius: 8,
+            maxRadius: 55,
+            color: '#fb923c',
+            duration: 16
+          });
+        }
+        if (target && Math.abs(p.x - target.x) < 75 && Math.abs(p.y - target.y) < 70 && target.invincibleTimer <= 0) {
+          this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+            name: '量子散裂高爆彈',
+            damage: p.damage,
+            guardType: 'stand_only',
+            knockdown: true
+          });
+        }
+        this.projectiles.splice(i, 1);
+        continue;
+      }
+
+      if (p.type === 'emp_mine' && ((target && Math.abs(p.x - target.x) < 55 && Math.abs(p.y - target.y) < 65) || p.life <= 0)) {
+        soundEngine.playHit('burst');
+        this.triggerScreenShake(6);
+        this.shockwaves.push({
+          x: p.x,
+          y: p.y,
+          radius: 12,
+          maxRadius: 85,
+          color: '#c084fc',
+          duration: 18
+        });
+        if (target && Math.abs(p.x - target.x) < 80 && Math.abs(p.y - target.y) < 75 && target.invincibleTimer <= 0) {
+          this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {
+            name: '電磁引力爆縮雷',
+            damage: p.damage,
+            guardType: 'all',
             knockdown: true
           });
         }

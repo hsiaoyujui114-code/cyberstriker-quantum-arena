@@ -29,9 +29,27 @@ class CyberStrikerApp {
     this.isFighting = false;
     this.matchMode = 'ai'; // 'ai', 'local_2p', 'p2p', 'training', 'arcade'
     this.aiDifficulty = 'normal';
-    this.loadoutSelection = ['SK-01', 'SK-02', 'SK-09'];
+    this.loadoutSelection = ['SK-01', 'SK-02', 'SK-03', 'SK-10', 'SK-11'];
     this.loadoutTimer = 15;
     this.loadoutInterval = null;
+
+    // 自訂技能槽位按鍵綁定 (預設 U, I, O, Y, H)
+    let savedKeys = null;
+    try {
+      savedKeys = JSON.parse(localStorage.getItem('quantum_arena_skill_keys') || 'null');
+    } catch (e) { savedKeys = null; }
+    this.skillKeyBindings = (Array.isArray(savedKeys) && savedKeys.length === 5)
+      ? savedKeys
+      : ['KeyU', 'KeyI', 'KeyO', 'KeyY', 'KeyH'];
+
+    // 我的最愛攻擊技能清單
+    let savedFavs = null;
+    try {
+      savedFavs = JSON.parse(localStorage.getItem('quantum_arena_favorite_skills') || 'null');
+    } catch (e) { savedFavs = null; }
+    this.favoriteSkills = Array.isArray(savedFavs)
+      ? savedFavs
+      : ['SK-01', 'SK-02', 'SK-03', 'SK-10', 'SK-11'];
 
     // 主題戰鬥場景與單人街機闖關
     this.selectedStageId = 'random';
@@ -44,7 +62,7 @@ class CyberStrikerApp {
 
     // 按鍵映射
     this.keys = {};
-    this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false, superMove: false };
+    this.mobileInputs = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false, superMove: false };
 
     // 畫布
     this.canvas = null;
@@ -550,11 +568,17 @@ class CyberStrikerApp {
     if (modal) modal.classList.remove('active');
   }
 
-  // ─── 賽前戰術武器與技能配置視窗 (20 款自由挑選 3 項・無時間限制) ───
+  // ─── 賽前戰術武器與技能配置視窗 (30 款純攻擊自由挑選 5 項・無時間限制) ───
   openLoadoutModal(startMatchCallback) {
     const modal = document.getElementById('loadoutModal');
     if (!modal) return;
     modal.classList.add('active');
+
+    // 暫停背景展示台動畫以節省 CPU/GPU 確保滾動完全順暢
+    if (this.pedestalAnimId) {
+      cancelAnimationFrame(this.pedestalAnimId);
+      this.pedestalAnimId = null;
+    }
 
     // 清除舊倒數 (若有)
     if (this.loadoutInterval) {
@@ -563,10 +587,20 @@ class CyberStrikerApp {
     }
 
     const u = saveSystem.currentUser;
-    this.loadoutSelection = (u && u.loadout && u.loadout.length === 3) ? [...u.loadout] : ['SK-15', 'SK-16', 'SK-18'];
-    this.loadoutFilter = this.loadoutFilter || 'all';
+    if (u && Array.isArray(u.loadout) && u.loadout.length > 0) {
+      this.loadoutSelection = [...u.loadout];
+    } else {
+      this.loadoutSelection = ['SK-01', 'SK-02', 'SK-03', 'SK-10', 'SK-11'];
+    }
+    while (this.loadoutSelection.length < 5) {
+      const fallback = SKILLS.find(s => !this.loadoutSelection.includes(s.id)) || SKILLS[0];
+      this.loadoutSelection.push(fallback.id);
+    }
 
-    // 綁定武裝分類篩選標籤 (全部武裝 / 遠程武器庫 / 近戰格鬥武藝)
+    this.loadoutFilter = this.loadoutFilter || 'all';
+    this._updateFavCountBadge();
+
+    // 綁定武裝分類篩選標籤 (我的最愛 / 全部武裝 / 遠程武器庫 / 近戰格鬥武藝)
     document.querySelectorAll('.loadout-filter-btn').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.loadout-filter-btn').forEach(b => {
@@ -581,15 +615,17 @@ class CyberStrikerApp {
       };
     });
 
+    this._renderLoadoutSlotsBar();
     this._renderLoadoutSkillsGrid();
 
-    // 綁定五大戰術流派快捷按鈕
+    // 綁定六大戰術流派快捷按鈕
     document.querySelectorAll('.archetype-btn').forEach(btn => {
       btn.onclick = () => {
         const archId = btn.dataset.arch;
         const arch = ARCHETYPES.find(a => a.id === archId);
         if (arch) {
           this.loadoutSelection = [...arch.skills];
+          this._renderLoadoutSlotsBar();
           this._renderLoadoutSkillsGrid();
           soundEngine.playUI('click');
         }
@@ -605,32 +641,146 @@ class CyberStrikerApp {
     }
   }
 
+  isFavoriteSkill(id) {
+    return this.favoriteSkills && this.favoriteSkills.includes(id);
+  }
+
+  toggleFavoriteSkill(id) {
+    if (this.favoriteSkills.includes(id)) {
+      this.favoriteSkills = this.favoriteSkills.filter(x => x !== id);
+    } else {
+      this.favoriteSkills.push(id);
+    }
+    localStorage.setItem('quantum_arena_favorite_skills', JSON.stringify(this.favoriteSkills));
+    this._updateFavCountBadge();
+    this._renderLoadoutSkillsGrid();
+    soundEngine.playUI('click');
+  }
+
+  _updateFavCountBadge() {
+    const el = document.getElementById('favCountBadge');
+    if (el) el.textContent = this.favoriteSkills ? this.favoriteSkills.length : 0;
+  }
+
+  getSkillKeyDisplayName(idx) {
+    const code = (this.skillKeyBindings && this.skillKeyBindings[idx]) || ['KeyU', 'KeyI', 'KeyO', 'KeyY', 'KeyH'][idx];
+    if (!code) return `K${idx + 1}`;
+    if (code.startsWith('Key')) return code.slice(3);
+    if (code.startsWith('Digit')) return code.slice(5);
+    if (code.startsWith('Numpad')) return 'Num' + code.slice(6);
+    return code;
+  }
+
+  _renderLoadoutSlotsBar() {
+    const container = document.getElementById('loadoutSlotsContainer');
+    const countEl = document.getElementById('loadoutSelectedCount');
+    if (countEl) countEl.textContent = `已選擇 ${this.loadoutSelection.length} / 5 招`;
+    if (!container) return;
+
+    container.innerHTML = [0, 1, 2, 3, 4].map(slotIdx => {
+      const skillId = this.loadoutSelection[slotIdx];
+      const sk = SKILLS.find(s => s.id === skillId);
+      const keyDisplay = this.getSkillKeyDisplayName(slotIdx);
+
+      if (!sk) {
+        return `
+          <div class="loadout-slot-card" style="border-style: dashed; opacity: 0.6;">
+            <span style="font-size: 10px; color: #94a3b8;">槽位 ${slotIdx + 1}</span>
+            <span style="font-size: 11px; color: #64748b;">(未選定)</span>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="loadout-slot-card active" style="border-color: ${sk.color};">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <span style="font-size: 10px; color: #00f3ff; font-weight: 800;">槽位 ${slotIdx + 1}</span>
+            <span class="loadout-slot-key-badge" data-slot="${slotIdx}" title="點擊自訂按鍵綁定">[ ${keyDisplay} ]</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+            <i class="${sk.icon}" style="color: ${sk.color}; font-size: 13px;"></i>
+            <strong style="color: #fff; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px;">${sk.name}</strong>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // 綁定點擊按鍵標籤修改按鍵事件
+    container.querySelectorAll('.loadout-slot-key-badge').forEach(badge => {
+      badge.onclick = (e) => {
+        e.stopPropagation();
+        const slot = parseInt(badge.dataset.slot, 10);
+        badge.textContent = '[ 請按鍵... ]';
+        badge.style.background = '#ff007f';
+        badge.style.color = '#fff';
+
+        const onKeyDown = (evt) => {
+          evt.preventDefault();
+          evt.stopPropagation();
+          window.removeEventListener('keydown', onKeyDown, true);
+          if (evt.key === 'Escape') {
+            this._renderLoadoutSlotsBar();
+            return;
+          }
+          this.skillKeyBindings[slot] = evt.code;
+          localStorage.setItem('quantum_arena_skill_keys', JSON.stringify(this.skillKeyBindings));
+          soundEngine.playUI('click');
+          this._renderLoadoutSlotsBar();
+          this._renderLoadoutSkillsGrid();
+        };
+        window.addEventListener('keydown', onKeyDown, { capture: true, once: true });
+      };
+    });
+  }
+
   _renderLoadoutSkillsGrid() {
     const container = document.getElementById('loadoutSkillsGrid');
     if (!container) return;
 
     const filter = this.loadoutFilter || 'all';
-    const displayedSkills = SKILLS.filter(sk => {
-      if (filter === 'all') return true;
-      return sk.category === filter;
-    });
+    let displayedSkills = SKILLS;
+    if (filter === 'favorites') {
+      displayedSkills = SKILLS.filter(sk => this.isFavoriteSkill(sk.id));
+    } else if (filter === 'ranged') {
+      displayedSkills = SKILLS.filter(sk => sk.category === 'ranged');
+    } else if (filter === 'melee') {
+      displayedSkills = SKILLS.filter(sk => sk.category === 'melee');
+    }
+
+    if (filter === 'favorites' && displayedSkills.length === 0) {
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 45px 15px; color: #94a3b8;">
+          <div style="font-size: 42px; color: #ffd700; margin-bottom: 10px; animation: pulse-event 1.8s infinite;">★</div>
+          <strong style="color: #fff; font-size: 16px;">目前「我的最愛」尚無收藏招式！</strong>
+          <p style="font-size: 13px; color: #64748b; margin-top: 6px;">點擊任意技能卡片右上角的 ⭐ 星號，即可將您偏好的攻擊加入我的最愛，快速出戰選用！</p>
+        </div>
+      `;
+      return;
+    }
 
     container.innerHTML = displayedSkills.map(sk => {
       const isSelected = this.loadoutSelection.includes(sk.id);
       const slotIndex = this.loadoutSelection.indexOf(sk.id);
-      const keyName = slotIndex === 0 ? '[U]' : (slotIndex === 1 ? '[I]' : (slotIndex === 2 ? '[O]' : ''));
+      const keyDisplay = slotIndex >= 0 ? `[${this.getSkillKeyDisplayName(slotIndex)}]` : '';
+      const slotLabel = slotIndex >= 0 ? `槽位 ${slotIndex + 1}` : '';
       const isRanged = sk.category === 'ranged';
+      const isFav = this.isFavoriteSkill(sk.id);
 
       return `
-        <div class="skill-card ${isSelected ? 'selected' : ''}" data-id="${sk.id}" style="background: rgba(255,255,255,0.03); border: 1.5px solid ${isSelected ? '#00f3ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 10px; cursor: pointer; position: relative; transition: all 0.2s;">
+        <div class="skill-card ${isSelected ? 'selected' : ''}" data-id="${sk.id}" style="background: rgba(255,255,255,0.03); border: 1.5px solid ${isSelected ? '#00f3ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 10px; cursor: pointer; position: relative; transition: border-color 0.15s ease, box-shadow 0.15s ease; will-change: transform;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: ${isRanged ? 'rgba(56,189,248,0.2)' : 'rgba(244,63,94,0.2)'}; color: ${isRanged ? '#38bdf8' : '#fb7185'}; border: 1px solid ${isRanged ? '#38bdf8' : '#fb7185'};">
-                ${isRanged ? '🏹 遠程武器' : '⚔️ 近戰武藝'}
+                ${isRanged ? '🏹 遠程神兵' : '⚔️ 近戰武藝'}
               </span>
               <strong style="color: ${sk.color}; font-size: 13px;"><i class="${sk.icon}"></i> ${sk.name}</strong>
             </div>
-            ${isSelected ? `<span style="background: #00f3ff; color: #000; font-size: 11px; font-weight: 900; padding: 1px 7px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${keyName}</span>` : ''}
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button class="fav-star-btn ${isFav ? 'active' : ''}" data-fav-id="${sk.id}" title="${isFav ? '移出我的最愛' : '加入我的最愛'}">
+                <i class="fa-${isFav ? 'solid' : 'regular'} fa-star"></i>
+              </button>
+              ${isSelected ? `<span style="background: #00f3ff; color: #000; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${slotLabel} ${keyDisplay}</span>` : ''}
+            </div>
           </div>
           <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">${sk.typeName} | 傷害 ${sk.damage} | CD ${sk.cd}s</div>
           <div style="font-size: 11px; color: #64748b; margin-top: 4px; line-height: 1.35;">${sk.description}</div>
@@ -638,24 +788,32 @@ class CyberStrikerApp {
       `;
     }).join('');
 
+    // 綁定卡片點選與我的最愛星號點擊
     container.querySelectorAll('.skill-card').forEach(card => {
+      const id = card.dataset.id;
+      const starBtn = card.querySelector('.fav-star-btn');
+      if (starBtn) {
+        starBtn.onclick = (e) => {
+          e.stopPropagation();
+          this.toggleFavoriteSkill(id);
+        };
+      }
+
       card.addEventListener('click', () => {
-        const id = card.dataset.id;
         if (this.loadoutSelection.includes(id)) {
-          // 已勾選則移除 (若至少保留1個)
           if (this.loadoutSelection.length > 1) {
             this.loadoutSelection = this.loadoutSelection.filter(s => s !== id);
           }
         } else {
-          if (this.loadoutSelection.length < 3) {
+          if (this.loadoutSelection.length < 5) {
             this.loadoutSelection.push(id);
           } else {
-            // 已滿3個，替換最先選擇的項目
             this.loadoutSelection.shift();
             this.loadoutSelection.push(id);
           }
         }
         soundEngine.playUI('click');
+        this._renderLoadoutSlotsBar();
         this._renderLoadoutSkillsGrid();
       });
     });
@@ -665,6 +823,9 @@ class CyberStrikerApp {
     const modal = document.getElementById('loadoutModal');
     if (modal) modal.classList.remove('active');
     saveSystem.updateLoadout(this.loadoutSelection);
+    if (!this.isFighting && this.activeTab === 'skins') {
+      this._startPedestalLoop();
+    }
     if (callback) callback();
   }
 
@@ -708,6 +869,7 @@ class CyberStrikerApp {
     }
     const battleScreen = document.getElementById('battleScreen');
     if (battleScreen) battleScreen.classList.add('active');
+    document.body.classList.add('in-battle');
 
     const p1Skin = this.getEquippedSkin();
     let p2Skin = SKINS[1]; // 預設對手
@@ -768,7 +930,7 @@ class CyberStrikerApp {
     const p2Data = {
       name: p2Name,
       skin: p2Skin,
-      loadout: ['SK-01', 'SK-02', 'SK-09']
+      loadout: ['SK-01', 'SK-02', 'SK-06', 'SK-16', 'SK-17']
     };
 
     // 戰鬥前確保畫布尺寸與擂台邊界自適應當前螢幕
@@ -811,29 +973,43 @@ class CyberStrikerApp {
     const bar = document.getElementById('battleActionBar');
     if (!bar) return;
 
-    bar.innerHTML = combatEngine.p1.skills.map((sk, idx) => {
-      const hotkey = idx === 0 ? 'U' : (idx === 1 ? 'I' : 'O');
+    bar.innerHTML = (combatEngine.p1.skills || []).map((sk, idx) => {
+      const hotkey = this.getSkillKeyDisplayName(idx);
       return `
-        <div class="skill-hud-card" id="skillCard_${idx}" style="border-color: ${sk.color};">
+        <div class="skill-hud-card" id="skillCard_${idx}" style="border-color: ${sk.color}; cursor: pointer;" title="${sk.name} [${hotkey}]">
           <div class="skill-cd-overlay" id="skillCdOverlay_${idx}"></div>
-          <i class="${sk.icon}" style="font-size: 20px; color: ${sk.color};"></i>
-          <span style="font-size: 10px; font-weight: 900; color: #fff;">[${hotkey}]</span>
+          <i class="${sk.icon}" style="font-size: 18px; color: ${sk.color}; pointer-events: none;"></i>
+          <span style="font-size: 10px; font-weight: 900; color: #fff; pointer-events: none;">[${hotkey}]</span>
         </div>
       `;
     }).join('') + `
-      <div class="guard-hud-card" id="guardHudBtn" title="按住召喚量子防護罩 (快捷鍵: L / Shift)">
-        <i class="fa-solid fa-shield-halved" style="font-size: 20px; color: #38bdf8;"></i>
-        <span style="font-size: 10px; font-weight: 900; color: #38bdf8;">[L] 護盾</span>
+      <div class="guard-hud-card" id="guardHudBtn" title="按住召喚量子防護罩 (快捷鍵: L / Shift)" style="cursor: pointer;">
+        <i class="fa-solid fa-shield-halved" style="font-size: 18px; color: #38bdf8; pointer-events: none;"></i>
+        <span style="font-size: 10px; font-weight: 900; color: #38bdf8; pointer-events: none;">[L] 護盾</span>
       </div>
-      <div class="burst-hud-card" id="burstHudBtn" title="受擊時脫身爆發 [B]">
-        <span style="font-size: 11px;">BURST</span>
-        <span style="font-size: 9px; opacity: 0.8;">[B]</span>
+      <div class="burst-hud-card" id="burstHudBtn" title="受擊時脫身爆發 [B]" style="cursor: pointer;">
+        <span style="font-size: 11px; pointer-events: none;">BURST</span>
+        <span style="font-size: 9px; opacity: 0.8; pointer-events: none;">[B]</span>
       </div>
-      <div class="burst-hud-card" id="superHudBtn" style="background: linear-gradient(135deg, #ffd700, #ff007f); border-color: #ffd700;" title="滿能量或殘血時發動終極奧義 [P]">
-        <span style="font-size: 11px; font-weight: 900; color: #fff;">SUPER</span>
-        <span style="font-size: 9px; opacity: 0.9; color: #ffd700;">[P] 奧義</span>
+      <div class="burst-hud-card" id="superHudBtn" style="background: linear-gradient(135deg, #ffd700, #ff007f); border-color: #ffd700; cursor: pointer;" title="滿能量或殘血時發動終極奧義 [P]">
+        <span style="font-size: 11px; font-weight: 900; color: #fff; pointer-events: none;">SUPER</span>
+        <span style="font-size: 9px; opacity: 0.9; color: #ffd700; pointer-events: none;">[P] 奧義</span>
       </div>
     `;
+
+    // 綁定 5 大技能 HUD 卡片點擊/觸碰釋放
+    (combatEngine.p1.skills || []).forEach((_, idx) => {
+      const card = document.getElementById(`skillCard_${idx}`);
+      if (card) {
+        const triggerSkill = (e) => {
+          e.preventDefault();
+          this.mobileInputs[`skill${idx + 1}`] = true;
+          setTimeout(() => { this.mobileInputs[`skill${idx + 1}`] = false; }, 90);
+        };
+        card.onmousedown = triggerSkill;
+        card.ontouchstart = triggerSkill;
+      }
+    });
 
     // 綁定防護罩 HUD 按鈕點擊/按住事件
     const guardBtn = document.getElementById('guardHudBtn');
@@ -843,6 +1019,24 @@ class CyberStrikerApp {
       guardBtn.onmouseleave = () => { this.keys['KeyL'] = false; };
       guardBtn.ontouchstart = (e) => { e.preventDefault(); this.mobileInputs.guard = true; };
       guardBtn.ontouchend = (e) => { e.preventDefault(); this.mobileInputs.guard = false; };
+    }
+
+    // 綁定爆發 HUD 按鈕點擊事件
+    const burstBtn = document.getElementById('burstHudBtn');
+    if (burstBtn) {
+      burstBtn.onclick = (e) => {
+        e.preventDefault();
+        this.keys['KeyB'] = true;
+        setTimeout(() => { this.keys['KeyB'] = false; }, 80);
+      };
+      burstBtn.ontouchstart = (e) => {
+        e.preventDefault();
+        this.mobileInputs.burst = true;
+      };
+      burstBtn.ontouchend = (e) => {
+        e.preventDefault();
+        this.mobileInputs.burst = false;
+      };
     }
 
     // 綁定終極奧義 HUD 按鈕點擊事件
@@ -893,13 +1087,13 @@ class CyberStrikerApp {
     while (this._timeAccumulator >= FIXED_STEP && steps < 3) {
       // 1. 採集 1P 輸入 (對局結束時停止採集，勝者保持勝利姿態)
       const inputP1 = combatEngine.isOver
-        ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false }
+        ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false }
         : this._gatherInputsP1();
 
       // 2. 採集 2P / AI 輸入
       let inputP2 = null;
       if (combatEngine.isOver) {
-        inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, burst: false };
+        inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
       } else if (this.matchMode === 'local_2p') {
         inputP2 = this._gatherInputsP2();
       } else {
@@ -954,6 +1148,11 @@ class CyberStrikerApp {
     if (Math.abs(m.x) > 0.1) x = m.x;
 
     const dropThrough = isDown && isUp;
+    const k1 = (this.skillKeyBindings && this.skillKeyBindings[0]) || 'KeyU';
+    const k2 = (this.skillKeyBindings && this.skillKeyBindings[1]) || 'KeyI';
+    const k3 = (this.skillKeyBindings && this.skillKeyBindings[2]) || 'KeyO';
+    const k4 = (this.skillKeyBindings && this.skillKeyBindings[3]) || 'KeyY';
+    const k5 = (this.skillKeyBindings && this.skillKeyBindings[4]) || 'KeyH';
 
     return {
       x,
@@ -964,16 +1163,18 @@ class CyberStrikerApp {
       punch: !!(k['KeyJ'] || m.punch),
       kick: !!(k['KeyK'] || m.kick),
       guard: !!(k['KeyL'] || k['ShiftLeft'] || k['ShiftRight'] || m.guard),
-      skill1: !!(k['KeyU'] || m.skill1),
-      skill2: !!(k['KeyI'] || m.skill2),
-      skill3: !!(k['KeyO'] || m.skill3),
+      skill1: !!(k[k1] || m.skill1),
+      skill2: !!(k[k2] || m.skill2),
+      skill3: !!(k[k3] || m.skill3),
+      skill4: !!(k[k4] || m.skill4),
+      skill5: !!(k[k5] || m.skill5),
       burst: !!(k['KeyB'] || m.burst),
       superMove: !!(k['KeyP'] || m.superMove)
     };
   }
 
   _gatherInputsP2() {
-    // 本地雙人同機對決 2P 鍵位 (方向鍵 + 數字鍵盤 1/2/4/5/6/3)
+    // 本地雙人同機對決 2P 鍵位 (方向鍵 + 數字鍵盤 1/2/4/5/6/7/9)
     const k = this.keys;
     let x = 0;
     let y = 0;
@@ -999,6 +1200,8 @@ class CyberStrikerApp {
       skill1: !!(k['Numpad4'] || k['Digit4']),
       skill2: !!(k['Numpad5'] || k['Digit5']),
       skill3: !!(k['Numpad6'] || k['Digit6']),
+      skill4: !!(k['Numpad7'] || k['Digit8']),
+      skill5: !!(k['Numpad9'] || k['Digit9']),
       burst: !!(k['NumpadPlus'] || k['NumpadEnter'] || k['Digit7']),
       superMove: !!(k['Numpad3'] || k['Digit3'])
     };
@@ -1455,13 +1658,13 @@ class CyberStrikerApp {
     // 10. 繪製熱血連擊計數器 (Arcade Combo Counter HUD)
     this._drawComboCounters(ctx, w, h);
 
-    // 11. 戰鬥結束勝利橫幅與冠軍慶祝 (Victory Celebration Banner)
+    // 11. 戰鬥播報語音與華麗動態文字橫幅 (Announcer & Combat Banners)
+    announcerEngine.draw(ctx, w, h);
+
+    // 12. 戰鬥結束勝利橫幅與冠軍慶祝 (Victory Celebration Banner) - 置於最頂層最上排，絕不被任何戰鬥文字遮擋
     if (combatEngine.isOver && !combatEngine.isTraining) {
       this._drawVictoryBanner(ctx, w, h);
     }
-
-    // 12. 戰鬥播報語音與華麗動態文字橫幅 (Announcer & Combat Banners)
-    announcerEngine.draw(ctx, w, h);
   }
 
   // ─── 打擊爆裂火花與斬芒特效 (Hit Sparks & Impact Rays) ───
@@ -1485,48 +1688,30 @@ class CyberStrikerApp {
       ctx.stroke();
 
       // 2. 核心白熾爆閃 (White Flash)
-      if (spark.life >= spark.maxLife - 4) {
+      if (progress < 0.35) {
         ctx.fillStyle = '#ffffff';
         ctx.shadowColor = '#ffffff';
         ctx.shadowBlur = 24;
         ctx.beginPath();
-        ctx.arc(spark.x, spark.y, (spark.coreRadius || 20) * 0.5 * (1 - progress), 0, Math.PI * 2);
+        ctx.arc(spark.x, spark.y, currentRadius * 0.45, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // 3. 破空放射狀斬擊光芒 (Directional Rays)
-      if (spark.rays && spark.rays.length > 0) {
-        ctx.strokeStyle = spark.color || '#ffd700';
-        ctx.lineWidth = Math.max(1, 2.8 * alpha);
-        ctx.shadowColor = spark.color || '#ffd700';
-        ctx.shadowBlur = 12;
-        for (const ray of spark.rays) {
-          const rayLen = ray.len * (0.6 + progress * 0.8);
-          const startDist = progress * 6;
-          const sx = spark.x + Math.cos(ray.angle) * startDist;
-          const sy = spark.y + Math.sin(ray.angle) * startDist;
-          const ex = spark.x + Math.cos(ray.angle) * (startDist + rayLen);
-          const ey = spark.y + Math.sin(ray.angle) * (startDist + rayLen);
-          ctx.beginPath();
-          ctx.moveTo(sx, sy);
-          ctx.lineTo(ex, ey);
-          ctx.stroke();
-        }
-      }
+      // 3. 放射狀斬擊十字光芒 (Directional Slash & Impact Rays)
+      const rayLen = (spark.rayLength || 40) * (0.5 + progress * 0.9);
+      ctx.lineWidth = Math.max(1.5, (1 - progress) * 3);
+      ctx.strokeStyle = spark.secondaryColor || '#ffd700';
+      ctx.shadowColor = spark.secondaryColor || '#ffd700';
+      ctx.shadowBlur = 14;
 
-      // 4. 飛濺火花微粒 (Flying Spark Particles)
-      if (spark.particles) {
-        for (const p of spark.particles) {
-          if (p.life <= 0) continue;
-          const pAlpha = Math.max(0, p.life / p.maxLife);
-          ctx.globalAlpha = pAlpha;
-          ctx.fillStyle = p.color || spark.color;
-          ctx.shadowColor = p.color || spark.color;
-          ctx.shadowBlur = 8;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, (p.size || 2.5) * pAlpha, 0, Math.PI * 2);
-          ctx.fill();
-        }
+      const angles = spark.angles || [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+      for (const ang of angles) {
+        const ax = spark.x + Math.cos(ang) * rayLen;
+        const ay = spark.y + Math.sin(ang) * rayLen;
+        ctx.beginPath();
+        ctx.moveTo(spark.x, spark.y);
+        ctx.lineTo(ax, ay);
+        ctx.stroke();
       }
 
       ctx.restore();
@@ -1596,18 +1781,18 @@ class CyberStrikerApp {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // 背景慶祝暗幕
+    // 背景慶祝暗幕 (勝利時輕度壓暗背景，突出最上排 Victory 橫幅)
     ctx.fillStyle = 'rgba(5, 8, 20, 0.45)';
     ctx.fillRect(0, 0, w, h);
 
-    // 冠軍光芒主橫幅
-    const cy = Math.max(160, h * 0.28);
+    // 冠軍光芒主橫幅 - 永遠置頂在最上排 (Y: 82px 左右)，絕不被其他字或攻擊特效擋到
+    const cy = Math.max(76, Math.min(94, h * 0.11));
     const bannerW = Math.min(w * 0.88, 560);
-    const bannerH = 76;
+    const bannerH = 68;
     const bx = w / 2 - bannerW / 2;
     const by = cy - bannerH / 2;
 
-    ctx.fillStyle = 'rgba(11, 17, 32, 0.9)';
+    ctx.fillStyle = 'rgba(11, 17, 32, 0.95)';
     ctx.strokeStyle = themeColor;
     ctx.lineWidth = 3;
     ctx.shadowColor = themeColor;
@@ -1623,18 +1808,18 @@ class CyberStrikerApp {
       ctx.strokeRect(bx, by, bannerW, bannerH);
     }
 
-    // 主標題文字
-    ctx.font = '900 32px "Orbitron", "Noto Sans TC", sans-serif';
+    // 主標題文字 (最上排醒目大字 VICTORY)
+    ctx.font = '900 30px "Orbitron", "Noto Sans TC", sans-serif';
     ctx.fillStyle = themeColor;
     ctx.shadowColor = themeColor;
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 18;
     ctx.fillText(winTitle, w / 2, cy - 10);
 
     // 副標題文字
     ctx.font = '700 13px "Noto Sans TC", sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.shadowBlur = 6;
-    ctx.fillText(subTitle, w / 2, cy + 20);
+    ctx.fillText(subTitle, w / 2, cy + 18);
 
     ctx.restore();
   }
@@ -2138,7 +2323,12 @@ class CyberStrikerApp {
           if (nextStageBtn) nextStageBtn.style.display = 'flex';
           if (playAgainBtn) playAgainBtn.style.display = 'none';
         } else {
-          // 全破街機 5 連關！彈出大榮譽獎盃對話框
+          // 全破街機 5 連關！停止戰鬥主循環，彈出大榮譽獎盃對話框
+          this.isFighting = false;
+          if (this._battleLoopId) {
+            cancelAnimationFrame(this._battleLoopId);
+            this._battleLoopId = null;
+          }
           if (endModal) endModal.classList.remove('active');
           const trophyModal = document.getElementById('arcadeTrophyModal');
           const trophyScore = document.getElementById('arcadeTrophyScore');
@@ -2188,12 +2378,19 @@ class CyberStrikerApp {
     this.matchEndTimer = 0;
     combatEngine.isOver = true;
     soundEngine.stopBgm();
+    document.body.classList.remove('in-battle');
     const battleScreen = document.getElementById('battleScreen');
     if (battleScreen) battleScreen.classList.remove('active');
     const endModal = document.getElementById('matchEndModal');
     if (endModal) endModal.classList.remove('active');
+    const trophyModal = document.getElementById('arcadeTrophyModal');
+    if (trophyModal) trophyModal.classList.remove('active');
     const trainingBar = document.getElementById('trainingToolbar');
     if (trainingBar) trainingBar.style.display = 'none';
+    this.arcadeMode = false;
+    this.arcadeStage = 1;
+    this.arcadeScore = 0;
+    this.arcadeStreakWins = 0;
     this.updateUserHUD();
   }
 
@@ -2231,9 +2428,7 @@ class CyberStrikerApp {
     const fab = document.getElementById('fabStartBtn');
     if (fab) {
       fab.addEventListener('click', () => {
-        const modeModal = document.getElementById('modeSelectModal');
-        if (modeModal) modeModal.classList.add('active');
-        soundEngine.playUI('click');
+        this.openModeSelectModal();
       });
     }
 
@@ -2280,6 +2475,23 @@ class CyberStrikerApp {
         if (tModal) tModal.classList.remove('active');
         this.exitBattleToLobby();
       };
+    }
+    const trophyCloseBtn = document.getElementById('arcadeTrophyCloseBtn');
+    if (trophyCloseBtn) {
+      trophyCloseBtn.onclick = () => {
+        const tModal = document.getElementById('arcadeTrophyModal');
+        if (tModal) tModal.classList.remove('active');
+        this.exitBattleToLobby();
+      };
+    }
+    const trophyModal = document.getElementById('arcadeTrophyModal');
+    if (trophyModal) {
+      trophyModal.addEventListener('click', (e) => {
+        if (e.target === trophyModal) {
+          trophyModal.classList.remove('active');
+          this.exitBattleToLobby();
+        }
+      });
     }
 
     // 戰鬥主題場景選擇按鈕
@@ -2648,6 +2860,8 @@ class CyberStrikerApp {
     bindTouchBtn('touchSkill1Btn', 'skill1');
     bindTouchBtn('touchSkill2Btn', 'skill2');
     bindTouchBtn('touchSkill3Btn', 'skill3');
+    bindTouchBtn('touchSkill4Btn', 'skill4');
+    bindTouchBtn('touchSkill5Btn', 'skill5');
     bindTouchBtn('touchBurstBtn', 'burst');
     bindTouchBtn('touchSuperBtn', 'superMove');
   }
