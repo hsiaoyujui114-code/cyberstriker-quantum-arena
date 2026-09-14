@@ -1723,7 +1723,9 @@ export class CombatEngine {
         radius: 12,
         maxRadius: 65,
         color: '#38bdf8',
-        duration: 18
+        duration: 18,
+        isIceSpikes: true,
+        facing: char.facing
       });
       if (Math.abs(opp.x - spikeX) <= 70 && Math.abs(opp.y - spikeY) <= 80 && opp.invincibleTimer <= 0) {
         this._applyHit(char, opp, {
@@ -2277,7 +2279,8 @@ export class CombatEngine {
             radius: 8,
             maxRadius: 55,
             color: '#fb923c',
-            duration: 16
+            duration: 16,
+            isClusterBlast: true
           });
         }
         if (target && Math.abs(p.x - target.x) < 75 && Math.abs(p.y - target.y) < 70 && target.invincibleTimer <= 0) {
@@ -2301,7 +2304,8 @@ export class CombatEngine {
           radius: 12,
           maxRadius: 85,
           color: '#c084fc',
-          duration: 18
+          duration: 18,
+          isEmpBlast: true
         });
         if (target && Math.abs(p.x - target.x) < 80 && Math.abs(p.y - target.y) < 75 && target.invincibleTimer <= 0) {
           this._applyHit(p.ownerId === 1 ? this.p1 : this.p2, target, {

@@ -704,13 +704,10 @@ export class CharacterRenderer {
       }
 
       case 'knockdown': {
-        // 倒地翻滾：旋轉橫飛、平躺
+        // 倒地翻滾：旋轉橫飛、平躺，頭部與軀幹緊密鏈接
         defaultPose.torso.y = -16;
         defaultPose.torso.angle = -Math.PI / 2;
-        defaultPose.head.y = -16;
-        defaultPose.head.x = -32;
         defaultPose.head.angle = -Math.PI / 2;
-        defaultPose.head.lockedAbsolute = true;
         defaultPose.frontLeg.thighAngle = -Math.PI / 2;
         defaultPose.frontLeg.shinAngle = 0.2;
         defaultPose.backLeg.thighAngle = -Math.PI / 2;
@@ -720,13 +717,11 @@ export class CharacterRenderer {
       }
 
       case 'wakeup': {
-        // 單手撐地彈起
+        // 單手撐地彈起：頭部與軀幹連續平滑旋轉抬升
         const wRatio = Math.min(1, t / 15);
         defaultPose.torso.y = -16 - wRatio * 58;
-        defaultPose.head.y = -16 - wRatio * 82;
         defaultPose.torso.angle = -Math.PI / 2 * (1 - wRatio);
         defaultPose.head.angle = -Math.PI / 2 * (1 - wRatio);
-        defaultPose.head.lockedAbsolute = true;
         return defaultPose;
       }
 
@@ -853,46 +848,61 @@ export class CharacterRenderer {
     }
   }
 
-  // ─── 人體骨骼動態約束：頭部頸關節自動鏈接 ───
+  // ─── 人體骨骼動態約束：頭部頸關節自動鏈接 (消除任何角度下的頭身分離) ───
   _anchorHeadToTorso(pose) {
     if (!pose || !pose.torso || !pose.head) return pose;
-    // 若特定姿勢（如倒地平躺 knockdown / wakeup）已手動指定絕對座標，則尊重其設定
-    if (pose.head.lockedAbsolute) return pose;
 
-    // 人體脊椎頸關節自然約束：頸關節位於軀幹頂部（距離軀幹中心 24px）
-    // 隨軀幹位置 (torso.x, torso.y) 與軀幹前傾/後仰角度 (torso.angle) 自動精準旋轉鏈接
-    const neckDist = 24;
-    const sinA = Math.sin(pose.torso.angle || 0);
-    const cosA = Math.cos(pose.torso.angle || 0);
+    // 人體脊椎頸關節約束：頸關節位於軀幹頂部（距離軀幹中心 23.5px）
+    // 隨軀幹位置 (torso.x, torso.y) 與軀幹傾斜角度 (torso.angle) 自動精準旋轉鏈接
+    const neckDist = 23.5;
+    const angle = pose.torso.angle || 0;
+    const sinA = Math.sin(angle);
+    const cosA = Math.cos(angle);
 
-    pose.head.x = (pose.torso.x || 0) - sinA * neckDist;
+    // 正確人體運動學幾何：順時針傾角時，軀幹頂端與頭部移向 +X 方向
+    pose.head.x = (pose.torso.x || 0) + sinA * neckDist;
     pose.head.y = (pose.torso.y || -74) - cosA * neckDist;
+
+    // 頭部隨動：如果頭部沒有指定獨立角度，自然跟隨軀幹傾斜並帶有頸部生理自然前屈補償
+    if (pose.head.angle === undefined) {
+      pose.head.angle = angle * 0.45;
+    }
     return pose;
   }
 
   // ─── 頸部連接柱 (Anatomical Neck Connector) ───
   drawNeck(ctx, pose, skin) {
-    if (!pose || !pose.torso || !pose.head || pose.head.lockedAbsolute) return;
+    if (!pose || !pose.torso || !pose.head) return;
     ctx.save();
-    const torsoTopX = (pose.torso.x || 0) - Math.sin(pose.torso.angle || 0) * 18;
-    const torsoTopY = (pose.torso.y || -74) - Math.cos(pose.torso.angle || 0) * 18;
-    const headBaseX = pose.head.x || 0;
-    const headBaseY = (pose.head.y || -98) + 8;
+    const torsoAngle = pose.torso.angle || 0;
+    const headAngle = pose.head.angle !== undefined ? pose.head.angle : torsoAngle * 0.45;
+
+    // 軀幹頂部接合點 (Torso Collar / Top of Chest Plate)
+    const torsoTopX = (pose.torso.x || 0) + Math.sin(torsoAngle) * 19;
+    const torsoTopY = (pose.torso.y || -74) - Math.cos(torsoAngle) * 19;
+
+    // 頭部枕骨/下顎接合點 (Base of Skull / Jaw Base)
+    const headBaseX = (pose.head.x || 0) - Math.sin(headAngle) * 7;
+    const headBaseY = (pose.head.y || -98) + Math.cos(headAngle) * 7;
 
     const neckColor = this._getNeckColor(skin);
     const strokeColor = this._getNeckStrokeColor(skin);
 
-    ctx.fillStyle = neckColor;
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 1.4;
-
-    const angle = Math.atan2(headBaseY - torsoTopY, headBaseX - torsoTopX);
+    // 向量計算頸部法線方向
+    const dx = headBaseX - torsoTopX;
+    const dy = headBaseY - torsoTopY;
+    const angle = Math.atan2(dy, dx);
     const perpX = Math.sin(angle);
     const perpY = -Math.cos(angle);
 
-    const wBottom = 6.5;
-    const wTop = 5.0;
+    const wBottom = 8.0;
+    const wTop = 6.2;
 
+    ctx.fillStyle = neckColor;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 1.6;
+
+    // 實心厚實多邊形連接柱 (無死角覆蓋，絕不露出背後空隙)
     ctx.beginPath();
     ctx.moveTo(torsoTopX - perpX * wBottom, torsoTopY - perpY * wBottom);
     ctx.lineTo(torsoTopX + perpX * wBottom, torsoTopY + perpY * wBottom);
@@ -903,13 +913,13 @@ export class CharacterRenderer {
     ctx.stroke();
 
     // 頸部兩側胸鎖乳突肌立體陰影 (Sternocleidomastoid Shading)
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.18)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)';
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(headBaseX - 2, headBaseY);
-    ctx.lineTo(torsoTopX - 3.5, torsoTopY);
-    ctx.moveTo(headBaseX + 2, headBaseY);
-    ctx.lineTo(torsoTopX + 3.5, torsoTopY);
+    ctx.moveTo(headBaseX - perpX * 2.2, headBaseY - perpY * 2.2);
+    ctx.lineTo(torsoTopX - perpX * 3.8, torsoTopY - perpY * 3.8);
+    ctx.moveTo(headBaseX + perpX * 2.2, headBaseY + perpY * 2.2);
+    ctx.lineTo(torsoTopX + perpX * 3.8, torsoTopY + perpY * 3.8);
     ctx.stroke();
 
     ctx.restore();
@@ -923,7 +933,8 @@ export class CharacterRenderer {
     if (id === 'skin_brawl_el_primo') return '#f59e0b';
     if (id === 'skin_brawl_crow') return '#0f172a';
     if (id === 'skin_brawl_leon') return '#10b981';
-    if (id === 'skin_goku_ssj' || id === 'skin_vegeta_ssj' || id === 'skin_hawkeye' || id === 'skin_thor') return '#fed7aa';
+    if (id === 'skin_goku_ssj' || id === 'skin_vegeta_ssj' || id === 'skin_trunks_future' || id === 'skin_hawkeye' || id === 'skin_thor') return '#fed7aa';
+    if (id === 'skin_solar_valkyrie' || id === 'skin_cyber_diva' || id === 'skin_cryo_maiden') return '#fed7aa';
     if (id === 'skin_piccolo') return '#15803d';
     if (id === 'skin_golden_frieza') return '#fbbf24';
     if (id === 'skin_thanos') return '#7c3aed';
@@ -941,6 +952,8 @@ export class CharacterRenderer {
     if (id === 'skin_brawl_el_primo') return '#92400e';
     if (id === 'skin_brawl_crow') return '#1e293b';
     if (id === 'skin_brawl_leon') return '#065f46';
+    if (id === 'skin_goku_ssj' || id === 'skin_vegeta_ssj' || id === 'skin_trunks_future' || id === 'skin_hawkeye' || id === 'skin_thor') return '#ea580c';
+    if (id === 'skin_solar_valkyrie' || id === 'skin_cyber_diva' || id === 'skin_cryo_maiden') return '#ea580c';
     if (id === 'skin_piccolo') return '#14532d';
     return skin.themeColor || '#00f3ff';
   }
