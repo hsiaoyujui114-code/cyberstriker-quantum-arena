@@ -21,7 +21,7 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=20260909_cyberstriker_v1">
+  <link rel="stylesheet" href="css/style.css?v=20260915_v8_start_fix">
 </head>
 <body>
 
@@ -30,7 +30,7 @@
   <div class="scanlines"></div>
 
   <!-- ── 遊戲前置載入畫面 (Splash & Loading Screen) ── -->
-  <div id="splashScreen" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #040711; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s;">
+  <div id="splashScreen" onclick="this.style.pointerEvents='none'; this.style.display='none'; if(this.parentNode) this.parentNode.removeChild(this);" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #040711; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; cursor: pointer;">
     <div style="font-size: 54px; color: #00f3ff; margin-bottom: 20px; animation: pulse-event 1.8s infinite;">
       <i class="fa-solid fa-shield-halved"></i>
     </div>
@@ -48,6 +48,16 @@
       本遊戲為公平競技格鬥專案，全外觀數值 100% 相同，絕無數值增益 | V1.0.0-PROD
     </div>
   </div>
+  <script>
+    setTimeout(function() {
+      var sp = document.getElementById('splashScreen');
+      if (sp) {
+        sp.style.pointerEvents = 'none';
+        sp.style.opacity = '0';
+        setTimeout(function() { if (sp && sp.parentNode) sp.parentNode.removeChild(sp); }, 350);
+      }
+    }, 1200);
+  </script>
 
   <!-- ── 頂部科技 HUD 導航列 ── -->
   <header class="app-header">
@@ -298,14 +308,14 @@
   </main>
 
   <!-- ── 常駐右下角開始按鈕 (FAB) ── -->
-  <button class="fab-start-btn" id="fabStartBtn" onclick="if(window.app && window.app.openModeSelectModal) window.app.openModeSelectModal();" title="點擊展開模式選擇對話框">
+  <button class="fab-start-btn" id="fabStartBtn" onclick="document.getElementById('modeSelectModal').classList.add('active'); if(window.app && window.app.openModeSelectModal){ window.app.openModeSelectModal(); }" title="點擊展開模式選擇對話框">
     <i class="fa-solid fa-gamepad"></i> 開始遊戲
   </button>
 
   <!-- ── 模式選擇對話框 (Mode Select Modal) ── -->
   <div class="modal-overlay" id="modeSelectModal">
     <div class="modal-card">
-      <button class="modal-close-btn">&times;</button>
+      <button class="modal-close-btn" onclick="document.getElementById('modeSelectModal').classList.remove('active');">&times;</button>
       <h2 style="color: var(--primary-cyan);"><i class="fa-solid fa-crosshairs"></i> 選擇對戰模式</h2>
       <p style="font-size: 13px; color: var(--text-muted);">純技術立回對決，請選擇您的挑戰模式：</p>
 
@@ -319,7 +329,7 @@
           <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px; line-height: 1.5;">
             連續挑戰 5 大主題關卡與終極魔王（蜘蛛人 ➔ 比克 ➔ 特南克斯 ➔ 達爾 ➔ 霸主薩諾斯）！過關自動恢復 35% 生命值，全破領取典藏稱號與高額獎勵。
           </div>
-          <button class="nav-tab-btn" id="startArcadeModeBtn" style="width: 100%; justify-content: center; background: linear-gradient(90deg, #ffd700, #ff007f); color: #000; font-weight: 900; font-size: 14px; border: none; padding: 10px; box-shadow: 0 0 14px rgba(255, 215, 0, 0.4);">
+          <button class="nav-tab-btn" id="startArcadeModeBtn" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startArcadeMode(); }" style="width: 100%; justify-content: center; background: linear-gradient(90deg, #ffd700, #ff007f); color: #000; font-weight: 900; font-size: 14px; border: none; padding: 10px; box-shadow: 0 0 14px rgba(255, 215, 0, 0.4);">
             <i class="fa-solid fa-play"></i> 開啟單人街機 5 連關闖關
           </button>
         </div>
@@ -328,10 +338,10 @@
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
           <div style="font-weight: 800; margin-bottom: 8px; color: #00f3ff;"><i class="fa-solid fa-robot"></i> 對戰 AI (4 大難度行為樹)</div>
           <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-            <button class="nav-tab-btn select-ai-btn" data-diff="easy" style="justify-content: center; padding: 8px 4px;">簡單</button>
-            <button class="nav-tab-btn select-ai-btn" data-diff="normal" style="justify-content: center; padding: 8px 4px;">普通</button>
-            <button class="nav-tab-btn select-ai-btn" data-diff="hard" style="justify-content: center; padding: 8px 4px; border-color: #ffd700; color: #ffd700;">困難</button>
-            <button class="nav-tab-btn select-ai-btn" data-diff="nightmare" style="justify-content: center; padding: 8px 4px; border-color: #ff007f; color: #ff007f;">惡夢</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="easy" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('ai', 'easy'); }" style="justify-content: center; padding: 8px 4px;">簡單</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="normal" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('ai', 'normal'); }" style="justify-content: center; padding: 8px 4px;">普通</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="hard" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('ai', 'hard'); }" style="justify-content: center; padding: 8px 4px; border-color: #ffd700; color: #ffd700;">困難</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="nightmare" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('ai', 'nightmare'); }" style="justify-content: center; padding: 8px 4px; border-color: #ff007f; color: #ff007f;">惡夢</button>
           </div>
         </div>
 
@@ -339,7 +349,7 @@
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
           <div style="font-weight: 800; margin-bottom: 8px; color: #a855f7;"><i class="fa-solid fa-user-group"></i> 雙人對打</div>
           <div style="display: flex; gap: 8px;">
-            <button class="nav-tab-btn" id="selectLocal2pBtn" style="flex: 1; justify-content: center; border-color: #a855f7; color: #c084fc;">
+            <button class="nav-tab-btn" id="selectLocal2pBtn" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('local_2p'); }" style="flex: 1; justify-content: center; border-color: #a855f7; color: #c084fc;">
               <i class="fa-solid fa-keyboard"></i> 同機同鍵盤雙人
             </button>
             <button class="nav-tab-btn" id="hostRoomBtn" style="flex: 1; justify-content: center;">
@@ -355,7 +365,7 @@
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(0,255,102,0.3); border-radius: 8px; padding: 14px;">
           <div style="font-weight: 800; margin-bottom: 6px; color: #00ff66;"><i class="fa-solid fa-dumbbell"></i> 自由格鬥訓練營 (Training Mode)</div>
           <div style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;">無限血量木樁假人，自訂站立/蹲防/跳躍，具備一鍵重置冷卻與幀數優劣勢即時指示燈！</div>
-          <button class="nav-tab-btn" id="selectTrainingBtn" style="width: 100%; justify-content: center; background: rgba(0,255,102,0.15); border-color: #00ff66; color: #00ff66;">
+          <button class="nav-tab-btn" id="selectTrainingBtn" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('training'); }" style="width: 100%; justify-content: center; background: rgba(0,255,102,0.15); border-color: #00ff66; color: #00ff66;">
             進入自由訓練營
           </button>
         </div>
@@ -703,6 +713,6 @@
   </div>
 
   <!-- 主邏輯入口模組 -->
-  <script src="js/bundle.js?v=20260913_brawl_stars_v2"></script>
+  <script src="js/bundle.js?v=20260915_v8_start_fix"></script>
 </body>
 </html>

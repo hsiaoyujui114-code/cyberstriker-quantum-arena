@@ -164,15 +164,15 @@ class CyberStrikerApp {
 
       if (progress >= 100) {
         clearInterval(interval);
+        splash.style.pointerEvents = 'none';
+        soundEngine.playHit('burst');
+        splash.style.opacity = '0';
         setTimeout(() => {
-          soundEngine.playHit('burst');
-          splash.style.opacity = '0';
-          setTimeout(() => {
-            splash.style.display = 'none';
-            // 進入遊戲後的第一個畫面：登入 Google 帳號授權儀
-            this.openAuthModal();
-          }, 500);
-        }, 300);
+          splash.style.display = 'none';
+          if (splash.parentNode) {
+            splash.parentNode.removeChild(splash);
+          }
+        }, 350);
       }
     }, 25);
   }
@@ -883,6 +883,11 @@ class CyberStrikerApp {
     const battleScreen = document.getElementById('battleScreen');
     if (battleScreen) battleScreen.classList.add('active');
     document.body.classList.add('in-battle');
+    const fab = document.getElementById('fabStartBtn');
+    if (fab) {
+      fab.style.display = 'none';
+      fab.style.pointerEvents = 'none';
+    }
 
     const p1Skin = this.getEquippedSkin();
     let p2Skin = SKINS[1]; // 預設對手
@@ -3236,6 +3241,11 @@ class CyberStrikerApp {
     combatEngine.isOver = true;
     soundEngine.stopBgm();
     document.body.classList.remove('in-battle');
+    const fab = document.getElementById('fabStartBtn');
+    if (fab) {
+      fab.style.display = 'flex';
+      fab.style.pointerEvents = 'auto';
+    }
     const battleScreen = document.getElementById('battleScreen');
     if (battleScreen) battleScreen.classList.remove('active');
     const endModal = document.getElementById('matchEndModal');
@@ -3752,7 +3762,12 @@ export { CyberStrikerApp };
 // 實例化並暴露給視窗
 if (typeof window !== 'undefined') {
   window.app = new CyberStrikerApp();
-  window.addEventListener('DOMContentLoaded', () => {
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', () => {
+      window.app.init();
+    });
+  } else {
+    // DOM 已就緒，立即安全執行初始化
     window.app.init();
-  });
+  }
 }

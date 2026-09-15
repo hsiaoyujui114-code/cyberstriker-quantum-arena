@@ -15092,14 +15092,15 @@
         else text.textContent = stages[2].text;
         if (progress >= 100) {
           clearInterval(interval);
+          splash.style.pointerEvents = "none";
+          soundEngine.playHit("burst");
+          splash.style.opacity = "0";
           setTimeout(() => {
-            soundEngine.playHit("burst");
-            splash.style.opacity = "0";
-            setTimeout(() => {
-              splash.style.display = "none";
-              this.openAuthModal();
-            }, 500);
-          }, 300);
+            splash.style.display = "none";
+            if (splash.parentNode) {
+              splash.parentNode.removeChild(splash);
+            }
+          }, 350);
         }
       }, 25);
     }
@@ -15720,6 +15721,11 @@
       const battleScreen = document.getElementById("battleScreen");
       if (battleScreen) battleScreen.classList.add("active");
       document.body.classList.add("in-battle");
+      const fab = document.getElementById("fabStartBtn");
+      if (fab) {
+        fab.style.display = "none";
+        fab.style.pointerEvents = "none";
+      }
       const p1Skin = this.getEquippedSkin();
       let p2Skin = SKINS[1];
       let p2Name = `AI (${this.aiDifficulty.toUpperCase()})`;
@@ -17629,6 +17635,11 @@
       combatEngine.isOver = true;
       soundEngine.stopBgm();
       document.body.classList.remove("in-battle");
+      const fab = document.getElementById("fabStartBtn");
+      if (fab) {
+        fab.style.display = "flex";
+        fab.style.pointerEvents = "auto";
+      }
       const battleScreen = document.getElementById("battleScreen");
       if (battleScreen) battleScreen.classList.remove("active");
       const endModal = document.getElementById("matchEndModal");
@@ -18085,8 +18096,12 @@
   };
   if (typeof window !== "undefined") {
     window.app = new CyberStrikerApp();
-    window.addEventListener("DOMContentLoaded", () => {
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", () => {
+        window.app.init();
+      });
+    } else {
       window.app.init();
-    });
+    }
   }
 })();

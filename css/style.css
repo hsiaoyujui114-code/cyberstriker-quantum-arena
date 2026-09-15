@@ -514,7 +514,7 @@ body {
   position: fixed;
   right: 28px;
   bottom: 24px;
-  z-index: 100;
+  z-index: 999;
   background: linear-gradient(135deg, #00f3ff, #ff007f);
   color: #fff;
   border: 2px solid #fff;
@@ -531,7 +531,7 @@ body {
   box-shadow: 0 0 25px rgba(0, 243, 255, 0.6);
   animation: pulse-fab 2.5s infinite;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
-  pointer-events: auto;
+  pointer-events: auto !important;
   touch-action: manipulation;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -556,7 +556,9 @@ body {
 #battleScreen.active ~ #fabStartBtn,
 #battleScreen.active ~ .fab-start-btn,
 body.in-battle #fabStartBtn,
-body.in-battle .fab-start-btn {
+body.in-battle .fab-start-btn,
+body:has(#battleScreen.active) #fabStartBtn,
+body:has(#battleScreen.active) .fab-start-btn {
   display: none !important;
   visibility: hidden !important;
   pointer-events: none !important;
@@ -570,7 +572,7 @@ body.in-battle .fab-start-btn {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 200;
+  z-index: 2000;
   background: rgba(3, 7, 18, 0.85);
   backdrop-filter: blur(14px);
   display: none;
