@@ -298,7 +298,7 @@
   </main>
 
   <!-- ── 常駐右下角開始按鈕 (FAB) ── -->
-  <button class="fab-start-btn" id="fabStartBtn" title="點擊展開模式選擇對話框">
+  <button class="fab-start-btn" id="fabStartBtn" onclick="if(window.app && window.app.openModeSelectModal) window.app.openModeSelectModal();" title="點擊展開模式選擇對話框">
     <i class="fa-solid fa-gamepad"></i> 開始遊戲
   </button>
 

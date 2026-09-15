@@ -568,6 +568,19 @@ class CyberStrikerApp {
     if (modal) modal.classList.remove('active');
   }
 
+  // ─── 模式選擇視窗 (Mode Select Modal) ───
+  openModeSelectModal() {
+    const modal = document.getElementById('modeSelectModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    soundEngine.playUI('click');
+  }
+
+  closeModeSelectModal() {
+    const modal = document.getElementById('modeSelectModal');
+    if (modal) modal.classList.remove('active');
+  }
+
   // ─── 賽前戰術武器與技能配置視窗 (30 款純攻擊自由挑選 5 項・無時間限制) ───
   openLoadoutModal(startMatchCallback) {
     const modal = document.getElementById('loadoutModal');
@@ -3271,8 +3284,22 @@ class CyberStrikerApp {
     // 常駐右下角開始按鈕 (FAB)
     const fab = document.getElementById('fabStartBtn');
     if (fab) {
-      fab.addEventListener('click', () => {
+      fab.onclick = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         this.openModeSelectModal();
+      };
+    }
+
+    // 點擊對話框半透明背景關閉
+    const modeModal = document.getElementById('modeSelectModal');
+    if (modeModal) {
+      modeModal.addEventListener('click', (e) => {
+        if (e.target === modeModal) {
+          this.closeModeSelectModal();
+        }
       });
     }
 
