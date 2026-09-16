@@ -936,11 +936,8 @@ body:has(#battleScreen.active) .fab-start-btn {
 
 /* ─── 武裝選擇面板流暢捲動與硬體加速 ─── */
 #loadoutSkillsGrid {
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  will-change: scroll-position, transform;
-  transform: translateZ(0);
 }
 
 #loadoutSkillsGrid::-webkit-scrollbar {

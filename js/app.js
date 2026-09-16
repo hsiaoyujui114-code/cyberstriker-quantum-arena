@@ -599,12 +599,24 @@ class CyberStrikerApp {
       this.loadoutInterval = null;
     }
 
+    // 優先還原玩家上次選用的武裝配置 (LocalStorage 或 雲端存檔)
+    let savedLoadout = null;
+    try {
+      const raw = localStorage.getItem('quantum_arena_last_loadout');
+      if (raw) savedLoadout = JSON.parse(raw);
+    } catch (e) {}
+
     const u = saveSystem.currentUser;
-    if (u && Array.isArray(u.loadout) && u.loadout.length > 0) {
+    if (Array.isArray(savedLoadout) && savedLoadout.length > 0) {
+      this.loadoutSelection = [...savedLoadout];
+    } else if (u && Array.isArray(u.loadout) && u.loadout.length > 0) {
       this.loadoutSelection = [...u.loadout];
     } else {
       this.loadoutSelection = ['SK-01', 'SK-02', 'SK-03', 'SK-10', 'SK-11'];
     }
+
+    // 確保所有選定之技能 ID 均存在於 SKILLS 且不重複
+    this.loadoutSelection = this.loadoutSelection.filter(id => SKILLS.some(s => s.id === id));
     while (this.loadoutSelection.length < 5) {
       const fallback = SKILLS.find(s => !this.loadoutSelection.includes(s.id)) || SKILLS[0];
       this.loadoutSelection.push(fallback.id);
@@ -638,6 +650,8 @@ class CyberStrikerApp {
         const arch = ARCHETYPES.find(a => a.id === archId);
         if (arch) {
           this.loadoutSelection = [...arch.skills];
+          localStorage.setItem('quantum_arena_last_loadout', JSON.stringify(this.loadoutSelection));
+          saveSystem.updateLoadout(this.loadoutSelection);
           this._renderLoadoutSlotsBar();
           this._renderLoadoutSkillsGrid();
           soundEngine.playUI('click');
@@ -780,7 +794,7 @@ class CyberStrikerApp {
       const isFav = this.isFavoriteSkill(sk.id);
 
       return `
-        <div class="skill-card ${isSelected ? 'selected' : ''}" data-id="${sk.id}" style="background: rgba(255,255,255,0.03); border: 1.5px solid ${isSelected ? '#00f3ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 10px; cursor: pointer; position: relative; transition: border-color 0.15s ease, box-shadow 0.15s ease; will-change: transform;">
+        <div class="skill-card ${isSelected ? 'selected' : ''}" data-id="${sk.id}" style="background: rgba(255,255,255,0.03); border: 1.5px solid ${isSelected ? '#00f3ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 10px; cursor: pointer; position: relative; transition: border-color 0.12s ease;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: ${isRanged ? 'rgba(56,189,248,0.2)' : 'rgba(244,63,94,0.2)'}; color: ${isRanged ? '#38bdf8' : '#fb7185'}; border: 1px solid ${isRanged ? '#38bdf8' : '#fb7185'};">
@@ -792,7 +806,7 @@ class CyberStrikerApp {
               <button class="fav-star-btn ${isFav ? 'active' : ''}" data-fav-id="${sk.id}" title="${isFav ? '移出我的最愛' : '加入我的最愛'}">
                 <i class="fa-${isFav ? 'solid' : 'regular'} fa-star"></i>
               </button>
-              ${isSelected ? `<span style="background: #00f3ff; color: #000; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${slotLabel} ${keyDisplay}</span>` : ''}
+              <span class="skill-slot-badge-wrap">${isSelected ? `<span style="background: #00f3ff; color: #000; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${slotLabel} ${keyDisplay}</span>` : ''}</span>
             </div>
           </div>
           <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">${sk.typeName} | 傷害 ${sk.damage} | CD ${sk.cd}s</div>
@@ -826,15 +840,43 @@ class CyberStrikerApp {
           }
         }
         soundEngine.playUI('click');
+        localStorage.setItem('quantum_arena_last_loadout', JSON.stringify(this.loadoutSelection));
+        saveSystem.updateLoadout(this.loadoutSelection);
         this._renderLoadoutSlotsBar();
-        this._renderLoadoutSkillsGrid();
+        this._updateLoadoutCardVisuals();
       });
+    });
+  }
+
+  _updateLoadoutCardVisuals() {
+    const container = document.getElementById('loadoutSkillsGrid');
+    if (!container) return;
+
+    container.querySelectorAll('.skill-card').forEach(card => {
+      const id = card.dataset.id;
+      const isSelected = this.loadoutSelection.includes(id);
+      const slotIndex = this.loadoutSelection.indexOf(id);
+      const keyDisplay = slotIndex >= 0 ? `[${this.getSkillKeyDisplayName(slotIndex)}]` : '';
+      const slotLabel = slotIndex >= 0 ? `槽位 ${slotIndex + 1}` : '';
+
+      card.classList.toggle('selected', isSelected);
+      card.style.borderColor = isSelected ? '#00f3ff' : 'rgba(255,255,255,0.1)';
+
+      const badgeWrap = card.querySelector('.skill-slot-badge-wrap');
+      if (badgeWrap) {
+        if (isSelected) {
+          badgeWrap.innerHTML = `<span style="background: #00f3ff; color: #000; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${slotLabel} ${keyDisplay}</span>`;
+        } else {
+          badgeWrap.innerHTML = '';
+        }
+      }
     });
   }
 
   _confirmLoadout(callback) {
     const modal = document.getElementById('loadoutModal');
     if (modal) modal.classList.remove('active');
+    localStorage.setItem('quantum_arena_last_loadout', JSON.stringify(this.loadoutSelection));
     saveSystem.updateLoadout(this.loadoutSelection);
     if (!this.isFighting && this.activeTab === 'skins') {
       this._startPedestalLoop();
@@ -888,6 +930,8 @@ class CyberStrikerApp {
       fab.style.display = 'none';
       fab.style.pointerEvents = 'none';
     }
+    const victoryOverlay = document.getElementById('battleVictoryOverlay');
+    if (victoryOverlay) victoryOverlay.style.display = 'none';
 
     const p1Skin = this.getEquippedSkin();
     let p2Skin = SKINS[1]; // 預設對手
@@ -1125,8 +1169,20 @@ class CyberStrikerApp {
       if (combatEngine.isOver && !combatEngine.isTraining) {
         if (!this.matchEndTimer) {
           this.matchEndTimer = 1;
+          if (combatEngine.winner === 1) {
+            // 清除戰鬥雜訊文字，避免擋住 VICTORY
+            combatEngine.floatingTexts = [];
+            announcerEngine.activeBanners = [];
+            const vOverlay = document.getElementById('battleVictoryOverlay');
+            if (vOverlay) vOverlay.style.display = 'block';
+          }
         } else {
           this.matchEndTimer++;
+          if (combatEngine.winner === 1) {
+            // 勝利期間持續抑制浮動傷害字與播報雜訊
+            combatEngine.floatingTexts = [];
+            announcerEngine.activeBanners = [];
+          }
         }
 
         // 勝利慶祝展示 110 幀 (~1.8 秒) 後彈出結算對話框，背景姿態動畫持續播放
@@ -2635,34 +2691,34 @@ class CyberStrikerApp {
     if (!isP1Win && !isP2Win) return;
 
     const winner = isP1Win ? combatEngine.p1 : combatEngine.p2;
-    const winTitle = isP1Win ? 'VICTORY 戰鬥勝利' : 'K.O. 戰鬥結束';
-    const subTitle = isP1Win ? '★ 恭喜獲勝！漂亮擊倒對手奪下冠軍 ★' : `${winner.name} 贏得了本場對決！`;
+    const winTitle = isP1Win ? 'VICTORY' : 'K.O. 戰鬥結束';
+    const subTitle = isP1Win ? '★ 戰鬥勝利！漂亮擊倒對手奪下冠軍 ★' : `${winner.name} 贏得了本場對決！`;
     const themeColor = isP1Win ? '#ffd700' : '#ff007f';
 
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // 背景慶祝暗幕 (勝利時輕度壓暗背景，突出最上排 Victory 橫幅)
-    ctx.fillStyle = 'rgba(5, 8, 20, 0.45)';
+    // 背景慶祝暗幕 (勝利時輕度壓暗背景，突出 Victory 橫幅)
+    ctx.fillStyle = 'rgba(5, 8, 20, 0.55)';
     ctx.fillRect(0, 0, w, h);
 
-    // 冠軍光芒主橫幅 - 永遠置頂在最上排 (Y: 82px 左右)，絕不被其他字或攻擊特效擋到
-    const cy = Math.max(76, Math.min(94, h * 0.11));
-    const bannerW = Math.min(w * 0.88, 560);
-    const bannerH = 68;
+    // 冠軍光芒主橫幅 - 位於血條下方清晰可見處 (Y: ~145px)，絕不被血條或任何文字遮擋
+    const cy = Math.max(136, Math.min(168, h * 0.22));
+    const bannerW = Math.min(w * 0.88, 580);
+    const bannerH = 76;
     const bx = w / 2 - bannerW / 2;
     const by = cy - bannerH / 2;
 
-    ctx.fillStyle = 'rgba(11, 17, 32, 0.95)';
+    ctx.fillStyle = 'rgba(11, 17, 32, 0.96)';
     ctx.strokeStyle = themeColor;
     ctx.lineWidth = 3;
     ctx.shadowColor = themeColor;
-    ctx.shadowBlur = 24;
+    ctx.shadowBlur = 26;
 
     if (ctx.roundRect) {
       ctx.beginPath();
-      ctx.roundRect(bx, by, bannerW, bannerH, 12);
+      ctx.roundRect(bx, by, bannerW, bannerH, 14);
       ctx.fill();
       ctx.stroke();
     } else {
@@ -2670,18 +2726,18 @@ class CyberStrikerApp {
       ctx.strokeRect(bx, by, bannerW, bannerH);
     }
 
-    // 主標題文字 (最上排醒目大字 VICTORY)
-    ctx.font = '900 30px "Orbitron", "Noto Sans TC", sans-serif';
-    ctx.fillStyle = themeColor;
-    ctx.shadowColor = themeColor;
-    ctx.shadowBlur = 18;
-    ctx.fillText(winTitle, w / 2, cy - 10);
+    // 主標題文字 (醒目大字 VICTORY，純金黃色)
+    ctx.font = isP1Win ? '900 44px "Orbitron", sans-serif' : '900 32px "Orbitron", "Noto Sans TC", sans-serif';
+    ctx.fillStyle = '#ffd700';
+    ctx.shadowColor = 'rgba(255, 215, 0, 0.95)';
+    ctx.shadowBlur = 22;
+    ctx.fillText(winTitle, w / 2, cy - (isP1Win ? 13 : 10));
 
     // 副標題文字
     ctx.font = '700 13px "Noto Sans TC", sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.shadowBlur = 6;
-    ctx.fillText(subTitle, w / 2, cy + 18);
+    ctx.fillText(subTitle, w / 2, cy + 20);
 
     ctx.restore();
   }
@@ -3195,7 +3251,13 @@ class CyberStrikerApp {
           const trophyModal = document.getElementById('arcadeTrophyModal');
           const trophyScore = document.getElementById('arcadeTrophyScore');
           if (trophyScore) trophyScore.textContent = `${this.arcadeScore.toLocaleString()} PTS`;
-          saveSystem.addCredits(2500);
+          try {
+            if (saveSystem && typeof saveSystem.addCredits === 'function') {
+              saveSystem.addCredits(2500);
+            }
+          } catch (e) {
+            console.warn('Failed to add arcade victory credits:', e);
+          }
           soundEngine.playHit('super');
           if (trophyModal) trophyModal.classList.add('active');
           this.updateUserHUD();
@@ -3222,7 +3284,7 @@ class CyberStrikerApp {
       }
       if (resultTitle) {
         resultTitle.textContent = won ? 'VICTORY 戰鬥勝利' : 'DEFEAT 戰鬥落敗';
-        resultTitle.style.color = won ? '#00f3ff' : '#ff007f';
+        resultTitle.style.color = won ? '#ffd700' : '#ff007f';
       }
       if (creditsReward) creditsReward.textContent = `+${reward.gained} 能量幣`;
     }
@@ -3246,6 +3308,8 @@ class CyberStrikerApp {
       fab.style.display = 'flex';
       fab.style.pointerEvents = 'auto';
     }
+    const victoryOverlay = document.getElementById('battleVictoryOverlay');
+    if (victoryOverlay) victoryOverlay.style.display = 'none';
     const battleScreen = document.getElementById('battleScreen');
     if (battleScreen) battleScreen.classList.remove('active');
     const endModal = document.getElementById('matchEndModal');
@@ -3264,6 +3328,8 @@ class CyberStrikerApp {
   playAgain() {
     const endModal = document.getElementById('matchEndModal');
     if (endModal) endModal.classList.remove('active');
+    const victoryOverlay = document.getElementById('battleVictoryOverlay');
+    if (victoryOverlay) victoryOverlay.style.display = 'none';
     this._launchMatch();
   }
 

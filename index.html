@@ -21,7 +21,7 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=20260915_v8_start_fix">
+  <link rel="stylesheet" href="css/style.css?v=20260916_v9_victory_fix">
 </head>
 <body>
 
@@ -432,7 +432,7 @@
         <button class="nav-tab-btn archetype-btn" data-arch="counter_cross" style="flex: 1; min-width: 100px; justify-content: center; font-size: 11px;">奇襲霸體流</button>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 380px; overflow-y: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; will-change: scroll-position, transform;" id="loadoutSkillsGrid">
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 380px; overflow-y: auto; -webkit-overflow-scrolling: touch;" id="loadoutSkillsGrid">
         <!-- 動態渲染 30 款武裝技能卡片 -->
       </div>
 
@@ -445,6 +445,18 @@
   <!-- ── 戰鬥全螢幕畫面 (Battle Screen) ── -->
   <div id="battleScreen">
     <canvas id="gameCanvas"></canvas>
+
+    <!-- 頂層勝利提示橫幅 (永遠置頂最上排，絕不被任何文字擋住，純金黃色耀眼大字) -->
+    <div id="battleVictoryOverlay" style="display: none; position: absolute; top: 128px; left: 50%; transform: translateX(-50%); z-index: 95; text-align: center; pointer-events: none;">
+      <div style="background: rgba(11, 17, 32, 0.94); border: 2.5px solid #ffd700; border-radius: 14px; padding: 12px 42px; box-shadow: 0 0 35px rgba(255, 215, 0, 0.75), inset 0 0 15px rgba(255, 215, 0, 0.25); backdrop-filter: blur(8px);">
+        <div id="battleVictoryTitle" style="font-family: 'Orbitron', 'Noto Sans TC', sans-serif; font-size: 46px; font-weight: 900; color: #ffd700; text-shadow: 0 0 25px rgba(255, 215, 0, 0.95), 0 0 50px rgba(255, 215, 0, 0.7), 2px 2px 4px #000; letter-spacing: 4px; line-height: 1.1;">
+          VICTORY
+        </div>
+        <div id="battleVictorySub" style="font-family: 'Noto Sans TC', sans-serif; font-size: 14px; font-weight: 800; color: #ffffff; text-shadow: 0 0 8px #000; margin-top: 4px; letter-spacing: 1px;">
+          ★ 戰鬥勝利！漂亮擊倒對手奪下冠軍 ★
+        </div>
+      </div>
+    </div>
 
     <!-- 常駐戰鬥返回/退出按鈕 (左上角) -->
     <button class="battle-corner-exit-btn" id="battleCornerExitBtn" title="退出對戰 / 返回大廳 (按 ESC 鍵亦可退出)">
@@ -572,7 +584,7 @@
   <!-- ── 街機通關王者榮譽獎盃對話框 (Arcade Grand Trophy Modal) ── -->
   <div class="modal-overlay" id="arcadeTrophyModal">
     <div class="modal-card" style="text-align: center; align-items: center; max-width: 520px; border-color: #ffd700; box-shadow: 0 0 45px rgba(255,215,0,0.5); position: relative;">
-      <button class="modal-close-btn" id="arcadeTrophyCloseBtn">&times;</button>
+      <button class="modal-close-btn" id="arcadeTrophyCloseBtn" onclick="document.getElementById('arcadeTrophyModal').classList.remove('active'); if(window.app && window.app.exitBattleToLobby){ window.app.exitBattleToLobby(); }">&times;</button>
       <div style="font-size: 72px; color: #ffd700; margin-bottom: 6px; animation: pulse-event 1.6s infinite; filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));">
         <i class="fa-solid fa-trophy"></i>
       </div>
@@ -601,7 +613,7 @@
       </div>
 
       <div style="display: flex; gap: 10px; width: 100%;">
-        <button class="nav-tab-btn" id="arcadeTrophyClaimBtn" style="flex: 1; width: 100%; background: linear-gradient(135deg, #ffd700, #ff007f); color: #000; justify-content: center; padding: 14px; font-size: 16px; font-weight: 900; border: none; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); cursor: pointer;">
+        <button class="nav-tab-btn" id="arcadeTrophyClaimBtn" onclick="document.getElementById('arcadeTrophyModal').classList.remove('active'); if(window.app && window.app.exitBattleToLobby){ window.app.exitBattleToLobby(); }" style="flex: 1; width: 100%; background: linear-gradient(135deg, #ffd700, #ff007f); color: #000; justify-content: center; padding: 14px; font-size: 16px; font-weight: 900; border: none; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); cursor: pointer;">
           <i class="fa-solid fa-crown"></i> 榮耀加冕並返回大廳
         </button>
       </div>
@@ -713,6 +725,6 @@
   </div>
 
   <!-- 主邏輯入口模組 -->
-  <script src="js/bundle.js?v=20260915_v8_start_fix"></script>
+  <script src="js/bundle.js?v=20260916_v9_victory_fix"></script>
 </body>
 </html>

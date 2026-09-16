@@ -713,12 +713,25 @@ export class SaveSystem {
   }
 
   updateLoadout(skillsArray) {
-    if (!this.currentUser) return;
-    if (Array.isArray(skillsArray) && skillsArray.length === 3) {
-      this.currentUser.loadout = [...skillsArray];
+    if (Array.isArray(skillsArray) && skillsArray.length > 0) {
+      safeSetItem('quantum_arena_last_loadout', JSON.stringify(skillsArray));
+      if (this.currentUser) {
+        this.currentUser.loadout = [...skillsArray];
+        this.currentUser.updatedAt = new Date().toISOString();
+        this._saveCurrent();
+      }
+    }
+  }
+
+  addCredits(amount) {
+    const num = Math.max(0, Number(amount) || 0);
+    if (this.currentUser) {
+      this.currentUser.credits = (Number(this.currentUser.credits) || 0) + num;
       this.currentUser.updatedAt = new Date().toISOString();
       this._saveCurrent();
+      return this.currentUser.credits;
     }
+    return 0;
   }
 
   savePreferences(prefs) {

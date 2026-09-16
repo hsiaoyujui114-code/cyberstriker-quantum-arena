@@ -2726,12 +2726,24 @@
       return `${hours} \u5C0F\u6642 ${mins} \u5206\u9418`;
     }
     updateLoadout(skillsArray) {
-      if (!this.currentUser) return;
-      if (Array.isArray(skillsArray) && skillsArray.length === 3) {
-        this.currentUser.loadout = [...skillsArray];
+      if (Array.isArray(skillsArray) && skillsArray.length > 0) {
+        safeSetItem("quantum_arena_last_loadout", JSON.stringify(skillsArray));
+        if (this.currentUser) {
+          this.currentUser.loadout = [...skillsArray];
+          this.currentUser.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+          this._saveCurrent();
+        }
+      }
+    }
+    addCredits(amount) {
+      const num = Math.max(0, Number(amount) || 0);
+      if (this.currentUser) {
+        this.currentUser.credits = (Number(this.currentUser.credits) || 0) + num;
         this.currentUser.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
         this._saveCurrent();
+        return this.currentUser.credits;
       }
+      return 0;
     }
     savePreferences(prefs) {
       if (!this.currentUser) return;
@@ -15472,12 +15484,21 @@
         clearInterval(this.loadoutInterval);
         this.loadoutInterval = null;
       }
+      let savedLoadout = null;
+      try {
+        const raw = localStorage.getItem("quantum_arena_last_loadout");
+        if (raw) savedLoadout = JSON.parse(raw);
+      } catch (e) {
+      }
       const u = saveSystem.currentUser;
-      if (u && Array.isArray(u.loadout) && u.loadout.length > 0) {
+      if (Array.isArray(savedLoadout) && savedLoadout.length > 0) {
+        this.loadoutSelection = [...savedLoadout];
+      } else if (u && Array.isArray(u.loadout) && u.loadout.length > 0) {
         this.loadoutSelection = [...u.loadout];
       } else {
         this.loadoutSelection = ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"];
       }
+      this.loadoutSelection = this.loadoutSelection.filter((id) => SKILLS.some((s) => s.id === id));
       while (this.loadoutSelection.length < 5) {
         const fallback = SKILLS.find((s) => !this.loadoutSelection.includes(s.id)) || SKILLS[0];
         this.loadoutSelection.push(fallback.id);
@@ -15505,6 +15526,8 @@
           const arch = ARCHETYPES.find((a) => a.id === archId);
           if (arch) {
             this.loadoutSelection = [...arch.skills];
+            localStorage.setItem("quantum_arena_last_loadout", JSON.stringify(this.loadoutSelection));
+            saveSystem.updateLoadout(this.loadoutSelection);
             this._renderLoadoutSlotsBar();
             this._renderLoadoutSkillsGrid();
             soundEngine.playUI("click");
@@ -15629,7 +15652,7 @@
         const isRanged = sk.category === "ranged";
         const isFav = this.isFavoriteSkill(sk.id);
         return `
-        <div class="skill-card ${isSelected ? "selected" : ""}" data-id="${sk.id}" style="background: rgba(255,255,255,0.03); border: 1.5px solid ${isSelected ? "#00f3ff" : "rgba(255,255,255,0.1)"}; border-radius: 8px; padding: 10px; cursor: pointer; position: relative; transition: border-color 0.15s ease, box-shadow 0.15s ease; will-change: transform;">
+        <div class="skill-card ${isSelected ? "selected" : ""}" data-id="${sk.id}" style="background: rgba(255,255,255,0.03); border: 1.5px solid ${isSelected ? "#00f3ff" : "rgba(255,255,255,0.1)"}; border-radius: 8px; padding: 10px; cursor: pointer; position: relative; transition: border-color 0.12s ease;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: ${isRanged ? "rgba(56,189,248,0.2)" : "rgba(244,63,94,0.2)"}; color: ${isRanged ? "#38bdf8" : "#fb7185"}; border: 1px solid ${isRanged ? "#38bdf8" : "#fb7185"};">
@@ -15641,7 +15664,7 @@
               <button class="fav-star-btn ${isFav ? "active" : ""}" data-fav-id="${sk.id}" title="${isFav ? "\u79FB\u51FA\u6211\u7684\u6700\u611B" : "\u52A0\u5165\u6211\u7684\u6700\u611B"}">
                 <i class="fa-${isFav ? "solid" : "regular"} fa-star"></i>
               </button>
-              ${isSelected ? `<span style="background: #00f3ff; color: #000; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${slotLabel} ${keyDisplay}</span>` : ""}
+              <span class="skill-slot-badge-wrap">${isSelected ? `<span style="background: #00f3ff; color: #000; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${slotLabel} ${keyDisplay}</span>` : ""}</span>
             </div>
           </div>
           <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">${sk.typeName} | \u50B7\u5BB3 ${sk.damage} | CD ${sk.cd}s</div>
@@ -15672,14 +15695,38 @@
             }
           }
           soundEngine.playUI("click");
+          localStorage.setItem("quantum_arena_last_loadout", JSON.stringify(this.loadoutSelection));
+          saveSystem.updateLoadout(this.loadoutSelection);
           this._renderLoadoutSlotsBar();
-          this._renderLoadoutSkillsGrid();
+          this._updateLoadoutCardVisuals();
         });
+      });
+    }
+    _updateLoadoutCardVisuals() {
+      const container = document.getElementById("loadoutSkillsGrid");
+      if (!container) return;
+      container.querySelectorAll(".skill-card").forEach((card) => {
+        const id = card.dataset.id;
+        const isSelected = this.loadoutSelection.includes(id);
+        const slotIndex = this.loadoutSelection.indexOf(id);
+        const keyDisplay = slotIndex >= 0 ? `[${this.getSkillKeyDisplayName(slotIndex)}]` : "";
+        const slotLabel = slotIndex >= 0 ? `\u69FD\u4F4D ${slotIndex + 1}` : "";
+        card.classList.toggle("selected", isSelected);
+        card.style.borderColor = isSelected ? "#00f3ff" : "rgba(255,255,255,0.1)";
+        const badgeWrap = card.querySelector(".skill-slot-badge-wrap");
+        if (badgeWrap) {
+          if (isSelected) {
+            badgeWrap.innerHTML = `<span style="background: #00f3ff; color: #000; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,243,255,0.6);">${slotLabel} ${keyDisplay}</span>`;
+          } else {
+            badgeWrap.innerHTML = "";
+          }
+        }
       });
     }
     _confirmLoadout(callback) {
       const modal = document.getElementById("loadoutModal");
       if (modal) modal.classList.remove("active");
+      localStorage.setItem("quantum_arena_last_loadout", JSON.stringify(this.loadoutSelection));
       saveSystem.updateLoadout(this.loadoutSelection);
       if (!this.isFighting && this.activeTab === "skins") {
         this._startPedestalLoop();
@@ -15726,6 +15773,8 @@
         fab.style.display = "none";
         fab.style.pointerEvents = "none";
       }
+      const victoryOverlay = document.getElementById("battleVictoryOverlay");
+      if (victoryOverlay) victoryOverlay.style.display = "none";
       const p1Skin = this.getEquippedSkin();
       let p2Skin = SKINS[1];
       let p2Name = `AI (${this.aiDifficulty.toUpperCase()})`;
@@ -15935,8 +15984,18 @@
         if (combatEngine.isOver && !combatEngine.isTraining) {
           if (!this.matchEndTimer) {
             this.matchEndTimer = 1;
+            if (combatEngine.winner === 1) {
+              combatEngine.floatingTexts = [];
+              announcerEngine.activeBanners = [];
+              const vOverlay = document.getElementById("battleVictoryOverlay");
+              if (vOverlay) vOverlay.style.display = "block";
+            }
           } else {
             this.matchEndTimer++;
+            if (combatEngine.winner === 1) {
+              combatEngine.floatingTexts = [];
+              announcerEngine.activeBanners = [];
+            }
           }
           if (this.matchEndTimer === 110) {
             this._showMatchEndModal();
@@ -17131,42 +17190,42 @@
       const isP2Win = combatEngine.winner === 2;
       if (!isP1Win && !isP2Win) return;
       const winner = isP1Win ? combatEngine.p1 : combatEngine.p2;
-      const winTitle = isP1Win ? "VICTORY \u6230\u9B25\u52DD\u5229" : "K.O. \u6230\u9B25\u7D50\u675F";
-      const subTitle = isP1Win ? "\u2605 \u606D\u559C\u7372\u52DD\uFF01\u6F02\u4EAE\u64CA\u5012\u5C0D\u624B\u596A\u4E0B\u51A0\u8ECD \u2605" : `${winner.name} \u8D0F\u5F97\u4E86\u672C\u5834\u5C0D\u6C7A\uFF01`;
+      const winTitle = isP1Win ? "VICTORY" : "K.O. \u6230\u9B25\u7D50\u675F";
+      const subTitle = isP1Win ? "\u2605 \u6230\u9B25\u52DD\u5229\uFF01\u6F02\u4EAE\u64CA\u5012\u5C0D\u624B\u596A\u4E0B\u51A0\u8ECD \u2605" : `${winner.name} \u8D0F\u5F97\u4E86\u672C\u5834\u5C0D\u6C7A\uFF01`;
       const themeColor = isP1Win ? "#ffd700" : "#ff007f";
       ctx.save();
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "rgba(5, 8, 20, 0.45)";
+      ctx.fillStyle = "rgba(5, 8, 20, 0.55)";
       ctx.fillRect(0, 0, w, h);
-      const cy = Math.max(76, Math.min(94, h * 0.11));
-      const bannerW = Math.min(w * 0.88, 560);
-      const bannerH = 68;
+      const cy = Math.max(136, Math.min(168, h * 0.22));
+      const bannerW = Math.min(w * 0.88, 580);
+      const bannerH = 76;
       const bx = w / 2 - bannerW / 2;
       const by = cy - bannerH / 2;
-      ctx.fillStyle = "rgba(11, 17, 32, 0.95)";
+      ctx.fillStyle = "rgba(11, 17, 32, 0.96)";
       ctx.strokeStyle = themeColor;
       ctx.lineWidth = 3;
       ctx.shadowColor = themeColor;
-      ctx.shadowBlur = 24;
+      ctx.shadowBlur = 26;
       if (ctx.roundRect) {
         ctx.beginPath();
-        ctx.roundRect(bx, by, bannerW, bannerH, 12);
+        ctx.roundRect(bx, by, bannerW, bannerH, 14);
         ctx.fill();
         ctx.stroke();
       } else {
         ctx.fillRect(bx, by, bannerW, bannerH);
         ctx.strokeRect(bx, by, bannerW, bannerH);
       }
-      ctx.font = '900 30px "Orbitron", "Noto Sans TC", sans-serif';
-      ctx.fillStyle = themeColor;
-      ctx.shadowColor = themeColor;
-      ctx.shadowBlur = 18;
-      ctx.fillText(winTitle, w / 2, cy - 10);
+      ctx.font = isP1Win ? '900 44px "Orbitron", sans-serif' : '900 32px "Orbitron", "Noto Sans TC", sans-serif';
+      ctx.fillStyle = "#ffd700";
+      ctx.shadowColor = "rgba(255, 215, 0, 0.95)";
+      ctx.shadowBlur = 22;
+      ctx.fillText(winTitle, w / 2, cy - (isP1Win ? 13 : 10));
       ctx.font = '700 13px "Noto Sans TC", sans-serif';
       ctx.fillStyle = "#ffffff";
       ctx.shadowBlur = 6;
-      ctx.fillText(subTitle, w / 2, cy + 18);
+      ctx.fillText(subTitle, w / 2, cy + 20);
       ctx.restore();
     }
     // ─── 瑪利歐風格空中高低平台繪製 (Mario Style Floating Platforms) ───
@@ -17592,7 +17651,13 @@
             const trophyModal = document.getElementById("arcadeTrophyModal");
             const trophyScore = document.getElementById("arcadeTrophyScore");
             if (trophyScore) trophyScore.textContent = `${this.arcadeScore.toLocaleString()} PTS`;
-            saveSystem.addCredits(2500);
+            try {
+              if (saveSystem && typeof saveSystem.addCredits === "function") {
+                saveSystem.addCredits(2500);
+              }
+            } catch (e) {
+              console.warn("Failed to add arcade victory credits:", e);
+            }
             soundEngine.playHit("super");
             if (trophyModal) trophyModal.classList.add("active");
             this.updateUserHUD();
@@ -17618,7 +17683,7 @@
         }
         if (resultTitle) {
           resultTitle.textContent = won ? "VICTORY \u6230\u9B25\u52DD\u5229" : "DEFEAT \u6230\u9B25\u843D\u6557";
-          resultTitle.style.color = won ? "#00f3ff" : "#ff007f";
+          resultTitle.style.color = won ? "#ffd700" : "#ff007f";
         }
         if (creditsReward) creditsReward.textContent = `+${reward.gained} \u80FD\u91CF\u5E63`;
       }
@@ -17640,6 +17705,8 @@
         fab.style.display = "flex";
         fab.style.pointerEvents = "auto";
       }
+      const victoryOverlay = document.getElementById("battleVictoryOverlay");
+      if (victoryOverlay) victoryOverlay.style.display = "none";
       const battleScreen = document.getElementById("battleScreen");
       if (battleScreen) battleScreen.classList.remove("active");
       const endModal = document.getElementById("matchEndModal");
@@ -17657,6 +17724,8 @@
     playAgain() {
       const endModal = document.getElementById("matchEndModal");
       if (endModal) endModal.classList.remove("active");
+      const victoryOverlay = document.getElementById("battleVictoryOverlay");
+      if (victoryOverlay) victoryOverlay.style.display = "none";
       this._launchMatch();
     }
     // ─── 事件綁定 ───
