@@ -2076,6 +2076,190 @@
     return STAGES[idx];
   }
 
+  // js/engine/anti_cheat.js
+  var AntiCheatEngine = class {
+    constructor() {
+      this.salt = 1513922161;
+      this.saveSalt = "CS_QUANTUM_INTEGRITY_SALT_2026";
+      this.cheatViolations = 0;
+      this.lastAlertTime = 0;
+      this.warningCallback = null;
+    }
+    setWarningCallback(cb) {
+      if (typeof cb === "function") {
+        this.warningCallback = cb;
+      }
+    }
+    _triggerAlert(type, details) {
+      this.cheatViolations++;
+      const now = Date.now();
+      console.warn(`[Quantum Anti-Cheat] \u26A0\uFE0F \u6514\u622A\u5230\u4F5C\u5F0A\u5617\u8A66 [${type}]: ${details}`);
+      if (now - this.lastAlertTime > 1500) {
+        this.lastAlertTime = now;
+        if (this.warningCallback) {
+          this.warningCallback(type, details);
+        }
+      }
+    }
+    /**
+     * 1. 記憶體影子混淆保護 (為戰鬥角色注入防竄改 Getter/Setter)
+     */
+    protectFighter(fighter) {
+      if (!fighter || fighter._antiCheatProtected) return fighter;
+      const salt = this.salt ^ fighter.id * 2043453;
+      let _realHp = fighter.hp;
+      let _shadowHp = _realHp ^ salt;
+      let _realSuper = fighter.superMeter;
+      let _shadowSuper = _realSuper ^ salt;
+      let _realBurst = fighter.burstMeter;
+      let _shadowBurst = _realBurst ^ salt;
+      fighter._antiCheatProtected = true;
+      fighter.cheatFlagged = false;
+      fighter._lastValidX = fighter.x;
+      fighter._lastValidY = fighter.y;
+      Object.defineProperty(fighter, "hp", {
+        get() {
+          if ((_shadowHp ^ salt) !== _realHp) {
+            _realHp = Math.max(0, Math.min(fighter.maxHp, _shadowHp ^ salt));
+          }
+          return _realHp;
+        },
+        set(newVal) {
+          let val = Number(newVal);
+          if (isNaN(val)) val = 0;
+          if (val > fighter.maxHp) {
+            this.cheatViolations++;
+            val = fighter.maxHp;
+          }
+          if (!fighter.isTakingLegitHit && _realHp > 0 && _realHp - val > 420) {
+            val = Math.max(0, _realHp - 380);
+          }
+          val = Math.max(0, Math.min(fighter.maxHp, Math.round(val)));
+          _realHp = val;
+          _shadowHp = val ^ salt;
+        },
+        configurable: true,
+        enumerable: true
+      });
+      Object.defineProperty(fighter, "superMeter", {
+        get() {
+          if ((_shadowSuper ^ salt) !== _realSuper) {
+            _realSuper = Math.max(0, Math.min(fighter.superMax, _shadowSuper ^ salt));
+          }
+          return _realSuper;
+        },
+        set(newVal) {
+          let val = Number(newVal);
+          if (isNaN(val)) val = 0;
+          val = Math.max(0, Math.min(fighter.superMax, Math.round(val)));
+          _realSuper = val;
+          _shadowSuper = val ^ salt;
+        },
+        configurable: true,
+        enumerable: true
+      });
+      Object.defineProperty(fighter, "burstMeter", {
+        get() {
+          if ((_shadowBurst ^ salt) !== _realBurst) {
+            _realBurst = Math.max(0, Math.min(fighter.burstMax, _shadowBurst ^ salt));
+          }
+          return _realBurst;
+        },
+        set(newVal) {
+          let val = Number(newVal);
+          if (isNaN(val)) val = 0;
+          val = Math.max(0, Math.min(fighter.burstMax, Math.round(val)));
+          _realBurst = val;
+          _shadowBurst = val ^ salt;
+        },
+        configurable: true,
+        enumerable: true
+      });
+      return fighter;
+    }
+    /**
+     * 2. 瞬移與超速作弊監控 (Speedhack & Teleport Validator)
+     */
+    validateMovement(fighter, arenaWidth, floorY) {
+      if (!fighter) return;
+      if (typeof fighter._lastValidX === "undefined") {
+        fighter._lastValidX = fighter.x;
+        fighter._lastValidY = fighter.y;
+        return;
+      }
+      const deltaX = Math.abs(fighter.x - fighter._lastValidX);
+      const maxLegalDeltaX = 26;
+      if (deltaX > maxLegalDeltaX && !fighter.isAirBursting && fighter.state !== "wakeup") {
+        this._triggerAlert("SPEEDHACK_TELEPORT", `X \u4F4D\u79FB\u7570\u5E38: ${deltaX.toFixed(1)}px (\u9650\u5236\u4E0A\u9650: ${maxLegalDeltaX}px)`);
+        const sign = fighter.x > fighter._lastValidX ? 1 : -1;
+        fighter.x = fighter._lastValidX + sign * maxLegalDeltaX;
+        fighter.vx = 0;
+      }
+      fighter.x = Math.max(20, Math.min(arenaWidth - 20, fighter.x));
+      fighter.y = Math.min(floorY, fighter.y);
+      fighter._lastValidX = fighter.x;
+      fighter._lastValidY = fighter.y;
+    }
+    /**
+     * 3. 異常傷害與秒殺攔截 (Damage Spoofing Filter)
+     */
+    filterDamage(rawDamage, attackType = "normal") {
+      let dmg = Number(rawDamage) || 0;
+      const maxDamageTable = {
+        light_punch: 55,
+        heavy_kick: 95,
+        ranged_attack: 110,
+        skill: 290,
+        super_move: 380,
+        normal: 380
+      };
+      const maxAllowed = maxDamageTable[attackType] || 380;
+      if (dmg > maxAllowed) {
+        this._triggerAlert("DAMAGE_SPOOF", `\u7570\u5E38\u55AE\u64CA\u50B7\u5BB3: ${dmg} (\u5F37\u5236\u5E73\u6291\u70BA\u6700\u9AD8\u5408\u6CD5\u4E0A\u9650: ${maxAllowed})`);
+        dmg = maxAllowed;
+      }
+      return Math.max(0, dmg);
+    }
+    /**
+     * 4. 存檔數位簽名防篡改 (HMAC / Hash Verification)
+     */
+    generateSaveSignature(user) {
+      if (!user) return "";
+      const raw = `${user.id}_${user.credits}_${(user.skins || []).sort().join(",")}_${user.wins || 0}_${this.saveSalt}`;
+      return this._hashString(raw);
+    }
+    verifySaveIntegrity(user) {
+      if (!user) return false;
+      if (!user._sig) {
+        user._sig = this.generateSaveSignature(user);
+        return true;
+      }
+      const expectedSig = this.generateSaveSignature(user);
+      const isAuthentic = user._sig === expectedSig;
+      if (!isAuthentic) {
+        this._triggerAlert("SAVE_TAMPERED", "\u5075\u6E2C\u5230\u672C\u5730\u5B58\u6A94\u906D\u624B\u52D5\u7AC4\u6539 (\u91D1\u5E63\u6216\u5916\u89C0\u7C3D\u540D\u4E0D\u5408)\uFF01");
+        user.isCheated = true;
+        if (user.credits > 1e6) {
+          user.credits = 1200;
+        }
+        user._sig = this.generateSaveSignature(user);
+      }
+      return isAuthentic;
+    }
+    _hashString(str) {
+      let h1 = 3735928559, h2 = 1103547991;
+      for (let i = 0, ch; i < str.length; i++) {
+        ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ h1 >>> 16, 2246822507) ^ Math.imul(h2 ^ h2 >>> 13, 3266489909);
+      h2 = Math.imul(h2 ^ h2 >>> 16, 2246822507) ^ Math.imul(h1 ^ h1 >>> 13, 3266489909);
+      return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+    }
+  };
+  var antiCheat = new AntiCheatEngine();
+
   // js/save_system.js
   var STORAGE_KEY_CURRENT = "cyberstriker_current_session";
   var STORAGE_KEY_ACCOUNTS = "cyberstriker_cloud_accounts";
@@ -2277,6 +2461,7 @@
             return;
           } else if (sessionData.email && this.accounts[sessionData.email]) {
             this.currentUser = this.accounts[sessionData.email];
+            antiCheat.verifySaveIntegrity(this.currentUser);
             this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
             this._saveAccountsToStorage();
             this.syncWithCloud(sessionData.email).catch((err) => {
@@ -2736,7 +2921,7 @@
       }
     }
     addCredits(amount) {
-      const num = Math.max(0, Number(amount) || 0);
+      const num = Math.max(0, Math.min(5e3, Number(amount) || 0));
       if (this.currentUser) {
         this.currentUser.credits = (Number(this.currentUser.credits) || 0) + num;
         this.currentUser.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
@@ -2755,6 +2940,9 @@
      * 存檔核心：先寫入本機 localStorage，並在背景非同步上傳至全球雲端
      */
     _saveCurrent() {
+      if (this.currentUser) {
+        this.currentUser._sig = antiCheat.generateSaveSignature(this.currentUser);
+      }
       if (!this.isGuest && this.currentUser && this.currentUser.email) {
         this.accounts[this.currentUser.email] = { ...this.currentUser, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
         this._saveAccountsToStorage();
@@ -11689,6 +11877,17 @@
         // 技能即時無冷卻
       };
       this.enableHaptics = true;
+      antiCheat.setWarningCallback((type, details) => {
+        this.floatingTexts.push({
+          x: this.arenaWidth / 2,
+          y: 110,
+          text: `\u{1F6E1}\uFE0F\u3010\u9632\u4F5C\u5F0A\u6514\u622A\u3011\u5DF2\u6514\u622A\u7570\u5E38\u64CD\u4F5C: ${type}`,
+          color: "#ff0055",
+          size: 15,
+          lifetime: 80,
+          maxLife: 80
+        });
+      });
     }
     triggerScreenShake(intensity = 4) {
       this.screenShake.intensity = Math.max(this.screenShake.intensity, intensity);
@@ -11731,6 +11930,8 @@
       this.p2 = this._createFighter(2, p2StartX, p2Data);
       this.p1.facing = 1;
       this.p2.facing = -1;
+      antiCheat.protectFighter(this.p1);
+      antiCheat.protectFighter(this.p2);
     }
     _createFighter(id, x, data) {
       const defaultSkills = [SKILLS[0], SKILLS[1], SKILLS[2], SKILLS[3], SKILLS[4]];
@@ -11854,6 +12055,8 @@
       }
       this._updateFighter(this.p1, this.p2, inputsP1);
       this._updateFighter(this.p2, this.p1, inputsP2);
+      antiCheat.validateMovement(this.p1, this.arenaWidth, this.floorY);
+      antiCheat.validateMovement(this.p2, this.arenaWidth, this.floorY);
       this._updateProjectiles();
       this._updateShockwaves();
       this._updateFloatingTexts();
@@ -13241,7 +13444,8 @@
     }
     // ─── 傷害計算與攻防三段三擇 ───
     _applyHit(char, opp, action) {
-      let damage = action.damage || 50;
+      let rawDamage = action.damage || 50;
+      let damage = antiCheat.filterDamage(rawDamage, action.type || "skill");
       let isBlocked = false;
       if (action.guardType === "unblockable") {
         isBlocked = false;
@@ -13271,7 +13475,9 @@
       }
       if (isBlocked) {
         damage = Math.max(12, Math.round(damage * 0.5));
+        opp.isTakingLegitHit = true;
         opp.hp = Math.max(0, opp.hp - damage);
+        opp.isTakingLegitHit = false;
         soundEngine.playHit("guard");
         this._triggerHaptic(25);
         opp.vx = char.facing * 2.6;
@@ -13309,7 +13515,9 @@
         });
         return;
       }
+      opp.isTakingLegitHit = true;
       opp.hp = Math.max(0, opp.hp - damage);
+      opp.isTakingLegitHit = false;
       char.superMeter = Math.min(char.superMax, (char.superMeter || 0) + 45);
       opp.superMeter = Math.min(opp.superMax, (opp.superMeter || 0) + 60);
       opp.burstMeter = Math.min(opp.burstMax, opp.burstMeter + Math.round(damage * 0.9));

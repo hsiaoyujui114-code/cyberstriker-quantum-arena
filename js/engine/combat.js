@@ -9,6 +9,7 @@ import { SKILLS } from '../data/skills.js';
 import { getSkinAttackMeta, getSkinSuperMeta } from '../data/skins.js';
 import { soundEngine } from './audio.js';
 import { announcerEngine } from './announcer.js';
+import { antiCheat } from './anti_cheat.js';
 
 export class CombatEngine {
   constructor() {
@@ -43,6 +44,19 @@ export class CombatEngine {
 
     // 震動回饋開關
     this.enableHaptics = true;
+
+    // 量子防作弊系統即時警報掛載
+    antiCheat.setWarningCallback((type, details) => {
+      this.floatingTexts.push({
+        x: this.arenaWidth / 2,
+        y: 110,
+        text: `🛡️【防作弊攔截】已攔截異常操作: ${type}`,
+        color: '#ff0055',
+        size: 15,
+        lifetime: 80,
+        maxLife: 80
+      });
+    });
   }
 
   triggerScreenShake(intensity = 4) {
@@ -92,6 +106,10 @@ export class CombatEngine {
     this.p2 = this._createFighter(2, p2StartX, p2Data);
     this.p1.facing = 1;
     this.p2.facing = -1;
+
+    // 量子反作弊核心守護：注入記憶體影子混淆與防竄改防護
+    antiCheat.protectFighter(this.p1);
+    antiCheat.protectFighter(this.p2);
   }
 
   _createFighter(id, x, data) {
@@ -237,6 +255,10 @@ export class CombatEngine {
     // 4. 處理雙方冷卻與輸入
     this._updateFighter(this.p1, this.p2, inputsP1);
     this._updateFighter(this.p2, this.p1, inputsP2);
+
+    // 4.5 量子防作弊：瞬移與超速位移即時校驗
+    antiCheat.validateMovement(this.p1, this.arenaWidth, this.floorY);
+    antiCheat.validateMovement(this.p2, this.arenaWidth, this.floorY);
 
     // 5. 更新飛行道具與衝擊波
     this._updateProjectiles();
@@ -1814,7 +1836,9 @@ export class CombatEngine {
 
   // ─── 傷害計算與攻防三段三擇 ───
   _applyHit(char, opp, action) {
-    let damage = action.damage || 50;
+    let rawDamage = action.damage || 50;
+    // 量子防作弊：過濾異常超大傷害與秒殺外掛
+    let damage = antiCheat.filterDamage(rawDamage, action.type || 'skill');
     let isBlocked = false;
 
     // 攻防三段核心規則：
@@ -1860,7 +1884,9 @@ export class CombatEngine {
     if (isBlocked) {
       // 50% 傷害穿透防護罩，實質扣除血量
       damage = Math.max(12, Math.round(damage * 0.5));
+      opp.isTakingLegitHit = true;
       opp.hp = Math.max(0, opp.hp - damage);
+      opp.isTakingLegitHit = false;
       soundEngine.playHit('guard');
       this._triggerHaptic(25);
 
@@ -1907,7 +1933,9 @@ export class CombatEngine {
     }
 
     // 命中打擊！
+    opp.isTakingLegitHit = true;
     opp.hp = Math.max(0, opp.hp - damage);
+    opp.isTakingLegitHit = false;
 
     // 充能雙方之終極必殺計量槽 (Super Gauge) 與受擊方的量子爆發計量槽
     char.superMeter = Math.min(char.superMax, (char.superMeter || 0) + 45);

@@ -4,6 +4,8 @@
  * 支援跨電腦 / 跨瀏覽器自動同步進度、雲端代碼備份與時間戳智能合併
  */
 
+import { antiCheat } from './engine/anti_cheat.js';
+
 const STORAGE_KEY_CURRENT = "cyberstriker_current_session";
 const STORAGE_KEY_ACCOUNTS = "cyberstriker_cloud_accounts";
 const CLOUD_KV_ENDPOINT = "https://kvdb.io/LjcEsRKfWahraYeimuojjQ/";
@@ -215,6 +217,7 @@ export class SaveSystem {
           return;
         } else if (sessionData.email && this.accounts[sessionData.email]) {
           this.currentUser = this.accounts[sessionData.email];
+          antiCheat.verifySaveIntegrity(this.currentUser);
           this.currentUser.lastLogin = new Date().toISOString();
           this._saveAccountsToStorage();
 
@@ -724,7 +727,8 @@ export class SaveSystem {
   }
 
   addCredits(amount) {
-    const num = Math.max(0, Number(amount) || 0);
+    // 防作弊：單次最多發放 5,000 幣，杜絕惡意控制台注入
+    const num = Math.max(0, Math.min(5000, Number(amount) || 0));
     if (this.currentUser) {
       this.currentUser.credits = (Number(this.currentUser.credits) || 0) + num;
       this.currentUser.updatedAt = new Date().toISOString();
@@ -745,6 +749,11 @@ export class SaveSystem {
    * 存檔核心：先寫入本機 localStorage，並在背景非同步上傳至全球雲端
    */
   _saveCurrent() {
+    if (this.currentUser) {
+      // 數位簽名防篡改保護
+      this.currentUser._sig = antiCheat.generateSaveSignature(this.currentUser);
+    }
+
     if (!this.isGuest && this.currentUser && this.currentUser.email) {
       this.accounts[this.currentUser.email] = { ...this.currentUser, updatedAt: new Date().toISOString() };
       this._saveAccountsToStorage();
