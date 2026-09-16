@@ -25,6 +25,12 @@ class CyberStrikerApp {
     this.pedestalTime = 0;
     this.pedestalAnimId = null;
 
+    // 商城外觀正面全息預覽動畫
+    this.shopPreviewAnimId = null;
+    this.shopPreviewTime = 0;
+    this.visibleShopCanvases = new Set();
+    this.shopObserver = null;
+
     // 戰鬥狀態
     this.isFighting = false;
     this.matchMode = 'ai'; // 'ai', 'local_2p', 'p2p', 'training', 'arcade'
@@ -179,6 +185,11 @@ class CyberStrikerApp {
 
   // ─── 大廳展示台 (Skeletal Real-Time Pedestal) ───
   _startPedestalLoop() {
+    if (this.pedestalAnimId) {
+      cancelAnimationFrame(this.pedestalAnimId);
+      this.pedestalAnimId = null;
+    }
+
     const render = () => {
       this.pedestalTime++;
       if (this.pedestalCanvas && this.pedestalCtx) {
@@ -216,13 +227,87 @@ class CyberStrikerApp {
       }
       this.pedestalAnimId = requestAnimationFrame(render);
     };
-    render();
+    this.pedestalAnimId = requestAnimationFrame(render);
   }
 
   previewPedestalAction(action) {
     this.pedestalAction = action;
     this.pedestalActionTimer = action === 'jump' ? 35 : 20;
     soundEngine.playHit(action === 'light_punch' ? 'punch' : (action === 'heavy_kick' ? 'kick' : (action === 'high_guard' ? 'guard' : (action === 'ranged_attack' ? 'projectile' : 'dp'))));
+  }
+
+  // ─── 商城卡片外觀正面即時渲染 (Shop Skin Preview Rendering) ───
+  _renderSingleShopSkinCanvas(canvas, skin, time = 0, action = 'idle') {
+    if (!canvas || !skin) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // 1. 全息光圈底座 (置於腳底)
+    const cx = w / 2;
+    const cy = h - 34;
+    characterRenderer.drawPedestal(ctx, cx, cy, 54, skin, time);
+
+    // 2. 正面人體骨骼外觀
+    const dummyModel = {
+      x: cx,
+      y: h - 44,
+      facing: 1,
+      state: action,
+      stateTime: time,
+      skin: skin,
+      isGuarding: action.includes('guard'),
+      guardStance: 'high',
+      invincibleTimer: 0
+    };
+    characterRenderer.draw(ctx, dummyModel);
+  }
+
+  _startShopPreviewLoop() {
+    if (this.shopPreviewAnimId) {
+      cancelAnimationFrame(this.shopPreviewAnimId);
+      this.shopPreviewAnimId = null;
+    }
+    if (this.currentTab !== 'shop') return;
+
+    const render = () => {
+      this.shopPreviewTime++;
+      const container = document.getElementById('shopGrid');
+      if (container && this.currentTab === 'shop') {
+        const canvases = (this.visibleShopCanvases && this.visibleShopCanvases.size > 0)
+          ? Array.from(this.visibleShopCanvases)
+          : Array.from(container.querySelectorAll('.shop-skin-canvas'));
+
+        canvases.forEach(canvas => {
+          const skinId = canvas.dataset.skinId;
+          const skin = SKINS.find(s => s.id === skinId);
+          if (skin) {
+            let action = 'idle';
+            if (canvas.dataset.actionTimer && Number(canvas.dataset.actionTimer) > 0) {
+              const timer = Number(canvas.dataset.actionTimer) - 1;
+              canvas.dataset.actionTimer = timer;
+              action = canvas.dataset.action || 'light_punch';
+            }
+            this._renderSingleShopSkinCanvas(canvas, skin, this.shopPreviewTime, action);
+          }
+        });
+      }
+      if (this.currentTab === 'shop') {
+        this.shopPreviewAnimId = requestAnimationFrame(render);
+      } else {
+        this.shopPreviewAnimId = null;
+      }
+    };
+    this.shopPreviewAnimId = requestAnimationFrame(render);
+  }
+
+  _stopShopPreviewLoop() {
+    if (this.shopPreviewAnimId) {
+      cancelAnimationFrame(this.shopPreviewAnimId);
+      this.shopPreviewAnimId = null;
+    }
   }
 
   // ─── 畫面導航與分頁 ───
@@ -235,6 +320,15 @@ class CyberStrikerApp {
       view.classList.toggle('active', view.id === `view_${tabId}`);
     });
     soundEngine.playUI('click');
+
+    // 切換分頁時智慧調節展示台循環
+    if (tabId === 'skins') {
+      this._startPedestalLoop();
+    } else if (tabId === 'shop') {
+      this._startShopPreviewLoop();
+    } else {
+      this._stopShopPreviewLoop();
+    }
   }
 
   updateUserHUD() {
@@ -479,6 +573,18 @@ class CyberStrikerApp {
               </button>
             `}
           </div>
+          <!-- 最下方：直接出現該角色的正面外觀展示台 (免去切換分頁滑動繁瑣操作) -->
+          <div class="shop-skin-preview-wrap" style="margin-top: 10px; background: rgba(4, 7, 18, 0.92); border: 1.5px solid ${s.themeColor}55; border-radius: 8px; overflow: hidden; position: relative; box-shadow: inset 0 0 18px rgba(0,0,0,0.85);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <span style="font-size: 11px; font-weight: 800; color: ${s.themeColor}; display: flex; align-items: center; gap: 5px;">
+                <i class="fa-solid fa-user-shield"></i> ${s.name} 正面全息外觀
+              </span>
+              <span style="font-size: 9px; color: #94a3b8; font-family: 'Orbitron', monospace; letter-spacing: 0.5px;">LIVE PREVIEW</span>
+            </div>
+            <div style="position: relative; width: 100%; height: 200px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 85%, ${s.themeColor}18 0%, rgba(3, 7, 18, 0.98) 75%);">
+              <canvas class="shop-skin-canvas" data-skin-id="${s.id}" width="260" height="200" style="width: 100%; max-width: 260px; height: 200px; display: block; border-radius: 6px; cursor: pointer;" title="點擊或滑鼠移入可展示微型即時武打動作"></canvas>
+            </div>
+          </div>
         </div>
       `;
     }).join('');
@@ -490,10 +596,75 @@ class CyberStrikerApp {
         if (skinObj) {
           this.pedestalSkin = skinObj;
           this.switchTab('skins');
-          soundEngine.playUI('hover');
+          soundEngine.playUI('equip');
+
+          // 1. 確保大廳展示台動畫處於運行狀態
+          this._startPedestalLoop();
+
+          // 2. 即時讓大廳展示台角色做出武打展示動作
+          this.previewPedestalAction('light_punch');
+
+          // 3. 自動平滑滾動至大廳展示台 (徹底解決按完商店後還要往下滑尋找的問題)
+          setTimeout(() => {
+            const arena = document.querySelector('.preview-arena-panel') || document.getElementById('pedestalCanvas');
+            if (arena) {
+              arena.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              arena.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease';
+              arena.style.boxShadow = `0 0 35px ${skinObj.themeColor}`;
+              setTimeout(() => {
+                arena.style.boxShadow = '';
+              }, 1200);
+            }
+          }, 60);
         }
       });
     });
+
+    // 立即靜態渲染所有商品之正面全息外觀 (Frame 0 即時成像，零等待零延遲)
+    const canvases = container.querySelectorAll('.shop-skin-canvas');
+    canvases.forEach(canvas => {
+      const skinId = canvas.dataset.skinId;
+      const skin = SKINS.find(s => s.id === skinId);
+      if (skin) {
+        this._renderSingleShopSkinCanvas(canvas, skin, 0, 'idle');
+      }
+
+      // 互動微動態：移入輕拳、點擊重踢
+      canvas.onmouseenter = () => {
+        canvas.dataset.action = 'light_punch';
+        canvas.dataset.actionTimer = '24';
+        soundEngine.playHit('punch');
+      };
+      canvas.onclick = () => {
+        canvas.dataset.action = 'heavy_kick';
+        canvas.dataset.actionTimer = '28';
+        soundEngine.playHit('kick');
+      };
+    });
+
+    // 設置高效視窗觀察器 (IntersectionObserver)，僅針對當前可見的商品卡片進行動態全息動畫更新，滾動極致順暢無負擔
+    if ('IntersectionObserver' in window) {
+      if (this.shopObserver) {
+        this.shopObserver.disconnect();
+      }
+      this.visibleShopCanvases = new Set();
+      this.shopObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            this.visibleShopCanvases.add(entry.target);
+          } else {
+            this.visibleShopCanvases.delete(entry.target);
+          }
+        });
+      }, { rootMargin: '80px' });
+
+      canvases.forEach(cvs => this.shopObserver.observe(cvs));
+    }
+
+    // 若當前在商城分頁，啟動商城全息動畫循環
+    if (this.currentTab === 'shop') {
+      this._startShopPreviewLoop();
+    }
 
     container.querySelectorAll('.buy-skin-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -878,8 +1049,10 @@ class CyberStrikerApp {
     if (modal) modal.classList.remove('active');
     localStorage.setItem('quantum_arena_last_loadout', JSON.stringify(this.loadoutSelection));
     saveSystem.updateLoadout(this.loadoutSelection);
-    if (!this.isFighting && this.activeTab === 'skins') {
+    if (!this.isFighting && this.currentTab === 'skins') {
       this._startPedestalLoop();
+    } else if (!this.isFighting && this.currentTab === 'shop') {
+      this._startShopPreviewLoop();
     }
     if (callback) callback();
   }
@@ -3323,6 +3496,13 @@ class CyberStrikerApp {
     this.arcadeScore = 0;
     this.arcadeStreakWins = 0;
     this.updateUserHUD();
+
+    // 恢復大廳擂台或商城正面預覽循環
+    if (this.currentTab === 'skins') {
+      this._startPedestalLoop();
+    } else if (this.currentTab === 'shop') {
+      this._startShopPreviewLoop();
+    }
   }
 
   playAgain() {
@@ -3743,6 +3923,11 @@ class CyberStrikerApp {
       btn.onclick = () => {
         const m = btn.closest('.modal-overlay');
         if (m) m.classList.remove('active');
+        if (!this.isFighting && this.currentTab === 'skins') {
+          this._startPedestalLoop();
+        } else if (!this.isFighting && this.currentTab === 'shop') {
+          this._startShopPreviewLoop();
+        }
       };
     });
   }
@@ -3755,6 +3940,11 @@ class CyberStrikerApp {
           this.exitBattleToLobby();
         } else {
           document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+          if (this.currentTab === 'skins') {
+            this._startPedestalLoop();
+          } else if (this.currentTab === 'shop') {
+            this._startShopPreviewLoop();
+          }
         }
       }
     });
