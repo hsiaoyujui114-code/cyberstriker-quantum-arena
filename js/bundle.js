@@ -18404,6 +18404,27 @@
         workshopBtn.onclick = () => {
           const m = document.getElementById("workshopModal");
           if (m) m.classList.add("active");
+          soundEngine.playUI("click");
+        };
+      }
+      const openHowToContributeBtn = document.getElementById("openHowToContributeBtn");
+      if (openHowToContributeBtn) {
+        openHowToContributeBtn.onclick = () => {
+          const workshopModal = document.getElementById("workshopModal");
+          if (workshopModal) workshopModal.classList.remove("active");
+          const howToModal = document.getElementById("howToContributeModal");
+          if (howToModal) howToModal.classList.add("active");
+          soundEngine.playUI("click");
+        };
+      }
+      const backToWorkshopBtn = document.getElementById("backToWorkshopBtn");
+      if (backToWorkshopBtn) {
+        backToWorkshopBtn.onclick = () => {
+          const howToModal = document.getElementById("howToContributeModal");
+          if (howToModal) howToModal.classList.remove("active");
+          const workshopModal = document.getElementById("workshopModal");
+          if (workshopModal) workshopModal.classList.add("active");
+          soundEngine.playUI("click");
         };
       }
       document.querySelectorAll(".shop-filter-btn").forEach((btn) => {

@@ -3884,6 +3884,31 @@ class CyberStrikerApp {
       workshopBtn.onclick = () => {
         const m = document.getElementById('workshopModal');
         if (m) m.classList.add('active');
+        soundEngine.playUI('click');
+      };
+    }
+
+    // 「如何共創」詳細圖文指引彈窗入口
+    const openHowToContributeBtn = document.getElementById('openHowToContributeBtn');
+    if (openHowToContributeBtn) {
+      openHowToContributeBtn.onclick = () => {
+        const workshopModal = document.getElementById('workshopModal');
+        if (workshopModal) workshopModal.classList.remove('active');
+        const howToModal = document.getElementById('howToContributeModal');
+        if (howToModal) howToModal.classList.add('active');
+        soundEngine.playUI('click');
+      };
+    }
+
+    // 從「如何共創」返回工作坊
+    const backToWorkshopBtn = document.getElementById('backToWorkshopBtn');
+    if (backToWorkshopBtn) {
+      backToWorkshopBtn.onclick = () => {
+        const howToModal = document.getElementById('howToContributeModal');
+        if (howToModal) howToModal.classList.remove('active');
+        const workshopModal = document.getElementById('workshopModal');
+        if (workshopModal) workshopModal.classList.add('active');
+        soundEngine.playUI('click');
       };
     }
 

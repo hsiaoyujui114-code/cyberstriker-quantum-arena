@@ -21,7 +21,7 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=20260916_v11_anticheat">
+  <link rel="stylesheet" href="css/style.css?v=20260916_v12_contribute_guide">
 </head>
 <body>
 
@@ -721,13 +721,140 @@
         3. 發起 Pull Request，CI 自動執行 100% 判定盒對稱驗證後即可正式收錄！
       </div>
 
+      <!-- 如何共創入口按鈕 (位於造訪 GitHub 倉庫正上方) -->
+      <button class="nav-tab-btn" id="openHowToContributeBtn" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #ffd700, #f59e0b); color: #000; border: none; box-shadow: 0 0 16px rgba(255, 215, 0, 0.4); margin-bottom: 8px; cursor: pointer;">
+        <i class="fa-solid fa-graduation-cap"></i> 如何共創？（新手與創作者完整圖文教學指南）
+      </button>
+
       <a href="https://github.com/hsiaoyujui114-code/cyberstriker-quantum-arena" target="_blank" class="nav-tab-btn" style="background: #24292e; color: #fff; justify-content: center; padding: 10px;">
         <i class="fa-brands fa-github"></i> 造訪 GitHub 倉庫參與共創
       </a>
     </div>
   </div>
 
+  <!-- ── GitHub 如何共創完整指引對話框 (How To Contribute Modal) ── -->
+  <div class="modal-overlay" id="howToContributeModal">
+    <div class="modal-card" style="max-width: 820px; max-height: 88vh; overflow-y: auto; gap: 14px;">
+      <button class="modal-close-btn" id="howToContributeCloseBtn">&times;</button>
+      
+      <!-- 標題欄 -->
+      <div style="display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 12px;">
+        <div style="font-size: 34px; color: #ffd700; filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.7));">
+          <i class="fa-solid fa-handshake-angle"></i>
+        </div>
+        <div>
+          <h2 style="color: var(--primary-cyan); font-size: 22px; margin: 0; font-family: 'Orbitron', 'Noto Sans TC', sans-serif;">
+            如何共創？GitHub 開源社群共創完整指引指南
+          </h2>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+            《CyberStriker》由全體玩家共同打造！無論您是資深工程師、動漫繪師，或單純熱愛格鬥遊戲，都能輕鬆參與
+          </div>
+        </div>
+      </div>
+
+      <!-- 區塊一：你可以為遊戲共創什麼？ -->
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 243, 255, 0.25); border-radius: 10px; padding: 14px;">
+        <h3 style="color: #00f3ff; font-size: 15px; margin-top: 0; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-shapes"></i> 1. 你可以為遊戲共創什麼內容？
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; font-size: 12px; color: #cbd5e1;">
+          <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #00f3ff;">
+            <strong style="color: #fff; font-size: 13px;"><i class="fa-solid fa-palette"></i> 設計全新英雄外觀 (Skins)</strong>
+            <p style="margin: 4px 0 0 0; color: #94a3b8; line-height: 1.5;">為遊戲自訂原創科幻機甲、動漫熱門角色或荒野亂鬥英雄塗裝，配置專屬光軌與量子反應爐色彩。</p>
+          </div>
+          <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ff007f;">
+            <strong style="color: #fff; font-size: 13px;"><i class="fa-solid fa-wand-magic-sparkles"></i> 擴充武器與招式庫 (Skills)</strong>
+            <p style="margin: 4px 0 0 0; color: #94a3b8; line-height: 1.5;">設計嶄新的 30 款武器攻擊方式（例如：追蹤浮游砲、裂地火浪、居合拔刀術等），定義公平傷害數值。</p>
+          </div>
+          <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #10b981;">
+            <strong style="color: #fff; font-size: 13px;"><i class="fa-solid fa-bug"></i> 修復問題與流暢度優化 (Code)</strong>
+            <p style="margin: 4px 0 0 0; color: #94a3b8; line-height: 1.5;">改善手機觸控虛擬搖桿手感、優化 60 FPS 物理判定幀數、修復連段邊界判斷或瀏覽器相容性。</p>
+          </div>
+          <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ffd700;">
+            <strong style="color: #fff; font-size: 13px;"><i class="fa-solid fa-lightbulb"></i> 提議玩法與許願池 (Ideas)</strong>
+            <p style="margin: 4px 0 0 0; color: #94a3b8; line-height: 1.5;">不懂程式也能玩！到 GitHub Issues 提出您的遊戲創意、平衡性調整建議或平衡數據回饋。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 區塊二：手把手共創 4 步驟實戰 -->
+      <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 14px;">
+        <h3 style="color: #ffd700; font-size: 15px; margin-top: 0; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-laptop-code"></i> 2. 手把手共創實戰 4 步驟
+        </h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px; color: #e2e8f0; line-height: 1.6;">
+          <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px;">
+            <strong style="color: #00f3ff;">第 1 步：Fork 專案倉庫（一鍵複製）</strong><br>
+            <span style="color: #94a3b8; font-size: 12px;">點擊官方 GitHub 倉庫右上角的 <span style="background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 4px; color: #fff;">Fork</span> 按鈕，將整份遊戲代碼複製一份到您的 GitHub 空間中。</span>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px;">
+            <strong style="color: #00f3ff;">第 2 步：修改對應代碼檔案（檔案架構一覽）</strong><br>
+            <span style="color: #94a3b8; font-size: 12px;">
+              • <strong>想新增造型外觀</strong>：打開 <code>js/data/skins.js</code>，複製現有範例並填寫您的角色名稱、十六進制主題色彩（themeColor）、光軌特效說明。<br>
+              • <strong>想新增武器招式</strong>：打開 <code>js/data/skills.js</code>，設定招式名稱、傷害（Damage）、冷卻時間（Cooldown）。<br>
+              • <strong>想微調骨骼部件</strong>：打開 <code>js/engine/character_renderer.js</code> 查看標準尺寸規格。
+            </span>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px;">
+            <strong style="color: #00f3ff;">第 3 步：本機免環境即時測試（秒開即測）</strong><br>
+            <span style="color: #94a3b8; font-size: 12px;">本遊戲是純前端架構！電腦上直接雙擊打開 <code>index.html</code>，或在 VS Code 點擊 Live Server，就能在自己瀏覽器中立即試玩、測試自己新做的英雄外觀與招式！</span>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px;">
+            <strong style="color: #00f3ff;">第 4 步：提交 Pull Request (發起合併請求)</strong><br>
+            <span style="color: #94a3b8; font-size: 12px;">在您的 GitHub 頁面點擊 <span style="background: #10b981; color: #000; font-weight: 800; padding: 1px 6px; border-radius: 4px;">Contribute → Open Pull Request</span>，寫下您的作品名稱與設計亮點。作者審核通過後，您的作品將正式上線給全世界所有玩家遊玩！</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 區塊三：三大審查原則 (公平競技保證) -->
+      <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid #10b981; border-radius: 10px; padding: 12px;">
+        <h3 style="color: #10b981; font-size: 14px; margin-top: 0; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-scale-balanced"></i> 3. 官方審核三大黃金原則（維持 100% 公平對稱競技）
+        </h3>
+        <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #cbd5e1; line-height: 1.6;">
+          <li><strong>判定盒對稱一致</strong>：所有外觀的受擊碰撞盒（Hitbox）與生命值完全相同，杜絕任何因模型過小或手長而產生的不公平優勢。</li>
+          <li><strong>零數值課金破壞</strong>：武器招式數值嚴格遵循傷害與冷卻平衡模型，純外觀換裝不得附帶任何攻擊力加成。</li>
+          <li><strong>代碼無毒透明</strong>：提交之代碼不得夾帶外部未知腳本，維護全球玩家遊戲環境純淨。</li>
+        </ul>
+      </div>
+
+      <!-- 區塊四：創作者專屬榮譽與獎勵 -->
+      <div style="background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,0,127,0.1)); border: 1.5px solid #ffd700; border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 14px;">
+        <div style="font-size: 40px; color: #ffd700; filter: drop-shadow(0 0 10px rgba(255,215,0,0.8));">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <div style="font-size: 12px; color: #e2e8f0; line-height: 1.6;">
+          <strong style="color: #ffd700; font-size: 14px;">🏆 創作者專屬榮譽計畫：</strong><br>
+          只要您的外觀或功能通過審查正式收錄：<br>
+          1. 遊戲內該卡片將<strong>永久標註您的創作者名稱 (例如：PR #42)</strong> 與 GitHub 主頁連結！<br>
+          2. 官方直接為您的遊戲帳號派發 <strong>10,000 點能量幣</strong> 獎勵！<br>
+          3. 獲頒遊戲內<strong>金色「尊貴共創者」專屬限定動態頭框與頭銜</strong>！
+        </div>
+      </div>
+
+      <!-- 區塊五：不懂程式也能共創！常見問答 -->
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px; font-size: 12px; color: #94a3b8; line-height: 1.6;">
+        <strong style="color: #fff;"><i class="fa-solid fa-circle-question"></i> 我不懂寫程式也能一起共創嗎？</strong><br>
+        當然可以！您可以前往 GitHub 倉庫點擊 <strong>「Issues」</strong> 標籤頁，點擊「New Issue」，提出您想要的英雄角色、畫出角色的顏色配色草圖，或者分享您發現的遊戲 Bug 與改進靈感，我們都會親自看見並協助實現！
+      </div>
+
+      <!-- 底部操作按鈕 -->
+      <div style="display: flex; gap: 10px; margin-top: 4px;">
+        <button class="nav-tab-btn" id="backToWorkshopBtn" style="flex: 1; justify-content: center; padding: 12px; font-weight: 700; border-color: rgba(255,255,255,0.25); color: #cbd5e1; cursor: pointer;">
+          <i class="fa-solid fa-arrow-left"></i> 返回工作坊
+        </button>
+        <a href="https://github.com/hsiaoyujui114-code/cyberstriker-quantum-arena" target="_blank" class="nav-tab-btn" style="flex: 2; justify-content: center; padding: 12px; background: linear-gradient(135deg, #00f3ff, #0077ff); color: #000; font-weight: 900; font-size: 14px; box-shadow: 0 0 16px rgba(0,243,255,0.5); text-decoration: none;">
+          <i class="fa-brands fa-github"></i> 前往 GitHub 倉庫開始共創
+        </a>
+      </div>
+    </div>
+  </div>
+
   <!-- 主邏輯入口模組 -->
-  <script src="js/bundle.js?v=20260916_v11_anticheat"></script>
+  <script src="js/bundle.js?v=20260916_v12_contribute_guide"></script>
 </body>
 </html>
