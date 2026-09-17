@@ -1181,7 +1181,9 @@ class CyberStrikerApp {
       else if (this.matchMode === 'local_2p') p2Name = 'Player 2';
     }
 
-    const isAiOpponent = (this.matchMode === 'ai' || this.matchMode === 'arcade' || this.matchMode === 'training' || this._isSimulatedOpponent);
+    const isAiOpponent = this.matchMode === 'p2p'
+      ? false
+      : (this.matchMode === 'ai' || this.matchMode === 'arcade' || this.matchMode === 'training');
 
     // AI 武器抽取機制：依據難度（簡單、普通、困難、噩夢），從對應強度的武器庫中隨機抽取 3 把神兵武器
     let p2Loadout = ['SK-01', 'SK-02', 'SK-06'];
@@ -1190,7 +1192,7 @@ class CyberStrikerApp {
     }
 
     const p1Data = (this.matchMode === 'p2p' && this._p2pMatchData)
-      ? this._p2pMatchData.p1Data
+      ? { ...this._p2pMatchData.p1Data, isAi: false }
       : {
           name: saveSystem.currentUser ? saveSystem.currentUser.nickname : 'Player 1',
           skin: p1Skin,
@@ -1199,7 +1201,7 @@ class CyberStrikerApp {
         };
 
     const p2Data = (this.matchMode === 'p2p' && this._p2pMatchData)
-      ? this._p2pMatchData.p2Data
+      ? { ...this._p2pMatchData.p2Data, isAi: false }
       : {
           name: p2Name,
           skin: p2Skin,
@@ -1215,7 +1217,7 @@ class CyberStrikerApp {
 
     combatEngine.initMatch(p1Data, p2Data, this.matchMode === 'training');
 
-    // 開局提示 AI 本場隨機抽取的 3 把神兵武器
+    // 開局提示 AI 本場隨機抽取的 3 把神兵武器 (僅單人對戰 AI / 街機模式觸發)
     if (isAiOpponent && combatEngine.p2 && Array.isArray(combatEngine.p2.skills)) {
       const drawnNames = combatEngine.p2.skills.map(s => `【${s.name}】`).join(' ');
       const tierObj = TIER_CONFIG[p2Diff] || TIER_CONFIG.normal;
@@ -1275,20 +1277,31 @@ class CyberStrikerApp {
     // 更新技能快捷鍵 HUD 圖標與頂部角色標籤
     const p1NameEl = document.getElementById('p1NameDisplay');
     const p2NameEl = document.getElementById('p2NameDisplay');
+    const p1RoleTag = document.getElementById('p1RoleTag');
     const p2RoleTag = document.getElementById('p2RoleTag');
     if (p1NameEl) p1NameEl.textContent = p1Data.name;
     if (p2NameEl) p2NameEl.textContent = p2Data.name;
-    if (p2RoleTag) {
-      const p2Text = this.matchMode === 'local_2p'
-        ? '2P 對手'
-        : (this.matchMode === 'p2p'
-          ? (this.multiplayerRole === 'host' ? `連線挑戰者 (${p2Data.name})` : `連線房主 (${p1Data.name})`)
+
+    if (this.matchMode === 'p2p') {
+      if (this.multiplayerRole === 'host') {
+        if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-crown"></i> 房主 (我方 YOU)`;
+        if (p2RoleTag) p2RoleTag.innerHTML = `<i class="fa-solid fa-user"></i> 連線好友 (${p2Data.name})`;
+      } else {
+        if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-crown"></i> 連線房主 (${p1Data.name})`;
+        if (p2RoleTag) p2RoleTag.innerHTML = `<i class="fa-solid fa-user-check"></i> 挑戰者 (我方 YOU)`;
+      }
+    } else {
+      if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-user-check"></i> 這是玩家的角色 (YOU)`;
+      if (p2RoleTag) {
+        const p2Text = this.matchMode === 'local_2p'
+          ? '2P 對手'
           : (this.matchMode === 'training'
             ? '訓練木樁'
             : (this.matchMode === 'arcade'
               ? `街機對手 (STAGE ${this.arcadeStage})`
-              : '電腦對手 / AI')));
-      p2RoleTag.innerHTML = `<i class="fa-solid fa-gamepad"></i> ${p2Text}`;
+              : '電腦對手 / AI'));
+        p2RoleTag.innerHTML = `<i class="fa-solid fa-gamepad"></i> ${p2Text}`;
+      }
     }
     this._updateSkillActionBar();
 
@@ -1437,10 +1450,7 @@ class CyberStrikerApp {
       } else if (this.matchMode === 'p2p') {
         this._p2pSyncTimer = (this._p2pSyncTimer || 0) + 1;
 
-        if (this._isSimulatedOpponent) {
-          inputP1 = this._gatherInputsP1();
-          inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
-        } else if (this.multiplayerRole === 'host') {
+        if (this.multiplayerRole === 'host') {
           inputP1 = this._gatherInputsP1();
           inputP2 = this.networkP2Input || { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
           if (p2pNetwork.isConnected) {
@@ -3269,9 +3279,12 @@ class CyberStrikerApp {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
+    const p1IsMe = !(this.matchMode === 'p2p' && this.multiplayerRole === 'guest');
+
     // 1P 下指立體發光箭頭
-    ctx.fillStyle = '#00f3ff';
-    ctx.shadowColor = '#00f3ff';
+    const p1ArrowColor = p1IsMe ? '#00f3ff' : '#ff007f';
+    ctx.fillStyle = p1ArrowColor;
+    ctx.shadowColor = p1ArrowColor;
     ctx.shadowBlur = 14;
     ctx.beginPath();
     ctx.moveTo(p1.x, p1HeadY);
@@ -3282,13 +3295,20 @@ class CyberStrikerApp {
 
     // 1P 科技毛玻璃標籤底框 (含血量顯示)
     const p1Hp = Math.max(0, Math.round(p1.hp));
-    const badgeW1 = 186;
+    let p1Label = '★ 這是玩家的角色';
+    if (this.matchMode === 'p2p') {
+      p1Label = this.multiplayerRole === 'host' ? '👑 我方 (房主)' : `👑 連線房主 (${p1.name || '房主'})`;
+    } else if (this.matchMode === 'local_2p') {
+      p1Label = '1P 玩家';
+    }
+
+    const badgeW1 = Math.max(186, p1Label.length * 12 + 65);
     const badgeH1 = 28;
     const badgeX1 = p1.x - badgeW1 / 2;
     const badgeY1 = p1HeadY - 9 - badgeH1;
 
-    ctx.fillStyle = 'rgba(5, 15, 30, 0.9)';
-    ctx.strokeStyle = '#00f3ff';
+    ctx.fillStyle = p1IsMe ? 'rgba(5, 15, 30, 0.9)' : 'rgba(25, 5, 15, 0.9)';
+    ctx.strokeStyle = p1IsMe ? '#00f3ff' : '#ff007f';
     ctx.lineWidth = 2;
     ctx.beginPath();
     if (ctx.roundRect) {
@@ -3299,12 +3319,12 @@ class CyberStrikerApp {
     ctx.fill();
     ctx.stroke();
 
-    // 1P 文字: ★ 這是玩家的角色 [HP]
+    // 1P 文字
     ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
-    ctx.fillStyle = '#00f3ff';
-    ctx.shadowColor = '#00f3ff';
+    ctx.fillStyle = p1IsMe ? '#00f3ff' : '#ff007f';
+    ctx.shadowColor = p1IsMe ? '#00f3ff' : '#ff007f';
     ctx.shadowBlur = 10;
-    ctx.fillText(`★ 這是玩家的角色 [${p1Hp} HP]`, p1.x, badgeY1 + badgeH1 / 2);
+    ctx.fillText(`${p1Label} [${p1Hp} HP]`, p1.x, badgeY1 + badgeH1 / 2);
 
     // 1P 攻擊動作細節與招式屬性標籤 (所有細節即時動態顯示)
     if (p1.currentAction) {
@@ -3368,9 +3388,12 @@ class CyberStrikerApp {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
+    const p2IsMe = (this.matchMode === 'p2p' && this.multiplayerRole === 'guest');
+
     // 2P 下指箭頭
-    ctx.fillStyle = '#ff007f';
-    ctx.shadowColor = '#ff007f';
+    const p2ArrowColor = p2IsMe ? '#00f3ff' : '#ff007f';
+    ctx.fillStyle = p2ArrowColor;
+    ctx.shadowColor = p2ArrowColor;
     ctx.shadowBlur = 14;
     ctx.beginPath();
     ctx.moveTo(p2.x, p2HeadY);
@@ -3381,14 +3404,23 @@ class CyberStrikerApp {
 
     // 2P 底框 (含血量顯示)
     const p2Hp = Math.max(0, Math.round(p2.hp));
-    const p2Label = this.matchMode === 'local_2p' ? '2P 對手' : (this.matchMode === 'training' ? '訓練木樁' : '電腦對手 (AI)');
-    const badgeW2 = 168;
+    let p2Label = '電腦對手 (AI)';
+    if (this.matchMode === 'p2p') {
+      p2Label = this.multiplayerRole === 'host' ? `⚔️ 連線好友 (${p2.name || '挑戰者'})` : '⚔️ 我方 (挑戰者)';
+    } else if (this.matchMode === 'local_2p') {
+      p2Label = '2P 對手';
+    } else if (this.matchMode === 'training') {
+      p2Label = '訓練木樁';
+    } else if (this.matchMode === 'arcade') {
+      p2Label = `街機對手 (STAGE ${this.arcadeStage})`;
+    }
+    const badgeW2 = Math.max(168, p2Label.length * 12 + 65);
     const badgeH2 = 28;
     const badgeX2 = p2.x - badgeW2 / 2;
     const badgeY2 = p2HeadY - 9 - badgeH2;
 
-    ctx.fillStyle = 'rgba(25, 5, 15, 0.9)';
-    ctx.strokeStyle = '#ff007f';
+    ctx.fillStyle = p2IsMe ? 'rgba(5, 15, 30, 0.9)' : 'rgba(25, 5, 15, 0.9)';
+    ctx.strokeStyle = p2IsMe ? '#00f3ff' : '#ff007f';
     ctx.lineWidth = 2;
     ctx.beginPath();
     if (ctx.roundRect) {
@@ -3401,8 +3433,8 @@ class CyberStrikerApp {
 
     // 2P 文字
     ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
-    ctx.fillStyle = '#ff007f';
-    ctx.shadowColor = '#ff007f';
+    ctx.fillStyle = p2IsMe ? '#00f3ff' : '#ff007f';
+    ctx.shadowColor = p2IsMe ? '#00f3ff' : '#ff007f';
     ctx.shadowBlur = 10;
     ctx.fillText(`${p2Label} [${p2Hp} HP]`, p2.x, badgeY2 + badgeH2 / 2);
 
@@ -4491,6 +4523,7 @@ class CyberStrikerApp {
     const modeModal = document.getElementById('modeSelectModal');
     if (modeModal) modeModal.classList.remove('active');
 
+    this.matchMode = 'p2p';
     this.multiplayerRole = 'host';
     this._isSimulatedOpponent = false;
     this.multiplayerOpponentConnected = false;
@@ -4544,6 +4577,7 @@ class CyberStrikerApp {
     const joinModal = document.getElementById('joinRoomModal');
     if (joinModal) joinModal.classList.remove('active');
 
+    this.matchMode = 'p2p';
     this.multiplayerRole = 'guest';
     this.multiplayerRoomCode = cleanCode;
     this._isSimulatedOpponent = false;
@@ -4908,6 +4942,27 @@ class CyberStrikerApp {
     const hint = document.getElementById('roomReadyStatusHint');
     if (!btn) return;
 
+    if (!this.multiplayerOpponentConnected) {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'not-allowed';
+      btn.innerHTML = '<i class="fa-solid fa-user-clock"></i> 等待好友加入中...';
+      btn.style.background = 'linear-gradient(90deg, #4b5563, #374151)';
+      btn.style.boxShadow = 'none';
+      if (hint) {
+        if (this.multiplayerRole === 'host') {
+          hint.innerHTML = '請將右上方 6 位數字代碼告訴好友，待好友加入房間後即可點選「準備完成」！';
+        } else {
+          hint.innerHTML = '正在與房主建立量子連線中，請稍候...';
+        }
+      }
+      return;
+    }
+
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+
     if (this.multiplayerMyReady) {
       btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> 已準備就緒 (點擊可取消)';
       btn.style.background = 'linear-gradient(90deg, #10b981, #059669)';
@@ -4926,6 +4981,12 @@ class CyberStrikerApp {
   }
 
   toggleMultiplayerReady() {
+    if (!this.multiplayerOpponentConnected) {
+      soundEngine.playUI('click');
+      alert('⚠️ 目前房間內尚無好友加入！\n請先將 6 位數房間代碼分享給好友，待好友輸入代碼進入房間後即可點擊「準備完成」。');
+      return;
+    }
+
     soundEngine.playUI('click');
     if (!this.multiplayerMyReady) {
       if (this.loadoutSelection.length < 5) {
@@ -4957,12 +5018,15 @@ class CyberStrikerApp {
 
   _checkBothReady() {
     if (this.multiplayerMyReady && this.multiplayerOpponentReady && this.multiplayerOpponentConnected) {
-      if (!this.isCountdownActive) {
-        this._startMatchCountdown();
+      if (!this.isCountdownActive && this.multiplayerRole === 'host') {
+        this._startMatchCountdown(true);
       }
     } else {
       if (this.isCountdownActive) {
         this._cancelMatchCountdown();
+        if (this.multiplayerRole === 'host' && p2pNetwork.isConnected) {
+          p2pNetwork.send({ type: 'countdown_cancel' });
+        }
       }
     }
   }
@@ -5069,23 +5133,27 @@ class CyberStrikerApp {
       p1Data = {
         name: myName,
         skin: mySkin,
-        loadout: this.loadoutSelection
+        loadout: this.loadoutSelection,
+        isAi: false
       };
       p2Data = {
         name: this.multiplayerOpponentData?.name || '挑戰者 (2P)',
         skin: this.multiplayerOpponentData?.skin || SKINS[1],
-        loadout: this.multiplayerOpponentData?.loadout || ['SK-01', 'SK-02', 'SK-06', 'SK-16', 'SK-17']
+        loadout: this.multiplayerOpponentData?.loadout || ['SK-01', 'SK-02', 'SK-06', 'SK-16', 'SK-17'],
+        isAi: false
       };
     } else {
       p1Data = {
         name: this.multiplayerOpponentData?.name || '房主 (1P)',
         skin: this.multiplayerOpponentData?.skin || SKINS[0],
-        loadout: this.multiplayerOpponentData?.loadout || ['SK-01', 'SK-02', 'SK-03', 'SK-10', 'SK-11']
+        loadout: this.multiplayerOpponentData?.loadout || ['SK-01', 'SK-02', 'SK-03', 'SK-10', 'SK-11'],
+        isAi: false
       };
       p2Data = {
         name: myName,
         skin: mySkin,
-        loadout: this.loadoutSelection
+        loadout: this.loadoutSelection,
+        isAi: false
       };
     }
 
@@ -5130,6 +5198,7 @@ class CyberStrikerApp {
 
     soundEngine.playUI('click');
     this._updateRoomPlayersCard();
+    this._updateRoomReadyButton();
     this._checkBothReady();
   }
 
@@ -5141,11 +5210,13 @@ class CyberStrikerApp {
         badge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 等待好友輸入 6 位代碼加入中...';
         badge.style.color = '#38bdf8';
       }
+      this._updateRoomReadyButton();
     } else if (status === 'connecting') {
       if (badge) {
         badge.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> 正在連線至房間 ${this.multiplayerRoomCode}...`;
         badge.style.color = '#ffd700';
       }
+      this._updateRoomReadyButton();
     } else if (status === 'connected') {
       this.multiplayerOpponentConnected = true;
       if (badge) {
@@ -5164,6 +5235,7 @@ class CyberStrikerApp {
       });
 
       this._updateRoomPlayersCard();
+      this._updateRoomReadyButton();
     } else if (status === 'disconnected') {
       this.multiplayerOpponentConnected = false;
       this.multiplayerOpponentReady = false;
@@ -5175,11 +5247,13 @@ class CyberStrikerApp {
         badge.style.color = '#ff007f';
       }
       this._updateRoomPlayersCard();
+      this._updateRoomReadyButton();
     } else if (status === 'error') {
       if (badge) {
         badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> 連線提示：${data || '未找到房間或已逾時'}`;
         badge.style.color = '#f43f5e';
       }
+      this._updateRoomReadyButton();
     }
   }
 

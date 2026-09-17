@@ -485,7 +485,7 @@
         </div>
 
         <div style="display: flex; align-items: center; gap: 8px;">
-          <button class="nav-tab-btn" id="roomSimulateOpponentBtn" style="padding: 5px 10px; font-size: 11px; border-color: #a855f7; color: #d8b4fe;" title="若只有單人測試，可點此模擬對手加入連線">
+          <button class="nav-tab-btn" id="roomSimulateOpponentBtn" style="display: none; padding: 5px 10px; font-size: 11px; border-color: #a855f7; color: #d8b4fe;" title="若只有單人測試，可點此模擬對手加入連線">
             <i class="fa-solid fa-robot"></i> 模擬對手(測試用)
           </button>
           <button class="nav-tab-btn" id="leaveRoomBtn" style="padding: 6px 14px; font-size: 12px; border-color: rgba(239,68,68,0.4); color: #ef4444;">
@@ -644,7 +644,7 @@
       <!-- 1P HUD (玩家) -->
       <div class="fighter-hud-box">
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 2px;">
-          <span class="hud-role-badge player-role" style="background: rgba(0, 243, 255, 0.25); border: 1.5px solid #00f3ff; color: #00f3ff; font-weight: 900; font-size: 13px; padding: 2px 10px; border-radius: 4px; box-shadow: 0 0 12px rgba(0, 243, 255, 0.6); letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px;">
+          <span class="hud-role-badge player-role" id="p1RoleTag" style="background: rgba(0, 243, 255, 0.25); border: 1.5px solid #00f3ff; color: #00f3ff; font-weight: 900; font-size: 13px; padding: 2px 10px; border-radius: 4px; box-shadow: 0 0 12px rgba(0, 243, 255, 0.6); letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-user-check"></i> 這是玩家的角色 (YOU)
           </span>
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -1032,7 +1032,7 @@
   </div>
 
   <!-- 主邏輯入口模組 -->
-  <script src="js/bundle.js?v=20260917_rematch_v2"></script>
+  <script src="js/bundle.js?v=20260917_p2p_real_v1"></script>
   <script src="js/control_feel.js?v=20260916_control_v1"></script>
 </body>
 </html>

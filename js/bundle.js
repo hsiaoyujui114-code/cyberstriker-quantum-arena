@@ -16519,18 +16519,18 @@
         if (this.matchMode === "training") p2Name = "\u7DF4\u7FD2\u6728\u6A01\u5047\u4EBA";
         else if (this.matchMode === "local_2p") p2Name = "Player 2";
       }
-      const isAiOpponent = this.matchMode === "ai" || this.matchMode === "arcade" || this.matchMode === "training" || this._isSimulatedOpponent;
+      const isAiOpponent = this.matchMode === "p2p" ? false : this.matchMode === "ai" || this.matchMode === "arcade" || this.matchMode === "training";
       let p2Loadout = ["SK-01", "SK-02", "SK-06"];
       if (isAiOpponent) {
         p2Loadout = getRandomAiWeapons(p2Diff, 3);
       }
-      const p1Data = this.matchMode === "p2p" && this._p2pMatchData ? this._p2pMatchData.p1Data : {
+      const p1Data = this.matchMode === "p2p" && this._p2pMatchData ? { ...this._p2pMatchData.p1Data, isAi: false } : {
         name: saveSystem.currentUser ? saveSystem.currentUser.nickname : "Player 1",
         skin: p1Skin,
         isAi: false,
         loadout: this.loadoutSelection
       };
-      const p2Data = this.matchMode === "p2p" && this._p2pMatchData ? this._p2pMatchData.p2Data : {
+      const p2Data = this.matchMode === "p2p" && this._p2pMatchData ? { ...this._p2pMatchData.p2Data, isAi: false } : {
         name: p2Name,
         skin: p2Skin,
         isAi: isAiOpponent,
@@ -16590,12 +16590,24 @@
       announcerEngine.startRoundIntro(1);
       const p1NameEl = document.getElementById("p1NameDisplay");
       const p2NameEl = document.getElementById("p2NameDisplay");
+      const p1RoleTag = document.getElementById("p1RoleTag");
       const p2RoleTag = document.getElementById("p2RoleTag");
       if (p1NameEl) p1NameEl.textContent = p1Data.name;
       if (p2NameEl) p2NameEl.textContent = p2Data.name;
-      if (p2RoleTag) {
-        const p2Text = this.matchMode === "local_2p" ? "2P \u5C0D\u624B" : this.matchMode === "p2p" ? this.multiplayerRole === "host" ? `\u9023\u7DDA\u6311\u6230\u8005 (${p2Data.name})` : `\u9023\u7DDA\u623F\u4E3B (${p1Data.name})` : this.matchMode === "training" ? "\u8A13\u7DF4\u6728\u6A01" : this.matchMode === "arcade" ? `\u8857\u6A5F\u5C0D\u624B (STAGE ${this.arcadeStage})` : "\u96FB\u8166\u5C0D\u624B / AI";
-        p2RoleTag.innerHTML = `<i class="fa-solid fa-gamepad"></i> ${p2Text}`;
+      if (this.matchMode === "p2p") {
+        if (this.multiplayerRole === "host") {
+          if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-crown"></i> \u623F\u4E3B (\u6211\u65B9 YOU)`;
+          if (p2RoleTag) p2RoleTag.innerHTML = `<i class="fa-solid fa-user"></i> \u9023\u7DDA\u597D\u53CB (${p2Data.name})`;
+        } else {
+          if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-crown"></i> \u9023\u7DDA\u623F\u4E3B (${p1Data.name})`;
+          if (p2RoleTag) p2RoleTag.innerHTML = `<i class="fa-solid fa-user-check"></i> \u6311\u6230\u8005 (\u6211\u65B9 YOU)`;
+        }
+      } else {
+        if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-user-check"></i> \u9019\u662F\u73A9\u5BB6\u7684\u89D2\u8272 (YOU)`;
+        if (p2RoleTag) {
+          const p2Text = this.matchMode === "local_2p" ? "2P \u5C0D\u624B" : this.matchMode === "training" ? "\u8A13\u7DF4\u6728\u6A01" : this.matchMode === "arcade" ? `\u8857\u6A5F\u5C0D\u624B (STAGE ${this.arcadeStage})` : "\u96FB\u8166\u5C0D\u624B / AI";
+          p2RoleTag.innerHTML = `<i class="fa-solid fa-gamepad"></i> ${p2Text}`;
+        }
       }
       this._updateSkillActionBar();
       this._runBattleLoop();
@@ -16734,10 +16746,7 @@
           }
         } else if (this.matchMode === "p2p") {
           this._p2pSyncTimer = (this._p2pSyncTimer || 0) + 1;
-          if (this._isSimulatedOpponent) {
-            inputP1 = this._gatherInputsP1();
-            inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
-          } else if (this.multiplayerRole === "host") {
+          if (this.multiplayerRole === "host") {
             inputP1 = this._gatherInputsP1();
             inputP2 = this.networkP2Input || { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
             if (p2pNetwork.isConnected) {
@@ -18188,8 +18197,10 @@
       ctx.save();
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "#00f3ff";
-      ctx.shadowColor = "#00f3ff";
+      const p1IsMe = !(this.matchMode === "p2p" && this.multiplayerRole === "guest");
+      const p1ArrowColor = p1IsMe ? "#00f3ff" : "#ff007f";
+      ctx.fillStyle = p1ArrowColor;
+      ctx.shadowColor = p1ArrowColor;
       ctx.shadowBlur = 14;
       ctx.beginPath();
       ctx.moveTo(p1.x, p1HeadY);
@@ -18198,12 +18209,18 @@
       ctx.closePath();
       ctx.fill();
       const p1Hp = Math.max(0, Math.round(p1.hp));
-      const badgeW1 = 186;
+      let p1Label = "\u2605 \u9019\u662F\u73A9\u5BB6\u7684\u89D2\u8272";
+      if (this.matchMode === "p2p") {
+        p1Label = this.multiplayerRole === "host" ? "\u{1F451} \u6211\u65B9 (\u623F\u4E3B)" : `\u{1F451} \u9023\u7DDA\u623F\u4E3B (${p1.name || "\u623F\u4E3B"})`;
+      } else if (this.matchMode === "local_2p") {
+        p1Label = "1P \u73A9\u5BB6";
+      }
+      const badgeW1 = Math.max(186, p1Label.length * 12 + 65);
       const badgeH1 = 28;
       const badgeX1 = p1.x - badgeW1 / 2;
       const badgeY1 = p1HeadY - 9 - badgeH1;
-      ctx.fillStyle = "rgba(5, 15, 30, 0.9)";
-      ctx.strokeStyle = "#00f3ff";
+      ctx.fillStyle = p1IsMe ? "rgba(5, 15, 30, 0.9)" : "rgba(25, 5, 15, 0.9)";
+      ctx.strokeStyle = p1IsMe ? "#00f3ff" : "#ff007f";
       ctx.lineWidth = 2;
       ctx.beginPath();
       if (ctx.roundRect) {
@@ -18214,10 +18231,10 @@
       ctx.fill();
       ctx.stroke();
       ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
-      ctx.fillStyle = "#00f3ff";
-      ctx.shadowColor = "#00f3ff";
+      ctx.fillStyle = p1IsMe ? "#00f3ff" : "#ff007f";
+      ctx.shadowColor = p1IsMe ? "#00f3ff" : "#ff007f";
       ctx.shadowBlur = 10;
-      ctx.fillText(`\u2605 \u9019\u662F\u73A9\u5BB6\u7684\u89D2\u8272 [${p1Hp} HP]`, p1.x, badgeY1 + badgeH1 / 2);
+      ctx.fillText(`${p1Label} [${p1Hp} HP]`, p1.x, badgeY1 + badgeH1 / 2);
       if (p1.currentAction) {
         const act = p1.currentAction;
         let propText = "\u4E0A\u6BB5";
@@ -18274,8 +18291,10 @@
       ctx.save();
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "#ff007f";
-      ctx.shadowColor = "#ff007f";
+      const p2IsMe = this.matchMode === "p2p" && this.multiplayerRole === "guest";
+      const p2ArrowColor = p2IsMe ? "#00f3ff" : "#ff007f";
+      ctx.fillStyle = p2ArrowColor;
+      ctx.shadowColor = p2ArrowColor;
       ctx.shadowBlur = 14;
       ctx.beginPath();
       ctx.moveTo(p2.x, p2HeadY);
@@ -18284,13 +18303,22 @@
       ctx.closePath();
       ctx.fill();
       const p2Hp = Math.max(0, Math.round(p2.hp));
-      const p2Label = this.matchMode === "local_2p" ? "2P \u5C0D\u624B" : this.matchMode === "training" ? "\u8A13\u7DF4\u6728\u6A01" : "\u96FB\u8166\u5C0D\u624B (AI)";
-      const badgeW2 = 168;
+      let p2Label = "\u96FB\u8166\u5C0D\u624B (AI)";
+      if (this.matchMode === "p2p") {
+        p2Label = this.multiplayerRole === "host" ? `\u2694\uFE0F \u9023\u7DDA\u597D\u53CB (${p2.name || "\u6311\u6230\u8005"})` : "\u2694\uFE0F \u6211\u65B9 (\u6311\u6230\u8005)";
+      } else if (this.matchMode === "local_2p") {
+        p2Label = "2P \u5C0D\u624B";
+      } else if (this.matchMode === "training") {
+        p2Label = "\u8A13\u7DF4\u6728\u6A01";
+      } else if (this.matchMode === "arcade") {
+        p2Label = `\u8857\u6A5F\u5C0D\u624B (STAGE ${this.arcadeStage})`;
+      }
+      const badgeW2 = Math.max(168, p2Label.length * 12 + 65);
       const badgeH2 = 28;
       const badgeX2 = p2.x - badgeW2 / 2;
       const badgeY2 = p2HeadY - 9 - badgeH2;
-      ctx.fillStyle = "rgba(25, 5, 15, 0.9)";
-      ctx.strokeStyle = "#ff007f";
+      ctx.fillStyle = p2IsMe ? "rgba(5, 15, 30, 0.9)" : "rgba(25, 5, 15, 0.9)";
+      ctx.strokeStyle = p2IsMe ? "#00f3ff" : "#ff007f";
       ctx.lineWidth = 2;
       ctx.beginPath();
       if (ctx.roundRect) {
@@ -18301,8 +18329,8 @@
       ctx.fill();
       ctx.stroke();
       ctx.font = '900 12px "Orbitron", "Noto Sans TC", sans-serif';
-      ctx.fillStyle = "#ff007f";
-      ctx.shadowColor = "#ff007f";
+      ctx.fillStyle = p2IsMe ? "#00f3ff" : "#ff007f";
+      ctx.shadowColor = p2IsMe ? "#00f3ff" : "#ff007f";
       ctx.shadowBlur = 10;
       ctx.fillText(`${p2Label} [${p2Hp} HP]`, p2.x, badgeY2 + badgeH2 / 2);
       if (p2.currentAction) {
@@ -19254,6 +19282,7 @@
     openHostRoom() {
       const modeModal = document.getElementById("modeSelectModal");
       if (modeModal) modeModal.classList.remove("active");
+      this.matchMode = "p2p";
       this.multiplayerRole = "host";
       this._isSimulatedOpponent = false;
       this.multiplayerOpponentConnected = false;
@@ -19297,6 +19326,7 @@
       }
       const joinModal = document.getElementById("joinRoomModal");
       if (joinModal) joinModal.classList.remove("active");
+      this.matchMode = "p2p";
       this.multiplayerRole = "guest";
       this.multiplayerRoomCode = cleanCode;
       this._isSimulatedOpponent = false;
@@ -19619,6 +19649,25 @@
       const btn = document.getElementById("roomReadyBtn");
       const hint = document.getElementById("roomReadyStatusHint");
       if (!btn) return;
+      if (!this.multiplayerOpponentConnected) {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+        btn.innerHTML = '<i class="fa-solid fa-user-clock"></i> \u7B49\u5F85\u597D\u53CB\u52A0\u5165\u4E2D...';
+        btn.style.background = "linear-gradient(90deg, #4b5563, #374151)";
+        btn.style.boxShadow = "none";
+        if (hint) {
+          if (this.multiplayerRole === "host") {
+            hint.innerHTML = "\u8ACB\u5C07\u53F3\u4E0A\u65B9 6 \u4F4D\u6578\u5B57\u4EE3\u78BC\u544A\u8A34\u597D\u53CB\uFF0C\u5F85\u597D\u53CB\u52A0\u5165\u623F\u9593\u5F8C\u5373\u53EF\u9EDE\u9078\u300C\u6E96\u5099\u5B8C\u6210\u300D\uFF01";
+          } else {
+            hint.innerHTML = "\u6B63\u5728\u8207\u623F\u4E3B\u5EFA\u7ACB\u91CF\u5B50\u9023\u7DDA\u4E2D\uFF0C\u8ACB\u7A0D\u5019...";
+          }
+        }
+        return;
+      }
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
       if (this.multiplayerMyReady) {
         btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> \u5DF2\u6E96\u5099\u5C31\u7DD2 (\u9EDE\u64CA\u53EF\u53D6\u6D88)';
         btn.style.background = "linear-gradient(90deg, #10b981, #059669)";
@@ -19636,6 +19685,11 @@
       }
     }
     toggleMultiplayerReady() {
+      if (!this.multiplayerOpponentConnected) {
+        soundEngine.playUI("click");
+        alert("\u26A0\uFE0F \u76EE\u524D\u623F\u9593\u5167\u5C1A\u7121\u597D\u53CB\u52A0\u5165\uFF01\n\u8ACB\u5148\u5C07 6 \u4F4D\u6578\u623F\u9593\u4EE3\u78BC\u5206\u4EAB\u7D66\u597D\u53CB\uFF0C\u5F85\u597D\u53CB\u8F38\u5165\u4EE3\u78BC\u9032\u5165\u623F\u9593\u5F8C\u5373\u53EF\u9EDE\u64CA\u300C\u6E96\u5099\u5B8C\u6210\u300D\u3002");
+        return;
+      }
       soundEngine.playUI("click");
       if (!this.multiplayerMyReady) {
         if (this.loadoutSelection.length < 5) {
@@ -19665,12 +19719,15 @@
     }
     _checkBothReady() {
       if (this.multiplayerMyReady && this.multiplayerOpponentReady && this.multiplayerOpponentConnected) {
-        if (!this.isCountdownActive) {
-          this._startMatchCountdown();
+        if (!this.isCountdownActive && this.multiplayerRole === "host") {
+          this._startMatchCountdown(true);
         }
       } else {
         if (this.isCountdownActive) {
           this._cancelMatchCountdown();
+          if (this.multiplayerRole === "host" && p2pNetwork.isConnected) {
+            p2pNetwork.send({ type: "countdown_cancel" });
+          }
         }
       }
     }
@@ -19763,23 +19820,27 @@
         p1Data = {
           name: myName,
           skin: mySkin,
-          loadout: this.loadoutSelection
+          loadout: this.loadoutSelection,
+          isAi: false
         };
         p2Data = {
           name: this.multiplayerOpponentData?.name || "\u6311\u6230\u8005 (2P)",
           skin: this.multiplayerOpponentData?.skin || SKINS[1],
-          loadout: this.multiplayerOpponentData?.loadout || ["SK-01", "SK-02", "SK-06", "SK-16", "SK-17"]
+          loadout: this.multiplayerOpponentData?.loadout || ["SK-01", "SK-02", "SK-06", "SK-16", "SK-17"],
+          isAi: false
         };
       } else {
         p1Data = {
           name: this.multiplayerOpponentData?.name || "\u623F\u4E3B (1P)",
           skin: this.multiplayerOpponentData?.skin || SKINS[0],
-          loadout: this.multiplayerOpponentData?.loadout || ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"]
+          loadout: this.multiplayerOpponentData?.loadout || ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
+          isAi: false
         };
         p2Data = {
           name: myName,
           skin: mySkin,
-          loadout: this.loadoutSelection
+          loadout: this.loadoutSelection,
+          isAi: false
         };
       }
       this._p2pMatchData = { p1Data, p2Data };
@@ -19818,6 +19879,7 @@
       }
       soundEngine.playUI("click");
       this._updateRoomPlayersCard();
+      this._updateRoomReadyButton();
       this._checkBothReady();
     }
     _handleP2PStatusChange(status, data) {
@@ -19827,11 +19889,13 @@
           badge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> \u7B49\u5F85\u597D\u53CB\u8F38\u5165 6 \u4F4D\u4EE3\u78BC\u52A0\u5165\u4E2D...';
           badge.style.color = "#38bdf8";
         }
+        this._updateRoomReadyButton();
       } else if (status === "connecting") {
         if (badge) {
           badge.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> \u6B63\u5728\u9023\u7DDA\u81F3\u623F\u9593 ${this.multiplayerRoomCode}...`;
           badge.style.color = "#ffd700";
         }
+        this._updateRoomReadyButton();
       } else if (status === "connected") {
         this.multiplayerOpponentConnected = true;
         if (badge) {
@@ -19847,6 +19911,7 @@
           ready: this.multiplayerMyReady
         });
         this._updateRoomPlayersCard();
+        this._updateRoomReadyButton();
       } else if (status === "disconnected") {
         this.multiplayerOpponentConnected = false;
         this.multiplayerOpponentReady = false;
@@ -19857,11 +19922,13 @@
           badge.style.color = "#ff007f";
         }
         this._updateRoomPlayersCard();
+        this._updateRoomReadyButton();
       } else if (status === "error") {
         if (badge) {
           badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> \u9023\u7DDA\u63D0\u793A\uFF1A${data || "\u672A\u627E\u5230\u623F\u9593\u6216\u5DF2\u903E\u6642"}`;
           badge.style.color = "#f43f5e";
         }
+        this._updateRoomReadyButton();
       }
     }
     _handleP2PData(data) {
