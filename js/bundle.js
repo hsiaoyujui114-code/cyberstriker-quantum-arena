@@ -1,606 +1,862 @@
 (() => {
   // js/data/skills.js
+  var WEAPON_TIERS = {
+    "easy": [
+      "SK-01",
+      "SK-03",
+      "SK-14",
+      "SK-18",
+      "SK-11",
+      "SK-09",
+      "SK-12",
+      "SK-21"
+    ],
+    "normal": [
+      "SK-19",
+      "SK-06",
+      "SK-17",
+      "SK-20",
+      "SK-22",
+      "SK-02",
+      "SK-24",
+      "SK-27"
+    ],
+    "hard": [
+      "SK-04",
+      "SK-28",
+      "SK-15",
+      "SK-23",
+      "SK-16",
+      "SK-26",
+      "SK-05"
+    ],
+    "nightmare": [
+      "SK-13",
+      "SK-07",
+      "SK-25",
+      "SK-29",
+      "SK-30",
+      "SK-08",
+      "SK-10"
+    ]
+  };
+  var TIER_CONFIG = {
+    "easy": {
+      "name": "\u7C21\u55AE\u968E",
+      "label": "\u521D\u968E\u30FB\u7C21\u55AE",
+      "color": "#22c55e",
+      "badge": "\u{1F7E2} \u7C21\u55AE\u968E"
+    },
+    "normal": {
+      "name": "\u666E\u901A\u968E",
+      "label": "\u4E2D\u968E\u30FB\u666E\u901A",
+      "color": "#38bdf8",
+      "badge": "\u{1F535} \u666E\u901A\u968E"
+    },
+    "hard": {
+      "name": "\u56F0\u96E3\u968E",
+      "label": "\u9AD8\u968E\u30FB\u56F0\u96E3",
+      "color": "#a855f7",
+      "badge": "\u{1F7E3} \u56F0\u96E3\u968E"
+    },
+    "nightmare": {
+      "name": "\u5669\u5922\u968E",
+      "label": "\u9802\u7D1A\u30FB\u5669\u5922",
+      "color": "#ef4444",
+      "badge": "\u{1F534} \u5669\u5922\u968E"
+    }
+  };
+  function getRandomAiWeapons(difficulty = "normal", count = 3) {
+    const diffKey = WEAPON_TIERS[difficulty] ? difficulty : "normal";
+    const pool = WEAPON_TIERS[diffKey];
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  }
   var SKILLS = [
-    // ─── 15 大飛行道具與遠程神兵武器 (Ranged Weapons Arsenal - 15 款純攻擊) ───
     {
-      id: "SK-01",
-      name: "\u80FD\u91CF\u8108\u885D\u5F48",
-      category: "ranged",
-      type: "projectile",
-      typeName: "\u76F4\u7DDA\u5C04\u64CA / \u9060\u7A0B\u795E\u5175",
-      cd: 0.8,
-      damage: 185,
-      startup: 5,
-      active: 60,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u638C\u5FC3\u805A\u80FD\u5C04\u51FA\u76F4\u7DDA\u9AD8\u901F\u6CE2\u5C0E\u5F48\uFF0C\u5177\u5099\u512A\u7570\u7684\u9060\u7A0B\u58D3\u5236\u8207\u903C\u8DF3\u80FD\u529B\u3002",
-      counterGuide: "\u53EF\u7AD9\u7ACB\u683C\u64CB\u3001\u4E0B\u8E72\u683C\u64CB\uFF0C\u6216\u6293\u6E96\u8D77\u8DF3\u6642\u6A5F\u7FFB\u8D8A\u8EB2\u907F\u3002",
-      icon: "fa-solid fa-bolt",
-      color: "#00f3ff"
+      "id": "SK-01",
+      "name": "\u80FD\u91CF\u8108\u885D\u5F48",
+      "category": "ranged",
+      "type": "projectile",
+      "typeName": "\u76F4\u7DDA\u5C04\u64CA / \u9060\u7A0B\u795E\u5175",
+      "cd": 0.8,
+      "damage": 185,
+      "startup": 5,
+      "active": 60,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u638C\u5FC3\u805A\u80FD\u5C04\u51FA\u76F4\u7DDA\u9AD8\u901F\u6CE2\u5C0E\u5F48\uFF0C\u5177\u5099\u512A\u7570\u7684\u9060\u7A0B\u58D3\u5236\u8207\u903C\u8DF3\u80FD\u529B\u3002",
+      "counterGuide": "\u53EF\u4E3B\u52D5\u53EC\u559A\u91CF\u5B50\u9632\u8B77\u7F69\u683C\u64CB\uFF0C\u6216\u6293\u6E96\u8D77\u8DF3\u6642\u6A5F\u7FFB\u8D8A\u8EB2\u907F\u3002",
+      "icon": "fa-solid fa-bolt",
+      "color": "#00f3ff",
+      "tier": "easy",
+      "tierName": "\u7C21\u55AE\u968E",
+      "tierLabel": "\u521D\u968E\u30FB\u7C21\u55AE",
+      "tierColor": "#22c55e",
+      "tierBadge": "\u{1F7E2} \u7C21\u55AE\u968E"
     },
     {
-      id: "SK-10",
-      name: "\u8D85\u8F09\u96E2\u5B50\u5DE8\u7832",
-      category: "ranged",
-      type: "ultimate_beam",
-      typeName: "\u8CAB\u7A7F\u5DE8\u7832 / \u9060\u7A0B\u795E\u5175",
-      cd: 2.5,
-      damage: 340,
-      startup: 10,
-      active: 16,
-      recovery: 12,
-      guardType: "all",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u80F8\u90E8\u53CD\u61C9\u7210\u8D85\u8F09\u805A\u80FD\uFF0C\u5C04\u51FA\u8CAB\u7A7F\u5168\u87A2\u5E55\u4E4B\u96E2\u5B50\u5DE8\u7832\uFF0C\u5177\u5099\u6BC0\u6EC5\u7D1A\u6253\u64CA\u529B\u3002",
-      counterGuide: "\u524D\u6416\u84C4\u80FD\u660E\u986F\uFF0C\u770B\u6E96\u5149\u8292\u53CA\u6642\u8D77\u8DF3\u8D8A\u904E\u6216\u4F7F\u7528\u6298\u8E8D\u65AC\u5947\u8972\u3002",
-      icon: "fa-solid fa-sun",
-      color: "#f97316"
+      "id": "SK-10",
+      "name": "\u8D85\u8F09\u96E2\u5B50\u5DE8\u7832",
+      "category": "ranged",
+      "type": "ultimate_beam",
+      "typeName": "\u8CAB\u7A7F\u5DE8\u7832 / \u9060\u7A0B\u795E\u5175",
+      "cd": 2.5,
+      "damage": 340,
+      "startup": 10,
+      "active": 16,
+      "recovery": 12,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u80F8\u90E8\u53CD\u61C9\u7210\u8D85\u8F09\u805A\u80FD\uFF0C\u5C04\u51FA\u8CAB\u7A7F\u5168\u87A2\u5E55\u4E4B\u96E2\u5B50\u5DE8\u7832\uFF0C\u5177\u5099\u6BC0\u6EC5\u7D1A\u6253\u64CA\u529B\u3002",
+      "counterGuide": "\u524D\u6416\u84C4\u80FD\u660E\u986F\uFF0C\u770B\u6E96\u5149\u8292\u53CA\u6642\u8D77\u8DF3\u8D8A\u904E\u6216\u4F7F\u7528\u6298\u8E8D\u65AC\u5947\u8972\u3002",
+      "icon": "fa-solid fa-sun",
+      "color": "#f97316",
+      "tier": "nightmare",
+      "tierName": "\u5669\u5922\u968E",
+      "tierLabel": "\u9802\u7D1A\u30FB\u5669\u5922",
+      "tierColor": "#ef4444",
+      "tierBadge": "\u{1F534} \u5669\u5922\u968E"
     },
     {
-      id: "SK-11",
-      name: "\u8FFD\u8E64\u5FAE\u578B\u98DB\u5F48\u7FA4",
-      category: "ranged",
-      type: "homing_missiles",
-      typeName: "\u5C0E\u5F15\u98DB\u5F48 / \u9060\u7A0B\u795E\u5175",
-      cd: 1.4,
-      damage: 210,
-      startup: 4,
-      active: 70,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u9023\u7E8C\u767C\u5C04 3 \u679A\u91CF\u5B50\u5C0E\u5F15\u5FAE\u578B\u98DB\u5F48\uFF0C\u5728\u7A7A\u4E2D\u5283\u51FA\u5F27\u7DDA\u81EA\u52D5\u8FFD\u8E64\u9396\u5B9A\u5C0D\u624B\uFF01",
-      counterGuide: "\u5FAE\u5C0E\u5F48\u98DB\u884C\u8ECC\u8DE1\u53EF\u88AB\u8FD1\u8EAB\u653B\u64CA\u6253\u6D88\uFF0C\u6216\u5229\u7528\u8D77\u8DF3\u8207\u5E73\u53F0\u8D70\u4F4D\u8B93\u98DB\u5F48\u649E\u5730\u5F15\u7206\u3002",
-      icon: "fa-solid fa-rocket",
-      color: "#ec4899"
+      "id": "SK-11",
+      "name": "\u8FFD\u8E64\u5FAE\u578B\u98DB\u5F48\u7FA4",
+      "category": "ranged",
+      "type": "homing_missiles",
+      "typeName": "\u5C0E\u5F15\u98DB\u5F48 / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.4,
+      "damage": 210,
+      "startup": 4,
+      "active": 70,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u9023\u7E8C\u767C\u5C04 3 \u679A\u91CF\u5B50\u5C0E\u5F15\u5FAE\u578B\u98DB\u5F48\uFF0C\u5728\u7A7A\u4E2D\u5283\u51FA\u5F27\u7DDA\u81EA\u52D5\u8FFD\u8E64\u9396\u5B9A\u5C0D\u624B\uFF01",
+      "counterGuide": "\u5FAE\u5C0E\u5F48\u98DB\u884C\u8ECC\u8DE1\u53EF\u88AB\u8FD1\u8EAB\u653B\u64CA\u6253\u6D88\uFF0C\u6216\u5229\u7528\u8D77\u8DF3\u8207\u5E73\u53F0\u8D70\u4F4D\u8B93\u98DB\u5F48\u649E\u5730\u5F15\u7206\u3002",
+      "icon": "fa-solid fa-rocket",
+      "color": "#ec4899",
+      "tier": "easy",
+      "tierName": "\u7C21\u55AE\u968E",
+      "tierLabel": "\u521D\u968E\u30FB\u7C21\u55AE",
+      "tierColor": "#22c55e",
+      "tierBadge": "\u{1F7E2} \u7C21\u55AE\u968E"
     },
     {
-      id: "SK-12",
-      name: "\u6298\u5C04\u7A1C\u93E1\u6FC0\u5149",
-      category: "ranged",
-      type: "bouncing_laser",
-      typeName: "\u5F48\u5C04\u6FC0\u5149 / \u9060\u7A0B\u795E\u5175",
-      cd: 1.2,
-      damage: 215,
-      startup: 3,
-      active: 75,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u767C\u5C04\u8D85\u9AD8\u901F\u5E7E\u4F55\u7A1C\u93E1\u5149\u675F\uFF0C\u78B0\u89F8\u908A\u754C\u64C2\u53F0\u8207\u5730\u9762\u6642\u81EA\u52D5\u6298\u5C04\u53CD\u5F48\uFF01",
-      counterGuide: "\u6CE8\u610F\u5149\u675F\u5F48\u5C04\u89D2\u5EA6\uFF0C\u5728\u53CD\u5F48\u8DEF\u5F91\u524D\u63D0\u524D\u8D77\u8DF3\u9A30\u7A7A\u6216\u9632\u79A6\u3002",
-      icon: "fa-solid fa-bolt-lightning",
-      color: "#a855f7"
+      "id": "SK-12",
+      "name": "\u6298\u5C04\u7A1C\u93E1\u6FC0\u5149",
+      "category": "ranged",
+      "type": "bouncing_laser",
+      "typeName": "\u5F48\u5C04\u6FC0\u5149 / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.2,
+      "damage": 215,
+      "startup": 3,
+      "active": 75,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u767C\u5C04\u8D85\u9AD8\u901F\u5E7E\u4F55\u7A1C\u93E1\u5149\u675F\uFF0C\u78B0\u89F8\u908A\u754C\u64C2\u53F0\u8207\u5730\u9762\u6642\u81EA\u52D5\u6298\u5C04\u53CD\u5F48\uFF01",
+      "counterGuide": "\u6CE8\u610F\u5149\u675F\u5F48\u5C04\u89D2\u5EA6\uFF0C\u5728\u53CD\u5F48\u8DEF\u5F91\u524D\u63D0\u524D\u8D77\u8DF3\u9A30\u7A7A\u6216\u9632\u79A6\u3002",
+      "icon": "fa-solid fa-bolt-lightning",
+      "color": "#a855f7",
+      "tier": "easy",
+      "tierName": "\u7C21\u55AE\u968E",
+      "tierLabel": "\u521D\u968E\u30FB\u7C21\u55AE",
+      "tierColor": "#22c55e",
+      "tierBadge": "\u{1F7E2} \u7C21\u55AE\u968E"
     },
     {
-      id: "SK-13",
-      name: "\u5929\u9802\u8ECC\u9053\u6253\u64CA",
-      category: "ranged",
-      type: "orbital_strike",
-      typeName: "\u8ECC\u9053\u91CD\u7832 / \u9060\u7A0B\u795E\u5175",
-      cd: 2,
-      damage: 255,
-      startup: 8,
-      active: 18,
-      recovery: 8,
-      guardType: "stand_only",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u547C\u53EB\u885B\u661F\u8ECC\u9053\u70AE\uFF0C\u9396\u5B9A\u5C0D\u624B\u5EA7\u6A19\u5F15\u5C0E\u5DE8\u578B\u96E2\u5B50\u5929\u96F7\u5782\u76F4\u8F5F\u64CA\uFF01\u4E0B\u8E72\u9632\u79A6\u7121\u6548\uFF01",
-      counterGuide: "\u4E2D\u6BB5\u653B\u64CA\u4E0D\u53EF\u8E72\u9632\uFF01\u770B\u898B\u8173\u5E95\u51FA\u73FE\u9396\u5B9A\u7D05\u5708\u6642\u9700\u7AD9\u7ACB\u683C\u64CB\u6216\u8FC5\u901F\u5411\u524D\u7FFB\u6EFE\u96E2\u958B\u3002",
-      icon: "fa-solid fa-satellite-dish",
-      color: "#ffd700"
+      "id": "SK-13",
+      "name": "\u5929\u9802\u8ECC\u9053\u6253\u64CA",
+      "category": "ranged",
+      "type": "orbital_strike",
+      "typeName": "\u8ECC\u9053\u91CD\u7832 / \u9060\u7A0B\u795E\u5175",
+      "cd": 2,
+      "damage": 255,
+      "startup": 8,
+      "active": 18,
+      "recovery": 8,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u547C\u53EB\u885B\u661F\u8ECC\u9053\u70AE\uFF0C\u9396\u5B9A\u5C0D\u624B\u5EA7\u6A19\u5F15\u5C0E\u5DE8\u578B\u96E2\u5B50\u5929\u96F7\u5782\u76F4\u8F5F\u64CA\uFF01",
+      "counterGuide": "\u770B\u898B\u8173\u5E95\u51FA\u73FE\u9396\u5B9A\u7D05\u5708\u6642\u9700\u53CA\u6642\u53EC\u559A\u9632\u8B77\u7F69\u6216\u8FC5\u901F\u5411\u524D\u8D77\u8DF3\u7FFB\u6EFE\u96E2\u958B\u3002",
+      "icon": "fa-solid fa-satellite-dish",
+      "color": "#ffd700",
+      "tier": "nightmare",
+      "tierName": "\u5669\u5922\u968E",
+      "tierLabel": "\u9802\u7D1A\u30FB\u5669\u5922",
+      "tierColor": "#ef4444",
+      "tierBadge": "\u{1F534} \u5669\u5922\u968E"
     },
     {
-      id: "SK-14",
-      name: "\u865B\u7A7A\u5F15\u529B\u9ED1\u6D1E\u7403",
-      category: "ranged",
-      type: "gravity_vortex",
-      typeName: "\u9ED1\u6D1E\u529B\u5834 / \u9060\u7A0B\u795E\u5175",
-      cd: 2.2,
-      damage: 200,
-      startup: 5,
-      active: 90,
-      recovery: 8,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u5C04\u51FA\u7DE9\u6162\u63A8\u9032\u7684\u9ED1\u6D1E\u5F15\u529B\u7403\uFF0C\u5F37\u884C\u5C07\u9014\u7D93\u7684\u5C0D\u624B\u727D\u5F15\u5438\u5165\u4E26\u9020\u6210\u6301\u7E8C\u591A\u6BB5\u6253\u64CA\uFF01",
-      counterGuide: "\u5F15\u529B\u7403\u79FB\u52D5\u7DE9\u6162\uFF0C\u4E0D\u53EF\u5728\u524D\u65B9\u5F8C\u9000\uFF0C\u61C9\u7ACB\u5373\u8D77\u8DF3\u7FFB\u8D8A\u6216\u65BD\u5C55\u77AC\u79FB\u7A7F\u8D8A\u3002",
-      icon: "fa-solid fa-circle-notch",
-      color: "#06b6d4"
+      "id": "SK-14",
+      "name": "\u865B\u7A7A\u5F15\u529B\u9ED1\u6D1E\u7403",
+      "category": "ranged",
+      "type": "gravity_vortex",
+      "typeName": "\u9ED1\u6D1E\u529B\u5834 / \u9060\u7A0B\u795E\u5175",
+      "cd": 2.2,
+      "damage": 200,
+      "startup": 5,
+      "active": 90,
+      "recovery": 8,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u5C04\u51FA\u7DE9\u6162\u63A8\u9032\u7684\u9ED1\u6D1E\u5F15\u529B\u7403\uFF0C\u5F37\u884C\u5C07\u9014\u7D93\u7684\u5C0D\u624B\u727D\u5F15\u5438\u5165\u4E26\u9020\u6210\u6301\u7E8C\u591A\u6BB5\u6253\u64CA\uFF01",
+      "counterGuide": "\u5F15\u529B\u7403\u79FB\u52D5\u7DE9\u6162\uFF0C\u4E0D\u53EF\u5728\u524D\u65B9\u5F8C\u9000\uFF0C\u61C9\u7ACB\u5373\u8D77\u8DF3\u7FFB\u8D8A\u6216\u65BD\u5C55\u77AC\u79FB\u7A7F\u8D8A\u3002",
+      "icon": "fa-solid fa-circle-notch",
+      "color": "#06b6d4",
+      "tier": "easy",
+      "tierName": "\u7C21\u55AE\u968E",
+      "tierLabel": "\u521D\u968E\u30FB\u7C21\u55AE",
+      "tierColor": "#22c55e",
+      "tierBadge": "\u{1F7E2} \u7C21\u55AE\u968E"
     },
     {
-      id: "SK-15",
-      name: "\u9AD8\u65AF\u72D9\u64CA\u7A7F\u7532\u91CD\u69CD",
-      category: "ranged",
-      type: "sniper_railgun",
-      typeName: "\u6975\u901F\u72D9\u64CA / \u9060\u7A0B\u795E\u5175",
-      cd: 1.1,
-      damage: 245,
-      startup: 3,
-      active: 45,
-      recovery: 7,
-      guardType: "all",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u9AD8\u7CBE\u6E96\u8D85\u97F3\u901F\u96FB\u78C1\u72D9\u64CA\u69CD\uFF01\u77AC\u767C\u5C04\u51FA\u7A7F\u7532\u96FB\u78C1\u5149\u675F\uFF0C\u5177\u5099\u6975\u81F4\u98DB\u884C\u901F\u5EA6\u8207\u91CD\u5EA6\u9707\u5C4F\u6253\u64CA\uFF01",
-      counterGuide: "\u5B50\u5F48\u98DB\u884C\u901F\u5EA6\u6975\u5FEB\u96E3\u4EE5\u76EE\u62BC\uFF0C\u9700\u5728\u4E2D\u9060\u8DDD\u96E2\u4FDD\u6301\u9632\u5099\u59FF\u614B\u6216\u9032\u884C\u9AD8\u7A7A\u8D77\u8DF3\u727D\u5236\u3002",
-      icon: "fa-solid fa-crosshairs",
-      color: "#38bdf8"
+      "id": "SK-15",
+      "name": "\u9AD8\u65AF\u72D9\u64CA\u7A7F\u7532\u91CD\u69CD",
+      "category": "ranged",
+      "type": "sniper_railgun",
+      "typeName": "\u6975\u901F\u72D9\u64CA / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.1,
+      "damage": 245,
+      "startup": 3,
+      "active": 45,
+      "recovery": 7,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u9AD8\u7CBE\u6E96\u8D85\u97F3\u901F\u96FB\u78C1\u72D9\u64CA\u69CD\uFF01\u77AC\u767C\u5C04\u51FA\u7A7F\u7532\u96FB\u78C1\u5149\u675F\uFF0C\u5177\u5099\u6975\u81F4\u98DB\u884C\u901F\u5EA6\u8207\u91CD\u5EA6\u9707\u5C4F\u6253\u64CA\uFF01",
+      "counterGuide": "\u5B50\u5F48\u98DB\u884C\u901F\u5EA6\u6975\u5FEB\u96E3\u4EE5\u76EE\u62BC\uFF0C\u9700\u5728\u4E2D\u9060\u8DDD\u96E2\u4FDD\u6301\u9632\u5099\u59FF\u614B\u6216\u9032\u884C\u9AD8\u7A7A\u8D77\u8DF3\u727D\u5236\u3002",
+      "icon": "fa-solid fa-crosshairs",
+      "color": "#38bdf8",
+      "tier": "hard",
+      "tierName": "\u56F0\u96E3\u968E",
+      "tierLabel": "\u9AD8\u968E\u30FB\u56F0\u96E3",
+      "tierColor": "#a855f7",
+      "tierBadge": "\u{1F7E3} \u56F0\u96E3\u968E"
     },
     {
-      id: "SK-16",
-      name: "\u64F4\u6563\u5F0F\u96FB\u6F3F\u9730\u5F48\u69CD",
-      category: "ranged",
-      type: "plasma_shotgun",
-      typeName: "\u6247\u5F62\u9730\u5F48 / \u9060\u7A0B\u795E\u5175",
-      cd: 1.3,
-      damage: 250,
-      startup: 4,
-      active: 50,
-      recovery: 8,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u5411\u524D\u6247\u5F62\u9F4A\u5C04 5 \u679A\u9AD8\u80FD\u96FB\u6F3F\u9730\u5F48\uFF0C\u8FD1\u4E2D\u8DDD\u96E2\u8986\u84CB\u6574\u500B\u524D\u65B9\u7A7A\u9593\uFF0C\u5168\u5F48\u547D\u4E2D\u7206\u767C\u9A5A\u4EBA\uFF01",
-      counterGuide: "\u8DDD\u96E2\u8D8A\u8FD1\u50B7\u5BB3\u8D8A\u9AD8\uFF0C\u62C9\u958B\u4E2D\u9060\u8DDD\u96E2\u5373\u53EF\u5229\u7528\u6563\u5F48\u7A7A\u9699\u8D77\u8DF3\u53CD\u5236\u3002",
-      icon: "fa-solid fa-burst",
-      color: "#f43f5e"
+      "id": "SK-16",
+      "name": "\u64F4\u6563\u5F0F\u96FB\u6F3F\u9730\u5F48\u69CD",
+      "category": "ranged",
+      "type": "plasma_shotgun",
+      "typeName": "\u6247\u5F62\u9730\u5F48 / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.3,
+      "damage": 250,
+      "startup": 4,
+      "active": 50,
+      "recovery": 8,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u5411\u524D\u6247\u5F62\u9F4A\u5C04 5 \u679A\u9AD8\u80FD\u96FB\u6F3F\u9730\u5F48\uFF0C\u8FD1\u4E2D\u8DDD\u96E2\u8986\u84CB\u6574\u500B\u524D\u65B9\u7A7A\u9593\uFF0C\u5168\u5F48\u547D\u4E2D\u7206\u767C\u9A5A\u4EBA\uFF01",
+      "counterGuide": "\u8DDD\u96E2\u8D8A\u8FD1\u50B7\u5BB3\u8D8A\u9AD8\uFF0C\u62C9\u958B\u4E2D\u9060\u8DDD\u96E2\u5373\u53EF\u5229\u7528\u6563\u5F48\u7A7A\u9699\u8D77\u8DF3\u53CD\u5236\u3002",
+      "icon": "fa-solid fa-burst",
+      "color": "#f43f5e",
+      "tier": "hard",
+      "tierName": "\u56F0\u96E3\u968E",
+      "tierLabel": "\u9AD8\u968E\u30FB\u56F0\u96E3",
+      "tierColor": "#a855f7",
+      "tierBadge": "\u{1F7E3} \u56F0\u96E3\u968E"
     },
     {
-      id: "SK-17",
-      name: "\u8108\u885D\u96FB\u78C1\u6D6E\u6E38\u7832",
-      category: "ranged",
-      type: "drone_funnel",
-      typeName: "\u81EA\u52D5\u6D6E\u6E38 / \u9060\u7A0B\u795E\u5175",
-      cd: 1.8,
-      damage: 225,
-      startup: 3,
-      active: 85,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u53EC\u559A 2 \u67B6\u9AD8\u79D1\u6280\u6D6E\u6E38\u7121\u4EBA\u50DA\u6A5F\u74B0\u7E5E\u96A8\u884C\uFF0C\u81EA\u52D5\u5411\u5C0D\u624B\u767C\u5C04\u9023\u7E8C\u9AD8\u983B\u8108\u885D\u6FC0\u5149\uFF01",
-      counterGuide: "\u6D6E\u6E38\u6A5F\u6301\u7E8C\u5C04\u64CA\uFF0C\u5207\u5FCC\u76F2\u76EE\u6436\u653B\uFF0C\u5229\u7528\u9632\u5B88\u5316\u89E3\u524D\u6CE2\u6FC0\u5149\u5F8C\u8FC5\u901F\u8FD1\u8EAB\u58D3\u5236\u3002",
-      icon: "fa-solid fa-satellite",
-      color: "#10b981"
+      "id": "SK-17",
+      "name": "\u8108\u885D\u96FB\u78C1\u6D6E\u6E38\u7832",
+      "category": "ranged",
+      "type": "drone_funnel",
+      "typeName": "\u81EA\u52D5\u6D6E\u6E38 / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.8,
+      "damage": 225,
+      "startup": 3,
+      "active": 85,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u53EC\u559A 2 \u67B6\u9AD8\u79D1\u6280\u6D6E\u6E38\u7121\u4EBA\u50DA\u6A5F\u74B0\u7E5E\u96A8\u884C\uFF0C\u81EA\u52D5\u5411\u5C0D\u624B\u767C\u5C04\u9023\u7E8C\u9AD8\u983B\u8108\u885D\u6FC0\u5149\uFF01",
+      "counterGuide": "\u6D6E\u6E38\u6A5F\u6301\u7E8C\u5C04\u64CA\uFF0C\u5207\u5FCC\u76F2\u76EE\u6436\u653B\uFF0C\u5229\u7528\u9632\u5B88\u5316\u89E3\u524D\u6CE2\u6FC0\u5149\u5F8C\u8FC5\u901F\u8FD1\u8EAB\u58D3\u5236\u3002",
+      "icon": "fa-solid fa-satellite",
+      "color": "#10b981",
+      "tier": "normal",
+      "tierName": "\u666E\u901A\u968E",
+      "tierLabel": "\u4E2D\u968E\u30FB\u666E\u901A",
+      "tierColor": "#38bdf8",
+      "tierBadge": "\u{1F535} \u666E\u901A\u968E"
     },
     {
-      id: "SK-18",
-      name: "\u6975\u51CD\u51B0\u971C\u7A7F\u900F\u7BAD",
-      category: "ranged",
-      type: "cryo_arrow",
-      typeName: "\u6E1B\u901F\u51B0\u7BAD / \u9060\u7A0B\u795E\u5175",
-      cd: 1.4,
-      damage: 205,
-      startup: 4,
-      active: 65,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u51DD\u805A\u7D55\u5C0D\u96F6\u5EA6\u6DB2\u6C2E\u51B0\u7BAD\u5C04\u51FA\uFF0C\u547D\u4E2D\u5C0D\u624B\u6642\u9644\u52A0\u300C\u5BD2\u971C\u6E1B\u901F\u300D\u72C0\u614B\uFF08\u79FB\u52D5\u901F\u5EA6\u964D\u4F4E 45%\uFF09\uFF01",
-      counterGuide: "\u82E5\u88AB\u547D\u4E2D\u79FB\u52D5\u901F\u5EA6\u5C07\u5927\u5E45\u4E0B\u964D\uFF0C\u9700\u5229\u7528\u4E0B\u8E72\u9632\u79A6\u5316\u89E3\u6216\u8D77\u8DF3\u62C9\u958B\u8EAB\u4F4D\u7B49\u5F85\u5BD2\u971C\u892A\u53BB\u3002",
-      icon: "fa-solid fa-snowflake",
-      color: "#67e8f9"
+      "id": "SK-18",
+      "name": "\u6975\u51CD\u51B0\u971C\u7A7F\u900F\u7BAD",
+      "category": "ranged",
+      "type": "cryo_arrow",
+      "typeName": "\u6E1B\u901F\u51B0\u7BAD / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.4,
+      "damage": 205,
+      "startup": 4,
+      "active": 65,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u51DD\u805A\u7D55\u5C0D\u96F6\u5EA6\u6DB2\u6C2E\u51B0\u7BAD\u5C04\u51FA\uFF0C\u547D\u4E2D\u5C0D\u624B\u6642\u9644\u52A0\u300C\u5BD2\u971C\u6E1B\u901F\u300D\u72C0\u614B\uFF08\u79FB\u52D5\u901F\u5EA6\u964D\u4F4E 45%\uFF09\uFF01",
+      "counterGuide": "\u82E5\u88AB\u547D\u4E2D\u79FB\u52D5\u901F\u5EA6\u5C07\u5927\u5E45\u4E0B\u964D\uFF0C\u9700\u5229\u7528\u4E3B\u52D5\u9632\u8B77\u7F69\u5316\u89E3\u6216\u8D77\u8DF3\u62C9\u958B\u8EAB\u4F4D\u7B49\u5F85\u5BD2\u971C\u892A\u53BB\u3002",
+      "icon": "fa-solid fa-snowflake",
+      "color": "#67e8f9",
+      "tier": "easy",
+      "tierName": "\u7C21\u55AE\u968E",
+      "tierLabel": "\u521D\u968E\u30FB\u7C21\u55AE",
+      "tierColor": "#22c55e",
+      "tierBadge": "\u{1F7E2} \u7C21\u55AE\u968E"
     },
     {
-      id: "SK-19",
-      name: "\u707C\u71B1\u71C3\u71D2\u69B4\u5F48\u69CD",
-      category: "ranged",
-      type: "incendiary_grenade",
-      typeName: "\u62CB\u7269\u69B4\u5F48 / \u9060\u7A0B\u795E\u5175",
-      cd: 1.6,
-      damage: 220,
-      startup: 5,
-      active: 80,
-      recovery: 8,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u62CB\u7269\u7DDA\u62CB\u5C04\u91CD\u578B\u71C3\u71D2\u69B4\u5F48\uFF0C\u89F8\u5730\u6216\u5E73\u53F0\u5F15\u7206\u751F\u6210\u4E00\u7247\u70C8\u7130\u706B\u6D77\uFF0C\u9020\u6210\u6301\u7E8C\u707C\u71D2\u50B7\u5BB3\uFF01",
-      counterGuide: "\u71C3\u71D2\u706B\u6D77\u7559\u5B58\u65BC\u5730\u9762\u6578\u79D2\uFF0C\u4E0D\u53EF\u8E29\u5165\u706B\u6D77\uFF0C\u61C9\u8DF3\u4E0A\u6D6E\u7A7A\u5E73\u53F0\u6216\u8D8A\u904E\u706B\u5340\u4F5C\u6230\u3002",
-      icon: "fa-solid fa-fire-flame-curved",
-      color: "#ff5500"
+      "id": "SK-19",
+      "name": "\u707C\u71B1\u71C3\u71D2\u69B4\u5F48\u69CD",
+      "category": "ranged",
+      "type": "incendiary_grenade",
+      "typeName": "\u62CB\u7269\u69B4\u5F48 / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.6,
+      "damage": 220,
+      "startup": 5,
+      "active": 80,
+      "recovery": 8,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u62CB\u7269\u7DDA\u62CB\u5C04\u91CD\u578B\u71C3\u71D2\u69B4\u5F48\uFF0C\u89F8\u5730\u6216\u5E73\u53F0\u5F15\u7206\u751F\u6210\u4E00\u7247\u70C8\u7130\u706B\u6D77\uFF0C\u9020\u6210\u6301\u7E8C\u707C\u71D2\u50B7\u5BB3\uFF01",
+      "counterGuide": "\u71C3\u71D2\u706B\u6D77\u7559\u5B58\u65BC\u5730\u9762\u6578\u79D2\uFF0C\u4E0D\u53EF\u8E29\u5165\u706B\u6D77\uFF0C\u61C9\u8DF3\u4E0A\u6D6E\u7A7A\u5E73\u53F0\u6216\u8D8A\u904E\u706B\u5340\u4F5C\u6230\u3002",
+      "icon": "fa-solid fa-fire-flame-curved",
+      "color": "#ff5500",
+      "tier": "normal",
+      "tierName": "\u666E\u901A\u968E",
+      "tierLabel": "\u4E2D\u968E\u30FB\u666E\u901A",
+      "tierColor": "#38bdf8",
+      "tierBadge": "\u{1F535} \u666E\u901A\u968E"
     },
     {
-      id: "SK-20",
-      name: "\u8FF4\u65CB\u96F7\u9706\u5149\u5203\u93E2",
-      category: "ranged",
-      type: "boomerang_blade",
-      typeName: "\u8FF4\u65CB\u98DB\u93E2 / \u9060\u7A0B\u795E\u5175",
-      cd: 1.2,
-      damage: 230,
-      startup: 3,
-      active: 70,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u64F2\u51FA\u9AD8\u983B\u65CB\u8F49\u4E4B\u96FB\u5149\u98DB\u5203\uFF0C\u5411\u524D\u7A7F\u900F\u6253\u64CA\u5F8C\u6298\u8FD4\u98DB\u56DE\uFF0C\u9020\u6210\u53BB\u7A0B\u8207\u56DE\u7A0B\u96D9\u91CD\u653B\u64CA\uFF01",
-      counterGuide: "\u98DB\u93E2\u5177\u6709\u56DE\u65CB\u7279\u6027\uFF01\u64CB\u4E0B\u524D\u64CA\u5F8C\u4E0D\u53EF\u7ACB\u5373\u9B06\u958B\u9632\u79A6\uFF0C\u9700\u63D0\u9632\u80CC\u5F8C\u98DB\u56DE\u7684\u6298\u8FD4\u5203\u3002",
-      icon: "fa-solid fa-compact-disc",
-      color: "#eab308"
+      "id": "SK-20",
+      "name": "\u8FF4\u65CB\u96F7\u9706\u5149\u5203\u93E2",
+      "category": "ranged",
+      "type": "boomerang_blade",
+      "typeName": "\u8FF4\u65CB\u98DB\u93E2 / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.2,
+      "damage": 230,
+      "startup": 3,
+      "active": 70,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u64F2\u51FA\u9AD8\u983B\u65CB\u8F49\u4E4B\u96FB\u5149\u98DB\u5203\uFF0C\u5411\u524D\u7A7F\u900F\u6253\u64CA\u5F8C\u6298\u8FD4\u98DB\u56DE\uFF0C\u9020\u6210\u53BB\u7A0B\u8207\u56DE\u7A0B\u96D9\u91CD\u653B\u64CA\uFF01",
+      "counterGuide": "\u98DB\u93E2\u5177\u6709\u56DE\u65CB\u7279\u6027\uFF01\u64CB\u4E0B\u524D\u64CA\u5F8C\u4E0D\u53EF\u7ACB\u5373\u9B06\u958B\u9632\u79A6\uFF0C\u9700\u63D0\u9632\u80CC\u5F8C\u98DB\u56DE\u7684\u6298\u8FD4\u5203\u3002",
+      "icon": "fa-solid fa-compact-disc",
+      "color": "#eab308",
+      "tier": "normal",
+      "tierName": "\u666E\u901A\u968E",
+      "tierLabel": "\u4E2D\u968E\u30FB\u666E\u901A",
+      "tierColor": "#38bdf8",
+      "tierBadge": "\u{1F535} \u666E\u901A\u968E"
     },
     {
-      id: "SK-21",
-      name: "\u5F71\u5206\u8EAB\u5341\u5B57\u624B\u88E1\u528D",
-      category: "ranged",
-      type: "multi_shuriken",
-      typeName: "\u4E09\u5411\u98DB\u5203 / \u9060\u7A0B\u795E\u5175",
-      cd: 1.1,
-      damage: 220,
-      startup: 3,
-      active: 65,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u540C\u6642\u5411\u524D\u65B9\u76F4\u7DDA\u8207\u659C\u5411\u98DB\u64F2 3 \u679A\u9AD8\u901F\u5F71\u5203\u624B\u88E1\u528D\uFF0C\u6247\u9762\u5C01\u9396\u8D77\u8DF3\u8207\u885D\u523A\uFF01",
-      counterGuide: "\u4E0A\u4E0B\u5F27\u5EA6\u5206\u4F48\u5747\u52FB\uFF0C\u9700\u5728\u4E2D\u8DDD\u96E2\u8E72\u9632\u6216\u7ACB\u9AD4\u8D70\u4F4D\u5C0B\u627E\u7A7A\u9699\u7A81\u9032\u3002",
-      icon: "fa-solid fa-asterisk",
-      color: "#818cf8"
+      "id": "SK-21",
+      "name": "\u5F71\u5206\u8EAB\u5341\u5B57\u624B\u88E1\u528D",
+      "category": "ranged",
+      "type": "multi_shuriken",
+      "typeName": "\u4E09\u5411\u98DB\u5203 / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.1,
+      "damage": 220,
+      "startup": 3,
+      "active": 65,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u540C\u6642\u5411\u524D\u65B9\u76F4\u7DDA\u8207\u659C\u5411\u98DB\u64F2 3 \u679A\u9AD8\u901F\u5F71\u5203\u624B\u88E1\u528D\uFF0C\u6247\u9762\u5C01\u9396\u8D77\u8DF3\u8207\u885D\u523A\uFF01",
+      "counterGuide": "\u4E0A\u4E0B\u5F27\u5EA6\u5206\u4F48\u5747\u52FB\uFF0C\u9700\u5728\u4E2D\u8DDD\u96E2\u53EC\u559A\u9632\u8B77\u7F69\u9632\u5B88\u6216\u7ACB\u9AD4\u8D70\u4F4D\u5C0B\u627E\u7A7A\u9699\u7A81\u9032\u3002",
+      "icon": "fa-solid fa-asterisk",
+      "color": "#818cf8",
+      "tier": "easy",
+      "tierName": "\u7C21\u55AE\u968E",
+      "tierLabel": "\u521D\u968E\u30FB\u7C21\u55AE",
+      "tierColor": "#22c55e",
+      "tierBadge": "\u{1F7E2} \u7C21\u55AE\u968E"
     },
     {
-      id: "SK-24",
-      name: "\u96FB\u78C1\u5F15\u529B\u7206\u7E2E\u96F7",
-      category: "ranged",
-      type: "emp_mine",
-      typeName: "\u6D6E\u6E38\u5F15\u529B\u96F7 / \u9060\u7A0B\u795E\u5175",
-      cd: 1.7,
-      damage: 235,
-      startup: 4,
-      active: 90,
-      recovery: 7,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u5411\u524D\u6295\u64F2\u61F8\u6D6E\u96FB\u78C1\u529B\u5834\u96F7\uFF0C\u89F8\u78B0\u5C0D\u624B\u6216 2.5 \u79D2\u5F8C\u5287\u70C8\u7206\u7E2E\u8F5F\u98DB\u76EE\u6A19\uFF01",
-      counterGuide: "\u5207\u52FF\u8E0F\u5165\u5F15\u529B\u96F7\u534A\u5F91\uFF0C\u53EF\u5F15\u5C0E\u5C0D\u624B\u79FB\u958B\u6216\u7528\u9060\u7A0B\u5B50\u5F48\u63D0\u524D\u5F15\u7206\u3002",
-      icon: "fa-solid fa-land-mine-on",
-      color: "#c084fc"
+      "id": "SK-24",
+      "name": "\u96FB\u78C1\u5F15\u529B\u7206\u7E2E\u96F7",
+      "category": "ranged",
+      "type": "emp_mine",
+      "typeName": "\u6D6E\u6E38\u5F15\u529B\u96F7 / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.7,
+      "damage": 235,
+      "startup": 4,
+      "active": 90,
+      "recovery": 7,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u5411\u524D\u6295\u64F2\u61F8\u6D6E\u96FB\u78C1\u529B\u5834\u96F7\uFF0C\u89F8\u78B0\u5C0D\u624B\u6216 2.5 \u79D2\u5F8C\u5287\u70C8\u7206\u7E2E\u8F5F\u98DB\u76EE\u6A19\uFF01",
+      "counterGuide": "\u5207\u52FF\u8E0F\u5165\u5F15\u529B\u96F7\u534A\u5F91\uFF0C\u53EF\u5F15\u5C0E\u5C0D\u624B\u79FB\u958B\u6216\u7528\u9060\u7A0B\u5B50\u5F48\u63D0\u524D\u5F15\u7206\u3002",
+      "icon": "fa-solid fa-land-mine-on",
+      "color": "#c084fc",
+      "tier": "normal",
+      "tierName": "\u666E\u901A\u968E",
+      "tierLabel": "\u4E2D\u968E\u30FB\u666E\u901A",
+      "tierColor": "#38bdf8",
+      "tierBadge": "\u{1F535} \u666E\u901A\u968E"
     },
     {
-      id: "SK-28",
-      name: "\u91CF\u5B50\u6563\u88C2\u9AD8\u7206\u5F48",
-      category: "ranged",
-      type: "cluster_bomb",
-      typeName: "\u7A7A\u7206\u6563\u88C2 / \u9060\u7A0B\u795E\u5175",
-      cd: 1.5,
-      damage: 240,
-      startup: 4,
-      active: 75,
-      recovery: 7,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u5C04\u51FA\u9AD8\u7206\u91CF\u5B50\u706B\u7BAD\u5F48\uFF0C\u98DB\u884C\u9014\u4E2D\u6563\u88C2\u70BA\u591A\u679A\u5FAE\u805A\u80FD\u7206\u8F5F\u5B50\u6BCD\u5F48\uFF0C\u7C60\u7F69\u5EE3\u57DF\u7A7A\u5730\uFF01",
-      counterGuide: "\u5B50\u6BCD\u5F48\u6563\u843D\u7BC4\u570D\u5EE3\uFF0C\u9632\u5B88\u6642\u9700\u4FDD\u6301\u683C\u64CB\u59FF\u52E2\u76F4\u81F3\u591A\u6BB5\u7206\u7834\u5B8C\u5168\u7D50\u675F\u3002",
-      icon: "fa-solid fa-bomb",
-      color: "#fb923c"
-    },
-    // ─── 15 大近戰打擊與格鬥武藝 (Melee Martial Skills - 15 款純攻擊) ───
-    {
-      id: "SK-02",
-      name: "\u5347\u9F8D\u885D\u5929\u64CA",
-      category: "melee",
-      type: "anti_air",
-      typeName: "\u5C0D\u7A7A\u7A81\u9032 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.2,
-      damage: 235,
-      startup: 3,
-      active: 12,
-      recovery: 10,
-      invincibleFrames: 4,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u524D 3 \u5E40\u5168\u8EAB\u7121\u6575\uFF0C\u659C\u4E0A\u65B9\u9AD8\u9AD8\u8E8D\u8D77\u65CB\u8F49\u6607\u9F8D\u6253\u64CA\uFF0C\u6975\u81F4\u9632\u7A7A\u8207\u89E3\u570D\u795E\u6280\u3002",
-      counterGuide: "\u524D\u6416\u7121\u6575\u96E3\u4EE5\u6436\u653B\uFF1B\u82E5\u5C0D\u65B9\u843D\u7A7A\u5F8C\u6416\u6975\u9577\uFF0C\u8457\u5730\u6642\u53EF\u9032\u884C\u6EFF\u984D\u78BA\u53CD\u8655\u7F70\u3002",
-      icon: "fa-solid fa-dragon",
-      color: "#38bdf8"
+      "id": "SK-28",
+      "name": "\u91CF\u5B50\u6563\u88C2\u9AD8\u7206\u5F48",
+      "category": "ranged",
+      "type": "cluster_bomb",
+      "typeName": "\u7A7A\u7206\u6563\u88C2 / \u9060\u7A0B\u795E\u5175",
+      "cd": 1.5,
+      "damage": 240,
+      "startup": 4,
+      "active": 75,
+      "recovery": 7,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u5C04\u51FA\u9AD8\u7206\u91CF\u5B50\u706B\u7BAD\u5F48\uFF0C\u98DB\u884C\u9014\u4E2D\u6563\u88C2\u70BA\u591A\u679A\u5FAE\u805A\u80FD\u7206\u8F5F\u5B50\u6BCD\u5F48\uFF0C\u7C60\u7F69\u5EE3\u57DF\u7A7A\u5730\uFF01",
+      "counterGuide": "\u5B50\u6BCD\u5F48\u6563\u843D\u7BC4\u570D\u5EE3\uFF0C\u9632\u5B88\u6642\u9700\u4FDD\u6301\u683C\u64CB\u59FF\u52E2\u76F4\u81F3\u591A\u6BB5\u7206\u7834\u5B8C\u5168\u7D50\u675F\u3002",
+      "icon": "fa-solid fa-bomb",
+      "color": "#fb923c",
+      "tier": "hard",
+      "tierName": "\u56F0\u96E3\u968E",
+      "tierLabel": "\u9AD8\u968E\u30FB\u56F0\u96E3",
+      "tierColor": "#a855f7",
+      "tierBadge": "\u{1F7E3} \u56F0\u96E3\u968E"
     },
     {
-      id: "SK-03",
-      name: "\u97F3\u901F\u6ED1\u8E22",
-      category: "melee",
-      type: "low",
-      typeName: "\u4E0B\u6BB5\u7A81\u9032 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1,
-      damage: 190,
-      startup: 4,
-      active: 14,
-      recovery: 6,
-      guardType: "crouch_only",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u8CBC\u5730\u75BE\u885D\u6ED1\u93DF\uFF0C\u547D\u4E2D\u5FC5\u5B9A\u9020\u6210\u5C0D\u624B\u4E0B\u76E4\u5931\u8861\u64CA\u5012\u3002\u7AD9\u7ACB\u9632\u79A6\u7121\u6548\uFF01",
-      counterGuide: "\u4E0D\u53EF\u7AD9\u7ACB\u9632\u79A6\uFF0C\u5FC5\u9808\u8FC5\u901F\u5207\u63DB\u70BA\u4E0B\u8E72\u9632\u79A6\u65B9\u53EF\u5316\u89E3\u3002",
-      icon: "fa-solid fa-shoe-prints",
-      color: "#a855f7"
+      "id": "SK-02",
+      "name": "\u5347\u9F8D\u885D\u5929\u64CA",
+      "category": "melee",
+      "type": "anti_air",
+      "typeName": "\u5C0D\u7A7A\u7A81\u9032 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.2,
+      "damage": 235,
+      "startup": 3,
+      "active": 12,
+      "recovery": 10,
+      "invincibleFrames": 4,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u524D 3 \u5E40\u5168\u8EAB\u7121\u6575\uFF0C\u659C\u4E0A\u65B9\u9AD8\u9AD8\u8E8D\u8D77\u65CB\u8F49\u6607\u9F8D\u6253\u64CA\uFF0C\u6975\u81F4\u9632\u7A7A\u8207\u89E3\u570D\u795E\u6280\u3002",
+      "counterGuide": "\u524D\u6416\u7121\u6575\u96E3\u4EE5\u6436\u653B\uFF1B\u82E5\u5C0D\u65B9\u843D\u7A7A\u5F8C\u6416\u6975\u9577\uFF0C\u8457\u5730\u6642\u53EF\u9032\u884C\u6EFF\u984D\u78BA\u53CD\u8655\u7F70\u3002",
+      "icon": "fa-solid fa-dragon",
+      "color": "#38bdf8",
+      "tier": "normal",
+      "tierName": "\u666E\u901A\u968E",
+      "tierLabel": "\u4E2D\u968E\u30FB\u666E\u901A",
+      "tierColor": "#38bdf8",
+      "tierBadge": "\u{1F535} \u666E\u901A\u968E"
     },
     {
-      id: "SK-04",
-      name: "\u8E8D\u7A7A\u9707\u5730\u7838",
-      category: "melee",
-      type: "overhead",
-      typeName: "\u4E2D\u6BB5\u7834\u9632 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.3,
-      damage: 240,
-      startup: 8,
-      active: 10,
-      recovery: 8,
-      guardType: "stand_only",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u7E31\u8EAB\u8E8D\u4E0A\u534A\u7A7A\u96D9\u62F3\u5408\u9318\u91CD\u64CA\u5730\u9762\uFF0C\u7834\u9664\u5C0D\u624B\u4E0B\u8E72\u9F9C\u7E2E\u3002\u4E0B\u8E72\u9632\u79A6\u7121\u6548\uFF01",
-      counterGuide: "\u4E0D\u53EF\u8E72\u9632\uFF01\u770B\u898B\u89D2\u8272\u8E8D\u8D77\u524D\u6416\u6642\u5FC5\u9808\u7ACB\u5373\u5207\u63DB\u70BA\u7AD9\u7ACB\u683C\u64CB\u3002",
-      icon: "fa-solid fa-hand-fist",
-      color: "#f59e0b"
+      "id": "SK-03",
+      "name": "\u97F3\u901F\u6ED1\u8E22",
+      "category": "melee",
+      "type": "low",
+      "typeName": "\u4E0B\u6BB5\u7A81\u9032 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1,
+      "damage": 190,
+      "startup": 4,
+      "active": 14,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u8CBC\u5730\u75BE\u885D\u6ED1\u93DF\uFF0C\u547D\u4E2D\u9020\u6210\u5C0D\u624B\u4E0B\u76E4\u5931\u8861\u64CA\u5012\u3002",
+      "counterGuide": "\u7A81\u9032\u901F\u5EA6\u6975\u5FEB\uFF0C\u9700\u53CA\u6642\u958B\u555F\u91CF\u5B50\u9632\u8B77\u7F69\u5316\u89E3\u6216\u6293\u6E96\u7BC0\u594F\u8D77\u8DF3\u907F\u958B\u3002",
+      "icon": "fa-solid fa-shoe-prints",
+      "color": "#a855f7",
+      "tier": "easy",
+      "tierName": "\u7C21\u55AE\u968E",
+      "tierLabel": "\u521D\u968E\u30FB\u7C21\u55AE",
+      "tierColor": "#22c55e",
+      "tierBadge": "\u{1F7E2} \u7C21\u55AE\u968E"
     },
     {
-      id: "SK-05",
-      name: "\u5E7B\u5F71\u75BE\u98A8\u7834\u7532\u523A",
-      category: "melee",
-      type: "pierce_thrust",
-      typeName: "\u7834\u7532\u76F4\u523A / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.2,
-      damage: 255,
-      startup: 3,
-      active: 12,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.65,
-      description: "\u8EAB\u5316\u75BE\u5F71\u8D85\u9AD8\u901F\u5411\u524D\u7A81\u523A\uFF0C\u9644\u5E36\u8D85\u9AD8\u524A\u97CC\u7834\u7532\u503C\uFF0C\u5927\u5E45\u58D3\u8FEB\u5C0D\u624B\u9632\u79A6\uFF01",
-      counterGuide: "\u7A81\u523A\u901F\u5EA6\u6975\u5FEB\uFF0C\u88AB\u58D3\u5236\u6642\u4E0D\u53EF\u96A8\u610F\u51FA\u62F3\uFF0C\u9700\u5C0B\u627E\u523A\u64CA\u6536\u62DB\u7A7A\u6A94\u53CD\u64CA\u3002",
-      icon: "fa-solid fa-bolt",
-      color: "#ec4899"
+      "id": "SK-04",
+      "name": "\u8E8D\u7A7A\u9707\u5730\u7838",
+      "category": "melee",
+      "type": "overhead",
+      "typeName": "\u4E2D\u6BB5\u7834\u9632 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.3,
+      "damage": 240,
+      "startup": 8,
+      "active": 10,
+      "recovery": 8,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u7E31\u8EAB\u8E8D\u4E0A\u534A\u7A7A\u96D9\u62F3\u5408\u9318\u91CD\u64CA\u5730\u9762\uFF0C\u5177\u5099\u5F37\u52C1\u4E0B\u7838\u7BC4\u570D\u9707\u6CE2\u885D\u64CA\uFF01",
+      "counterGuide": "\u770B\u898B\u89D2\u8272\u8E8D\u8D77\u524D\u6416\u6642\u53CA\u6642\u53EC\u559A\u9632\u8B77\u7F69\u9632\u79A6\u6216\u5F8C\u64A4\u62C9\u958B\u8EAB\u4F4D\u3002",
+      "icon": "fa-solid fa-hand-fist",
+      "color": "#f59e0b",
+      "tier": "hard",
+      "tierName": "\u56F0\u96E3\u968E",
+      "tierLabel": "\u9AD8\u968E\u30FB\u56F0\u96E3",
+      "tierColor": "#a855f7",
+      "tierBadge": "\u{1F7E3} \u56F0\u96E3\u968E"
     },
     {
-      id: "SK-06",
-      name: "\u865B\u7A7A\u6298\u8E8D\u65AC",
-      category: "melee",
-      type: "teleport",
-      typeName: "\u4F4D\u79FB\u5947\u8972 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.8,
-      damage: 225,
-      startup: 5,
-      active: 8,
-      recovery: 8,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u5316\u4F5C\u6B98\u5F71\u76F4\u63A5\u77AC\u79FB\u81F3\u5C0D\u624B\u6B63\u80CC\u5F8C\u5283\u51FA\u6A6B\u65AC\uFF0C\u80FD\u7A7F\u900F\u4E00\u5207\u6CE2\u5C0E\u8207\u98DB\u884C\u9053\u5177\u3002",
-      counterGuide: "\u5C0D\u624B\u77AC\u79FB\u6D88\u5931\u77AC\u9593\uFF0C\u9700\u7ACB\u523B\u8F49\u8EAB\u62C9\u5411\u53CD\u65B9\u5411\u7DAD\u6301\u9632\u5B88\u59FF\u614B\u3002",
-      icon: "fa-solid fa-wand-magic-sparkles",
-      color: "#6366f1"
+      "id": "SK-05",
+      "name": "\u5E7B\u5F71\u75BE\u98A8\u7834\u7532\u523A",
+      "category": "melee",
+      "type": "pierce_thrust",
+      "typeName": "\u7834\u7532\u76F4\u523A / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.2,
+      "damage": 255,
+      "startup": 3,
+      "active": 12,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.65,
+      "description": "\u8EAB\u5316\u75BE\u5F71\u8D85\u9AD8\u901F\u5411\u524D\u7A81\u523A\uFF0C\u9644\u5E36\u8D85\u9AD8\u524A\u97CC\u7834\u7532\u503C\uFF0C\u5927\u5E45\u58D3\u8FEB\u5C0D\u624B\u9632\u79A6\uFF01",
+      "counterGuide": "\u7A81\u523A\u901F\u5EA6\u6975\u5FEB\uFF0C\u88AB\u58D3\u5236\u6642\u4E0D\u53EF\u96A8\u610F\u51FA\u62F3\uFF0C\u9700\u5C0B\u627E\u523A\u64CA\u6536\u62DB\u7A7A\u6A94\u53CD\u64CA\u3002",
+      "icon": "fa-solid fa-bolt",
+      "color": "#ec4899",
+      "tier": "hard",
+      "tierName": "\u56F0\u96E3\u968E",
+      "tierLabel": "\u9AD8\u968E\u30FB\u56F0\u96E3",
+      "tierColor": "#a855f7",
+      "tierBadge": "\u{1F7E3} \u56F0\u96E3\u968E"
     },
     {
-      id: "SK-07",
-      name: "\u767E\u88C2\u9023\u64CA\u885D",
-      category: "melee",
-      type: "rush",
-      typeName: "\u9AD8\u6BB5\u58D3\u5236 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.2,
-      damage: 260,
-      startup: 4,
-      active: 20,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u524D\u8DE8\u5FEB\u901F\u6253\u51FA 5 \u9023\u6BB5\u5BC6\u96C6\u9AD4\u8853\uFF0C\u6700\u5F8C\u4E00\u638C\u64CA\u9000\u5C0D\u624B\uFF0C\u524A\u9632\u91CF\u8207\u58D3\u8FEB\u611F\u6975\u9AD8\u3002",
-      counterGuide: "\u4FDD\u6301\u9023\u7E8C\u683C\u64CB\uFF0C\u7B49\u5F85\u5176\u6253\u5B8C 5 \u6BB5\u9032\u5165\u6536\u62DB\u786C\u76F4\u6642\u679C\u65B7\u51FA\u62F3\u78BA\u53CD\u3002",
-      icon: "fa-solid fa-meteor",
-      color: "#10b981"
+      "id": "SK-06",
+      "name": "\u865B\u7A7A\u6298\u8E8D\u65AC",
+      "category": "melee",
+      "type": "teleport",
+      "typeName": "\u4F4D\u79FB\u5947\u8972 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.8,
+      "damage": 225,
+      "startup": 5,
+      "active": 8,
+      "recovery": 8,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u5316\u4F5C\u6B98\u5F71\u76F4\u63A5\u77AC\u79FB\u81F3\u5C0D\u624B\u6B63\u80CC\u5F8C\u5283\u51FA\u6A6B\u65AC\uFF0C\u80FD\u7A7F\u900F\u4E00\u5207\u6CE2\u5C0E\u8207\u98DB\u884C\u9053\u5177\u3002",
+      "counterGuide": "\u5C0D\u624B\u77AC\u79FB\u6D88\u5931\u77AC\u9593\uFF0C\u9700\u7ACB\u523B\u8F49\u8EAB\u62C9\u5411\u53CD\u65B9\u5411\u7DAD\u6301\u9632\u5B88\u59FF\u614B\u3002",
+      "icon": "fa-solid fa-wand-magic-sparkles",
+      "color": "#6366f1",
+      "tier": "normal",
+      "tierName": "\u666E\u901A\u968E",
+      "tierLabel": "\u4E2D\u968E\u30FB\u666E\u901A",
+      "tierColor": "#38bdf8",
+      "tierBadge": "\u{1F535} \u666E\u901A\u968E"
     },
     {
-      id: "SK-08",
-      name: "\u78C1\u66B4\u91CD\u6454\u6295",
-      category: "melee",
-      type: "command_grab",
-      typeName: "\u6307\u4EE4\u6454\u6280 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.6,
-      damage: 290,
-      startup: 4,
-      active: 6,
-      recovery: 8,
-      armor: true,
-      guardType: "unblockable",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u524D\u6416\u9644\u5E36\u9738\u9AD4\uFF0C\u5411\u524D\u5F37\u6293\u5C0D\u624B\u72E0\u72E0\u8CAB\u5165\u5730\u9762\uFF0C\u5B8C\u5168\u7121\u8996\u9632\u79A6\u529B\u5834\uFF01",
-      counterGuide: "\u7121\u6CD5\u9632\u79A6\uFF01\u4E0D\u53EF\u9F9C\u7E2E\u9632\u5B88\uFF0C\u5FC5\u9808\u5728\u8DDD\u96E2\u5916\u8D77\u8DF3\u8EB2\u907F\u6216\u6436\u5148\u51FA\u523A\u62F3\u6253\u65B7\u3002",
-      icon: "fa-solid fa-magnet",
-      color: "#e11d48"
+      "id": "SK-07",
+      "name": "\u767E\u88C2\u9023\u64CA\u885D",
+      "category": "melee",
+      "type": "rush",
+      "typeName": "\u9AD8\u6BB5\u58D3\u5236 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.2,
+      "damage": 260,
+      "startup": 4,
+      "active": 20,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u524D\u8DE8\u5FEB\u901F\u6253\u51FA 5 \u9023\u6BB5\u5BC6\u96C6\u9AD4\u8853\uFF0C\u6700\u5F8C\u4E00\u638C\u64CA\u9000\u5C0D\u624B\uFF0C\u524A\u9632\u91CF\u8207\u58D3\u8FEB\u611F\u6975\u9AD8\u3002",
+      "counterGuide": "\u4FDD\u6301\u9023\u7E8C\u683C\u64CB\uFF0C\u7B49\u5F85\u5176\u6253\u5B8C 5 \u6BB5\u9032\u5165\u6536\u62DB\u786C\u76F4\u6642\u679C\u65B7\u51FA\u62F3\u78BA\u53CD\u3002",
+      "icon": "fa-solid fa-meteor",
+      "color": "#10b981",
+      "tier": "nightmare",
+      "tierName": "\u5669\u5922\u968E",
+      "tierLabel": "\u9802\u7D1A\u30FB\u5669\u5922",
+      "tierColor": "#ef4444",
+      "tierBadge": "\u{1F534} \u5669\u5922\u968E"
     },
     {
-      id: "SK-09",
-      name: "\u96F7\u9706\u9707\u6CE2\u88C2\u7A7A\u638C",
-      category: "melee",
-      type: "radial_blast",
-      typeName: "\u9707\u6CE2\u8F5F\u64CA / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.5,
-      damage: 215,
-      startup: 3,
-      active: 10,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.5,
-      knockback: 280,
-      description: "\u6C89\u8170\u84C4\u52E2\u5411\u524D\u65B9\u62CD\u51FA\u7206\u767C\u6027\u74B0\u5F62\u885D\u64CA\u6CE2\uFF0C\u4EE5\u5F37\u52C1\u6C23\u52C1\u91CD\u64CA\u4E26\u64CA\u9000\u8CBC\u8EAB\u5C0D\u624B\uFF01",
-      counterGuide: "\u64CA\u9000\u8DDD\u96E2\u6975\u9060\uFF0C\u907F\u514D\u5728\u7248\u908A\u76F2\u76EE\u8CBC\u8EAB\u6436\u653B\uFF0C\u4FDD\u6301\u4E2D\u8DDD\u96E2\u7ACB\u56DE\u62C9\u626F\u3002",
-      icon: "fa-solid fa-hand-holding-hand",
-      color: "#14b8a6"
+      "id": "SK-08",
+      "name": "\u78C1\u66B4\u91CD\u6454\u6295",
+      "category": "melee",
+      "type": "command_grab",
+      "typeName": "\u6307\u4EE4\u6454\u6280 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.6,
+      "damage": 290,
+      "startup": 4,
+      "active": 6,
+      "recovery": 8,
+      "armor": true,
+      "guardType": "unblockable",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u524D\u6416\u9644\u5E36\u9738\u9AD4\uFF0C\u5411\u524D\u5F37\u6293\u5C0D\u624B\u72E0\u72E0\u8CAB\u5165\u5730\u9762\uFF0C\u5B8C\u5168\u7121\u8996\u9632\u79A6\u529B\u5834\uFF01",
+      "counterGuide": "\u7121\u6CD5\u9632\u79A6\uFF01\u4E0D\u53EF\u539F\u5730\u9632\u5B88\uFF0C\u5FC5\u9808\u5728\u8DDD\u96E2\u5916\u8D77\u8DF3\u8EB2\u907F\u6216\u6436\u5148\u767C\u52D5\u6B66\u5668\u6253\u65B7\u3002",
+      "icon": "fa-solid fa-magnet",
+      "color": "#e11d48",
+      "tier": "nightmare",
+      "tierName": "\u5669\u5922\u968E",
+      "tierLabel": "\u9802\u7D1A\u30FB\u5669\u5922",
+      "tierColor": "#ef4444",
+      "tierBadge": "\u{1F534} \u5669\u5922\u968E"
     },
     {
-      id: "SK-22",
-      name: "\u71BE\u708E\u70C8\u5730\u6CE2",
-      category: "melee",
-      type: "ground_fissure",
-      typeName: "\u5730\u88C2\u706B\u6D77 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.3,
-      damage: 230,
-      startup: 5,
-      active: 16,
-      recovery: 7,
-      guardType: "crouch_only",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u731B\u64CA\u5730\u9762\u5D29\u88C2\u5730\u8868\uFF0C\u6CBF\u8457\u5730\u8868\u5674\u6E67\u4E00\u9053\u5411\u524D\u5954\u9A30\u7684\u70C8\u7130\u5730\u88C2\u885D\u64CA\u6CE2\uFF01",
-      counterGuide: "\u4E0B\u6BB5\u5730\u88C2\u653B\u64CA\uFF01\u7AD9\u7ACB\u9632\u79A6\u7121\u6548\uFF0C\u9700\u8D77\u8DF3\u8E8D\u904E\u6216\u7ACB\u5373\u4E0B\u8E72\u683C\u64CB\u3002",
-      icon: "fa-solid fa-volcano",
-      color: "#f97316"
+      "id": "SK-09",
+      "name": "\u96F7\u9706\u9707\u6CE2\u88C2\u7A7A\u638C",
+      "category": "melee",
+      "type": "radial_blast",
+      "typeName": "\u9707\u6CE2\u8F5F\u64CA / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.5,
+      "damage": 215,
+      "startup": 3,
+      "active": 10,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockback": 280,
+      "description": "\u6C89\u8170\u84C4\u52E2\u5411\u524D\u65B9\u62CD\u51FA\u7206\u767C\u6027\u74B0\u5F62\u885D\u64CA\u6CE2\uFF0C\u4EE5\u5F37\u52C1\u6C23\u52C1\u91CD\u64CA\u4E26\u64CA\u9000\u8CBC\u8EAB\u5C0D\u624B\uFF01",
+      "counterGuide": "\u64CA\u9000\u8DDD\u96E2\u6975\u9060\uFF0C\u907F\u514D\u5728\u7248\u908A\u76F2\u76EE\u8CBC\u8EAB\u6436\u653B\uFF0C\u4FDD\u6301\u4E2D\u8DDD\u96E2\u7ACB\u56DE\u62C9\u626F\u3002",
+      "icon": "fa-solid fa-hand-holding-hand",
+      "color": "#14b8a6",
+      "tier": "easy",
+      "tierName": "\u7C21\u55AE\u968E",
+      "tierLabel": "\u521D\u968E\u30FB\u7C21\u55AE",
+      "tierColor": "#22c55e",
+      "tierBadge": "\u{1F7E2} \u7C21\u55AE\u968E"
     },
     {
-      id: "SK-23",
-      name: "\u75BE\u98A8\u9023\u74B0\u8FF4\u65CB\u8E22",
-      category: "melee",
-      type: "cyclone_kick",
-      typeName: "\u65CB\u98A8\u98DB\u8E22 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.1,
-      damage: 245,
-      startup: 4,
-      active: 18,
-      recovery: 6,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u51CC\u7A7A\u5411\u524D\u65CB\u8F49\u6253\u51FA\u4E09\u6BB5\u75BE\u98A8\u70C8\u8E22\uFF0C\u7A7A\u4E2D\u5730\u9762\u5168\u8986\u84CB\uFF0C\u5177\u6709\u6975\u5F37\u7684\u6D6E\u7A7A\u8FFD\u64CA\u5224\u5B9A\uFF01",
-      counterGuide: "\u591A\u6BB5\u5224\u5B9A\u6301\u7E8C\u63A8\u9032\uFF0C\u9700\u5C08\u6CE8\u683C\u64CB\u76F4\u81F3\u7B2C\u4E09\u8173\u843D\u5730\u65B9\u53EF\u78BA\u53CD\u3002",
-      icon: "fa-solid fa-wind",
-      color: "#34d399"
+      "id": "SK-22",
+      "name": "\u71BE\u708E\u70C8\u5730\u6CE2",
+      "category": "melee",
+      "type": "ground_fissure",
+      "typeName": "\u5730\u88C2\u706B\u6D77 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.3,
+      "damage": 230,
+      "startup": 5,
+      "active": 16,
+      "recovery": 7,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u731B\u64CA\u5730\u9762\u5D29\u88C2\u5730\u8868\uFF0C\u6CBF\u8457\u5730\u8868\u5674\u6E67\u4E00\u9053\u5411\u524D\u5954\u9A30\u7684\u70C8\u7130\u5730\u88C2\u885D\u64CA\u6CE2\uFF01",
+      "counterGuide": "\u5730\u88C2\u70C8\u7130\u885D\u64CA\uFF0C\u9700\u8D77\u8DF3\u8E8D\u904E\u6216\u7ACB\u5373\u53EC\u559A\u91CF\u5B50\u9632\u8B77\u7F69\u683C\u64CB\u3002",
+      "icon": "fa-solid fa-volcano",
+      "color": "#f97316",
+      "tier": "normal",
+      "tierName": "\u666E\u901A\u968E",
+      "tierLabel": "\u4E2D\u968E\u30FB\u666E\u901A",
+      "tierColor": "#38bdf8",
+      "tierBadge": "\u{1F535} \u666E\u901A\u968E"
     },
     {
-      id: "SK-25",
-      name: "\u87BA\u65CB\u97F3\u901F\u9738\u9AD4\u885D",
-      category: "melee",
-      type: "armor_charge",
-      typeName: "\u9738\u9AD4\u885D\u649E / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.4,
-      damage: 260,
-      startup: 3,
-      active: 14,
-      recovery: 8,
-      armor: true,
-      guardType: "all",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u8D77\u6B65\u5168\u8EAB\u8986\u84CB\u5F37\u97CC\u9738\u9AD4\u529B\u5834\uFF0C\u786C\u625B\u5C0D\u624B\u4E00\u6B21\u666E\u901A\u653B\u64CA\u4E26\u66B4\u529B\u649E\u98DB\u524D\u65B9\u5C0D\u624B\uFF01",
-      counterGuide: "\u9738\u9AD4\u671F\u9593\u514D\u75AB\u5E38\u898F\u786C\u76F4\uFF0C\u61C9\u5229\u7528\u6307\u4EE4\u6454\u6280\u6216\u8D77\u8DF3\u9583\u907F\u4F7F\u5176\u885D\u649E\u843D\u7A7A\u3002",
-      icon: "fa-solid fa-shield-virus",
-      color: "#e879f9"
+      "id": "SK-23",
+      "name": "\u75BE\u98A8\u9023\u74B0\u8FF4\u65CB\u8E22",
+      "category": "melee",
+      "type": "cyclone_kick",
+      "typeName": "\u65CB\u98A8\u98DB\u8E22 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.1,
+      "damage": 245,
+      "startup": 4,
+      "active": 18,
+      "recovery": 6,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u51CC\u7A7A\u5411\u524D\u65CB\u8F49\u6253\u51FA\u4E09\u6BB5\u75BE\u98A8\u70C8\u8E22\uFF0C\u7A7A\u4E2D\u5730\u9762\u5168\u8986\u84CB\uFF0C\u5177\u6709\u6975\u5F37\u7684\u6D6E\u7A7A\u8FFD\u64CA\u5224\u5B9A\uFF01",
+      "counterGuide": "\u591A\u6BB5\u5224\u5B9A\u6301\u7E8C\u63A8\u9032\uFF0C\u9700\u5C08\u6CE8\u683C\u64CB\u76F4\u81F3\u7B2C\u4E09\u8173\u843D\u5730\u65B9\u53EF\u78BA\u53CD\u3002",
+      "icon": "fa-solid fa-wind",
+      "color": "#34d399",
+      "tier": "hard",
+      "tierName": "\u56F0\u96E3\u968E",
+      "tierLabel": "\u9AD8\u968E\u30FB\u56F0\u96E3",
+      "tierColor": "#a855f7",
+      "tierBadge": "\u{1F7E3} \u56F0\u96E3\u968E"
     },
     {
-      id: "SK-26",
-      name: "\u6697\u5F71\u9396\u93C8\u91CD\u9328\u64CA",
-      category: "melee",
-      type: "chain_anchor",
-      typeName: "\u93C8\u5203\u91CD\u64CA / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.3,
-      damage: 250,
-      startup: 4,
-      active: 12,
-      recovery: 7,
-      guardType: "stand_only",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u7529\u52D5\u9AD8\u78B3\u92FC\u6A5F\u68B0\u6697\u5F71\u9396\u93C8\u81EA\u7A7A\u4E2D\u62BD\u64CA\u800C\u4E0B\uFF0C\u91CD\u7838\u5730\u9762\u9707\u61FE\u5C0D\u624B\uFF01\u4E0B\u8E72\u9632\u79A6\u7121\u6548\uFF01",
-      counterGuide: "\u4E2D\u6BB5\u91CD\u64CA\u4E0D\u53EF\u4E0B\u8E72\u9632\u79A6\uFF01\u770B\u6E96\u7529\u93C8\u52D5\u4F5C\u7ACB\u5373\u7AD9\u7ACB\u683C\u64CB\u3002",
-      icon: "fa-solid fa-link",
-      color: "#94a3b8"
+      "id": "SK-25",
+      "name": "\u87BA\u65CB\u97F3\u901F\u9738\u9AD4\u885D",
+      "category": "melee",
+      "type": "armor_charge",
+      "typeName": "\u9738\u9AD4\u885D\u649E / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.4,
+      "damage": 260,
+      "startup": 3,
+      "active": 14,
+      "recovery": 8,
+      "armor": true,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u8D77\u6B65\u5168\u8EAB\u8986\u84CB\u5F37\u97CC\u9738\u9AD4\u529B\u5834\uFF0C\u786C\u625B\u5C0D\u624B\u4E00\u6B21\u666E\u901A\u653B\u64CA\u4E26\u66B4\u529B\u649E\u98DB\u524D\u65B9\u5C0D\u624B\uFF01",
+      "counterGuide": "\u9738\u9AD4\u671F\u9593\u514D\u75AB\u5E38\u898F\u786C\u76F4\uFF0C\u61C9\u5229\u7528\u6307\u4EE4\u6454\u6280\u6216\u8D77\u8DF3\u9583\u907F\u4F7F\u5176\u885D\u649E\u843D\u7A7A\u3002",
+      "icon": "fa-solid fa-shield-virus",
+      "color": "#e879f9",
+      "tier": "nightmare",
+      "tierName": "\u5669\u5922\u968E",
+      "tierLabel": "\u9802\u7D1A\u30FB\u5669\u5922",
+      "tierColor": "#ef4444",
+      "tierBadge": "\u{1F534} \u5669\u5922\u968E"
     },
     {
-      id: "SK-27",
-      name: "\u51B0\u6676\u5730\u523A\u66B4\u6E67",
-      category: "melee",
-      type: "ice_spikes",
-      typeName: "\u5730\u523A\u5347\u6E67 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.4,
-      damage: 240,
-      startup: 4,
-      active: 14,
-      recovery: 7,
-      guardType: "all",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u5C07\u6975\u5BD2\u51B0\u80FD\u91CF\u704C\u5165\u8173\u4E0B\uFF0C\u524D\u65B9\u5730\u9762\u77AC\u9593\u66B4\u6E67\u51FA\u4E00\u6392\u5C16\u92B3\u51B0\u6676\u7A81\u523A\u91CD\u5275\u76EE\u6A19\uFF01",
-      counterGuide: "\u51B0\u523A\u5F9E\u8173\u5E95\u5411\u524D\u8513\u5EF6\uFF0C\u770B\u898B\u51B0\u9727\u524D\u594F\u61C9\u5373\u523B\u8D77\u8DF3\u6216\u62C9\u958B\u8DDD\u96E2\u3002",
-      icon: "fa-solid fa-icicles",
-      color: "#38bdf8"
+      "id": "SK-26",
+      "name": "\u6697\u5F71\u9396\u93C8\u91CD\u9328\u64CA",
+      "category": "melee",
+      "type": "chain_anchor",
+      "typeName": "\u93C8\u5203\u91CD\u64CA / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.3,
+      "damage": 250,
+      "startup": 4,
+      "active": 12,
+      "recovery": 7,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u7529\u52D5\u9AD8\u78B3\u92FC\u6A5F\u68B0\u6697\u5F71\u9396\u93C8\u81EA\u7A7A\u4E2D\u62BD\u64CA\u800C\u4E0B\uFF0C\u91CD\u7838\u5730\u9762\u9707\u61FE\u5C0D\u624B\uFF01",
+      "counterGuide": "\u770B\u6E96\u7529\u93C8\u52D5\u4F5C\u7ACB\u5373\u53EC\u559A\u91CF\u5B50\u9632\u8B77\u7F69\u683C\u64CB\u3002",
+      "icon": "fa-solid fa-link",
+      "color": "#94a3b8",
+      "tier": "hard",
+      "tierName": "\u56F0\u96E3\u968E",
+      "tierLabel": "\u9AD8\u968E\u30FB\u56F0\u96E3",
+      "tierColor": "#a855f7",
+      "tierBadge": "\u{1F7E3} \u56F0\u96E3\u968E"
     },
     {
-      id: "SK-29",
-      name: "\u96F7\u795E\u5929\u6975\u8F5F\u5929\u817F",
-      category: "melee",
-      type: "thunder_axe_kick",
-      typeName: "\u843D\u96F7\u4E0B\u5288 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.4,
-      damage: 265,
-      startup: 6,
-      active: 12,
-      recovery: 8,
-      guardType: "stand_only",
-      chipRatio: 0.5,
-      knockdown: true,
-      description: "\u7E8F\u7E5E\u842C\u4E08\u91D1\u96F7\u9A30\u7A7A\u8E8D\u8D77\uFF0C\u91CD\u65A7\u822C\u7531\u4E0A\u81F3\u4E0B\u5288\u64CA\u5C0D\u624B\u982D\u9802\uFF01\u7834\u9664\u4E0B\u8E72\u9F9C\u7E2E\uFF01",
-      counterGuide: "\u4E2D\u6BB5\u7834\u8E72\u9632\uFF01\u4E0D\u53EF\u8E72\u9632\uFF0C\u9700\u7AD9\u7ACB\u683C\u64CB\u6216\u5728\u4E0B\u5288\u8D77\u8E8D\u77AC\u9593\u5411\u524D\u7A7F\u884C\u3002",
-      icon: "fa-solid fa-cloud-bolt",
-      color: "#facc15"
+      "id": "SK-27",
+      "name": "\u51B0\u6676\u5730\u523A\u66B4\u6E67",
+      "category": "melee",
+      "type": "ice_spikes",
+      "typeName": "\u5730\u523A\u5347\u6E67 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.4,
+      "damage": 240,
+      "startup": 4,
+      "active": 14,
+      "recovery": 7,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u5C07\u6975\u5BD2\u51B0\u80FD\u91CF\u704C\u5165\u8173\u4E0B\uFF0C\u524D\u65B9\u5730\u9762\u77AC\u9593\u66B4\u6E67\u51FA\u4E00\u6392\u5C16\u92B3\u51B0\u6676\u7A81\u523A\u91CD\u5275\u76EE\u6A19\uFF01",
+      "counterGuide": "\u51B0\u523A\u5F9E\u8173\u5E95\u5411\u524D\u8513\u5EF6\uFF0C\u770B\u898B\u51B0\u9727\u524D\u594F\u61C9\u5373\u523B\u8D77\u8DF3\u6216\u62C9\u958B\u8DDD\u96E2\u3002",
+      "icon": "fa-solid fa-icicles",
+      "color": "#38bdf8",
+      "tier": "normal",
+      "tierName": "\u666E\u901A\u968E",
+      "tierLabel": "\u4E2D\u968E\u30FB\u666E\u901A",
+      "tierColor": "#38bdf8",
+      "tierBadge": "\u{1F535} \u666E\u901A\u968E"
     },
     {
-      id: "SK-30",
-      name: "\u5149\u5B50\u8D85\u80FD\u9023\u74B0\u885D\u62F3",
-      category: "melee",
-      type: "photon_fists",
-      typeName: "\u5149\u5B50\u72C2\u62F3 / \u8FD1\u6230\u6B66\u85DD",
-      cd: 1.2,
-      damage: 270,
-      startup: 3,
-      active: 18,
-      recovery: 7,
-      guardType: "all",
-      chipRatio: 0.5,
-      description: "\u96D9\u62F3\u6FC0\u76EA\u5149\u5B50\u9AD8\u983B\u9707\u76EA\uFF0C\u4EE5\u8089\u773C\u96E3\u8FA8\u7684\u8D85\u97F3\u901F\u9023\u7E8C\u91CD\u62F3\u72C2\u66B4\u8F5F\u64CA\u5C0D\u624B\uFF01",
-      counterGuide: "\u72C2\u62F3\u9023\u6BB5\u6253\u64CA\u5BC6\u96C6\uFF0C\u5FC5\u9808\u4FDD\u6301\u5168\u7A0B\u683C\u64CB\uFF0C\u5728\u6700\u5F8C\u6536\u62F3\u786C\u76F4\u6642\u767C\u8D77\u731B\u70C8\u53CD\u653B\u3002",
-      icon: "fa-solid fa-hand-back-fist",
-      color: "#fb7185"
+      "id": "SK-29",
+      "name": "\u96F7\u795E\u5929\u6975\u8F5F\u5929\u817F",
+      "category": "melee",
+      "type": "thunder_axe_kick",
+      "typeName": "\u843D\u96F7\u4E0B\u5288 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.4,
+      "damage": 265,
+      "startup": 6,
+      "active": 12,
+      "recovery": 8,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "knockdown": true,
+      "description": "\u7E8F\u7E5E\u842C\u4E08\u91D1\u96F7\u9A30\u7A7A\u8E8D\u8D77\uFF0C\u91CD\u65A7\u822C\u7531\u4E0A\u81F3\u4E0B\u5288\u64CA\u5C0D\u624B\u982D\u9802\uFF01",
+      "counterGuide": "\u9700\u53EC\u559A\u9632\u8B77\u7F69\u683C\u64CB\u6216\u5728\u4E0B\u5288\u8D77\u8E8D\u77AC\u9593\u5411\u524D\u7A7F\u884C\u3002",
+      "icon": "fa-solid fa-cloud-bolt",
+      "color": "#facc15",
+      "tier": "nightmare",
+      "tierName": "\u5669\u5922\u968E",
+      "tierLabel": "\u9802\u7D1A\u30FB\u5669\u5922",
+      "tierColor": "#ef4444",
+      "tierBadge": "\u{1F534} \u5669\u5922\u968E"
+    },
+    {
+      "id": "SK-30",
+      "name": "\u5149\u5B50\u8D85\u80FD\u9023\u74B0\u885D\u62F3",
+      "category": "melee",
+      "type": "photon_fists",
+      "typeName": "\u5149\u5B50\u72C2\u62F3 / \u8FD1\u6230\u6B66\u85DD",
+      "cd": 1.2,
+      "damage": 270,
+      "startup": 3,
+      "active": 18,
+      "recovery": 7,
+      "guardType": "all",
+      "chipRatio": 0.5,
+      "description": "\u96D9\u62F3\u6FC0\u76EA\u5149\u5B50\u9AD8\u983B\u9707\u76EA\uFF0C\u4EE5\u8089\u773C\u96E3\u8FA8\u7684\u8D85\u97F3\u901F\u9023\u7E8C\u91CD\u62F3\u72C2\u66B4\u8F5F\u64CA\u5C0D\u624B\uFF01",
+      "counterGuide": "\u72C2\u62F3\u9023\u6BB5\u6253\u64CA\u5BC6\u96C6\uFF0C\u5FC5\u9808\u4FDD\u6301\u5168\u7A0B\u683C\u64CB\uFF0C\u5728\u6700\u5F8C\u6536\u62F3\u786C\u76F4\u6642\u767C\u8D77\u731B\u70C8\u53CD\u653B\u3002",
+      "icon": "fa-solid fa-hand-back-fist",
+      "color": "#fb7185",
+      "tier": "nightmare",
+      "tierName": "\u5669\u5922\u968E",
+      "tierLabel": "\u9802\u7D1A\u30FB\u5669\u5922",
+      "tierColor": "#ef4444",
+      "tierBadge": "\u{1F534} \u5669\u5922\u968E"
     }
   ];
   var ARCHETYPES = [
     {
-      id: "wave_dp",
-      name: "\u6CE2\u5347\u63A7\u5236\u6D41",
-      desc: "\u80FD\u91CF\u8108\u885D\u5F48\u9060\u7A0B\u903C\u8DF3\u3001\u5347\u9F8D\u7A7A\u4E2D\u622A\u64CA\u3001\u88C2\u7A7A\u638C\u9632\u8FD1\u8EAB\u3001\u97F3\u901F\u6ED1\u8E22\u7A81\u8972\u3001\u7834\u7532\u76F4\u523A\u58D3\u8FEB",
-      skills: ["SK-01", "SK-02", "SK-09", "SK-03", "SK-05"],
-      badge: "\u7D93\u5178\u727D\u5236"
+      "id": "wave_dp",
+      "name": "\u6CE2\u5347\u63A7\u5236\u6D41",
+      "desc": "\u80FD\u91CF\u8108\u885D\u5F48\u9060\u7A0B\u903C\u8DF3\u3001\u5347\u9F8D\u7A7A\u4E2D\u622A\u64CA\u3001\u88C2\u7A7A\u638C\u9632\u8FD1\u8EAB\u3001\u97F3\u901F\u6ED1\u8E22\u7A81\u8972\u3001\u7834\u7532\u76F4\u523A\u58D3\u8FEB",
+      "skills": [
+        "SK-01",
+        "SK-02",
+        "SK-09",
+        "SK-03",
+        "SK-05"
+      ],
+      "badge": "\u7D93\u5178\u727D\u5236"
     },
     {
-      id: "ranged_artillery",
-      name: "\u5168\u57DF\u91CD\u7832\u706B\u529B\u6D41",
-      desc: "\u8FFD\u8E64\u98DB\u5F48\u9396\u5B9A\u3001\u6298\u5C04\u6FC0\u5149\u58D3\u5236\u3001\u5929\u9802\u8ECC\u9053\u91CD\u7832\u3001\u5F15\u529B\u9ED1\u6D1E\u727D\u5F15\u3001\u8D85\u8F09\u5DE8\u7832\u81F4\u547D\u8F5F\u64CA",
-      skills: ["SK-11", "SK-12", "SK-13", "SK-14", "SK-10"],
-      badge: "\u6975\u81F4\u5C04\u624B"
+      "id": "ranged_artillery",
+      "name": "\u5168\u57DF\u91CD\u7832\u706B\u529B\u6D41",
+      "desc": "\u8FFD\u8E64\u98DB\u5F48\u9396\u5B9A\u3001\u6298\u5C04\u6FC0\u5149\u58D3\u5236\u3001\u5929\u9802\u8ECC\u9053\u91CD\u7832\u3001\u5F15\u529B\u9ED1\u6D1E\u727D\u5F15\u3001\u8D85\u8F09\u5DE8\u7832\u81F4\u547D\u8F5F\u64CA",
+      "skills": [
+        "SK-11",
+        "SK-12",
+        "SK-13",
+        "SK-14",
+        "SK-10"
+      ],
+      "badge": "\u6975\u81F4\u5C04\u624B"
     },
     {
-      id: "sniper_freeze",
-      name: "\u72D9\u64CA\u51B0\u971C\u727D\u5236\u6D41",
-      desc: "\u9AD8\u65AF\u8D85\u97F3\u901F\u72D9\u64CA\u69CD\u7A7F\u900F\u3001\u6975\u51CD\u51B0\u7BAD\u6E1B\u901F\u3001\u8FF4\u65CB\u5149\u5203\u96D9\u91CD\u6253\u64CA\u3001\u5341\u5B57\u624B\u88E1\u528D\u58D3\u5236\u3001\u6563\u88C2\u7A7A\u7206\u5F48\u5C01\u9396",
-      skills: ["SK-15", "SK-18", "SK-20", "SK-21", "SK-28"],
-      badge: "\u7A7F\u7532\u72D9\u6BBA"
+      "id": "sniper_freeze",
+      "name": "\u72D9\u64CA\u51B0\u971C\u727D\u5236\u6D41",
+      "desc": "\u9AD8\u65AF\u8D85\u97F3\u901F\u72D9\u64CA\u69CD\u7A7F\u900F\u3001\u6975\u51CD\u51B0\u7BAD\u6E1B\u901F\u3001\u8FF4\u65CB\u5149\u5203\u96D9\u91CD\u6253\u64CA\u3001\u5341\u5B57\u624B\u88E1\u528D\u58D3\u5236\u3001\u6563\u88C2\u7A7A\u7206\u5F48\u5C01\u9396",
+      "skills": [
+        "SK-15",
+        "SK-18",
+        "SK-20",
+        "SK-21",
+        "SK-28"
+      ],
+      "badge": "\u7A7F\u7532\u72D9\u6BBA"
     },
     {
-      id: "shotgun_funnel",
-      name: "\u6563\u5F48\u6D6E\u6E38\u706B\u529B\u6D41",
-      desc: "\u64F4\u6563\u9730\u5F48\u6B63\u9762\u5C01\u9396\u3001\u6D6E\u6E38\u6A5F\u81EA\u52D5\u9023\u7E8C\u96F7\u5C04\u3001\u71C3\u71D2\u69B4\u5F48\u5C01\u9396\u5730\u9762\u3001\u96FB\u78C1\u5F15\u529B\u96F7\u9810\u4F0F\u3001\u80FD\u91CF\u8108\u885D\u5F48\u63A7\u5834",
-      skills: ["SK-16", "SK-17", "SK-19", "SK-24", "SK-01"],
-      badge: "\u5BC6\u96C6\u7FA4\u706B"
+      "id": "shotgun_funnel",
+      "name": "\u6563\u5F48\u6D6E\u6E38\u706B\u529B\u6D41",
+      "desc": "\u64F4\u6563\u9730\u5F48\u6B63\u9762\u5C01\u9396\u3001\u6D6E\u6E38\u6A5F\u81EA\u52D5\u9023\u7E8C\u96F7\u5C04\u3001\u71C3\u71D2\u69B4\u5F48\u5C01\u9396\u5730\u9762\u3001\u96FB\u78C1\u5F15\u529B\u96F7\u9810\u4F0F\u3001\u80FD\u91CF\u8108\u885D\u5F48\u63A7\u5834",
+      "skills": [
+        "SK-16",
+        "SK-17",
+        "SK-19",
+        "SK-24",
+        "SK-01"
+      ],
+      "badge": "\u5BC6\u96C6\u7FA4\u706B"
     },
     {
-      id: "low_rush",
-      name: "\u4E0B\u6BB5\u72C2\u653B\u58D3\u5236\u6D41",
-      desc: "\u97F3\u901F\u6ED1\u8E22\uFF08\u4E0B\u6BB5\uFF09\u8207\u8E8D\u7A7A\u7838\uFF08\u4E2D\u6BB5\uFF09\u96D9\u64C7\u3001\u767E\u88C2\u9023\u64CA\u885D\u3001\u71BE\u708E\u70C8\u5730\u6CE2\u3001\u5730\u523A\u5347\u6E67\u5F37\u653B",
-      skills: ["SK-03", "SK-04", "SK-07", "SK-22", "SK-27"],
-      badge: "\u96D9\u64C7\u7834\u9632"
+      "id": "low_rush",
+      "name": "\u4E0B\u6BB5\u72C2\u653B\u58D3\u5236\u6D41",
+      "desc": "\u97F3\u901F\u6ED1\u8E22\uFF08\u4E0B\u6BB5\uFF09\u8207\u8E8D\u7A7A\u7838\uFF08\u4E2D\u6BB5\uFF09\u96D9\u64C7\u3001\u767E\u88C2\u9023\u64CA\u885D\u3001\u71BE\u708E\u70C8\u5730\u6CE2\u3001\u5730\u523A\u5347\u6E67\u5F37\u653B",
+      "skills": [
+        "SK-03",
+        "SK-04",
+        "SK-07",
+        "SK-22",
+        "SK-27"
+      ],
+      "badge": "\u96D9\u64C7\u7834\u9632"
     },
     {
-      id: "counter_cross",
-      name: "\u5947\u8972\u7A81\u9032\u72C2\u653B\u6D41",
-      desc: "\u865B\u7A7A\u77AC\u79FB\u7A7F\u900F\u3001\u6307\u4EE4\u6454\u7121\u8996\u9632\u79A6\u3001\u65CB\u98A8\u8FF4\u65CB\u8E22\u3001\u9738\u9AD4\u97F3\u901F\u885D\u649E\u3001\u5149\u5B50\u72C2\u62F3\u66B4\u529B\u8F5F\u6BBA",
-      skills: ["SK-06", "SK-08", "SK-23", "SK-25", "SK-30"],
-      badge: "\u7A81\u64CA\u9738\u9AD4"
+      "id": "counter_cross",
+      "name": "\u5947\u8972\u7A81\u9032\u72C2\u653B\u6D41",
+      "desc": "\u865B\u7A7A\u77AC\u79FB\u7A7F\u900F\u3001\u6307\u4EE4\u6454\u7121\u8996\u9632\u79A6\u3001\u65CB\u98A8\u8FF4\u65CB\u8E22\u3001\u9738\u9AD4\u97F3\u901F\u885D\u649E\u3001\u5149\u5B50\u72C2\u62F3\u66B4\u529B\u8F5F\u6BBA",
+      "skills": [
+        "SK-06",
+        "SK-08",
+        "SK-23",
+        "SK-25",
+        "SK-30"
+      ],
+      "badge": "\u7A81\u64CA\u9738\u9AD4"
     }
   ];
 
@@ -11936,14 +12192,26 @@
       antiCheat.protectFighter(this.p2);
     }
     _createFighter(id, x, data) {
-      const defaultSkills = [SKILLS[0], SKILLS[1], SKILLS[2], SKILLS[3], SKILLS[4]];
-      const skillList = data.loadout && Array.isArray(data.loadout) && data.loadout.length > 0 ? data.loadout.slice(0, 5).map((sid, i) => SKILLS.find((s) => s.id === sid) || defaultSkills[i] || SKILLS[0]) : defaultSkills;
-      while (skillList.length < 5) {
-        const unused = SKILLS.find((s) => !skillList.includes(s)) || SKILLS[0];
-        skillList.push(unused);
+      const isAi = !!data.isAi;
+      let skillList = [];
+      if (isAi) {
+        const rawLoadout = data.loadout && Array.isArray(data.loadout) && data.loadout.length > 0 ? data.loadout : ["SK-01", "SK-02", "SK-06"];
+        skillList = rawLoadout.slice(0, 3).map((sid) => SKILLS.find((s) => s.id === sid)).filter(Boolean);
+        while (skillList.length < 3) {
+          const fallback = SKILLS.find((s) => !skillList.includes(s)) || SKILLS[0];
+          skillList.push(fallback);
+        }
+      } else {
+        const defaultSkills = [SKILLS[0], SKILLS[1], SKILLS[2], SKILLS[3], SKILLS[4]];
+        skillList = data.loadout && Array.isArray(data.loadout) && data.loadout.length > 0 ? data.loadout.slice(0, 5).map((sid, i) => SKILLS.find((s) => s.id === sid) || defaultSkills[i] || SKILLS[0]) : defaultSkills;
+        while (skillList.length < 5) {
+          const unused = SKILLS.find((s) => !skillList.includes(s)) || SKILLS[0];
+          skillList.push(unused);
+        }
       }
       return {
         id,
+        isAi,
         name: data.name || (id === 1 ? "Player 1" : "Player 2"),
         skin: data.skin,
         x,
@@ -11960,13 +12228,12 @@
         maxHp: 1e3,
         hp: 1e3,
         state: "idle",
-        // idle, walk_fwd, walk_back, jump, crouch, high_guard, low_guard, light_punch, heavy_kick, ranged_attack, skill, hit_stun, knockdown, wakeup, super_move
+        // idle, walk_fwd, walk_back, jump, high_guard, light_punch, heavy_kick, ranged_attack, skill, hit_stun, knockdown, wakeup, super_move
         stateTime: 0,
         stateDuration: 0,
         currentAction: null,
         isGuarding: false,
         guardStance: "high",
-        // 'high' 或 'low'
         invincibleTimer: 0,
         rangedCooldown: 0,
         // 終極必殺量表 (Super Gauge - 滿 1000 或殘血逆境覺醒時可發動奧義)
@@ -11980,9 +12247,9 @@
         burstAvailable: true,
         frostTimer: 0,
         // 冰凍減速計時器
-        // 5 大自選攻擊技能
+        // 神兵武器武裝 (AI: 3 把，玩家: 5 把)
         skills: skillList,
-        cooldowns: [0, 0, 0, 0, 0],
+        cooldowns: skillList.map(() => 0),
         // 連段統計
         comboCount: 0,
         comboDamage: 0,
@@ -12307,9 +12574,7 @@
         case "idle":
         case "walk_fwd":
         case "walk_back":
-        case "crouch":
         case "high_guard":
-        case "low_guard":
           this._handleNormalInputs(char, opp, input);
           break;
         case "jump":
@@ -12358,7 +12623,7 @@
           }
           if (char.currentAction) {
             this._updateAttackAction(char, opp);
-          } else if (input && (input.punch || input.kick)) {
+          } else if (input && (input.punch || input.kick) && char.isAi) {
             char.facing = char.x < opp.x ? 1 : -1;
             this._executeAirAttack(char, opp, input.kick ? "kick" : "punch");
           }
@@ -12433,33 +12698,21 @@
       }
       const moveX = input.x || 0;
       const moveY = input.y || 0;
-      const isCrouching = (moveY > 0.35 || char.state === "crouch") && char.isGrounded;
-      if (input.punch) {
-        if (isCrouching) {
-          this._executeCrouchPunch(char, opp);
-        } else {
+      if (char.isAi) {
+        if (input.punch) {
           this._executeLightPunch(char, opp);
+          return;
         }
-        return;
-      }
-      if (input.kick) {
-        if (isCrouching) {
-          this._executeCrouchKick(char, opp);
-        } else {
+        if (input.kick) {
           this._executeHeavyKick(char, opp);
+          return;
         }
-        return;
       }
       if (input.guard && char.isGrounded) {
         const wasGuarding = char.isGuarding;
         char.isGuarding = true;
-        if (moveY > 0.4) {
-          char.state = "low_guard";
-          char.guardStance = "low";
-        } else {
-          char.state = "high_guard";
-          char.guardStance = "high";
-        }
+        char.state = "high_guard";
+        char.guardStance = "high";
         if (!wasGuarding) {
           soundEngine.playHit("shield_up");
         }
@@ -12476,11 +12729,6 @@
         char.stateTime = 0;
         char.isGuarding = false;
         soundEngine.playHit("dp");
-        return;
-      }
-      if (moveY > 0.35 && char.isGrounded) {
-        char.state = "crouch";
-        char.isGuarding = false;
         return;
       }
       if (Math.abs(moveX) > 0.15) {
@@ -13508,18 +13756,6 @@
       let isBlocked = false;
       if (action.guardType === "unblockable") {
         isBlocked = false;
-      } else if (action.guardType === "stand_only") {
-        if (opp.isGuarding && opp.guardStance === "high") {
-          isBlocked = true;
-        } else {
-          isBlocked = false;
-        }
-      } else if (action.guardType === "crouch_only") {
-        if (opp.isGuarding && opp.guardStance === "low") {
-          isBlocked = true;
-        } else {
-          isBlocked = false;
-        }
       } else if (opp.isGuarding) {
         isBlocked = true;
       }
@@ -14675,6 +14911,19 @@
       return this.bufferedDecision;
     }
     /**
+     * 獲取 AI 當前已冷卻就緒的神兵武器清單 (AI 隨機抽取之 3 把武器)
+     */
+    _getReadySkills(ai) {
+      const ready = [];
+      if (!ai || !ai.skills || !ai.cooldowns) return ready;
+      for (let i = 0; i < Math.min(3, ai.skills.length); i++) {
+        if (ai.cooldowns[i] <= 0 && ai.skills[i]) {
+          ready.push({ slot: i, skill: ai.skills[i] });
+        }
+      }
+      return ready;
+    }
+    /**
      * 在浮空平台上平穩作戰，防止地面走位時無意識滑落平台
      */
     _filterPlatformEdges(ai, input) {
@@ -14687,7 +14936,7 @@
     }
     /**
      * 空中戰鬥決策 (Airborne Combat Execution)
-     * 在躍空過程中根據與玩家之相對距離，執行中段破防躍空飛踢或快速刺拳
+     * 在躍空過程中根據與玩家之相對距離，執行空中重踢或空中刺拳 (AI 專屬體術)
      */
     _decideAirborneCombat(ai, player, engine) {
       const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
@@ -14722,12 +14971,11 @@
     _makeDecision(ai, player, engine) {
       const input = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
       const dist = Math.abs(ai.x - player.x);
-      const facingPlayer = (ai.x < player.x ? 1 : -1) === ai.facing;
       const dirToPlayer = ai.x < player.x ? 1 : -1;
       const playerInAir = !player.isGrounded;
-      const playerAttacking = player.state === "light_punch" || player.state === "heavy_kick" || player.state === "crouch_punch" || player.state === "crouch_kick" || player.state === "ranged_attack" || player.state === "skill" || player.state === "jump" && !!player.currentAction;
-      const isPlayerLowAttack = player.state === "crouch_kick" || player.currentAction && player.currentAction.guardType === "crouch_only";
+      const playerAttacking = player.state === "ranged_attack" || player.state === "skill" || player.state === "jump" && !!player.currentAction;
       const playerGuarding = player.isGuarding;
+      const readySkills = this._getReadySkills(ai);
       const incomingProjectile = engine && engine.projectiles && engine.projectiles.find((p) => {
         if (p.owner === player) {
           const pTowardsAI = p.vx > 0 && p.x < ai.x || p.vx < 0 && p.x > ai.x || Math.abs(p.vx) < 1;
@@ -14770,58 +15018,49 @@
           return input;
         }
         if (playerInAir && dist < 170) {
-          if (ai.cooldowns[1] <= 0) {
-            input.skill2 = true;
-            return input;
-          } else {
-            if (Math.random() < 0.6) {
-              input.y = -1;
-              input.x = dirToPlayer;
-              input.kick = true;
-            } else {
-              input.kick = true;
-            }
+          const antiAir = readySkills.find((s) => s.skill.type === "anti_air" || s.skill.typeName?.includes("\u5C0D\u7A7A"));
+          if (antiAir) {
+            input[`skill${antiAir.slot + 1}`] = true;
             return input;
           }
+          if (Math.random() < 0.6) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            input.kick = true;
+          } else {
+            input.kick = true;
+          }
+          return input;
         }
         if (incomingProjectile) {
           if (Math.random() < 0.5) {
             input.y = -1;
             input.x = dirToPlayer;
-            return input;
           } else {
             input.guard = true;
-            return input;
-          }
-        }
-        if (playerAttacking && dist < 140) {
-          if (ai.cooldowns[0] <= 0 && ai.skills?.[0]?.id === "SK-05") {
-            input.skill1 = true;
-            return input;
-          }
-          input.guard = true;
-          if (isPlayerLowAttack) {
-            input.y = 1;
           }
           return input;
         }
+        if (playerAttacking && dist < 140) {
+          const counterSkill = readySkills.find((s) => s.skill.id === "SK-05" || s.skill.type === "pierce_thrust");
+          if (counterSkill && Math.random() < 0.5) {
+            input[`skill${counterSkill.slot + 1}`] = true;
+            return input;
+          }
+          input.guard = true;
+          return input;
+        }
         if (playerGuarding && dist < 120) {
-          if (ai.cooldowns[2] <= 0 && ai.skills?.[2]?.id === "SK-08") {
-            input.skill3 = true;
+          const grabSkill = readySkills.find((s) => s.skill.guardType === "unblockable");
+          if (grabSkill) {
+            input[`skill${grabSkill.slot + 1}`] = true;
             return input;
-          } else if (ai.cooldowns[0] <= 0 && ai.skills?.[0]?.id === "SK-03") {
-            input.skill1 = true;
+          }
+          if (Math.random() < 0.5) {
+            input.y = -1;
+            input.x = dirToPlayer;
+            input.kick = true;
             return input;
-          } else {
-            if (Math.random() < 0.4) {
-              input.y = -1;
-              input.x = dirToPlayer;
-              return input;
-            } else {
-              input.y = 1;
-              input.kick = true;
-              return input;
-            }
           }
         }
         if (dist > 220) {
@@ -14830,14 +15069,9 @@
             input.y = -1;
             input.x = dirToPlayer;
             return input;
-          } else if (r < 0.65) {
-            const readySlots = [0, 1, 2, 3, 4].filter((idx) => ai.cooldowns[idx] <= 0 && ai.skills?.[idx]);
-            if (readySlots.length > 0) {
-              const slot = readySlots[Math.floor(Math.random() * readySlots.length)];
-              input[`skill${slot + 1}`] = true;
-              return input;
-            }
-            input.x = dirToPlayer;
+          } else if (r < 0.7 && readySkills.length > 0) {
+            const s = readySkills[Math.floor(Math.random() * readySkills.length)];
+            input[`skill${s.slot + 1}`] = true;
             return input;
           } else {
             input.x = dirToPlayer;
@@ -14846,19 +15080,19 @@
         }
         if (dist >= 120) {
           const r = Math.random();
-          if (r < 0.35) {
+          if (r < 0.3 && readySkills.length > 0) {
+            const s = readySkills[Math.floor(Math.random() * readySkills.length)];
+            input[`skill${s.slot + 1}`] = true;
+            return input;
+          } else if (r < 0.55) {
             input.y = -1;
             input.x = dirToPlayer;
             return input;
-          } else if (r < 0.65) {
+          } else if (r < 0.8) {
             input.x = dirToPlayer;
-            return input;
-          } else if (r < 0.85) {
-            input.x = -dirToPlayer;
             return input;
           } else {
-            input.y = -1;
-            input.x = 0;
+            input.x = -dirToPlayer;
             return input;
           }
         }
@@ -14867,12 +15101,15 @@
           input.y = -1;
           input.x = Math.random() < 0.5 ? dirToPlayer : -dirToPlayer;
           return input;
-        } else if (rClose2 < 0.55) {
+        } else if (rClose2 < 0.5) {
           input.punch = true;
           return input;
-        } else if (rClose2 < 0.85) {
+        } else if (rClose2 < 0.75) {
           input.kick = true;
-          if (Math.random() < 0.4) input.y = 1;
+          return input;
+        } else if (readySkills.length > 0) {
+          const s = readySkills[Math.floor(Math.random() * readySkills.length)];
+          input[`skill${s.slot + 1}`] = true;
           return input;
         } else {
           input.x = -dirToPlayer;
@@ -14881,8 +15118,9 @@
       }
       if (this.difficulty === "hard") {
         if (playerInAir && dist < 150) {
-          if (ai.cooldowns[1] <= 0 && Math.random() < 0.75) {
-            input.skill2 = true;
+          const antiAir = readySkills.find((s) => s.skill.type === "anti_air" || s.skill.typeName?.includes("\u5C0D\u7A7A"));
+          if (antiAir && Math.random() < 0.75) {
+            input[`skill${antiAir.slot + 1}`] = true;
             return input;
           } else if (Math.random() < 0.6) {
             input.kick = true;
@@ -14896,33 +15134,29 @@
           if (Math.random() < 0.45) {
             input.y = -1;
             input.x = dirToPlayer;
-            return input;
           } else {
             input.guard = true;
-            return input;
           }
+          return input;
         }
         if (playerAttacking && dist < 140) {
           if (Math.random() < 0.85) {
             input.guard = true;
-            if (isPlayerLowAttack) {
-              input.y = 1;
-            }
-            return input;
           } else {
             input.y = -1;
             input.x = -dirToPlayer;
-            return input;
           }
+          return input;
         }
         if (playerGuarding && dist < 120) {
-          const r = Math.random();
-          if (r < 0.35) {
+          const grabSkill = readySkills.find((s) => s.skill.guardType === "unblockable");
+          if (grabSkill) {
+            input[`skill${grabSkill.slot + 1}`] = true;
+            return input;
+          }
+          if (Math.random() < 0.4) {
             input.y = -1;
             input.x = dirToPlayer;
-            return input;
-          } else if (r < 0.65) {
-            input.y = 1;
             input.kick = true;
             return input;
           }
@@ -14933,8 +15167,9 @@
             input.y = -1;
             input.x = dirToPlayer;
             return input;
-          } else if (r < 0.55 && ai.cooldowns[0] <= 0) {
-            input.skill1 = true;
+          } else if (r < 0.6 && readySkills.length > 0) {
+            const s = readySkills[Math.floor(Math.random() * readySkills.length)];
+            input[`skill${s.slot + 1}`] = true;
             return input;
           } else {
             input.x = dirToPlayer;
@@ -14943,14 +15178,14 @@
         }
         if (dist >= 120) {
           const r = Math.random();
-          if (r < 0.3) {
-            input.y = -1;
+          if (r < 0.25 && readySkills.length > 0) {
+            const s = readySkills[Math.floor(Math.random() * readySkills.length)];
+            input[`skill${s.slot + 1}`] = true;
+            return input;
+          } else if (r < 0.55) {
             input.x = dirToPlayer;
             return input;
-          } else if (r < 0.65) {
-            input.x = dirToPlayer;
-            return input;
-          } else if (r < 0.9) {
+          } else if (r < 0.85) {
             input.x = -dirToPlayer;
             return input;
           } else {
@@ -14964,11 +15199,15 @@
           input.y = -1;
           input.x = Math.random() < 0.6 ? -dirToPlayer : dirToPlayer;
           return input;
-        } else if (rClose2 < 0.55) {
+        } else if (rClose2 < 0.5) {
           input.punch = true;
           return input;
-        } else if (rClose2 < 0.85) {
+        } else if (rClose2 < 0.8) {
           input.kick = true;
+          return input;
+        } else if (readySkills.length > 0) {
+          const s = readySkills[Math.floor(Math.random() * readySkills.length)];
+          input[`skill${s.slot + 1}`] = true;
           return input;
         } else {
           input.x = -dirToPlayer;
@@ -14978,7 +15217,7 @@
       if (this.difficulty === "normal") {
         if (playerInAir && dist < 140) {
           const r = Math.random();
-          if (r < 0.4) {
+          if (r < 0.45) {
             input.kick = true;
             return input;
           } else if (r < 0.8) {
@@ -14990,25 +15229,20 @@
           if (Math.random() < 0.35) {
             input.y = -1;
             input.x = dirToPlayer;
-            return input;
           } else if (Math.random() < 0.8) {
             input.guard = true;
-            return input;
           }
+          return input;
         }
         if (playerAttacking && dist < 135) {
           const r = Math.random();
           if (r < 0.65) {
             input.guard = true;
-            if (isPlayerLowAttack && Math.random() < 0.75) {
-              input.y = 1;
-            }
-            return input;
           } else if (r < 0.8) {
             input.y = -1;
             input.x = -dirToPlayer;
-            return input;
           }
+          return input;
         }
         if (dist > 200) {
           const r = Math.random();
@@ -15016,8 +15250,9 @@
             input.y = -1;
             input.x = dirToPlayer;
             return input;
-          } else if (r < 0.5 && ai.cooldowns[0] <= 0) {
-            input.skill1 = true;
+          } else if (r < 0.55 && readySkills.length > 0) {
+            const s = readySkills[Math.floor(Math.random() * readySkills.length)];
+            input[`skill${s.slot + 1}`] = true;
             return input;
           } else {
             input.x = dirToPlayer;
@@ -15026,14 +15261,14 @@
         }
         if (dist >= 120) {
           const r = Math.random();
-          if (r < 0.25) {
-            input.y = -1;
+          if (r < 0.2 && readySkills.length > 0) {
+            const s = readySkills[Math.floor(Math.random() * readySkills.length)];
+            input[`skill${s.slot + 1}`] = true;
+            return input;
+          } else if (r < 0.6) {
             input.x = dirToPlayer;
             return input;
-          } else if (r < 0.65) {
-            input.x = dirToPlayer;
-            return input;
-          } else if (r < 0.88) {
+          } else if (r < 0.85) {
             input.x = -dirToPlayer;
             return input;
           } else {
@@ -15053,8 +15288,9 @@
         } else if (rClose2 < 0.8) {
           input.kick = true;
           return input;
-        } else if (rClose2 < 0.9 && ai.cooldowns[1] <= 0) {
-          input.skill2 = true;
+        } else if (rClose2 < 0.9 && readySkills.length > 0) {
+          const s = readySkills[Math.floor(Math.random() * readySkills.length)];
+          input[`skill${s.slot + 1}`] = true;
           return input;
         } else {
           input.x = -dirToPlayer;
@@ -15065,9 +15301,6 @@
         const r = Math.random();
         if (r < 0.35) {
           input.guard = true;
-          if (isPlayerLowAttack && Math.random() < 0.5) {
-            input.y = 1;
-          }
           return input;
         } else if (r < 0.5) {
           input.y = -1;
@@ -15080,6 +15313,10 @@
         if (r < 0.18) {
           input.y = -1;
           input.x = dirToPlayer;
+          return input;
+        } else if (r < 0.4 && readySkills.length > 0) {
+          const s = readySkills[Math.floor(Math.random() * readySkills.length)];
+          input[`skill${s.slot + 1}`] = true;
           return input;
         } else {
           input.x = dirToPlayer * 0.8;
@@ -15130,14 +15367,9 @@
       }
       if (settings.dummyStance === "jump") {
         input.y = -1;
-      } else if (settings.dummyStance === "crouch") {
-        input.y = 1;
       }
-      if (settings.dummyGuard === "stand_guard") {
+      if (settings.dummyGuard === "stand_guard" || settings.dummyGuard === "crouch_guard") {
         input.guard = true;
-      } else if (settings.dummyGuard === "crouch_guard") {
-        input.guard = true;
-        input.y = 1;
       } else if (settings.dummyGuard === "after_first_hit") {
         if (player.comboCount >= 1) {
           input.guard = true;
@@ -16091,6 +16323,9 @@
               <span style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: ${isRanged ? "rgba(56,189,248,0.2)" : "rgba(244,63,94,0.2)"}; color: ${isRanged ? "#38bdf8" : "#fb7185"}; border: 1px solid ${isRanged ? "#38bdf8" : "#fb7185"};">
                 ${isRanged ? "\u{1F3F9} \u9060\u7A0B\u795E\u5175" : "\u2694\uFE0F \u8FD1\u6230\u6B66\u85DD"}
               </span>
+              <span style="font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px; background: ${sk.tierColor}26; color: ${sk.tierColor}; border: 1px solid ${sk.tierColor};">
+                ${sk.tierBadge || sk.tierName}
+              </span>
               <strong style="color: ${sk.color}; font-size: 13px;"><i class="${sk.icon}"></i> ${sk.name}</strong>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
@@ -16260,21 +16495,43 @@
         if (this.matchMode === "training") p2Name = "\u7DF4\u7FD2\u6728\u6A01\u5047\u4EBA";
         else if (this.matchMode === "local_2p") p2Name = "Player 2";
       }
+      const isAiOpponent = this.matchMode === "ai" || this.matchMode === "arcade" || this.matchMode === "training" || this._isSimulatedOpponent;
+      let p2Loadout = ["SK-01", "SK-02", "SK-06"];
+      if (isAiOpponent) {
+        p2Loadout = getRandomAiWeapons(p2Diff, 3);
+      }
       const p1Data = this.matchMode === "p2p" && this._p2pMatchData ? this._p2pMatchData.p1Data : {
         name: saveSystem.currentUser ? saveSystem.currentUser.nickname : "Player 1",
         skin: p1Skin,
+        isAi: false,
         loadout: this.loadoutSelection
       };
       const p2Data = this.matchMode === "p2p" && this._p2pMatchData ? this._p2pMatchData.p2Data : {
         name: p2Name,
         skin: p2Skin,
-        loadout: ["SK-01", "SK-02", "SK-06", "SK-16", "SK-17"]
+        isAi: isAiOpponent,
+        loadout: p2Loadout
       };
       this._resizeCanvas();
       this.matchEndTimer = 0;
       this._lastFrameTime = 0;
       this._timeAccumulator = 0;
       combatEngine.initMatch(p1Data, p2Data, this.matchMode === "training");
+      if (isAiOpponent && combatEngine.p2 && Array.isArray(combatEngine.p2.skills)) {
+        const drawnNames = combatEngine.p2.skills.map((s) => `\u3010${s.name}\u3011`).join(" ");
+        const tierObj = TIER_CONFIG[p2Diff] || TIER_CONFIG.normal;
+        setTimeout(() => {
+          combatEngine.floatingTexts.push({
+            text: `\u26A1 AI (${tierObj.name}) \u96A8\u6A5F\u62BD\u9078 3 \u628A\u795E\u5175\uFF1A${drawnNames}`,
+            x: combatEngine.arenaWidth / 2,
+            y: combatEngine.floorY - 140,
+            color: tierObj.color,
+            duration: 130,
+            vy: -0.35,
+            fontSize: 14
+          });
+        }, 400);
+      }
       if (this.matchMode === "p2p") {
         this._p2pSyncTimer = 0;
         combatEngine.onKOCallback = (winner, p1Hp, p2Hp) => {
@@ -16559,8 +16816,9 @@
         jump: isUp,
         down: isDown,
         dropThrough,
-        punch: !!(k["KeyJ"] || m.punch),
-        kick: !!(k["KeyK"] || m.kick),
+        punch: false,
+        // 拳擊與踢腿改為 AI 專屬體術，玩家專注於自選神兵武裝
+        kick: false,
         guard: !!(k["KeyL"] || k["ShiftLeft"] || k["ShiftRight"] || m.guard),
         skill1: !!(k[k1] || m.skill1),
         skill2: !!(k[k2] || m.skill2),
@@ -16588,8 +16846,9 @@
         jump: isUp,
         down: isDown,
         dropThrough,
-        punch: !!(k["Numpad1"] || k["Digit1"]),
-        kick: !!(k["Numpad2"] || k["Digit2"]),
+        punch: false,
+        // 拳腳為 AI 專屬體術
+        kick: false,
         guard: !!(k["Numpad0"] || k["NumpadDecimal"]),
         skill1: !!(k["Numpad4"] || k["Digit4"]),
         skill2: !!(k["Numpad5"] || k["Digit5"]),
@@ -18989,8 +19248,10 @@
                 ${isSelected ? `<span style="font-size: 9px; font-weight: 900; background: #00f3ff; color: #000; padding: 1px 4px; border-radius: 3px;">\u69FD\u4F4D ${slotIndex + 1}</span>` : ""}
               </div>
             </div>
-            <div style="font-size: 10px; color: #94a3b8; margin-top: 1px;">
-              ${isRanged ? "\u{1F3F9} \u9060\u7A0B" : "\u2694\uFE0F \u8FD1\u6230"} | \u50B7 ${sk.damage} | CD ${sk.cd}s
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 1px; display: flex; align-items: center; gap: 5px;">
+              <span>${isRanged ? "\u{1F3F9} \u9060\u7A0B" : "\u2694\uFE0F \u8FD1\u6230"}</span>
+              <span style="color: ${sk.tierColor}; font-weight: 700;">${sk.tierName}</span>
+              <span>| \u50B7 ${sk.damage} | CD ${sk.cd}s</span>
             </div>
           </div>
         </div>

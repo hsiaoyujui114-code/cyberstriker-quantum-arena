@@ -4,7 +4,7 @@
  * 整合所有模組：登入、大廳展示台、四大大廳分頁、配技載入、60 FPS 戰鬥、AI 行為、重播短碼、雙人對打與行動觸控
  */
 
-import { SKILLS, ARCHETYPES } from './data/skills.js';
+import { SKILLS, ARCHETYPES, WEAPON_TIERS, TIER_CONFIG, getRandomAiWeapons } from './data/skills.js';
 import { SKINS } from './data/skins.js';
 import { STAGES, getStageById, getRandomStage } from './data/stages.js';
 import { saveSystem } from './save_system.js';
@@ -986,6 +986,9 @@ class CyberStrikerApp {
               <span style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: ${isRanged ? 'rgba(56,189,248,0.2)' : 'rgba(244,63,94,0.2)'}; color: ${isRanged ? '#38bdf8' : '#fb7185'}; border: 1px solid ${isRanged ? '#38bdf8' : '#fb7185'};">
                 ${isRanged ? '🏹 遠程神兵' : '⚔️ 近戰武藝'}
               </span>
+              <span style="font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px; background: ${sk.tierColor}26; color: ${sk.tierColor}; border: 1px solid ${sk.tierColor};">
+                ${sk.tierBadge || sk.tierName}
+              </span>
               <strong style="color: ${sk.color}; font-size: 13px;"><i class="${sk.icon}"></i> ${sk.name}</strong>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
@@ -1176,11 +1179,20 @@ class CyberStrikerApp {
       else if (this.matchMode === 'local_2p') p2Name = 'Player 2';
     }
 
+    const isAiOpponent = (this.matchMode === 'ai' || this.matchMode === 'arcade' || this.matchMode === 'training' || this._isSimulatedOpponent);
+
+    // AI 武器抽取機制：依據難度（簡單、普通、困難、噩夢），從對應強度的武器庫中隨機抽取 3 把神兵武器
+    let p2Loadout = ['SK-01', 'SK-02', 'SK-06'];
+    if (isAiOpponent) {
+      p2Loadout = getRandomAiWeapons(p2Diff, 3);
+    }
+
     const p1Data = (this.matchMode === 'p2p' && this._p2pMatchData)
       ? this._p2pMatchData.p1Data
       : {
           name: saveSystem.currentUser ? saveSystem.currentUser.nickname : 'Player 1',
           skin: p1Skin,
+          isAi: false,
           loadout: this.loadoutSelection
         };
 
@@ -1189,7 +1201,8 @@ class CyberStrikerApp {
       : {
           name: p2Name,
           skin: p2Skin,
-          loadout: ['SK-01', 'SK-02', 'SK-06', 'SK-16', 'SK-17']
+          isAi: isAiOpponent,
+          loadout: p2Loadout
         };
 
     // 戰鬥前確保畫布尺寸與擂台邊界自適應當前螢幕
@@ -1199,6 +1212,23 @@ class CyberStrikerApp {
     this._timeAccumulator = 0;
 
     combatEngine.initMatch(p1Data, p2Data, this.matchMode === 'training');
+
+    // 開局提示 AI 本場隨機抽取的 3 把神兵武器
+    if (isAiOpponent && combatEngine.p2 && Array.isArray(combatEngine.p2.skills)) {
+      const drawnNames = combatEngine.p2.skills.map(s => `【${s.name}】`).join(' ');
+      const tierObj = TIER_CONFIG[p2Diff] || TIER_CONFIG.normal;
+      setTimeout(() => {
+        combatEngine.floatingTexts.push({
+          text: `⚡ AI (${tierObj.name}) 隨機抽選 3 把神兵：${drawnNames}`,
+          x: combatEngine.arenaWidth / 2,
+          y: combatEngine.floorY - 140,
+          color: tierObj.color,
+          duration: 130,
+          vy: -0.35,
+          fontSize: 14
+        });
+      }, 400);
+    }
 
     // 多人連線即時 K.O. 與傷害廣播回調
     if (this.matchMode === 'p2p') {
@@ -1538,8 +1568,8 @@ class CyberStrikerApp {
       jump: isUp,
       down: isDown,
       dropThrough,
-      punch: !!(k['KeyJ'] || m.punch),
-      kick: !!(k['KeyK'] || m.kick),
+      punch: false, // 拳擊與踢腿改為 AI 專屬體術，玩家專注於自選神兵武裝
+      kick: false,
       guard: !!(k['KeyL'] || k['ShiftLeft'] || k['ShiftRight'] || m.guard),
       skill1: !!(k[k1] || m.skill1),
       skill2: !!(k[k2] || m.skill2),
@@ -1572,8 +1602,8 @@ class CyberStrikerApp {
       jump: isUp,
       down: isDown,
       dropThrough,
-      punch: !!(k['Numpad1'] || k['Digit1']),
-      kick: !!(k['Numpad2'] || k['Digit2']),
+      punch: false, // 拳腳為 AI 專屬體術
+      kick: false,
       guard: !!(k['Numpad0'] || k['NumpadDecimal']),
       skill1: !!(k['Numpad4'] || k['Digit4']),
       skill2: !!(k['Numpad5'] || k['Digit5']),
@@ -4477,8 +4507,10 @@ class CyberStrikerApp {
                 ${isSelected ? `<span style="font-size: 9px; font-weight: 900; background: #00f3ff; color: #000; padding: 1px 4px; border-radius: 3px;">槽位 ${slotIndex + 1}</span>` : ''}
               </div>
             </div>
-            <div style="font-size: 10px; color: #94a3b8; margin-top: 1px;">
-              ${isRanged ? '🏹 遠程' : '⚔️ 近戰'} | 傷 ${sk.damage} | CD ${sk.cd}s
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 1px; display: flex; align-items: center; gap: 5px;">
+              <span>${isRanged ? '🏹 遠程' : '⚔️ 近戰'}</span>
+              <span style="color: ${sk.tierColor}; font-weight: 700;">${sk.tierName}</span>
+              <span>| 傷 ${sk.damage} | CD ${sk.cd}s</span>
             </div>
           </div>
         </div>

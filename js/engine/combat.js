@@ -117,17 +117,34 @@ export class CombatEngine {
   }
 
   _createFighter(id, x, data) {
-    const defaultSkills = [SKILLS[0], SKILLS[1], SKILLS[2], SKILLS[3], SKILLS[4]];
-    const skillList = (data.loadout && Array.isArray(data.loadout) && data.loadout.length > 0)
-      ? data.loadout.slice(0, 5).map((sid, i) => SKILLS.find(s => s.id === sid) || defaultSkills[i] || SKILLS[0])
-      : defaultSkills;
-    while (skillList.length < 5) {
-      const unused = SKILLS.find(s => !skillList.includes(s)) || SKILLS[0];
-      skillList.push(unused);
+    const isAi = !!data.isAi;
+    let skillList = [];
+
+    if (isAi) {
+      // AI 專屬 3 把隨機抽取武器 (來自對應難度武器庫)
+      const rawLoadout = (data.loadout && Array.isArray(data.loadout) && data.loadout.length > 0)
+        ? data.loadout
+        : ['SK-01', 'SK-02', 'SK-06'];
+      skillList = rawLoadout.slice(0, 3).map(sid => SKILLS.find(s => s.id === sid)).filter(Boolean);
+      while (skillList.length < 3) {
+        const fallback = SKILLS.find(s => !skillList.includes(s)) || SKILLS[0];
+        skillList.push(fallback);
+      }
+    } else {
+      // 玩家配置 (最多 5 項技能槽位)
+      const defaultSkills = [SKILLS[0], SKILLS[1], SKILLS[2], SKILLS[3], SKILLS[4]];
+      skillList = (data.loadout && Array.isArray(data.loadout) && data.loadout.length > 0)
+        ? data.loadout.slice(0, 5).map((sid, i) => SKILLS.find(s => s.id === sid) || defaultSkills[i] || SKILLS[0])
+        : defaultSkills;
+      while (skillList.length < 5) {
+        const unused = SKILLS.find(s => !skillList.includes(s)) || SKILLS[0];
+        skillList.push(unused);
+      }
     }
 
     return {
       id,
+      isAi,
       name: data.name || (id === 1 ? 'Player 1' : 'Player 2'),
       skin: data.skin,
       x,
@@ -143,12 +160,12 @@ export class CombatEngine {
       prevDownInput: false,
       maxHp: 1000,
       hp: 1000,
-      state: 'idle', // idle, walk_fwd, walk_back, jump, crouch, high_guard, low_guard, light_punch, heavy_kick, ranged_attack, skill, hit_stun, knockdown, wakeup, super_move
+      state: 'idle', // idle, walk_fwd, walk_back, jump, high_guard, light_punch, heavy_kick, ranged_attack, skill, hit_stun, knockdown, wakeup, super_move
       stateTime: 0,
       stateDuration: 0,
       currentAction: null,
       isGuarding: false,
-      guardStance: 'high', // 'high' 或 'low'
+      guardStance: 'high',
       invincibleTimer: 0,
       rangedCooldown: 0,
 
@@ -163,9 +180,9 @@ export class CombatEngine {
       burstAvailable: true,
       frostTimer: 0, // 冰凍減速計時器
 
-      // 5 大自選攻擊技能
+      // 神兵武器武裝 (AI: 3 把，玩家: 5 把)
       skills: skillList,
-      cooldowns: [0, 0, 0, 0, 0],
+      cooldowns: skillList.map(() => 0),
 
       // 連段統計
       comboCount: 0,
@@ -546,14 +563,12 @@ export class CombatEngine {
       return;
     }
 
-    // 狀態機處理
+    // 狀態機處理 (已完全移除下蹲狀態)
     switch (char.state) {
       case 'idle':
       case 'walk_fwd':
       case 'walk_back':
-      case 'crouch':
       case 'high_guard':
-      case 'low_guard':
         this._handleNormalInputs(char, opp, input);
         break;
 
@@ -607,10 +622,10 @@ export class CombatEngine {
           }
         }
 
-        // 2. 空中攻擊打擊判定與出招 (Air Punch, Kick)
+        // 2. 空中攻擊打擊判定與出招 (Air Punch, Kick - 專屬 AI 體術，僅限 AI 可施展)
         if (char.currentAction) {
           this._updateAttackAction(char, opp);
-        } else if (input && (input.punch || input.kick)) {
+        } else if (input && (input.punch || input.kick) && char.isAi) {
           char.facing = char.x < opp.x ? 1 : -1;
           this._executeAirAttack(char, opp, input.kick ? 'kick' : 'punch');
         }
@@ -698,38 +713,27 @@ export class CombatEngine {
 
     const moveX = input.x || 0;
     const moveY = input.y || 0;
-    const isCrouching = (moveY > 0.35 || char.state === 'crouch') && char.isGrounded;
 
-    // 2. 基礎近戰攻擊 (細節三段判定：站立直拳/重踢、下蹲刺拳/下段掃堂腿)
-    if (input.punch) {
-      if (isCrouching) {
-        this._executeCrouchPunch(char, opp);
-      } else {
+    // 2. 基礎近戰攻擊 (直拳/重踢) - 專為 AI 對決設計之體術，僅限 AI 可施展！
+    if (char.isAi) {
+      if (input.punch) {
         this._executeLightPunch(char, opp);
+        return;
       }
-      return;
-    }
-    if (input.kick) {
-      if (isCrouching) {
-        this._executeCrouchKick(char, opp);
-      } else {
+      if (input.kick) {
         this._executeHeavyKick(char, opp);
+        return;
       }
-      return;
     }
 
     // 3. 專屬按鍵主動召喚量子防護罩 (Dedicated Guard Key: L / Shift / 觸控盾牌)
     // 只有在按下防禦鍵時才會召喚防護罩；單純向後走位後退絕不觸發防護罩
+    // 取消下蹲：統一為標準量子防護罩，可抵禦一切常規與下段神兵衝擊
     if (input.guard && char.isGrounded) {
       const wasGuarding = char.isGuarding;
       char.isGuarding = true;
-      if (moveY > 0.4) {
-        char.state = 'low_guard';
-        char.guardStance = 'low';
-      } else {
-        char.state = 'high_guard';
-        char.guardStance = 'high';
-      }
+      char.state = 'high_guard';
+      char.guardStance = 'high';
       if (!wasGuarding) {
         soundEngine.playHit('shield_up');
       }
@@ -748,13 +752,6 @@ export class CombatEngine {
       char.stateTime = 0;
       char.isGuarding = false;
       soundEngine.playHit('dp');
-      return;
-    }
-
-    // 5. 下蹲 (無防禦按鍵時為純下蹲，不召喚防護罩)
-    if (moveY > 0.35 && char.isGrounded) {
-      char.state = 'crouch';
-      char.isGuarding = false;
       return;
     }
 
@@ -1907,28 +1904,12 @@ export class CombatEngine {
     let damage = antiCheat.filterDamage(rawDamage, action.type || 'skill');
     let isBlocked = false;
 
-    // 攻防三段核心規則：
+    // 攻防核心規則：
     // 1. 指令摔 (unblockable)：不可防禦！
     if (action.guardType === 'unblockable') {
       isBlocked = false;
     }
-    // 2. 中段破防 (stand_only)：蹲防強制破除！
-    else if (action.guardType === 'stand_only') {
-      if (opp.isGuarding && opp.guardStance === 'high') {
-        isBlocked = true;
-      } else {
-        isBlocked = false; // 蹲防被破
-      }
-    }
-    // 3. 下段突進 (crouch_only)：站防強制破除！
-    else if (action.guardType === 'crouch_only') {
-      if (opp.isGuarding && opp.guardStance === 'low') {
-        isBlocked = true;
-      } else {
-        isBlocked = false; // 站防被破
-      }
-    }
-    // 4. 常規攻擊 (all)：站防/蹲防皆可防
+    // 2. 主動量子防護罩防禦 (全面取消下蹲，所有常規/突進神兵攻擊皆可由量子防護罩格擋)
     else if (opp.isGuarding) {
       isBlocked = true;
     }
