@@ -11877,6 +11877,8 @@
         // 技能即時無冷卻
       };
       this.enableHaptics = true;
+      this.onKOCallback = null;
+      this.onDamageCallback = null;
       antiCheat.setWarningCallback((type, details) => {
         this.floatingTexts.push({
           x: this.arenaWidth / 2,
@@ -12070,6 +12072,9 @@
           this.triggerScreenShake(16);
           announcerEngine.announceKO();
           this._triggerMatchEndStates();
+          if (typeof this.onKOCallback === "function") {
+            this.onKOCallback(0, this.p1.hp, this.p2.hp);
+          }
         } else if (this.p1.hp <= 0) {
           this.isOver = true;
           this.winner = 2;
@@ -12078,6 +12083,9 @@
           this.triggerScreenShake(16);
           announcerEngine.announceKO();
           this._triggerMatchEndStates();
+          if (typeof this.onKOCallback === "function") {
+            this.onKOCallback(2, this.p1.hp, this.p2.hp);
+          }
         } else if (this.p2.hp <= 0) {
           this.isOver = true;
           this.winner = 1;
@@ -12086,8 +12094,56 @@
           this.triggerScreenShake(16);
           announcerEngine.announceKO();
           this._triggerMatchEndStates();
+          if (typeof this.onKOCallback === "function") {
+            this.onKOCallback(1, this.p1.hp, this.p2.hp);
+          }
         }
       }
+    }
+    forceKO(winner, p1Hp = null, p2Hp = null) {
+      if (this.isOver) return;
+      this.isOver = true;
+      this.winner = winner;
+      if (this.p1 && this.p2) {
+        this.p1.isTakingLegitHit = true;
+        this.p2.isTakingLegitHit = true;
+        if (winner === 1) {
+          this.p1.hp = p1Hp !== null ? Math.max(1, p1Hp) : Math.max(1, this.p1.hp);
+          this.p2.hp = 0;
+          this.p1.state = "victory";
+          this.p1.stateTime = 0;
+          this.p1.vx = 0;
+          this.p1.vy = 0;
+          this.p2.state = "defeat";
+          this.p2.stateTime = 0;
+          this.p2.vx = 0;
+          this.p2.vy = 0;
+        } else if (winner === 2) {
+          this.p2.hp = p2Hp !== null ? Math.max(1, p2Hp) : Math.max(1, this.p2.hp);
+          this.p1.hp = 0;
+          this.p2.state = "victory";
+          this.p2.stateTime = 0;
+          this.p2.vx = 0;
+          this.p2.vy = 0;
+          this.p1.state = "defeat";
+          this.p1.stateTime = 0;
+          this.p1.vx = 0;
+          this.p1.vy = 0;
+        } else {
+          this.p1.hp = 0;
+          this.p2.hp = 0;
+          this.p1.state = "defeat";
+          this.p2.state = "defeat";
+        }
+        this.p1.isTakingLegitHit = false;
+        this.p2.isTakingLegitHit = false;
+      }
+      this.slowMoTimer = 45;
+      this.hitStop = 18;
+      this.triggerScreenShake(16);
+      announcerEngine.announceKO();
+      soundEngine.playHit("ko");
+      this._triggerMatchEndStates();
     }
     _triggerMatchEndStates() {
       const targetX = this.winner === 1 ? this.p2.x : this.winner === 2 ? this.p1.x : (this.p1.x + this.p2.x) / 2;
@@ -12575,6 +12631,9 @@
             this.triggerScreenShake(16);
             announcerEngine.announceKO();
             this._triggerMatchEndStates();
+            if (typeof this.onKOCallback === "function") {
+              this.onKOCallback(this.winner, this.p1.hp, this.p2.hp);
+            }
           }
         }
       }
@@ -13478,6 +13537,9 @@
         opp.isTakingLegitHit = true;
         opp.hp = Math.max(0, opp.hp - damage);
         opp.isTakingLegitHit = false;
+        if (typeof this.onDamageCallback === "function") {
+          this.onDamageCallback(opp.id, damage, opp.hp);
+        }
         soundEngine.playHit("guard");
         this._triggerHaptic(25);
         opp.vx = char.facing * 2.6;
@@ -13518,6 +13580,9 @@
       opp.isTakingLegitHit = true;
       opp.hp = Math.max(0, opp.hp - damage);
       opp.isTakingLegitHit = false;
+      if (typeof this.onDamageCallback === "function") {
+        this.onDamageCallback(opp.id, damage, opp.hp);
+      }
       char.superMeter = Math.min(char.superMax, (char.superMeter || 0) + 45);
       opp.superMeter = Math.min(opp.superMax, (opp.superMeter || 0) + 60);
       opp.burstMeter = Math.min(opp.burstMax, opp.burstMeter + Math.round(damage * 0.9));
@@ -13623,7 +13688,12 @@
       attacker.state = "hit_stun";
       attacker.stateTime = 0;
       attacker.stateDuration = 35;
+      attacker.isTakingLegitHit = true;
       attacker.hp = Math.max(0, attacker.hp - 190);
+      attacker.isTakingLegitHit = false;
+      if (typeof this.onDamageCallback === "function") {
+        this.onDamageCallback(attacker.id, 190, attacker.hp);
+      }
       this.hitSparks.push({
         type: "parry",
         x: (parryChar.x + attacker.x) / 2,
@@ -16205,6 +16275,31 @@
       this._lastFrameTime = 0;
       this._timeAccumulator = 0;
       combatEngine.initMatch(p1Data, p2Data, this.matchMode === "training");
+      if (this.matchMode === "p2p") {
+        this._p2pSyncTimer = 0;
+        combatEngine.onKOCallback = (winner, p1Hp, p2Hp) => {
+          if (p2pNetwork.isConnected) {
+            p2pNetwork.send({
+              type: "battle_ko",
+              winner,
+              p1Hp: Math.round(p1Hp),
+              p2Hp: Math.round(p2Hp)
+            });
+          }
+        };
+        combatEngine.onDamageCallback = (targetId, damage, newHp) => {
+          if (p2pNetwork.isConnected) {
+            p2pNetwork.send({
+              type: "battle_damage",
+              target: targetId,
+              damage,
+              p1Hp: Math.round(combatEngine.p1.hp),
+              p2Hp: Math.round(combatEngine.p2.hp),
+              isLethal: newHp <= 0
+            });
+          }
+        };
+      }
       if (this.matchMode === "arcade" && this.arcadeStage > 1) {
         combatEngine.p1.hp = Math.min(combatEngine.p1.maxHp, 650 + 350);
       }
@@ -16348,6 +16443,7 @@
           inputP1 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
           inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
         } else if (this.matchMode === "p2p") {
+          this._p2pSyncTimer = (this._p2pSyncTimer || 0) + 1;
           if (this._isSimulatedOpponent) {
             inputP1 = this._gatherInputsP1();
             inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
@@ -16356,12 +16452,51 @@
             inputP2 = this.networkP2Input || { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
             if (p2pNetwork.isConnected) {
               p2pNetwork.send({ type: "battle_input", p1: inputP1 });
+              if (this._p2pSyncTimer % 2 === 0) {
+                p2pNetwork.send({
+                  type: "battle_sync",
+                  p1: {
+                    hp: Math.round(combatEngine.p1.hp),
+                    x: Math.round(combatEngine.p1.x),
+                    y: Math.round(combatEngine.p1.y),
+                    vx: Math.round(combatEngine.p1.vx * 10) / 10,
+                    vy: Math.round(combatEngine.p1.vy * 10) / 10,
+                    state: combatEngine.p1.state,
+                    facing: combatEngine.p1.facing,
+                    burstMeter: Math.round(combatEngine.p1.burstMeter),
+                    superMeter: Math.round(combatEngine.p1.superMeter)
+                  },
+                  p2: {
+                    hp: Math.round(combatEngine.p2.hp),
+                    x: Math.round(combatEngine.p2.x),
+                    y: Math.round(combatEngine.p2.y),
+                    vx: Math.round(combatEngine.p2.vx * 10) / 10,
+                    vy: Math.round(combatEngine.p2.vy * 10) / 10,
+                    state: combatEngine.p2.state,
+                    facing: combatEngine.p2.facing,
+                    burstMeter: Math.round(combatEngine.p2.burstMeter),
+                    superMeter: Math.round(combatEngine.p2.superMeter)
+                  },
+                  roundTime: combatEngine.roundTime,
+                  isOver: combatEngine.isOver,
+                  winner: combatEngine.winner
+                });
+              }
             }
           } else {
             inputP2 = this._gatherInputsP1();
             inputP1 = this.networkP1Input || { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
             if (p2pNetwork.isConnected) {
               p2pNetwork.send({ type: "battle_input", p2: inputP2 });
+              if (this._p2pSyncTimer % 3 === 0) {
+                p2pNetwork.send({
+                  type: "guest_sync",
+                  hp: Math.round(combatEngine.p2.hp),
+                  x: Math.round(combatEngine.p2.x),
+                  y: Math.round(combatEngine.p2.y),
+                  burstMeter: Math.round(combatEngine.p2.burstMeter)
+                });
+              }
             }
           }
         } else if (this.matchMode === "local_2p") {
@@ -17582,9 +17717,10 @@
       const isP2Win = combatEngine.winner === 2;
       if (!isP1Win && !isP2Win) return;
       const winner = isP1Win ? combatEngine.p1 : combatEngine.p2;
-      const winTitle = isP1Win ? "VICTORY" : "K.O. \u6230\u9B25\u7D50\u675F";
-      const subTitle = isP1Win ? "\u2605 \u6230\u9B25\u52DD\u5229\uFF01\u6F02\u4EAE\u64CA\u5012\u5C0D\u624B\u596A\u4E0B\u51A0\u8ECD \u2605" : `${winner.name} \u8D0F\u5F97\u4E86\u672C\u5834\u5C0D\u6C7A\uFF01`;
-      const themeColor = isP1Win ? "#ffd700" : "#ff007f";
+      const isLocalWinner = this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? isP2Win : isP1Win : isP1Win;
+      const winTitle = isLocalWinner ? "VICTORY" : "K.O. \u6230\u9B25\u7D50\u675F";
+      const subTitle = isLocalWinner ? "\u2605 \u6230\u9B25\u52DD\u5229\uFF01\u6F02\u4EAE\u64CA\u5012\u5C0D\u624B\u596A\u4E0B\u51A0\u8ECD \u2605" : `${winner.name} \u8D0F\u5F97\u4E86\u672C\u5834\u5C0D\u6C7A\uFF01`;
+      const themeColor = isLocalWinner ? "#ffd700" : "#ff007f";
       ctx.save();
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -17609,11 +17745,11 @@
         ctx.fillRect(bx, by, bannerW, bannerH);
         ctx.strokeRect(bx, by, bannerW, bannerH);
       }
-      ctx.font = isP1Win ? '900 44px "Orbitron", sans-serif' : '900 32px "Orbitron", "Noto Sans TC", sans-serif';
-      ctx.fillStyle = "#ffd700";
-      ctx.shadowColor = "rgba(255, 215, 0, 0.95)";
+      ctx.font = isLocalWinner ? '900 44px "Orbitron", sans-serif' : '900 32px "Orbitron", "Noto Sans TC", sans-serif';
+      ctx.fillStyle = themeColor;
+      ctx.shadowColor = isLocalWinner ? "rgba(255, 215, 0, 0.95)" : "rgba(255, 0, 127, 0.95)";
       ctx.shadowBlur = 22;
-      ctx.fillText(winTitle, w / 2, cy - (isP1Win ? 13 : 10));
+      ctx.fillText(winTitle, w / 2, cy - (isLocalWinner ? 13 : 10));
       ctx.font = '700 13px "Noto Sans TC", sans-serif';
       ctx.fillStyle = "#ffffff";
       ctx.shadowBlur = 6;
@@ -19335,6 +19471,85 @@
       } else if (data.type === "battle_input") {
         if (data.p1) this.networkP1Input = data.p1;
         if (data.p2) this.networkP2Input = data.p2;
+      } else if (data.type === "battle_sync") {
+        if (this.multiplayerRole === "guest" && combatEngine.p1 && combatEngine.p2) {
+          combatEngine.p1.isTakingLegitHit = true;
+          combatEngine.p2.isTakingLegitHit = true;
+          if (typeof data.p1?.hp === "number") combatEngine.p1.hp = data.p1.hp;
+          if (typeof data.p2?.hp === "number") combatEngine.p2.hp = data.p2.hp;
+          combatEngine.p1.isTakingLegitHit = false;
+          combatEngine.p2.isTakingLegitHit = false;
+          if (typeof data.p1?.burstMeter === "number") combatEngine.p1.burstMeter = data.p1.burstMeter;
+          if (typeof data.p2?.burstMeter === "number") combatEngine.p2.burstMeter = data.p2.burstMeter;
+          if (typeof data.p1?.superMeter === "number") combatEngine.p1.superMeter = data.p1.superMeter;
+          if (typeof data.p2?.superMeter === "number") combatEngine.p2.superMeter = data.p2.superMeter;
+          if (data.p1) {
+            const dx1 = data.p1.x - combatEngine.p1.x;
+            const dy1 = data.p1.y - combatEngine.p1.y;
+            if (Math.abs(dx1) > 60 || Math.abs(dy1) > 60) {
+              combatEngine.p1.x = data.p1.x;
+              combatEngine.p1.y = data.p1.y;
+            } else {
+              combatEngine.p1.x += dx1 * 0.45;
+              combatEngine.p1.y += dy1 * 0.45;
+            }
+            combatEngine.p1.facing = data.p1.facing;
+            if (["knockdown", "hit_stun", "victory", "defeat"].includes(data.p1.state)) {
+              combatEngine.p1.state = data.p1.state;
+            }
+          }
+          if (data.p2) {
+            const dx2 = data.p2.x - combatEngine.p2.x;
+            if (Math.abs(dx2) > 90) {
+              combatEngine.p2.x += dx2 * 0.35;
+            }
+          }
+          if (typeof data.roundTime === "number") {
+            combatEngine.roundTime = data.roundTime;
+          }
+          if ((data.isOver || data.p1?.hp <= 0 || data.p2?.hp <= 0) && !combatEngine.isOver) {
+            const w = typeof data.winner === "number" ? data.winner : data.p1?.hp <= 0 ? 2 : 1;
+            this._applyRemoteKO(w, data.p1?.hp, data.p2?.hp);
+          }
+        }
+      } else if (data.type === "guest_sync") {
+        if (this.multiplayerRole === "host" && combatEngine.p2) {
+          if (data.hp <= 0 && !combatEngine.isOver) {
+            this._applyRemoteKO(1, combatEngine.p1.hp, 0);
+            if (p2pNetwork.isConnected) {
+              p2pNetwork.send({ type: "battle_ko", winner: 1, p1Hp: combatEngine.p1.hp, p2Hp: 0 });
+            }
+          }
+        }
+      } else if (data.type === "battle_damage") {
+        if (combatEngine.p1 && combatEngine.p2) {
+          combatEngine.p1.isTakingLegitHit = true;
+          combatEngine.p2.isTakingLegitHit = true;
+          if (typeof data.p1Hp === "number") combatEngine.p1.hp = Math.max(0, data.p1Hp);
+          if (typeof data.p2Hp === "number") combatEngine.p2.hp = Math.max(0, data.p2Hp);
+          combatEngine.p1.isTakingLegitHit = false;
+          combatEngine.p2.isTakingLegitHit = false;
+          if ((data.isLethal || combatEngine.p1.hp <= 0 || combatEngine.p2.hp <= 0) && !combatEngine.isOver) {
+            const w = combatEngine.p1.hp <= 0 ? 2 : 1;
+            this._applyRemoteKO(w, combatEngine.p1.hp, combatEngine.p2.hp);
+          }
+        }
+      } else if (data.type === "battle_ko") {
+        this._applyRemoteKO(data.winner, data.p1Hp, data.p2Hp);
+      }
+    }
+    _applyRemoteKO(winner, p1Hp = null, p2Hp = null) {
+      if (!this.isFighting || combatEngine.isOver) return;
+      combatEngine.forceKO(winner, p1Hp, p2Hp);
+      const isLocalWinner = this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? winner === 2 : winner === 1 : winner === 1;
+      if (!this.matchEndTimer) {
+        this.matchEndTimer = 1;
+        if (isLocalWinner) {
+          combatEngine.floatingTexts = [];
+          announcerEngine.activeBanners = [];
+          const vOverlay = document.getElementById("battleVictoryOverlay");
+          if (vOverlay) vOverlay.style.display = "block";
+        }
       }
     }
   };

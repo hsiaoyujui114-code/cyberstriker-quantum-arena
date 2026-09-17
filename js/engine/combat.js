@@ -45,6 +45,10 @@ export class CombatEngine {
     // 震動回饋開關
     this.enableHaptics = true;
 
+    // 多人連線即時對決狀態回調
+    this.onKOCallback = null;
+    this.onDamageCallback = null;
+
     // 量子防作弊系統即時警報掛載
     antiCheat.setWarningCallback((type, details) => {
       this.floatingTexts.push({
@@ -278,6 +282,9 @@ export class CombatEngine {
         this.triggerScreenShake(16);
         announcerEngine.announceKO();
         this._triggerMatchEndStates();
+        if (typeof this.onKOCallback === 'function') {
+          this.onKOCallback(0, this.p1.hp, this.p2.hp);
+        }
       } else if (this.p1.hp <= 0) {
         this.isOver = true;
         this.winner = 2;
@@ -286,6 +293,9 @@ export class CombatEngine {
         this.triggerScreenShake(16);
         announcerEngine.announceKO();
         this._triggerMatchEndStates();
+        if (typeof this.onKOCallback === 'function') {
+          this.onKOCallback(2, this.p1.hp, this.p2.hp);
+        }
       } else if (this.p2.hp <= 0) {
         this.isOver = true;
         this.winner = 1;
@@ -294,8 +304,61 @@ export class CombatEngine {
         this.triggerScreenShake(16);
         announcerEngine.announceKO();
         this._triggerMatchEndStates();
+        if (typeof this.onKOCallback === 'function') {
+          this.onKOCallback(1, this.p1.hp, this.p2.hp);
+        }
       }
     }
+  }
+
+  forceKO(winner, p1Hp = null, p2Hp = null) {
+    if (this.isOver) return;
+    this.isOver = true;
+    this.winner = winner;
+
+    if (this.p1 && this.p2) {
+      this.p1.isTakingLegitHit = true;
+      this.p2.isTakingLegitHit = true;
+
+      if (winner === 1) {
+        this.p1.hp = p1Hp !== null ? Math.max(1, p1Hp) : Math.max(1, this.p1.hp);
+        this.p2.hp = 0;
+        this.p1.state = 'victory';
+        this.p1.stateTime = 0;
+        this.p1.vx = 0;
+        this.p1.vy = 0;
+        this.p2.state = 'defeat';
+        this.p2.stateTime = 0;
+        this.p2.vx = 0;
+        this.p2.vy = 0;
+      } else if (winner === 2) {
+        this.p2.hp = p2Hp !== null ? Math.max(1, p2Hp) : Math.max(1, this.p2.hp);
+        this.p1.hp = 0;
+        this.p2.state = 'victory';
+        this.p2.stateTime = 0;
+        this.p2.vx = 0;
+        this.p2.vy = 0;
+        this.p1.state = 'defeat';
+        this.p1.stateTime = 0;
+        this.p1.vx = 0;
+        this.p1.vy = 0;
+      } else {
+        this.p1.hp = 0;
+        this.p2.hp = 0;
+        this.p1.state = 'defeat';
+        this.p2.state = 'defeat';
+      }
+
+      this.p1.isTakingLegitHit = false;
+      this.p2.isTakingLegitHit = false;
+    }
+
+    this.slowMoTimer = 45;
+    this.hitStop = 18;
+    this.triggerScreenShake(16);
+    announcerEngine.announceKO();
+    soundEngine.playHit('ko');
+    this._triggerMatchEndStates();
   }
 
   _triggerMatchEndStates() {
@@ -870,6 +933,9 @@ export class CombatEngine {
           this.triggerScreenShake(16);
           announcerEngine.announceKO();
           this._triggerMatchEndStates();
+          if (typeof this.onKOCallback === 'function') {
+            this.onKOCallback(this.winner, this.p1.hp, this.p2.hp);
+          }
         }
       }
     }
@@ -1887,6 +1953,9 @@ export class CombatEngine {
       opp.isTakingLegitHit = true;
       opp.hp = Math.max(0, opp.hp - damage);
       opp.isTakingLegitHit = false;
+      if (typeof this.onDamageCallback === 'function') {
+        this.onDamageCallback(opp.id, damage, opp.hp);
+      }
       soundEngine.playHit('guard');
       this._triggerHaptic(25);
 
@@ -1936,6 +2005,9 @@ export class CombatEngine {
     opp.isTakingLegitHit = true;
     opp.hp = Math.max(0, opp.hp - damage);
     opp.isTakingLegitHit = false;
+    if (typeof this.onDamageCallback === 'function') {
+      this.onDamageCallback(opp.id, damage, opp.hp);
+    }
 
     // 充能雙方之終極必殺計量槽 (Super Gauge) 與受擊方的量子爆發計量槽
     char.superMeter = Math.min(char.superMax, (char.superMeter || 0) + 45);
@@ -2062,7 +2134,12 @@ export class CombatEngine {
     attacker.state = 'hit_stun';
     attacker.stateTime = 0;
     attacker.stateDuration = 35; // 擊暈 35 幀
+    attacker.isTakingLegitHit = true;
     attacker.hp = Math.max(0, attacker.hp - 190);
+    attacker.isTakingLegitHit = false;
+    if (typeof this.onDamageCallback === 'function') {
+      this.onDamageCallback(attacker.id, 190, attacker.hp);
+    }
 
     // 架招翡翠爆裂火花
     this.hitSparks.push({

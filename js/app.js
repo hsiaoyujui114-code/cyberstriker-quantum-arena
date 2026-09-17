@@ -1200,6 +1200,34 @@ class CyberStrikerApp {
 
     combatEngine.initMatch(p1Data, p2Data, this.matchMode === 'training');
 
+    // 多人連線即時 K.O. 與傷害廣播回調
+    if (this.matchMode === 'p2p') {
+      this._p2pSyncTimer = 0;
+      combatEngine.onKOCallback = (winner, p1Hp, p2Hp) => {
+        if (p2pNetwork.isConnected) {
+          p2pNetwork.send({
+            type: 'battle_ko',
+            winner: winner,
+            p1Hp: Math.round(p1Hp),
+            p2Hp: Math.round(p2Hp)
+          });
+        }
+      };
+
+      combatEngine.onDamageCallback = (targetId, damage, newHp) => {
+        if (p2pNetwork.isConnected) {
+          p2pNetwork.send({
+            type: 'battle_damage',
+            target: targetId,
+            damage: damage,
+            p1Hp: Math.round(combatEngine.p1.hp),
+            p2Hp: Math.round(combatEngine.p2.hp),
+            isLethal: newHp <= 0
+          });
+        }
+      };
+    }
+
     // 街機闖關第 2~5 關生命值恢復機制 (+350 HP 獎勵)
     if (this.matchMode === 'arcade' && this.arcadeStage > 1) {
       combatEngine.p1.hp = Math.min(combatEngine.p1.maxHp, 650 + 350);
@@ -1364,6 +1392,8 @@ class CyberStrikerApp {
         inputP1 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
         inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
       } else if (this.matchMode === 'p2p') {
+        this._p2pSyncTimer = (this._p2pSyncTimer || 0) + 1;
+
         if (this._isSimulatedOpponent) {
           inputP1 = this._gatherInputsP1();
           inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
@@ -1372,6 +1402,38 @@ class CyberStrikerApp {
           inputP2 = this.networkP2Input || { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
           if (p2pNetwork.isConnected) {
             p2pNetwork.send({ type: 'battle_input', p1: inputP1 });
+
+            // 房主每 2 幀發送一次權威全域戰況同步包 (HP、坐標、動態狀態、勝負)
+            if (this._p2pSyncTimer % 2 === 0) {
+              p2pNetwork.send({
+                type: 'battle_sync',
+                p1: {
+                  hp: Math.round(combatEngine.p1.hp),
+                  x: Math.round(combatEngine.p1.x),
+                  y: Math.round(combatEngine.p1.y),
+                  vx: Math.round(combatEngine.p1.vx * 10) / 10,
+                  vy: Math.round(combatEngine.p1.vy * 10) / 10,
+                  state: combatEngine.p1.state,
+                  facing: combatEngine.p1.facing,
+                  burstMeter: Math.round(combatEngine.p1.burstMeter),
+                  superMeter: Math.round(combatEngine.p1.superMeter)
+                },
+                p2: {
+                  hp: Math.round(combatEngine.p2.hp),
+                  x: Math.round(combatEngine.p2.x),
+                  y: Math.round(combatEngine.p2.y),
+                  vx: Math.round(combatEngine.p2.vx * 10) / 10,
+                  vy: Math.round(combatEngine.p2.vy * 10) / 10,
+                  state: combatEngine.p2.state,
+                  facing: combatEngine.p2.facing,
+                  burstMeter: Math.round(combatEngine.p2.burstMeter),
+                  superMeter: Math.round(combatEngine.p2.superMeter)
+                },
+                roundTime: combatEngine.roundTime,
+                isOver: combatEngine.isOver,
+                winner: combatEngine.winner
+              });
+            }
           }
         } else {
           // guest
@@ -1379,6 +1441,17 @@ class CyberStrikerApp {
           inputP1 = this.networkP1Input || { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
           if (p2pNetwork.isConnected) {
             p2pNetwork.send({ type: 'battle_input', p2: inputP2 });
+
+            // 挑戰者每 3 幀回傳本地血量與位置意向
+            if (this._p2pSyncTimer % 3 === 0) {
+              p2pNetwork.send({
+                type: 'guest_sync',
+                hp: Math.round(combatEngine.p2.hp),
+                x: Math.round(combatEngine.p2.x),
+                y: Math.round(combatEngine.p2.y),
+                burstMeter: Math.round(combatEngine.p2.burstMeter)
+              });
+            }
           }
         }
       } else if (this.matchMode === 'local_2p') {
@@ -2922,9 +2995,12 @@ class CyberStrikerApp {
     if (!isP1Win && !isP2Win) return;
 
     const winner = isP1Win ? combatEngine.p1 : combatEngine.p2;
-    const winTitle = isP1Win ? 'VICTORY' : 'K.O. 戰鬥結束';
-    const subTitle = isP1Win ? '★ 戰鬥勝利！漂亮擊倒對手奪下冠軍 ★' : `${winner.name} 贏得了本場對決！`;
-    const themeColor = isP1Win ? '#ffd700' : '#ff007f';
+    const isLocalWinner = this.matchMode === 'p2p'
+      ? (this.multiplayerRole === 'guest' ? isP2Win : isP1Win)
+      : isP1Win;
+    const winTitle = isLocalWinner ? 'VICTORY' : 'K.O. 戰鬥結束';
+    const subTitle = isLocalWinner ? '★ 戰鬥勝利！漂亮擊倒對手奪下冠軍 ★' : `${winner.name} 贏得了本場對決！`;
+    const themeColor = isLocalWinner ? '#ffd700' : '#ff007f';
 
     ctx.save();
     ctx.textAlign = 'center';
@@ -2958,11 +3034,11 @@ class CyberStrikerApp {
     }
 
     // 主標題文字 (醒目大字 VICTORY，純金黃色)
-    ctx.font = isP1Win ? '900 44px "Orbitron", sans-serif' : '900 32px "Orbitron", "Noto Sans TC", sans-serif';
-    ctx.fillStyle = '#ffd700';
-    ctx.shadowColor = 'rgba(255, 215, 0, 0.95)';
+    ctx.font = isLocalWinner ? '900 44px "Orbitron", sans-serif' : '900 32px "Orbitron", "Noto Sans TC", sans-serif';
+    ctx.fillStyle = themeColor;
+    ctx.shadowColor = isLocalWinner ? 'rgba(255, 215, 0, 0.95)' : 'rgba(255, 0, 127, 0.95)';
     ctx.shadowBlur = 22;
-    ctx.fillText(winTitle, w / 2, cy - (isP1Win ? 13 : 10));
+    ctx.fillText(winTitle, w / 2, cy - (isLocalWinner ? 13 : 10));
 
     // 副標題文字
     ctx.font = '700 13px "Noto Sans TC", sans-serif';
@@ -4940,6 +5016,105 @@ class CyberStrikerApp {
     } else if (data.type === 'battle_input') {
       if (data.p1) this.networkP1Input = data.p1;
       if (data.p2) this.networkP2Input = data.p2;
+    } else if (data.type === 'battle_sync') {
+      if (this.multiplayerRole === 'guest' && combatEngine.p1 && combatEngine.p2) {
+        // 1. 同步血量 (強制合法命中繞過影子記憶體防竄改)
+        combatEngine.p1.isTakingLegitHit = true;
+        combatEngine.p2.isTakingLegitHit = true;
+        if (typeof data.p1?.hp === 'number') combatEngine.p1.hp = data.p1.hp;
+        if (typeof data.p2?.hp === 'number') combatEngine.p2.hp = data.p2.hp;
+        combatEngine.p1.isTakingLegitHit = false;
+        combatEngine.p2.isTakingLegitHit = false;
+
+        // 2. 同步計量槽
+        if (typeof data.p1?.burstMeter === 'number') combatEngine.p1.burstMeter = data.p1.burstMeter;
+        if (typeof data.p2?.burstMeter === 'number') combatEngine.p2.burstMeter = data.p2.burstMeter;
+        if (typeof data.p1?.superMeter === 'number') combatEngine.p1.superMeter = data.p1.superMeter;
+        if (typeof data.p2?.superMeter === 'number') combatEngine.p2.superMeter = data.p2.superMeter;
+
+        // 3. 房主 (1P) 坐標與面向平滑校正
+        if (data.p1) {
+          const dx1 = data.p1.x - combatEngine.p1.x;
+          const dy1 = data.p1.y - combatEngine.p1.y;
+          if (Math.abs(dx1) > 60 || Math.abs(dy1) > 60) {
+            combatEngine.p1.x = data.p1.x;
+            combatEngine.p1.y = data.p1.y;
+          } else {
+            combatEngine.p1.x += dx1 * 0.45;
+            combatEngine.p1.y += dy1 * 0.45;
+          }
+          combatEngine.p1.facing = data.p1.facing;
+          if (['knockdown', 'hit_stun', 'victory', 'defeat'].includes(data.p1.state)) {
+            combatEngine.p1.state = data.p1.state;
+          }
+        }
+
+        // 4. 客端 (2P) 坐標防漂移校正 (若與房主權威判定相差超過 90px，平滑收斂)
+        if (data.p2) {
+          const dx2 = data.p2.x - combatEngine.p2.x;
+          if (Math.abs(dx2) > 90) {
+            combatEngine.p2.x += dx2 * 0.35;
+          }
+        }
+
+        // 5. 回合時間同步
+        if (typeof data.roundTime === 'number') {
+          combatEngine.roundTime = data.roundTime;
+        }
+
+        // 6. 權威勝負同步：若房主判定 K.O. 或任一方血量歸零，無延遲同步觸發
+        if ((data.isOver || data.p1?.hp <= 0 || data.p2?.hp <= 0) && !combatEngine.isOver) {
+          const w = typeof data.winner === 'number' ? data.winner : (data.p1?.hp <= 0 ? 2 : 1);
+          this._applyRemoteKO(w, data.p1?.hp, data.p2?.hp);
+        }
+      }
+    } else if (data.type === 'guest_sync') {
+      if (this.multiplayerRole === 'host' && combatEngine.p2) {
+        // 如果客端回報血量已歸零且房主尚未觸發 K.O.
+        if (data.hp <= 0 && !combatEngine.isOver) {
+          this._applyRemoteKO(1, combatEngine.p1.hp, 0);
+          if (p2pNetwork.isConnected) {
+            p2pNetwork.send({ type: 'battle_ko', winner: 1, p1Hp: combatEngine.p1.hp, p2Hp: 0 });
+          }
+        }
+      }
+    } else if (data.type === 'battle_damage') {
+      if (combatEngine.p1 && combatEngine.p2) {
+        combatEngine.p1.isTakingLegitHit = true;
+        combatEngine.p2.isTakingLegitHit = true;
+        if (typeof data.p1Hp === 'number') combatEngine.p1.hp = Math.max(0, data.p1Hp);
+        if (typeof data.p2Hp === 'number') combatEngine.p2.hp = Math.max(0, data.p2Hp);
+        combatEngine.p1.isTakingLegitHit = false;
+        combatEngine.p2.isTakingLegitHit = false;
+
+        if ((data.isLethal || combatEngine.p1.hp <= 0 || combatEngine.p2.hp <= 0) && !combatEngine.isOver) {
+          const w = combatEngine.p1.hp <= 0 ? 2 : 1;
+          this._applyRemoteKO(w, combatEngine.p1.hp, combatEngine.p2.hp);
+        }
+      }
+    } else if (data.type === 'battle_ko') {
+      this._applyRemoteKO(data.winner, data.p1Hp, data.p2Hp);
+    }
+  }
+
+  _applyRemoteKO(winner, p1Hp = null, p2Hp = null) {
+    if (!this.isFighting || combatEngine.isOver) return;
+
+    // 強制雙方畫面同步觸發 K.O. 狀態 (倒地、慢動作、VICTORY橫幅、K.O.播報)
+    combatEngine.forceKO(winner, p1Hp, p2Hp);
+
+    const isLocalWinner = this.matchMode === 'p2p'
+      ? (this.multiplayerRole === 'guest' ? winner === 2 : winner === 1)
+      : winner === 1;
+
+    if (!this.matchEndTimer) {
+      this.matchEndTimer = 1;
+      if (isLocalWinner) {
+        combatEngine.floatingTexts = [];
+        announcerEngine.activeBanners = [];
+        const vOverlay = document.getElementById('battleVictoryOverlay');
+        if (vOverlay) vOverlay.style.display = 'block';
+      }
     }
   }
 }
