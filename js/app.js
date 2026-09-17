@@ -39,6 +39,21 @@ class CyberStrikerApp {
     this.loadoutTimer = 15;
     this.loadoutInterval = null;
 
+    // 雙人連線房間 (P2P Room) 狀態
+    this.multiplayerRole = null; // 'host' (1P) 或 'guest' (2P)
+    this.multiplayerRoomCode = null;
+    this.multiplayerOpponentConnected = false;
+    this.multiplayerMyReady = false;
+    this.multiplayerOpponentReady = false;
+    this.multiplayerOpponentData = null;
+    this.multiplayerRoomFilter = 'all';
+    this.isCountdownActive = false;
+    this.countdownTimerId = null;
+    this.networkP1Input = null;
+    this.networkP2Input = null;
+    this._isSimulatedOpponent = false;
+    this._p2pMatchData = null;
+
     // 自訂技能槽位按鍵綁定 (預設 U, I, O, Y, H)
     let savedKeys = null;
     try {
@@ -1106,7 +1121,7 @@ class CyberStrikerApp {
     const victoryOverlay = document.getElementById('battleVictoryOverlay');
     if (victoryOverlay) victoryOverlay.style.display = 'none';
 
-    const p1Skin = this.getEquippedSkin();
+    let p1Skin = this.getEquippedSkin();
     let p2Skin = SKINS[1]; // 預設對手
     let p2Name = `AI (${this.aiDifficulty.toUpperCase()})`;
     let p2Diff = this.aiDifficulty;
@@ -1148,6 +1163,11 @@ class CyberStrikerApp {
       }
       this.aiDifficulty = p2Diff;
       aiController.setDifficulty(p2Diff);
+    } else if (this.matchMode === 'p2p' && this._p2pMatchData) {
+      if (arcadeBadge) arcadeBadge.style.display = 'none';
+      p1Skin = this._p2pMatchData.p1Data.skin;
+      p2Skin = this._p2pMatchData.p2Data.skin;
+      p2Name = this._p2pMatchData.p2Data.name;
     } else {
       if (arcadeBadge) arcadeBadge.style.display = 'none';
       if (this.aiDifficulty === 'hard') p2Skin = SKINS[2];
@@ -1156,17 +1176,21 @@ class CyberStrikerApp {
       else if (this.matchMode === 'local_2p') p2Name = 'Player 2';
     }
 
-    const p1Data = {
-      name: saveSystem.currentUser ? saveSystem.currentUser.nickname : 'Player 1',
-      skin: p1Skin,
-      loadout: this.loadoutSelection
-    };
+    const p1Data = (this.matchMode === 'p2p' && this._p2pMatchData)
+      ? this._p2pMatchData.p1Data
+      : {
+          name: saveSystem.currentUser ? saveSystem.currentUser.nickname : 'Player 1',
+          skin: p1Skin,
+          loadout: this.loadoutSelection
+        };
 
-    const p2Data = {
-      name: p2Name,
-      skin: p2Skin,
-      loadout: ['SK-01', 'SK-02', 'SK-06', 'SK-16', 'SK-17']
-    };
+    const p2Data = (this.matchMode === 'p2p' && this._p2pMatchData)
+      ? this._p2pMatchData.p2Data
+      : {
+          name: p2Name,
+          skin: p2Skin,
+          loadout: ['SK-01', 'SK-02', 'SK-06', 'SK-16', 'SK-17']
+        };
 
     // 戰鬥前確保畫布尺寸與擂台邊界自適應當前螢幕
     this._resizeCanvas();
@@ -1195,8 +1219,16 @@ class CyberStrikerApp {
     if (p1NameEl) p1NameEl.textContent = p1Data.name;
     if (p2NameEl) p2NameEl.textContent = p2Data.name;
     if (p2RoleTag) {
-      const p2Text = this.matchMode === 'local_2p' ? '2P 對手' : (this.matchMode === 'training' ? '訓練木樁' : (this.matchMode === 'arcade' ? `街機對手 (STAGE ${this.arcadeStage})` : '電腦對手 / AI'));
-      p2RoleTag.innerHTML = `<i class="fa-solid fa-robot"></i> ${p2Text}`;
+      const p2Text = this.matchMode === 'local_2p'
+        ? '2P 對手'
+        : (this.matchMode === 'p2p'
+          ? (this.multiplayerRole === 'host' ? `連線挑戰者 (${p2Data.name})` : `連線房主 (${p1Data.name})`)
+          : (this.matchMode === 'training'
+            ? '訓練木樁'
+            : (this.matchMode === 'arcade'
+              ? `街機對手 (STAGE ${this.arcadeStage})`
+              : '電腦對手 / AI')));
+      p2RoleTag.innerHTML = `<i class="fa-solid fa-gamepad"></i> ${p2Text}`;
     }
     this._updateSkillActionBar();
 
@@ -1208,7 +1240,11 @@ class CyberStrikerApp {
     const bar = document.getElementById('battleActionBar');
     if (!bar) return;
 
-    bar.innerHTML = (combatEngine.p1.skills || []).map((sk, idx) => {
+    const myPlayer = (this.matchMode === 'p2p' && this.multiplayerRole === 'guest')
+      ? combatEngine.p2
+      : combatEngine.p1;
+
+    bar.innerHTML = (myPlayer.skills || []).map((sk, idx) => {
       const hotkey = this.getSkillKeyDisplayName(idx);
       return `
         <div class="skill-hud-card" id="skillCard_${idx}" style="border-color: ${sk.color}; cursor: pointer;" title="${sk.name} [${hotkey}]">
@@ -1233,7 +1269,7 @@ class CyberStrikerApp {
     `;
 
     // 綁定 5 大技能 HUD 卡片點擊/觸碰釋放
-    (combatEngine.p1.skills || []).forEach((_, idx) => {
+    (myPlayer.skills || []).forEach((_, idx) => {
       const card = document.getElementById(`skillCard_${idx}`);
       if (card) {
         const triggerSkill = (e) => {
@@ -1320,18 +1356,36 @@ class CyberStrikerApp {
 
     // 限制每渲染幀最多執行 3 次物理步進，確保高刷新率（120Hz/144Hz）或低幀率下均極致順暢
     while (this._timeAccumulator >= FIXED_STEP && steps < 3) {
-      // 1. 採集 1P 輸入 (對局結束時停止採集，勝者保持勝利姿態)
-      const inputP1 = combatEngine.isOver
-        ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false }
-        : this._gatherInputsP1();
-
-      // 2. 採集 2P / AI 輸入
+      // 1. 採集 1P 與 2P 輸入
+      let inputP1 = null;
       let inputP2 = null;
+
       if (combatEngine.isOver) {
+        inputP1 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
         inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+      } else if (this.matchMode === 'p2p') {
+        if (this._isSimulatedOpponent) {
+          inputP1 = this._gatherInputsP1();
+          inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
+        } else if (this.multiplayerRole === 'host') {
+          inputP1 = this._gatherInputsP1();
+          inputP2 = this.networkP2Input || { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+          if (p2pNetwork.isConnected) {
+            p2pNetwork.send({ type: 'battle_input', p1: inputP1 });
+          }
+        } else {
+          // guest
+          inputP2 = this._gatherInputsP1();
+          inputP1 = this.networkP1Input || { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+          if (p2pNetwork.isConnected) {
+            p2pNetwork.send({ type: 'battle_input', p2: inputP2 });
+          }
+        }
       } else if (this.matchMode === 'local_2p') {
+        inputP1 = this._gatherInputsP1();
         inputP2 = this._gatherInputsP2();
       } else {
+        inputP1 = this._gatherInputsP1();
         inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
       }
 
@@ -1340,9 +1394,13 @@ class CyberStrikerApp {
 
       // 4. 檢查對局結算與勝利姿態慶祝展示計時
       if (combatEngine.isOver && !combatEngine.isTraining) {
+        const isLocalWinner = this.matchMode === 'p2p'
+          ? (this.multiplayerRole === 'guest' ? combatEngine.winner === 2 : combatEngine.winner === 1)
+          : combatEngine.winner === 1;
+
         if (!this.matchEndTimer) {
           this.matchEndTimer = 1;
-          if (combatEngine.winner === 1) {
+          if (isLocalWinner) {
             // 清除戰鬥雜訊文字，避免擋住 VICTORY
             combatEngine.floatingTexts = [];
             announcerEngine.activeBanners = [];
@@ -1351,7 +1409,7 @@ class CyberStrikerApp {
           }
         } else {
           this.matchEndTimer++;
-          if (combatEngine.winner === 1) {
+          if (isLocalWinner) {
             // 勝利期間持續抑制浮動傷害字與播報雜訊
             combatEngine.floatingTexts = [];
             announcerEngine.activeBanners = [];
@@ -3308,14 +3366,15 @@ class CyberStrikerApp {
     }
 
     // 3. 量子爆發計量槽
+    const myPlayer = (this.matchMode === 'p2p' && this.multiplayerRole === 'guest') ? combatEngine.p2 : combatEngine.p1;
     const burst1El = document.getElementById('p1BurstFill');
-    if (burst1El) burst1El.style.width = `${(combatEngine.p1.burstMeter / combatEngine.p1.burstMax) * 100}%`;
+    if (burst1El) burst1El.style.width = `${(myPlayer.burstMeter / myPlayer.burstMax) * 100}%`;
 
     // 4. 技能冷卻遮罩
-    combatEngine.p1.cooldowns.forEach((cd, idx) => {
+    myPlayer.cooldowns.forEach((cd, idx) => {
       const overlay = document.getElementById(`skillCdOverlay_${idx}`);
       if (overlay) {
-        const totalCd = combatEngine.p1.skills[idx].cd;
+        const totalCd = myPlayer.skills[idx] ? myPlayer.skills[idx].cd : 1;
         const ratio = cd > 0 ? (cd / totalCd) : 0;
         overlay.style.height = `${ratio * 100}%`;
       }
@@ -3388,7 +3447,9 @@ class CyberStrikerApp {
   _showMatchEndModal() {
     soundEngine.stopBgm();
 
-    const won = combatEngine.winner === 1;
+    const won = this.matchMode === 'p2p'
+      ? (this.multiplayerRole === 'guest' ? combatEngine.winner === 2 : combatEngine.winner === 1)
+      : combatEngine.winner === 1;
     const isAi = this.matchMode === 'ai' || this.matchMode === 'arcade';
     const reward = saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
 
@@ -3640,34 +3701,130 @@ class CyberStrikerApp {
       };
     }
 
-    // 模式選擇：雙人連線房間 (P2P)
+    // 模式選擇：雙人連線房間 (P2P 6 位數房間大廳與對決系統)
     const hostRoomBtn = document.getElementById('hostRoomBtn');
     if (hostRoomBtn) {
       hostRoomBtn.onclick = () => {
-        const code = p2pNetwork.initHost((status, data) => {
-          if (status === 'connected') {
-            document.getElementById('modeSelectModal').classList.remove('active');
-            this.startBattle('p2p');
-          }
-        });
-        alert(`🎮 房間已建立！房間代碼：${code}\n請將代碼分享給好友連線對決。`);
+        this.openHostRoom();
       };
     }
 
     const joinRoomBtn = document.getElementById('joinRoomBtn');
     if (joinRoomBtn) {
       joinRoomBtn.onclick = () => {
-        const code = prompt('請輸入 6 位數房間代碼（例如：CY-8821）：');
-        if (code) {
-          p2pNetwork.joinRoom(code, (status) => {
-            if (status === 'connected') {
-              document.getElementById('modeSelectModal').classList.remove('active');
-              this.startBattle('p2p');
-            }
+        this.openJoinRoomModal();
+      };
+    }
+
+    const confirmJoinBtn = document.getElementById('confirmJoinRoomBtn');
+    if (confirmJoinBtn) {
+      confirmJoinBtn.onclick = () => {
+        const input = document.getElementById('joinRoomCodeInput');
+        this.confirmJoinRoom(input ? input.value : '');
+      };
+    }
+
+    const cancelJoinBtn = document.getElementById('cancelJoinRoomBtn');
+    if (cancelJoinBtn) {
+      cancelJoinBtn.onclick = () => {
+        document.getElementById('joinRoomModal').classList.remove('active');
+      };
+    }
+
+    const closeJoinBtn = document.getElementById('closeJoinRoomModalBtn');
+    if (closeJoinBtn) {
+      closeJoinBtn.onclick = () => {
+        document.getElementById('joinRoomModal').classList.remove('active');
+      };
+    }
+
+    const joinInput = document.getElementById('joinRoomCodeInput');
+    if (joinInput) {
+      joinInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.confirmJoinRoom(joinInput.value);
+        }
+      };
+      joinInput.oninput = (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+        const err = document.getElementById('joinRoomErrorMsg');
+        if (err) err.style.display = 'none';
+      };
+    }
+
+    const copyRoomBtn = document.getElementById('copyRoomCodeBtn');
+    if (copyRoomBtn) {
+      copyRoomBtn.onclick = () => {
+        if (!this.multiplayerRoomCode) return;
+        const code = this.multiplayerRoomCode;
+        const showSuccess = () => {
+          const s = document.getElementById('copyRoomCodeSuccess');
+          if (s) {
+            s.style.display = 'inline';
+            setTimeout(() => { s.style.display = 'none'; }, 2200);
+          }
+          soundEngine.playUI('click');
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess, () => {
+            fallbackCopy();
           });
+        } else {
+          fallbackCopy();
+        }
+
+        function fallbackCopy() {
+          const ta = document.createElement('textarea');
+          ta.value = code;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          try {
+            document.execCommand('copy');
+            showSuccess();
+          } catch (e) {}
+          document.body.removeChild(ta);
         }
       };
     }
+
+    const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+    if (leaveRoomBtn) {
+      leaveRoomBtn.onclick = () => this.leaveMultiplayerRoom();
+    }
+
+    const closeRoomBtn = document.getElementById('closeRoomModalBtn');
+    if (closeRoomBtn) {
+      closeRoomBtn.onclick = () => this.leaveMultiplayerRoom();
+    }
+
+    const roomReadyBtn = document.getElementById('roomReadyBtn');
+    if (roomReadyBtn) {
+      roomReadyBtn.onclick = () => this.toggleMultiplayerReady();
+    }
+
+    const simOppBtn = document.getElementById('roomSimulateOpponentBtn');
+    if (simOppBtn) {
+      simOppBtn.onclick = () => this.simulateTestOpponent();
+    }
+
+    document.querySelectorAll('.room-loadout-filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.room-loadout-filter-btn').forEach(b => {
+          b.classList.remove('active');
+          b.style.background = 'transparent';
+        });
+        btn.classList.add('active');
+        btn.style.background = 'rgba(255,255,255,0.1)';
+        this.multiplayerRoomFilter = btn.dataset.filter || 'all';
+        this._renderRoomWeaponGrid();
+        soundEngine.playUI('click');
+      };
+    });
 
     // 授權儀表單處理 (途徑一：手動 Gmail，跨電腦自動雲端還原)
     const emailForm = document.getElementById('manualEmailForm');
@@ -4035,6 +4192,755 @@ class CyberStrikerApp {
     const angle = Math.atan2(dy, dx);
     this.mobileInputs.x = (Math.cos(angle) * clampedDist) / maxRadius;
     this.mobileInputs.y = (Math.sin(angle) * clampedDist) / maxRadius;
+  }
+
+  // ─── 雙人連線房間 (P2P 6 位數房間大廳與武器即時選擇系統) ───
+
+  openHostRoom() {
+    const modeModal = document.getElementById('modeSelectModal');
+    if (modeModal) modeModal.classList.remove('active');
+
+    this.multiplayerRole = 'host';
+    this._isSimulatedOpponent = false;
+    this.multiplayerOpponentConnected = false;
+    this.multiplayerMyReady = false;
+    this.multiplayerOpponentReady = false;
+    this.multiplayerOpponentData = null;
+    this.multiplayerRoomFilter = 'all';
+    this.isCountdownActive = false;
+
+    // 產生 6 位純數字代碼並初始化 Host
+    this.multiplayerRoomCode = p2pNetwork.initHost((status, data) => {
+      this._handleP2PStatusChange(status, data);
+    });
+
+    p2pNetwork.onDataCallback = (data) => {
+      this._handleP2PData(data);
+    };
+
+    this._openMultiplayerRoomModal();
+  }
+
+  openJoinRoomModal() {
+    const modeModal = document.getElementById('modeSelectModal');
+    if (modeModal) modeModal.classList.remove('active');
+
+    const joinModal = document.getElementById('joinRoomModal');
+    if (joinModal) {
+      joinModal.classList.add('active');
+      const input = document.getElementById('joinRoomCodeInput');
+      if (input) {
+        input.value = '';
+        setTimeout(() => input.focus(), 150);
+      }
+      const err = document.getElementById('joinRoomErrorMsg');
+      if (err) err.style.display = 'none';
+    }
+  }
+
+  confirmJoinRoom(code) {
+    const cleanCode = String(code || '').trim().replace(/[^0-9]/g, '');
+    const err = document.getElementById('joinRoomErrorMsg');
+
+    if (cleanCode.length !== 6) {
+      if (err) {
+        err.textContent = '⚠️ 請輸入完整的 6 位純數字房間代碼！';
+        err.style.display = 'block';
+      }
+      return;
+    }
+
+    const joinModal = document.getElementById('joinRoomModal');
+    if (joinModal) joinModal.classList.remove('active');
+
+    this.multiplayerRole = 'guest';
+    this.multiplayerRoomCode = cleanCode;
+    this._isSimulatedOpponent = false;
+    this.multiplayerOpponentConnected = false;
+    this.multiplayerMyReady = false;
+    this.multiplayerOpponentReady = false;
+    this.multiplayerOpponentData = null;
+    this.multiplayerRoomFilter = 'all';
+    this.isCountdownActive = false;
+
+    p2pNetwork.joinRoom(cleanCode, (status, data) => {
+      this._handleP2PStatusChange(status, data);
+    });
+
+    p2pNetwork.onDataCallback = (data) => {
+      this._handleP2PData(data);
+    };
+
+    this._openMultiplayerRoomModal();
+  }
+
+  _openMultiplayerRoomModal() {
+    const roomModal = document.getElementById('multiplayerRoomModal');
+    if (!roomModal) return;
+    roomModal.classList.add('active');
+
+    // 顯示 6 位數房間代碼
+    const codeDisplay = document.getElementById('roomCodeDisplay') || document.getElementById('multiplayerRoomCodeDisplay');
+    if (codeDisplay) {
+      codeDisplay.textContent = this.multiplayerRoomCode || '------';
+    }
+
+    const copySuccess = document.getElementById('copyRoomCodeSuccess');
+    if (copySuccess) copySuccess.style.display = 'none';
+
+    // 連線狀態提示
+    const badge = document.getElementById('roomConnStatusBadge');
+    if (badge) {
+      if (this.multiplayerRole === 'host') {
+        badge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 等待好友輸入 6 位代碼加入中...';
+        badge.style.color = '#38bdf8';
+      } else {
+        badge.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> 正在連線至房間 ${this.multiplayerRoomCode}...`;
+        badge.style.color = '#ffd700';
+      }
+    }
+
+    // 載入當前武裝配置
+    let savedLoadout = null;
+    try {
+      const raw = localStorage.getItem('quantum_arena_last_loadout');
+      if (raw) savedLoadout = JSON.parse(raw);
+    } catch (e) {}
+    const u = saveSystem.currentUser;
+    if (Array.isArray(savedLoadout) && savedLoadout.length > 0) {
+      this.loadoutSelection = [...savedLoadout];
+    } else if (u && Array.isArray(u.loadout) && u.loadout.length > 0) {
+      this.loadoutSelection = [...u.loadout];
+    } else if (!this.loadoutSelection || this.loadoutSelection.length === 0) {
+      this.loadoutSelection = ['SK-01', 'SK-02', 'SK-03', 'SK-10', 'SK-11'];
+    }
+
+    this._renderRoomWeaponSlots();
+    this._renderRoomWeaponGrid();
+    this._updateRoomPlayersCard();
+    this._updateRoomReadyButton();
+    this._updateRoomFavCountBadge();
+  }
+
+  _renderRoomWeaponSlots() {
+    const container = document.getElementById('roomLoadoutSlotsContainer');
+    const countEl = document.getElementById('roomLoadoutSelectedCount');
+    if (countEl) countEl.textContent = `已選擇 ${this.loadoutSelection.length} / 5 招`;
+    if (!container) return;
+
+    container.innerHTML = [0, 1, 2, 3, 4].map(idx => {
+      const skillId = this.loadoutSelection[idx];
+      const sk = SKILLS.find(s => s.id === skillId);
+      if (!sk) {
+        return `
+          <div class="room-slot-card" style="border-style: dashed; opacity: 0.5;">
+            <div style="font-size: 10px; color: #94a3b8; font-weight: 800;">槽位 ${idx + 1}</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">(空)</div>
+          </div>
+        `;
+      }
+      return `
+        <div class="room-slot-card" style="border-color: ${sk.color}; background: rgba(0,0,0,0.5);">
+          <div style="font-size: 10px; color: ${sk.color}; font-weight: 800;">槽位 ${idx + 1}</div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 2px;">
+            <i class="${sk.icon}" style="color: ${sk.color}; font-size: 11px;"></i>
+            <span style="font-size: 11px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75px;">${sk.name}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  _updateRoomFavCountBadge() {
+    const el = document.getElementById('roomFavCountBadge');
+    if (el) el.textContent = this.favoriteSkills ? this.favoriteSkills.length : 0;
+  }
+
+  _renderRoomWeaponGrid() {
+    const container = document.getElementById('roomSkillsGrid');
+    if (!container) return;
+
+    const filter = this.multiplayerRoomFilter || 'all';
+    let list = SKILLS;
+    if (filter === 'favorites') {
+      list = SKILLS.filter(s => this.isFavoriteSkill(s.id));
+    } else if (filter === 'ranged') {
+      list = SKILLS.filter(s => s.category === 'ranged');
+    } else if (filter === 'melee') {
+      list = SKILLS.filter(s => s.category === 'melee');
+    }
+
+    if (filter === 'favorites' && list.length === 0) {
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 25px 10px; color: #94a3b8; font-size: 12px;">
+          <i class="fa-solid fa-star" style="font-size: 24px; color: #ffd700; margin-bottom: 6px; display: block;"></i>
+          尚無我的最愛招式！請點擊招式卡片上的 ⭐ 星號加入收藏。
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = list.map(sk => {
+      const isSelected = this.loadoutSelection.includes(sk.id);
+      const slotIndex = this.loadoutSelection.indexOf(sk.id);
+      const isRanged = sk.category === 'ranged';
+      const isFav = this.isFavoriteSkill(sk.id);
+
+      return `
+        <div class="room-skill-item ${isSelected ? 'equipped' : ''}" data-id="${sk.id}" style="border-color: ${isSelected ? '#00f3ff' : 'rgba(255,255,255,0.1)'};">
+          <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(0,0,0,0.5); border: 1px solid ${sk.color}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i class="${sk.icon}" style="color: ${sk.color}; font-size: 14px;"></i>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${sk.name}</span>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <button class="room-fav-star-btn" data-fav-id="${sk.id}" style="background: none; border: none; cursor: pointer; color: ${isFav ? '#ffd700' : '#64748b'}; font-size: 12px; padding: 2px;">
+                  <i class="fa-${isFav ? 'solid' : 'regular'} fa-star"></i>
+                </button>
+                ${isSelected ? `<span style="font-size: 9px; font-weight: 900; background: #00f3ff; color: #000; padding: 1px 4px; border-radius: 3px;">槽位 ${slotIndex + 1}</span>` : ''}
+              </div>
+            </div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 1px;">
+              ${isRanged ? '🏹 遠程' : '⚔️ 近戰'} | 傷 ${sk.damage} | CD ${sk.cd}s
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // 綁定卡片點選與星號
+    container.querySelectorAll('.room-skill-item').forEach(item => {
+      const id = item.dataset.id;
+      const starBtn = item.querySelector('.room-fav-star-btn');
+      if (starBtn) {
+        starBtn.onclick = (e) => {
+          e.stopPropagation();
+          this.toggleFavoriteSkill(id);
+          this._updateRoomFavCountBadge();
+          this._renderRoomWeaponGrid();
+        };
+      }
+
+      item.onclick = () => {
+        if (this.loadoutSelection.includes(id)) {
+          if (this.loadoutSelection.length > 1) {
+            this.loadoutSelection = this.loadoutSelection.filter(x => x !== id);
+          }
+        } else {
+          if (this.loadoutSelection.length < 5) {
+            this.loadoutSelection.push(id);
+          } else {
+            this.loadoutSelection.shift();
+            this.loadoutSelection.push(id);
+          }
+        }
+
+        // 當更換武器時，自動將準備狀態取消（需重新點選準備完成）
+        if (this.multiplayerMyReady) {
+          this.multiplayerMyReady = false;
+          if (this.isCountdownActive) this._cancelMatchCountdown();
+          if (p2pNetwork.isConnected) p2pNetwork.send({ type: 'ready_status', ready: false });
+          this._updateRoomReadyButton();
+        }
+
+        localStorage.setItem('quantum_arena_last_loadout', JSON.stringify(this.loadoutSelection));
+        saveSystem.updateLoadout(this.loadoutSelection);
+        soundEngine.playUI('click');
+
+        if (p2pNetwork.isConnected) {
+          p2pNetwork.send({ type: 'player_update', loadout: this.loadoutSelection });
+        }
+
+        this._renderRoomWeaponSlots();
+        this._renderRoomWeaponGrid();
+        this._updateRoomPlayersCard();
+      };
+    });
+  }
+
+  _updateRoomPlayersCard() {
+    const isHost = this.multiplayerRole === 'host';
+    const myName = saveSystem.currentUser ? saveSystem.currentUser.nickname : (isHost ? '房主 (我方)' : '挑戰者 (我方)');
+    const mySkin = this.getEquippedSkin();
+
+    // 1P Card
+    const p1Label = document.getElementById('roomP1Label');
+    const p1Name = document.getElementById('roomP1Name');
+    const p1ReadyBadge = document.getElementById('roomP1ReadyBadge');
+    const p1Summary = document.getElementById('roomP1LoadoutSummary');
+    const p1Avatar = document.getElementById('roomP1Avatar');
+
+    // 2P Card
+    const p2Label = document.getElementById('roomP2Label');
+    const p2Name = document.getElementById('roomP2Name');
+    const p2ReadyBadge = document.getElementById('roomP2ReadyBadge');
+    const p2Summary = document.getElementById('roomP2LoadoutSummary');
+    const p2Avatar = document.getElementById('roomP2Avatar');
+
+    if (isHost) {
+      // 我方是 1P (Host)
+      if (p1Label) p1Label.textContent = '👑 房主 (我方 1P)';
+      if (p1Name) p1Name.textContent = myName;
+      if (p1Summary) p1Summary.textContent = `已選 ${this.loadoutSelection.length} 款神兵 (${mySkin.name})`;
+      if (p1Avatar) p1Avatar.style.borderColor = mySkin.themeColor || '#00f3ff';
+      if (p1ReadyBadge) {
+        if (this.multiplayerMyReady) {
+          p1ReadyBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+          p1ReadyBadge.style.borderColor = '#10b981';
+          p1ReadyBadge.style.color = '#10b981';
+          p1ReadyBadge.textContent = '🟢 準備完成';
+        } else {
+          p1ReadyBadge.style.background = 'rgba(255, 0, 127, 0.2)';
+          p1ReadyBadge.style.borderColor = '#ff007f';
+          p1ReadyBadge.style.color = '#ff007f';
+          p1ReadyBadge.textContent = '🔴 挑選武器中';
+        }
+      }
+
+      // 對方是 2P (Guest)
+      if (p2Label) p2Label.textContent = '⚔️ 挑戰者 (2P)';
+      if (this.multiplayerOpponentConnected) {
+        const oppName = this.multiplayerOpponentData?.name || '挑戰者好友';
+        const oppSkin = this.multiplayerOpponentData?.skin || SKINS[1];
+        const oppCount = this.multiplayerOpponentData?.loadout?.length || 5;
+        if (p2Name) {
+          p2Name.textContent = oppName;
+          p2Name.style.color = '#fff';
+        }
+        if (p2Summary) p2Summary.textContent = `已選 ${oppCount} 款神兵 (${oppSkin.name || '賽博英雄'})`;
+        if (p2Avatar) {
+          p2Avatar.style.borderColor = oppSkin.themeColor || '#a855f7';
+          p2Avatar.style.color = oppSkin.themeColor || '#a855f7';
+        }
+        if (p2ReadyBadge) {
+          if (this.multiplayerOpponentReady) {
+            p2ReadyBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+            p2ReadyBadge.style.borderColor = '#10b981';
+            p2ReadyBadge.style.color = '#10b981';
+            p2ReadyBadge.textContent = '🟢 準備完成';
+          } else {
+            p2ReadyBadge.style.background = 'rgba(255, 0, 127, 0.2)';
+            p2ReadyBadge.style.borderColor = '#ff007f';
+            p2ReadyBadge.style.color = '#ff007f';
+            p2ReadyBadge.textContent = '🔴 挑選武器中';
+          }
+        }
+      } else {
+        if (p2Name) {
+          p2Name.textContent = '等待對手輸入代碼...';
+          p2Name.style.color = '#94a3b8';
+        }
+        if (p2Summary) p2Summary.textContent = '未連線';
+        if (p2ReadyBadge) {
+          p2ReadyBadge.style.background = 'rgba(255, 255, 255, 0.1)';
+          p2ReadyBadge.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+          p2ReadyBadge.style.color = '#94a3b8';
+          p2ReadyBadge.textContent = '⏳ 等待加入...';
+        }
+      }
+    } else {
+      // 我方是 2P (Guest)
+      // 對方是 1P (Host)
+      if (p1Label) p1Label.textContent = '👑 房主 (1P)';
+      if (this.multiplayerOpponentConnected) {
+        const oppName = this.multiplayerOpponentData?.name || '房主好友';
+        const oppSkin = this.multiplayerOpponentData?.skin || SKINS[0];
+        const oppCount = this.multiplayerOpponentData?.loadout?.length || 5;
+        if (p1Name) {
+          p1Name.textContent = oppName;
+          p1Name.style.color = '#fff';
+        }
+        if (p1Summary) p1Summary.textContent = `已選 ${oppCount} 款神兵 (${oppSkin.name || '賽博英雄'})`;
+        if (p1Avatar) {
+          p1Avatar.style.borderColor = oppSkin.themeColor || '#00f3ff';
+          p1Avatar.style.color = oppSkin.themeColor || '#00f3ff';
+        }
+        if (p1ReadyBadge) {
+          if (this.multiplayerOpponentReady) {
+            p1ReadyBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+            p1ReadyBadge.style.borderColor = '#10b981';
+            p1ReadyBadge.style.color = '#10b981';
+            p1ReadyBadge.textContent = '🟢 準備完成';
+          } else {
+            p1ReadyBadge.style.background = 'rgba(255, 0, 127, 0.2)';
+            p1ReadyBadge.style.borderColor = '#ff007f';
+            p1ReadyBadge.style.color = '#ff007f';
+            p1ReadyBadge.textContent = '🔴 挑選武器中';
+          }
+        }
+      } else {
+        if (p1Name) {
+          p1Name.textContent = '連線至房主中...';
+          p1Name.style.color = '#94a3b8';
+        }
+        if (p1Summary) p1Summary.textContent = '連線中';
+        if (p1ReadyBadge) {
+          p1ReadyBadge.style.background = 'rgba(255, 255, 255, 0.1)';
+          p1ReadyBadge.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+          p1ReadyBadge.style.color = '#94a3b8';
+          p1ReadyBadge.textContent = '⏳ 連線中...';
+        }
+      }
+
+      // 我方是 2P
+      if (p2Label) p2Label.textContent = '⚔️ 挑戰者 (我方 2P)';
+      if (p2Name) {
+        p2Name.textContent = myName;
+        p2Name.style.color = '#fff';
+      }
+      if (p2Summary) p2Summary.textContent = `已選 ${this.loadoutSelection.length} 款神兵 (${mySkin.name})`;
+      if (p2Avatar) {
+        p2Avatar.style.borderColor = mySkin.themeColor || '#a855f7';
+        p2Avatar.style.color = mySkin.themeColor || '#a855f7';
+      }
+      if (p2ReadyBadge) {
+        if (this.multiplayerMyReady) {
+          p2ReadyBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+          p2ReadyBadge.style.borderColor = '#10b981';
+          p2ReadyBadge.style.color = '#10b981';
+          p2ReadyBadge.textContent = '🟢 準備完成';
+        } else {
+          p2ReadyBadge.style.background = 'rgba(255, 0, 127, 0.2)';
+          p2ReadyBadge.style.borderColor = '#ff007f';
+          p2ReadyBadge.style.color = '#ff007f';
+          p2ReadyBadge.textContent = '🔴 挑選武器中';
+        }
+      }
+    }
+  }
+
+  _updateRoomReadyButton() {
+    const btn = document.getElementById('roomReadyBtn');
+    const hint = document.getElementById('roomReadyStatusHint');
+    if (!btn) return;
+
+    if (this.multiplayerMyReady) {
+      btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> 已準備就緒 (點擊可取消)';
+      btn.style.background = 'linear-gradient(90deg, #10b981, #059669)';
+      btn.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.5)';
+      if (hint) {
+        hint.innerHTML = '<span style="color: #00ff88; font-weight: 800;">✅ 您已準備完成！</span> 等待對手也準備完成後，將會自動進入 3、2、1 倒數開戰！';
+      }
+    } else {
+      btn.innerHTML = '<i class="fa-solid fa-bolt"></i> 準備完成';
+      btn.style.background = 'linear-gradient(90deg, #00f3ff, #10b981)';
+      btn.style.boxShadow = '0 0 25px rgba(0, 243, 255, 0.4)';
+      if (hint) {
+        hint.innerHTML = '點選「準備完成」後，等待對方也準備完成，雙方準備就緒後將會進行 3、2、1 倒數開戰！';
+      }
+    }
+  }
+
+  toggleMultiplayerReady() {
+    soundEngine.playUI('click');
+    if (!this.multiplayerMyReady) {
+      if (this.loadoutSelection.length < 5) {
+        while (this.loadoutSelection.length < 5) {
+          const fallback = SKILLS.find(s => !this.loadoutSelection.includes(s.id)) || SKILLS[0];
+          this.loadoutSelection.push(fallback.id);
+        }
+        this._renderRoomWeaponSlots();
+        this._renderRoomWeaponGrid();
+      }
+      this.multiplayerMyReady = true;
+      if (p2pNetwork.isConnected) {
+        p2pNetwork.send({ type: 'ready_status', ready: true });
+      }
+    } else {
+      this.multiplayerMyReady = false;
+      if (this.isCountdownActive) {
+        this._cancelMatchCountdown();
+      }
+      if (p2pNetwork.isConnected) {
+        p2pNetwork.send({ type: 'ready_status', ready: false });
+      }
+    }
+
+    this._updateRoomReadyButton();
+    this._updateRoomPlayersCard();
+    this._checkBothReady();
+  }
+
+  _checkBothReady() {
+    if (this.multiplayerMyReady && this.multiplayerOpponentReady && this.multiplayerOpponentConnected) {
+      if (!this.isCountdownActive) {
+        this._startMatchCountdown();
+      }
+    } else {
+      if (this.isCountdownActive) {
+        this._cancelMatchCountdown();
+      }
+    }
+  }
+
+  _startMatchCountdown(shouldBroadcast = true) {
+    if (this.isCountdownActive) return;
+    this.isCountdownActive = true;
+
+    if (shouldBroadcast && this.multiplayerRole === 'host' && p2pNetwork.isConnected) {
+      p2pNetwork.send({ type: 'countdown_start' });
+    }
+
+    const overlay = document.getElementById('multiplayerCountdownOverlay');
+    const numEl = document.getElementById('countdownNumberDisplay');
+    const subEl = document.getElementById('countdownSubDisplay');
+    if (!overlay || !numEl) {
+      this._launchMultiplayerBattle();
+      return;
+    }
+
+    overlay.style.display = 'flex';
+
+    if (this.countdownTimerId) {
+      clearTimeout(this.countdownTimerId);
+      this.countdownTimerId = null;
+    }
+
+    const runStep = (step) => {
+      if (!this.isCountdownActive) return;
+
+      numEl.classList.remove('countdown-anim-pop', 'countdown-anim-fight');
+      void numEl.offsetWidth; // 重新觸發 CSS 動畫
+
+      if (step === 3) {
+        numEl.textContent = '3';
+        numEl.style.color = '#00f3ff';
+        numEl.style.textShadow = '0 0 50px rgba(0, 243, 255, 0.85), 0 0 100px rgba(0, 243, 255, 0.4)';
+        if (subEl) subEl.textContent = '雙方均已準備完成！即將進入量子擂台...';
+        numEl.classList.add('countdown-anim-pop');
+        soundEngine.playUI('countdown');
+        this.countdownTimerId = setTimeout(() => runStep(2), 1000);
+      } else if (step === 2) {
+        numEl.textContent = '2';
+        numEl.style.color = '#ffd700';
+        numEl.style.textShadow = '0 0 50px rgba(255, 215, 0, 0.85), 0 0 100px rgba(255, 215, 0, 0.4)';
+        if (subEl) subEl.textContent = '神兵武裝配置同步完畢...';
+        numEl.classList.add('countdown-anim-pop');
+        soundEngine.playUI('countdown');
+        this.countdownTimerId = setTimeout(() => runStep(1), 1000);
+      } else if (step === 1) {
+        numEl.textContent = '1';
+        numEl.style.color = '#ff8800';
+        numEl.style.textShadow = '0 0 50px rgba(255, 136, 0, 0.85), 0 0 100px rgba(255, 136, 0, 0.4)';
+        if (subEl) subEl.textContent = '量子共振力場啟動，極限對決即刻爆發！';
+        numEl.classList.add('countdown-anim-pop');
+        soundEngine.playUI('countdown');
+        this.countdownTimerId = setTimeout(() => runStep(0), 1000);
+      } else if (step === 0) {
+        numEl.textContent = '開始！';
+        numEl.style.color = '#ff007f';
+        numEl.style.textShadow = '0 0 60px rgba(255, 0, 127, 0.95), 0 0 120px rgba(255, 0, 127, 0.6)';
+        if (subEl) subEl.textContent = '⚡ FIGHT! 全力以赴，奪取勝利！ ⚡';
+        numEl.classList.add('countdown-anim-fight');
+        soundEngine.playUI('fight');
+        announcerEngine.speak('Fight!');
+
+        this.countdownTimerId = setTimeout(() => {
+          if (!this.isCountdownActive) return;
+          this.isCountdownActive = false;
+          overlay.style.display = 'none';
+          const roomModal = document.getElementById('multiplayerRoomModal');
+          if (roomModal) roomModal.classList.remove('active');
+          this._launchMultiplayerBattle();
+        }, 850);
+      }
+    };
+
+    runStep(3);
+  }
+
+  _cancelMatchCountdown() {
+    if (!this.isCountdownActive) return;
+    this.isCountdownActive = false;
+    if (this.countdownTimerId) {
+      clearTimeout(this.countdownTimerId);
+      this.countdownTimerId = null;
+    }
+    const overlay = document.getElementById('multiplayerCountdownOverlay');
+    if (overlay) overlay.style.display = 'none';
+
+    if (this.multiplayerRole === 'host' && p2pNetwork.isConnected) {
+      p2pNetwork.send({ type: 'countdown_cancel' });
+    }
+  }
+
+  _launchMultiplayerBattle() {
+    this.matchMode = 'p2p';
+    const isHost = this.multiplayerRole === 'host';
+    const myName = saveSystem.currentUser ? saveSystem.currentUser.nickname : (isHost ? '房主 (1P)' : '挑戰者 (2P)');
+    const mySkin = this.getEquippedSkin();
+
+    let p1Data, p2Data;
+    if (isHost) {
+      p1Data = {
+        name: myName,
+        skin: mySkin,
+        loadout: this.loadoutSelection
+      };
+      p2Data = {
+        name: this.multiplayerOpponentData?.name || '挑戰者 (2P)',
+        skin: this.multiplayerOpponentData?.skin || SKINS[1],
+        loadout: this.multiplayerOpponentData?.loadout || ['SK-01', 'SK-02', 'SK-06', 'SK-16', 'SK-17']
+      };
+    } else {
+      p1Data = {
+        name: this.multiplayerOpponentData?.name || '房主 (1P)',
+        skin: this.multiplayerOpponentData?.skin || SKINS[0],
+        loadout: this.multiplayerOpponentData?.loadout || ['SK-01', 'SK-02', 'SK-03', 'SK-10', 'SK-11']
+      };
+      p2Data = {
+        name: myName,
+        skin: mySkin,
+        loadout: this.loadoutSelection
+      };
+    }
+
+    this._p2pMatchData = { p1Data, p2Data };
+    this._launchMatch();
+  }
+
+  leaveMultiplayerRoom() {
+    this._cancelMatchCountdown();
+    p2pNetwork.disconnect();
+    const roomModal = document.getElementById('multiplayerRoomModal');
+    if (roomModal) roomModal.classList.remove('active');
+
+    this.multiplayerRole = null;
+    this.multiplayerRoomCode = null;
+    this.multiplayerOpponentConnected = false;
+    this.multiplayerMyReady = false;
+    this.multiplayerOpponentReady = false;
+    this.multiplayerOpponentData = null;
+    this._isSimulatedOpponent = false;
+    this.networkP1Input = null;
+    this.networkP2Input = null;
+  }
+
+  simulateTestOpponent() {
+    this._isSimulatedOpponent = true;
+    this.multiplayerOpponentConnected = true;
+    this.multiplayerOpponentData = {
+      name: '量子模擬戰友 (測試)',
+      skin: SKINS[1],
+      loadout: ['SK-01', 'SK-04', 'SK-08', 'SK-15', 'SK-18']
+    };
+    this.multiplayerOpponentReady = true;
+
+    const badge = document.getElementById('roomConnStatusBadge');
+    if (badge) {
+      badge.innerHTML = '🤖 模擬對手已加入並已準備！請您挑選好武器後按下「準備完成」測試倒數開戰';
+      badge.style.color = '#00ff66';
+    }
+
+    soundEngine.playUI('click');
+    this._updateRoomPlayersCard();
+    this._checkBothReady();
+  }
+
+  _handleP2PStatusChange(status, data) {
+    const badge = document.getElementById('roomConnStatusBadge');
+
+    if (status === 'waiting_guest') {
+      if (badge) {
+        badge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 等待好友輸入 6 位代碼加入中...';
+        badge.style.color = '#38bdf8';
+      }
+    } else if (status === 'connecting') {
+      if (badge) {
+        badge.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> 正在連線至房間 ${this.multiplayerRoomCode}...`;
+        badge.style.color = '#ffd700';
+      }
+    } else if (status === 'connected') {
+      this.multiplayerOpponentConnected = true;
+      if (badge) {
+        badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> 雙方連線成功！請挑選武器並按「準備完成」';
+        badge.style.color = '#00ff66';
+      }
+      soundEngine.playUI('click');
+
+      // 送出我方玩家資訊與當前準備狀態
+      p2pNetwork.send({
+        type: 'player_info',
+        name: saveSystem.currentUser ? saveSystem.currentUser.nickname : (this.multiplayerRole === 'host' ? '房主' : '挑戰者'),
+        skin: this.getEquippedSkin(),
+        loadout: this.loadoutSelection,
+        ready: this.multiplayerMyReady
+      });
+
+      this._updateRoomPlayersCard();
+    } else if (status === 'disconnected') {
+      this.multiplayerOpponentConnected = false;
+      this.multiplayerOpponentReady = false;
+      this.multiplayerOpponentData = null;
+      if (this.isCountdownActive) this._cancelMatchCountdown();
+
+      if (badge) {
+        badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> 對手已離開房間';
+        badge.style.color = '#ff007f';
+      }
+      this._updateRoomPlayersCard();
+    } else if (status === 'error') {
+      if (badge) {
+        badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> 連線提示：${data || '未找到房間或已逾時'}`;
+        badge.style.color = '#f43f5e';
+      }
+    }
+  }
+
+  _handleP2PData(data) {
+    if (!data || !data.type) return;
+
+    if (data.type === 'player_info') {
+      this.multiplayerOpponentData = {
+        name: data.name,
+        skin: data.skin,
+        loadout: data.loadout
+      };
+      this.multiplayerOpponentReady = !!data.ready;
+
+      // 回覆我方資訊
+      p2pNetwork.send({
+        type: 'player_info_ack',
+        name: saveSystem.currentUser ? saveSystem.currentUser.nickname : (this.multiplayerRole === 'host' ? '房主' : '挑戰者'),
+        skin: this.getEquippedSkin(),
+        loadout: this.loadoutSelection,
+        ready: this.multiplayerMyReady
+      });
+
+      this._updateRoomPlayersCard();
+      this._checkBothReady();
+    } else if (data.type === 'player_info_ack') {
+      this.multiplayerOpponentData = {
+        name: data.name,
+        skin: data.skin,
+        loadout: data.loadout
+      };
+      this.multiplayerOpponentReady = !!data.ready;
+      this._updateRoomPlayersCard();
+      this._checkBothReady();
+    } else if (data.type === 'player_update') {
+      if (!this.multiplayerOpponentData) {
+        this.multiplayerOpponentData = {};
+      }
+      if (data.loadout) this.multiplayerOpponentData.loadout = data.loadout;
+      if (data.name) this.multiplayerOpponentData.name = data.name;
+      if (data.skin) this.multiplayerOpponentData.skin = data.skin;
+      this._updateRoomPlayersCard();
+    } else if (data.type === 'ready_status') {
+      this.multiplayerOpponentReady = !!data.ready;
+      this._updateRoomPlayersCard();
+      this._checkBothReady();
+    } else if (data.type === 'countdown_start') {
+      if (!this.isCountdownActive) {
+        this._startMatchCountdown(false);
+      }
+    } else if (data.type === 'countdown_cancel') {
+      this._cancelMatchCountdown();
+    } else if (data.type === 'battle_input') {
+      if (data.p1) this.networkP1Input = data.p1;
+      if (data.p2) this.networkP2Input = data.p2;
+    }
   }
 }
 

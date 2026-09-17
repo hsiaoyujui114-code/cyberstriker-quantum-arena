@@ -18,10 +18,11 @@ export class P2PNetwork {
   }
 
   generateRoomCode() {
-    return 'CY-' + Math.floor(1000 + Math.random() * 9000);
+    return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
   initHost(onStatusChange) {
+    this.disconnect();
     this.isHost = true;
     this.roomCode = this.generateRoomCode();
     this.onStatusChangeCallback = onStatusChange;
@@ -30,14 +31,15 @@ export class P2PNetwork {
   }
 
   joinRoom(code, onStatusChange) {
+    this.disconnect();
     this.isHost = false;
-    this.roomCode = code.trim().toUpperCase();
+    this.roomCode = String(code || '').trim().replace(/[^0-9]/g, '');
     this.onStatusChangeCallback = onStatusChange;
     this._initPeer('guest');
   }
 
   _initPeer(role) {
-    const peerId = role === 'host' ? `cyberstriker-${this.roomCode.toLowerCase()}` : undefined;
+    const peerId = role === 'host' ? `cyberstriker-${this.roomCode}` : undefined;
 
     try {
       if (typeof Peer !== 'undefined') {
@@ -56,7 +58,7 @@ export class P2PNetwork {
             this.onStatusChangeCallback(role === 'host' ? 'waiting_guest' : 'connecting');
           }
           if (role === 'guest') {
-            const hostPeerId = `cyberstriker-${this.roomCode.toLowerCase()}`;
+            const hostPeerId = `cyberstriker-${this.roomCode}`;
             this._connectToHost(hostPeerId);
           }
         });
@@ -69,7 +71,7 @@ export class P2PNetwork {
         this.peer.on('error', (err) => {
           console.warn('P2P Peer error:', err);
           if (this.onStatusChangeCallback) {
-            this.onStatusChangeCallback('error', err.message);
+            this.onStatusChangeCallback('error', err.type || err.message || '連線異常');
           }
         });
       } else {
@@ -77,7 +79,7 @@ export class P2PNetwork {
         console.warn('PeerJS not found, fallback to local loopback.');
         setTimeout(() => {
           if (this.onStatusChangeCallback) this.onStatusChangeCallback('waiting_guest');
-        }, 500);
+        }, 300);
       }
     } catch (e) {
       console.warn('P2P Init exception:', e);
@@ -87,7 +89,7 @@ export class P2PNetwork {
 
   _connectToHost(hostPeerId) {
     if (!this.peer) return;
-    this.conn = this.peer.connect(hostPeerId, { reliable: false });
+    this.conn = this.peer.connect(hostPeerId, { reliable: true });
     this._setupConn();
   }
 

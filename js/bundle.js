@@ -15091,9 +15091,10 @@
       this.onStatusChangeCallback = null;
     }
     generateRoomCode() {
-      return "CY-" + Math.floor(1e3 + Math.random() * 9e3);
+      return Math.floor(1e5 + Math.random() * 9e5).toString();
     }
     initHost(onStatusChange) {
+      this.disconnect();
       this.isHost = true;
       this.roomCode = this.generateRoomCode();
       this.onStatusChangeCallback = onStatusChange;
@@ -15101,13 +15102,14 @@
       return this.roomCode;
     }
     joinRoom(code, onStatusChange) {
+      this.disconnect();
       this.isHost = false;
-      this.roomCode = code.trim().toUpperCase();
+      this.roomCode = String(code || "").trim().replace(/[^0-9]/g, "");
       this.onStatusChangeCallback = onStatusChange;
       this._initPeer("guest");
     }
     _initPeer(role) {
-      const peerId = role === "host" ? `cyberstriker-${this.roomCode.toLowerCase()}` : void 0;
+      const peerId = role === "host" ? `cyberstriker-${this.roomCode}` : void 0;
       try {
         if (typeof Peer !== "undefined") {
           this.peer = new Peer(peerId, {
@@ -15124,7 +15126,7 @@
               this.onStatusChangeCallback(role === "host" ? "waiting_guest" : "connecting");
             }
             if (role === "guest") {
-              const hostPeerId = `cyberstriker-${this.roomCode.toLowerCase()}`;
+              const hostPeerId = `cyberstriker-${this.roomCode}`;
               this._connectToHost(hostPeerId);
             }
           });
@@ -15135,14 +15137,14 @@
           this.peer.on("error", (err) => {
             console.warn("P2P Peer error:", err);
             if (this.onStatusChangeCallback) {
-              this.onStatusChangeCallback("error", err.message);
+              this.onStatusChangeCallback("error", err.type || err.message || "\u9023\u7DDA\u7570\u5E38");
             }
           });
         } else {
           console.warn("PeerJS not found, fallback to local loopback.");
           setTimeout(() => {
             if (this.onStatusChangeCallback) this.onStatusChangeCallback("waiting_guest");
-          }, 500);
+          }, 300);
         }
       } catch (e) {
         console.warn("P2P Init exception:", e);
@@ -15151,7 +15153,7 @@
     }
     _connectToHost(hostPeerId) {
       if (!this.peer) return;
-      this.conn = this.peer.connect(hostPeerId, { reliable: false });
+      this.conn = this.peer.connect(hostPeerId, { reliable: true });
       this._setupConn();
     }
     _setupConn() {
@@ -15217,6 +15219,19 @@
       this.loadoutSelection = ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"];
       this.loadoutTimer = 15;
       this.loadoutInterval = null;
+      this.multiplayerRole = null;
+      this.multiplayerRoomCode = null;
+      this.multiplayerOpponentConnected = false;
+      this.multiplayerMyReady = false;
+      this.multiplayerOpponentReady = false;
+      this.multiplayerOpponentData = null;
+      this.multiplayerRoomFilter = "all";
+      this.isCountdownActive = false;
+      this.countdownTimerId = null;
+      this.networkP1Input = null;
+      this.networkP2Input = null;
+      this._isSimulatedOpponent = false;
+      this._p2pMatchData = null;
       let savedKeys = null;
       try {
         savedKeys = JSON.parse(localStorage.getItem("quantum_arena_skill_keys") || "null");
@@ -16125,7 +16140,7 @@
       }
       const victoryOverlay = document.getElementById("battleVictoryOverlay");
       if (victoryOverlay) victoryOverlay.style.display = "none";
-      const p1Skin = this.getEquippedSkin();
+      let p1Skin = this.getEquippedSkin();
       let p2Skin = SKINS[1];
       let p2Name = `AI (${this.aiDifficulty.toUpperCase()})`;
       let p2Diff = this.aiDifficulty;
@@ -16163,6 +16178,11 @@
         }
         this.aiDifficulty = p2Diff;
         aiController.setDifficulty(p2Diff);
+      } else if (this.matchMode === "p2p" && this._p2pMatchData) {
+        if (arcadeBadge) arcadeBadge.style.display = "none";
+        p1Skin = this._p2pMatchData.p1Data.skin;
+        p2Skin = this._p2pMatchData.p2Data.skin;
+        p2Name = this._p2pMatchData.p2Data.name;
       } else {
         if (arcadeBadge) arcadeBadge.style.display = "none";
         if (this.aiDifficulty === "hard") p2Skin = SKINS[2];
@@ -16170,12 +16190,12 @@
         if (this.matchMode === "training") p2Name = "\u7DF4\u7FD2\u6728\u6A01\u5047\u4EBA";
         else if (this.matchMode === "local_2p") p2Name = "Player 2";
       }
-      const p1Data = {
+      const p1Data = this.matchMode === "p2p" && this._p2pMatchData ? this._p2pMatchData.p1Data : {
         name: saveSystem.currentUser ? saveSystem.currentUser.nickname : "Player 1",
         skin: p1Skin,
         loadout: this.loadoutSelection
       };
-      const p2Data = {
+      const p2Data = this.matchMode === "p2p" && this._p2pMatchData ? this._p2pMatchData.p2Data : {
         name: p2Name,
         skin: p2Skin,
         loadout: ["SK-01", "SK-02", "SK-06", "SK-16", "SK-17"]
@@ -16198,8 +16218,8 @@
       if (p1NameEl) p1NameEl.textContent = p1Data.name;
       if (p2NameEl) p2NameEl.textContent = p2Data.name;
       if (p2RoleTag) {
-        const p2Text = this.matchMode === "local_2p" ? "2P \u5C0D\u624B" : this.matchMode === "training" ? "\u8A13\u7DF4\u6728\u6A01" : this.matchMode === "arcade" ? `\u8857\u6A5F\u5C0D\u624B (STAGE ${this.arcadeStage})` : "\u96FB\u8166\u5C0D\u624B / AI";
-        p2RoleTag.innerHTML = `<i class="fa-solid fa-robot"></i> ${p2Text}`;
+        const p2Text = this.matchMode === "local_2p" ? "2P \u5C0D\u624B" : this.matchMode === "p2p" ? this.multiplayerRole === "host" ? `\u9023\u7DDA\u6311\u6230\u8005 (${p2Data.name})` : `\u9023\u7DDA\u623F\u4E3B (${p1Data.name})` : this.matchMode === "training" ? "\u8A13\u7DF4\u6728\u6A01" : this.matchMode === "arcade" ? `\u8857\u6A5F\u5C0D\u624B (STAGE ${this.arcadeStage})` : "\u96FB\u8166\u5C0D\u624B / AI";
+        p2RoleTag.innerHTML = `<i class="fa-solid fa-gamepad"></i> ${p2Text}`;
       }
       this._updateSkillActionBar();
       this._runBattleLoop();
@@ -16207,7 +16227,8 @@
     _updateSkillActionBar() {
       const bar = document.getElementById("battleActionBar");
       if (!bar) return;
-      bar.innerHTML = (combatEngine.p1.skills || []).map((sk, idx) => {
+      const myPlayer = this.matchMode === "p2p" && this.multiplayerRole === "guest" ? combatEngine.p2 : combatEngine.p1;
+      bar.innerHTML = (myPlayer.skills || []).map((sk, idx) => {
         const hotkey = this.getSkillKeyDisplayName(idx);
         return `
         <div class="skill-hud-card" id="skillCard_${idx}" style="border-color: ${sk.color}; cursor: pointer;" title="${sk.name} [${hotkey}]">
@@ -16230,7 +16251,7 @@
         <span style="font-size: 9px; opacity: 0.9; color: #ffd700; pointer-events: none;">[P] \u5967\u7FA9</span>
       </div>
     `;
-      (combatEngine.p1.skills || []).forEach((_, idx) => {
+      (myPlayer.skills || []).forEach((_, idx) => {
         const card = document.getElementById(`skillCard_${idx}`);
         if (card) {
           const triggerSkill = (e) => {
@@ -16321,20 +16342,41 @@
       const FIXED_STEP = 1e3 / 60;
       let steps = 0;
       while (this._timeAccumulator >= FIXED_STEP && steps < 3) {
-        const inputP1 = combatEngine.isOver ? { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false } : this._gatherInputsP1();
+        let inputP1 = null;
         let inputP2 = null;
         if (combatEngine.isOver) {
+          inputP1 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
           inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+        } else if (this.matchMode === "p2p") {
+          if (this._isSimulatedOpponent) {
+            inputP1 = this._gatherInputsP1();
+            inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
+          } else if (this.multiplayerRole === "host") {
+            inputP1 = this._gatherInputsP1();
+            inputP2 = this.networkP2Input || { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+            if (p2pNetwork.isConnected) {
+              p2pNetwork.send({ type: "battle_input", p1: inputP1 });
+            }
+          } else {
+            inputP2 = this._gatherInputsP1();
+            inputP1 = this.networkP1Input || { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+            if (p2pNetwork.isConnected) {
+              p2pNetwork.send({ type: "battle_input", p2: inputP2 });
+            }
+          }
         } else if (this.matchMode === "local_2p") {
+          inputP1 = this._gatherInputsP1();
           inputP2 = this._gatherInputsP2();
         } else {
+          inputP1 = this._gatherInputsP1();
           inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
         }
         combatEngine.update(inputP1, inputP2);
         if (combatEngine.isOver && !combatEngine.isTraining) {
+          const isLocalWinner = this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? combatEngine.winner === 2 : combatEngine.winner === 1 : combatEngine.winner === 1;
           if (!this.matchEndTimer) {
             this.matchEndTimer = 1;
-            if (combatEngine.winner === 1) {
+            if (isLocalWinner) {
               combatEngine.floatingTexts = [];
               announcerEngine.activeBanners = [];
               const vOverlay = document.getElementById("battleVictoryOverlay");
@@ -16342,7 +16384,7 @@
             }
           } else {
             this.matchEndTimer++;
-            if (combatEngine.winner === 1) {
+            if (isLocalWinner) {
               combatEngine.floatingTexts = [];
               announcerEngine.activeBanners = [];
             }
@@ -17902,12 +17944,13 @@
       if (timerEl) {
         timerEl.textContent = combatEngine.isTraining ? "\u221E" : combatEngine.roundTime;
       }
+      const myPlayer = this.matchMode === "p2p" && this.multiplayerRole === "guest" ? combatEngine.p2 : combatEngine.p1;
       const burst1El = document.getElementById("p1BurstFill");
-      if (burst1El) burst1El.style.width = `${combatEngine.p1.burstMeter / combatEngine.p1.burstMax * 100}%`;
-      combatEngine.p1.cooldowns.forEach((cd, idx) => {
+      if (burst1El) burst1El.style.width = `${myPlayer.burstMeter / myPlayer.burstMax * 100}%`;
+      myPlayer.cooldowns.forEach((cd, idx) => {
         const overlay = document.getElementById(`skillCdOverlay_${idx}`);
         if (overlay) {
-          const totalCd = combatEngine.p1.skills[idx].cd;
+          const totalCd = myPlayer.skills[idx] ? myPlayer.skills[idx].cd : 1;
           const ratio = cd > 0 ? cd / totalCd : 0;
           overlay.style.height = `${ratio * 100}%`;
         }
@@ -17969,7 +18012,7 @@
     // ─── 對決結束與結算面板彈出 ───
     _showMatchEndModal() {
       soundEngine.stopBgm();
-      const won = combatEngine.winner === 1;
+      const won = this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? combatEngine.winner === 2 : combatEngine.winner === 1 : combatEngine.winner === 1;
       const isAi = this.matchMode === "ai" || this.matchMode === "arcade";
       const reward = saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
       const endModal = document.getElementById("matchEndModal");
@@ -18188,30 +18231,116 @@
       const hostRoomBtn = document.getElementById("hostRoomBtn");
       if (hostRoomBtn) {
         hostRoomBtn.onclick = () => {
-          const code = p2pNetwork.initHost((status, data) => {
-            if (status === "connected") {
-              document.getElementById("modeSelectModal").classList.remove("active");
-              this.startBattle("p2p");
-            }
-          });
-          alert(`\u{1F3AE} \u623F\u9593\u5DF2\u5EFA\u7ACB\uFF01\u623F\u9593\u4EE3\u78BC\uFF1A${code}
-\u8ACB\u5C07\u4EE3\u78BC\u5206\u4EAB\u7D66\u597D\u53CB\u9023\u7DDA\u5C0D\u6C7A\u3002`);
+          this.openHostRoom();
         };
       }
       const joinRoomBtn = document.getElementById("joinRoomBtn");
       if (joinRoomBtn) {
         joinRoomBtn.onclick = () => {
-          const code = prompt("\u8ACB\u8F38\u5165 6 \u4F4D\u6578\u623F\u9593\u4EE3\u78BC\uFF08\u4F8B\u5982\uFF1ACY-8821\uFF09\uFF1A");
-          if (code) {
-            p2pNetwork.joinRoom(code, (status) => {
-              if (status === "connected") {
-                document.getElementById("modeSelectModal").classList.remove("active");
-                this.startBattle("p2p");
-              }
+          this.openJoinRoomModal();
+        };
+      }
+      const confirmJoinBtn = document.getElementById("confirmJoinRoomBtn");
+      if (confirmJoinBtn) {
+        confirmJoinBtn.onclick = () => {
+          const input = document.getElementById("joinRoomCodeInput");
+          this.confirmJoinRoom(input ? input.value : "");
+        };
+      }
+      const cancelJoinBtn = document.getElementById("cancelJoinRoomBtn");
+      if (cancelJoinBtn) {
+        cancelJoinBtn.onclick = () => {
+          document.getElementById("joinRoomModal").classList.remove("active");
+        };
+      }
+      const closeJoinBtn = document.getElementById("closeJoinRoomModalBtn");
+      if (closeJoinBtn) {
+        closeJoinBtn.onclick = () => {
+          document.getElementById("joinRoomModal").classList.remove("active");
+        };
+      }
+      const joinInput = document.getElementById("joinRoomCodeInput");
+      if (joinInput) {
+        joinInput.onkeydown = (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            this.confirmJoinRoom(joinInput.value);
+          }
+        };
+        joinInput.oninput = (e) => {
+          e.target.value = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
+          const err = document.getElementById("joinRoomErrorMsg");
+          if (err) err.style.display = "none";
+        };
+      }
+      const copyRoomBtn = document.getElementById("copyRoomCodeBtn");
+      if (copyRoomBtn) {
+        copyRoomBtn.onclick = () => {
+          if (!this.multiplayerRoomCode) return;
+          const code = this.multiplayerRoomCode;
+          const showSuccess = () => {
+            const s = document.getElementById("copyRoomCodeSuccess");
+            if (s) {
+              s.style.display = "inline";
+              setTimeout(() => {
+                s.style.display = "none";
+              }, 2200);
+            }
+            soundEngine.playUI("click");
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).then(showSuccess, () => {
+              fallbackCopy();
             });
+          } else {
+            fallbackCopy();
+          }
+          function fallbackCopy() {
+            const ta = document.createElement("textarea");
+            ta.value = code;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try {
+              document.execCommand("copy");
+              showSuccess();
+            } catch (e) {
+            }
+            document.body.removeChild(ta);
           }
         };
       }
+      const leaveRoomBtn = document.getElementById("leaveRoomBtn");
+      if (leaveRoomBtn) {
+        leaveRoomBtn.onclick = () => this.leaveMultiplayerRoom();
+      }
+      const closeRoomBtn = document.getElementById("closeRoomModalBtn");
+      if (closeRoomBtn) {
+        closeRoomBtn.onclick = () => this.leaveMultiplayerRoom();
+      }
+      const roomReadyBtn = document.getElementById("roomReadyBtn");
+      if (roomReadyBtn) {
+        roomReadyBtn.onclick = () => this.toggleMultiplayerReady();
+      }
+      const simOppBtn = document.getElementById("roomSimulateOpponentBtn");
+      if (simOppBtn) {
+        simOppBtn.onclick = () => this.simulateTestOpponent();
+      }
+      document.querySelectorAll(".room-loadout-filter-btn").forEach((btn) => {
+        btn.onclick = () => {
+          document.querySelectorAll(".room-loadout-filter-btn").forEach((b) => {
+            b.classList.remove("active");
+            b.style.background = "transparent";
+          });
+          btn.classList.add("active");
+          btn.style.background = "rgba(255,255,255,0.1)";
+          this.multiplayerRoomFilter = btn.dataset.filter || "all";
+          this._renderRoomWeaponGrid();
+          soundEngine.playUI("click");
+        };
+      });
       const emailForm = document.getElementById("manualEmailForm");
       if (emailForm) {
         emailForm.onsubmit = async (e) => {
@@ -18547,6 +18676,666 @@
       const angle = Math.atan2(dy, dx);
       this.mobileInputs.x = Math.cos(angle) * clampedDist / maxRadius;
       this.mobileInputs.y = Math.sin(angle) * clampedDist / maxRadius;
+    }
+    // ─── 雙人連線房間 (P2P 6 位數房間大廳與武器即時選擇系統) ───
+    openHostRoom() {
+      const modeModal = document.getElementById("modeSelectModal");
+      if (modeModal) modeModal.classList.remove("active");
+      this.multiplayerRole = "host";
+      this._isSimulatedOpponent = false;
+      this.multiplayerOpponentConnected = false;
+      this.multiplayerMyReady = false;
+      this.multiplayerOpponentReady = false;
+      this.multiplayerOpponentData = null;
+      this.multiplayerRoomFilter = "all";
+      this.isCountdownActive = false;
+      this.multiplayerRoomCode = p2pNetwork.initHost((status, data) => {
+        this._handleP2PStatusChange(status, data);
+      });
+      p2pNetwork.onDataCallback = (data) => {
+        this._handleP2PData(data);
+      };
+      this._openMultiplayerRoomModal();
+    }
+    openJoinRoomModal() {
+      const modeModal = document.getElementById("modeSelectModal");
+      if (modeModal) modeModal.classList.remove("active");
+      const joinModal = document.getElementById("joinRoomModal");
+      if (joinModal) {
+        joinModal.classList.add("active");
+        const input = document.getElementById("joinRoomCodeInput");
+        if (input) {
+          input.value = "";
+          setTimeout(() => input.focus(), 150);
+        }
+        const err = document.getElementById("joinRoomErrorMsg");
+        if (err) err.style.display = "none";
+      }
+    }
+    confirmJoinRoom(code) {
+      const cleanCode = String(code || "").trim().replace(/[^0-9]/g, "");
+      const err = document.getElementById("joinRoomErrorMsg");
+      if (cleanCode.length !== 6) {
+        if (err) {
+          err.textContent = "\u26A0\uFE0F \u8ACB\u8F38\u5165\u5B8C\u6574\u7684 6 \u4F4D\u7D14\u6578\u5B57\u623F\u9593\u4EE3\u78BC\uFF01";
+          err.style.display = "block";
+        }
+        return;
+      }
+      const joinModal = document.getElementById("joinRoomModal");
+      if (joinModal) joinModal.classList.remove("active");
+      this.multiplayerRole = "guest";
+      this.multiplayerRoomCode = cleanCode;
+      this._isSimulatedOpponent = false;
+      this.multiplayerOpponentConnected = false;
+      this.multiplayerMyReady = false;
+      this.multiplayerOpponentReady = false;
+      this.multiplayerOpponentData = null;
+      this.multiplayerRoomFilter = "all";
+      this.isCountdownActive = false;
+      p2pNetwork.joinRoom(cleanCode, (status, data) => {
+        this._handleP2PStatusChange(status, data);
+      });
+      p2pNetwork.onDataCallback = (data) => {
+        this._handleP2PData(data);
+      };
+      this._openMultiplayerRoomModal();
+    }
+    _openMultiplayerRoomModal() {
+      const roomModal = document.getElementById("multiplayerRoomModal");
+      if (!roomModal) return;
+      roomModal.classList.add("active");
+      const codeDisplay = document.getElementById("roomCodeDisplay") || document.getElementById("multiplayerRoomCodeDisplay");
+      if (codeDisplay) {
+        codeDisplay.textContent = this.multiplayerRoomCode || "------";
+      }
+      const copySuccess = document.getElementById("copyRoomCodeSuccess");
+      if (copySuccess) copySuccess.style.display = "none";
+      const badge = document.getElementById("roomConnStatusBadge");
+      if (badge) {
+        if (this.multiplayerRole === "host") {
+          badge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> \u7B49\u5F85\u597D\u53CB\u8F38\u5165 6 \u4F4D\u4EE3\u78BC\u52A0\u5165\u4E2D...';
+          badge.style.color = "#38bdf8";
+        } else {
+          badge.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> \u6B63\u5728\u9023\u7DDA\u81F3\u623F\u9593 ${this.multiplayerRoomCode}...`;
+          badge.style.color = "#ffd700";
+        }
+      }
+      let savedLoadout = null;
+      try {
+        const raw = localStorage.getItem("quantum_arena_last_loadout");
+        if (raw) savedLoadout = JSON.parse(raw);
+      } catch (e) {
+      }
+      const u = saveSystem.currentUser;
+      if (Array.isArray(savedLoadout) && savedLoadout.length > 0) {
+        this.loadoutSelection = [...savedLoadout];
+      } else if (u && Array.isArray(u.loadout) && u.loadout.length > 0) {
+        this.loadoutSelection = [...u.loadout];
+      } else if (!this.loadoutSelection || this.loadoutSelection.length === 0) {
+        this.loadoutSelection = ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"];
+      }
+      this._renderRoomWeaponSlots();
+      this._renderRoomWeaponGrid();
+      this._updateRoomPlayersCard();
+      this._updateRoomReadyButton();
+      this._updateRoomFavCountBadge();
+    }
+    _renderRoomWeaponSlots() {
+      const container = document.getElementById("roomLoadoutSlotsContainer");
+      const countEl = document.getElementById("roomLoadoutSelectedCount");
+      if (countEl) countEl.textContent = `\u5DF2\u9078\u64C7 ${this.loadoutSelection.length} / 5 \u62DB`;
+      if (!container) return;
+      container.innerHTML = [0, 1, 2, 3, 4].map((idx) => {
+        const skillId = this.loadoutSelection[idx];
+        const sk = SKILLS.find((s) => s.id === skillId);
+        if (!sk) {
+          return `
+          <div class="room-slot-card" style="border-style: dashed; opacity: 0.5;">
+            <div style="font-size: 10px; color: #94a3b8; font-weight: 800;">\u69FD\u4F4D ${idx + 1}</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">(\u7A7A)</div>
+          </div>
+        `;
+        }
+        return `
+        <div class="room-slot-card" style="border-color: ${sk.color}; background: rgba(0,0,0,0.5);">
+          <div style="font-size: 10px; color: ${sk.color}; font-weight: 800;">\u69FD\u4F4D ${idx + 1}</div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 2px;">
+            <i class="${sk.icon}" style="color: ${sk.color}; font-size: 11px;"></i>
+            <span style="font-size: 11px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75px;">${sk.name}</span>
+          </div>
+        </div>
+      `;
+      }).join("");
+    }
+    _updateRoomFavCountBadge() {
+      const el = document.getElementById("roomFavCountBadge");
+      if (el) el.textContent = this.favoriteSkills ? this.favoriteSkills.length : 0;
+    }
+    _renderRoomWeaponGrid() {
+      const container = document.getElementById("roomSkillsGrid");
+      if (!container) return;
+      const filter = this.multiplayerRoomFilter || "all";
+      let list = SKILLS;
+      if (filter === "favorites") {
+        list = SKILLS.filter((s) => this.isFavoriteSkill(s.id));
+      } else if (filter === "ranged") {
+        list = SKILLS.filter((s) => s.category === "ranged");
+      } else if (filter === "melee") {
+        list = SKILLS.filter((s) => s.category === "melee");
+      }
+      if (filter === "favorites" && list.length === 0) {
+        container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 25px 10px; color: #94a3b8; font-size: 12px;">
+          <i class="fa-solid fa-star" style="font-size: 24px; color: #ffd700; margin-bottom: 6px; display: block;"></i>
+          \u5C1A\u7121\u6211\u7684\u6700\u611B\u62DB\u5F0F\uFF01\u8ACB\u9EDE\u64CA\u62DB\u5F0F\u5361\u7247\u4E0A\u7684 \u2B50 \u661F\u865F\u52A0\u5165\u6536\u85CF\u3002
+        </div>
+      `;
+        return;
+      }
+      container.innerHTML = list.map((sk) => {
+        const isSelected = this.loadoutSelection.includes(sk.id);
+        const slotIndex = this.loadoutSelection.indexOf(sk.id);
+        const isRanged = sk.category === "ranged";
+        const isFav = this.isFavoriteSkill(sk.id);
+        return `
+        <div class="room-skill-item ${isSelected ? "equipped" : ""}" data-id="${sk.id}" style="border-color: ${isSelected ? "#00f3ff" : "rgba(255,255,255,0.1)"};">
+          <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(0,0,0,0.5); border: 1px solid ${sk.color}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i class="${sk.icon}" style="color: ${sk.color}; font-size: 14px;"></i>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${sk.name}</span>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <button class="room-fav-star-btn" data-fav-id="${sk.id}" style="background: none; border: none; cursor: pointer; color: ${isFav ? "#ffd700" : "#64748b"}; font-size: 12px; padding: 2px;">
+                  <i class="fa-${isFav ? "solid" : "regular"} fa-star"></i>
+                </button>
+                ${isSelected ? `<span style="font-size: 9px; font-weight: 900; background: #00f3ff; color: #000; padding: 1px 4px; border-radius: 3px;">\u69FD\u4F4D ${slotIndex + 1}</span>` : ""}
+              </div>
+            </div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 1px;">
+              ${isRanged ? "\u{1F3F9} \u9060\u7A0B" : "\u2694\uFE0F \u8FD1\u6230"} | \u50B7 ${sk.damage} | CD ${sk.cd}s
+            </div>
+          </div>
+        </div>
+      `;
+      }).join("");
+      container.querySelectorAll(".room-skill-item").forEach((item) => {
+        const id = item.dataset.id;
+        const starBtn = item.querySelector(".room-fav-star-btn");
+        if (starBtn) {
+          starBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.toggleFavoriteSkill(id);
+            this._updateRoomFavCountBadge();
+            this._renderRoomWeaponGrid();
+          };
+        }
+        item.onclick = () => {
+          if (this.loadoutSelection.includes(id)) {
+            if (this.loadoutSelection.length > 1) {
+              this.loadoutSelection = this.loadoutSelection.filter((x) => x !== id);
+            }
+          } else {
+            if (this.loadoutSelection.length < 5) {
+              this.loadoutSelection.push(id);
+            } else {
+              this.loadoutSelection.shift();
+              this.loadoutSelection.push(id);
+            }
+          }
+          if (this.multiplayerMyReady) {
+            this.multiplayerMyReady = false;
+            if (this.isCountdownActive) this._cancelMatchCountdown();
+            if (p2pNetwork.isConnected) p2pNetwork.send({ type: "ready_status", ready: false });
+            this._updateRoomReadyButton();
+          }
+          localStorage.setItem("quantum_arena_last_loadout", JSON.stringify(this.loadoutSelection));
+          saveSystem.updateLoadout(this.loadoutSelection);
+          soundEngine.playUI("click");
+          if (p2pNetwork.isConnected) {
+            p2pNetwork.send({ type: "player_update", loadout: this.loadoutSelection });
+          }
+          this._renderRoomWeaponSlots();
+          this._renderRoomWeaponGrid();
+          this._updateRoomPlayersCard();
+        };
+      });
+    }
+    _updateRoomPlayersCard() {
+      const isHost = this.multiplayerRole === "host";
+      const myName = saveSystem.currentUser ? saveSystem.currentUser.nickname : isHost ? "\u623F\u4E3B (\u6211\u65B9)" : "\u6311\u6230\u8005 (\u6211\u65B9)";
+      const mySkin = this.getEquippedSkin();
+      const p1Label = document.getElementById("roomP1Label");
+      const p1Name = document.getElementById("roomP1Name");
+      const p1ReadyBadge = document.getElementById("roomP1ReadyBadge");
+      const p1Summary = document.getElementById("roomP1LoadoutSummary");
+      const p1Avatar = document.getElementById("roomP1Avatar");
+      const p2Label = document.getElementById("roomP2Label");
+      const p2Name = document.getElementById("roomP2Name");
+      const p2ReadyBadge = document.getElementById("roomP2ReadyBadge");
+      const p2Summary = document.getElementById("roomP2LoadoutSummary");
+      const p2Avatar = document.getElementById("roomP2Avatar");
+      if (isHost) {
+        if (p1Label) p1Label.textContent = "\u{1F451} \u623F\u4E3B (\u6211\u65B9 1P)";
+        if (p1Name) p1Name.textContent = myName;
+        if (p1Summary) p1Summary.textContent = `\u5DF2\u9078 ${this.loadoutSelection.length} \u6B3E\u795E\u5175 (${mySkin.name})`;
+        if (p1Avatar) p1Avatar.style.borderColor = mySkin.themeColor || "#00f3ff";
+        if (p1ReadyBadge) {
+          if (this.multiplayerMyReady) {
+            p1ReadyBadge.style.background = "rgba(16, 185, 129, 0.2)";
+            p1ReadyBadge.style.borderColor = "#10b981";
+            p1ReadyBadge.style.color = "#10b981";
+            p1ReadyBadge.textContent = "\u{1F7E2} \u6E96\u5099\u5B8C\u6210";
+          } else {
+            p1ReadyBadge.style.background = "rgba(255, 0, 127, 0.2)";
+            p1ReadyBadge.style.borderColor = "#ff007f";
+            p1ReadyBadge.style.color = "#ff007f";
+            p1ReadyBadge.textContent = "\u{1F534} \u6311\u9078\u6B66\u5668\u4E2D";
+          }
+        }
+        if (p2Label) p2Label.textContent = "\u2694\uFE0F \u6311\u6230\u8005 (2P)";
+        if (this.multiplayerOpponentConnected) {
+          const oppName = this.multiplayerOpponentData?.name || "\u6311\u6230\u8005\u597D\u53CB";
+          const oppSkin = this.multiplayerOpponentData?.skin || SKINS[1];
+          const oppCount = this.multiplayerOpponentData?.loadout?.length || 5;
+          if (p2Name) {
+            p2Name.textContent = oppName;
+            p2Name.style.color = "#fff";
+          }
+          if (p2Summary) p2Summary.textContent = `\u5DF2\u9078 ${oppCount} \u6B3E\u795E\u5175 (${oppSkin.name || "\u8CFD\u535A\u82F1\u96C4"})`;
+          if (p2Avatar) {
+            p2Avatar.style.borderColor = oppSkin.themeColor || "#a855f7";
+            p2Avatar.style.color = oppSkin.themeColor || "#a855f7";
+          }
+          if (p2ReadyBadge) {
+            if (this.multiplayerOpponentReady) {
+              p2ReadyBadge.style.background = "rgba(16, 185, 129, 0.2)";
+              p2ReadyBadge.style.borderColor = "#10b981";
+              p2ReadyBadge.style.color = "#10b981";
+              p2ReadyBadge.textContent = "\u{1F7E2} \u6E96\u5099\u5B8C\u6210";
+            } else {
+              p2ReadyBadge.style.background = "rgba(255, 0, 127, 0.2)";
+              p2ReadyBadge.style.borderColor = "#ff007f";
+              p2ReadyBadge.style.color = "#ff007f";
+              p2ReadyBadge.textContent = "\u{1F534} \u6311\u9078\u6B66\u5668\u4E2D";
+            }
+          }
+        } else {
+          if (p2Name) {
+            p2Name.textContent = "\u7B49\u5F85\u5C0D\u624B\u8F38\u5165\u4EE3\u78BC...";
+            p2Name.style.color = "#94a3b8";
+          }
+          if (p2Summary) p2Summary.textContent = "\u672A\u9023\u7DDA";
+          if (p2ReadyBadge) {
+            p2ReadyBadge.style.background = "rgba(255, 255, 255, 0.1)";
+            p2ReadyBadge.style.borderColor = "rgba(255, 255, 255, 0.2)";
+            p2ReadyBadge.style.color = "#94a3b8";
+            p2ReadyBadge.textContent = "\u23F3 \u7B49\u5F85\u52A0\u5165...";
+          }
+        }
+      } else {
+        if (p1Label) p1Label.textContent = "\u{1F451} \u623F\u4E3B (1P)";
+        if (this.multiplayerOpponentConnected) {
+          const oppName = this.multiplayerOpponentData?.name || "\u623F\u4E3B\u597D\u53CB";
+          const oppSkin = this.multiplayerOpponentData?.skin || SKINS[0];
+          const oppCount = this.multiplayerOpponentData?.loadout?.length || 5;
+          if (p1Name) {
+            p1Name.textContent = oppName;
+            p1Name.style.color = "#fff";
+          }
+          if (p1Summary) p1Summary.textContent = `\u5DF2\u9078 ${oppCount} \u6B3E\u795E\u5175 (${oppSkin.name || "\u8CFD\u535A\u82F1\u96C4"})`;
+          if (p1Avatar) {
+            p1Avatar.style.borderColor = oppSkin.themeColor || "#00f3ff";
+            p1Avatar.style.color = oppSkin.themeColor || "#00f3ff";
+          }
+          if (p1ReadyBadge) {
+            if (this.multiplayerOpponentReady) {
+              p1ReadyBadge.style.background = "rgba(16, 185, 129, 0.2)";
+              p1ReadyBadge.style.borderColor = "#10b981";
+              p1ReadyBadge.style.color = "#10b981";
+              p1ReadyBadge.textContent = "\u{1F7E2} \u6E96\u5099\u5B8C\u6210";
+            } else {
+              p1ReadyBadge.style.background = "rgba(255, 0, 127, 0.2)";
+              p1ReadyBadge.style.borderColor = "#ff007f";
+              p1ReadyBadge.style.color = "#ff007f";
+              p1ReadyBadge.textContent = "\u{1F534} \u6311\u9078\u6B66\u5668\u4E2D";
+            }
+          }
+        } else {
+          if (p1Name) {
+            p1Name.textContent = "\u9023\u7DDA\u81F3\u623F\u4E3B\u4E2D...";
+            p1Name.style.color = "#94a3b8";
+          }
+          if (p1Summary) p1Summary.textContent = "\u9023\u7DDA\u4E2D";
+          if (p1ReadyBadge) {
+            p1ReadyBadge.style.background = "rgba(255, 255, 255, 0.1)";
+            p1ReadyBadge.style.borderColor = "rgba(255, 255, 255, 0.2)";
+            p1ReadyBadge.style.color = "#94a3b8";
+            p1ReadyBadge.textContent = "\u23F3 \u9023\u7DDA\u4E2D...";
+          }
+        }
+        if (p2Label) p2Label.textContent = "\u2694\uFE0F \u6311\u6230\u8005 (\u6211\u65B9 2P)";
+        if (p2Name) {
+          p2Name.textContent = myName;
+          p2Name.style.color = "#fff";
+        }
+        if (p2Summary) p2Summary.textContent = `\u5DF2\u9078 ${this.loadoutSelection.length} \u6B3E\u795E\u5175 (${mySkin.name})`;
+        if (p2Avatar) {
+          p2Avatar.style.borderColor = mySkin.themeColor || "#a855f7";
+          p2Avatar.style.color = mySkin.themeColor || "#a855f7";
+        }
+        if (p2ReadyBadge) {
+          if (this.multiplayerMyReady) {
+            p2ReadyBadge.style.background = "rgba(16, 185, 129, 0.2)";
+            p2ReadyBadge.style.borderColor = "#10b981";
+            p2ReadyBadge.style.color = "#10b981";
+            p2ReadyBadge.textContent = "\u{1F7E2} \u6E96\u5099\u5B8C\u6210";
+          } else {
+            p2ReadyBadge.style.background = "rgba(255, 0, 127, 0.2)";
+            p2ReadyBadge.style.borderColor = "#ff007f";
+            p2ReadyBadge.style.color = "#ff007f";
+            p2ReadyBadge.textContent = "\u{1F534} \u6311\u9078\u6B66\u5668\u4E2D";
+          }
+        }
+      }
+    }
+    _updateRoomReadyButton() {
+      const btn = document.getElementById("roomReadyBtn");
+      const hint = document.getElementById("roomReadyStatusHint");
+      if (!btn) return;
+      if (this.multiplayerMyReady) {
+        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> \u5DF2\u6E96\u5099\u5C31\u7DD2 (\u9EDE\u64CA\u53EF\u53D6\u6D88)';
+        btn.style.background = "linear-gradient(90deg, #10b981, #059669)";
+        btn.style.boxShadow = "0 0 25px rgba(16, 185, 129, 0.5)";
+        if (hint) {
+          hint.innerHTML = '<span style="color: #00ff88; font-weight: 800;">\u2705 \u60A8\u5DF2\u6E96\u5099\u5B8C\u6210\uFF01</span> \u7B49\u5F85\u5C0D\u624B\u4E5F\u6E96\u5099\u5B8C\u6210\u5F8C\uFF0C\u5C07\u6703\u81EA\u52D5\u9032\u5165 3\u30012\u30011 \u5012\u6578\u958B\u6230\uFF01';
+        }
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-bolt"></i> \u6E96\u5099\u5B8C\u6210';
+        btn.style.background = "linear-gradient(90deg, #00f3ff, #10b981)";
+        btn.style.boxShadow = "0 0 25px rgba(0, 243, 255, 0.4)";
+        if (hint) {
+          hint.innerHTML = "\u9EDE\u9078\u300C\u6E96\u5099\u5B8C\u6210\u300D\u5F8C\uFF0C\u7B49\u5F85\u5C0D\u65B9\u4E5F\u6E96\u5099\u5B8C\u6210\uFF0C\u96D9\u65B9\u6E96\u5099\u5C31\u7DD2\u5F8C\u5C07\u6703\u9032\u884C 3\u30012\u30011 \u5012\u6578\u958B\u6230\uFF01";
+        }
+      }
+    }
+    toggleMultiplayerReady() {
+      soundEngine.playUI("click");
+      if (!this.multiplayerMyReady) {
+        if (this.loadoutSelection.length < 5) {
+          while (this.loadoutSelection.length < 5) {
+            const fallback = SKILLS.find((s) => !this.loadoutSelection.includes(s.id)) || SKILLS[0];
+            this.loadoutSelection.push(fallback.id);
+          }
+          this._renderRoomWeaponSlots();
+          this._renderRoomWeaponGrid();
+        }
+        this.multiplayerMyReady = true;
+        if (p2pNetwork.isConnected) {
+          p2pNetwork.send({ type: "ready_status", ready: true });
+        }
+      } else {
+        this.multiplayerMyReady = false;
+        if (this.isCountdownActive) {
+          this._cancelMatchCountdown();
+        }
+        if (p2pNetwork.isConnected) {
+          p2pNetwork.send({ type: "ready_status", ready: false });
+        }
+      }
+      this._updateRoomReadyButton();
+      this._updateRoomPlayersCard();
+      this._checkBothReady();
+    }
+    _checkBothReady() {
+      if (this.multiplayerMyReady && this.multiplayerOpponentReady && this.multiplayerOpponentConnected) {
+        if (!this.isCountdownActive) {
+          this._startMatchCountdown();
+        }
+      } else {
+        if (this.isCountdownActive) {
+          this._cancelMatchCountdown();
+        }
+      }
+    }
+    _startMatchCountdown(shouldBroadcast = true) {
+      if (this.isCountdownActive) return;
+      this.isCountdownActive = true;
+      if (shouldBroadcast && this.multiplayerRole === "host" && p2pNetwork.isConnected) {
+        p2pNetwork.send({ type: "countdown_start" });
+      }
+      const overlay = document.getElementById("multiplayerCountdownOverlay");
+      const numEl = document.getElementById("countdownNumberDisplay");
+      const subEl = document.getElementById("countdownSubDisplay");
+      if (!overlay || !numEl) {
+        this._launchMultiplayerBattle();
+        return;
+      }
+      overlay.style.display = "flex";
+      if (this.countdownTimerId) {
+        clearTimeout(this.countdownTimerId);
+        this.countdownTimerId = null;
+      }
+      const runStep = (step) => {
+        if (!this.isCountdownActive) return;
+        numEl.classList.remove("countdown-anim-pop", "countdown-anim-fight");
+        void numEl.offsetWidth;
+        if (step === 3) {
+          numEl.textContent = "3";
+          numEl.style.color = "#00f3ff";
+          numEl.style.textShadow = "0 0 50px rgba(0, 243, 255, 0.85), 0 0 100px rgba(0, 243, 255, 0.4)";
+          if (subEl) subEl.textContent = "\u96D9\u65B9\u5747\u5DF2\u6E96\u5099\u5B8C\u6210\uFF01\u5373\u5C07\u9032\u5165\u91CF\u5B50\u64C2\u53F0...";
+          numEl.classList.add("countdown-anim-pop");
+          soundEngine.playUI("countdown");
+          this.countdownTimerId = setTimeout(() => runStep(2), 1e3);
+        } else if (step === 2) {
+          numEl.textContent = "2";
+          numEl.style.color = "#ffd700";
+          numEl.style.textShadow = "0 0 50px rgba(255, 215, 0, 0.85), 0 0 100px rgba(255, 215, 0, 0.4)";
+          if (subEl) subEl.textContent = "\u795E\u5175\u6B66\u88DD\u914D\u7F6E\u540C\u6B65\u5B8C\u7562...";
+          numEl.classList.add("countdown-anim-pop");
+          soundEngine.playUI("countdown");
+          this.countdownTimerId = setTimeout(() => runStep(1), 1e3);
+        } else if (step === 1) {
+          numEl.textContent = "1";
+          numEl.style.color = "#ff8800";
+          numEl.style.textShadow = "0 0 50px rgba(255, 136, 0, 0.85), 0 0 100px rgba(255, 136, 0, 0.4)";
+          if (subEl) subEl.textContent = "\u91CF\u5B50\u5171\u632F\u529B\u5834\u555F\u52D5\uFF0C\u6975\u9650\u5C0D\u6C7A\u5373\u523B\u7206\u767C\uFF01";
+          numEl.classList.add("countdown-anim-pop");
+          soundEngine.playUI("countdown");
+          this.countdownTimerId = setTimeout(() => runStep(0), 1e3);
+        } else if (step === 0) {
+          numEl.textContent = "\u958B\u59CB\uFF01";
+          numEl.style.color = "#ff007f";
+          numEl.style.textShadow = "0 0 60px rgba(255, 0, 127, 0.95), 0 0 120px rgba(255, 0, 127, 0.6)";
+          if (subEl) subEl.textContent = "\u26A1 FIGHT! \u5168\u529B\u4EE5\u8D74\uFF0C\u596A\u53D6\u52DD\u5229\uFF01 \u26A1";
+          numEl.classList.add("countdown-anim-fight");
+          soundEngine.playUI("fight");
+          announcerEngine.speak("Fight!");
+          this.countdownTimerId = setTimeout(() => {
+            if (!this.isCountdownActive) return;
+            this.isCountdownActive = false;
+            overlay.style.display = "none";
+            const roomModal = document.getElementById("multiplayerRoomModal");
+            if (roomModal) roomModal.classList.remove("active");
+            this._launchMultiplayerBattle();
+          }, 850);
+        }
+      };
+      runStep(3);
+    }
+    _cancelMatchCountdown() {
+      if (!this.isCountdownActive) return;
+      this.isCountdownActive = false;
+      if (this.countdownTimerId) {
+        clearTimeout(this.countdownTimerId);
+        this.countdownTimerId = null;
+      }
+      const overlay = document.getElementById("multiplayerCountdownOverlay");
+      if (overlay) overlay.style.display = "none";
+      if (this.multiplayerRole === "host" && p2pNetwork.isConnected) {
+        p2pNetwork.send({ type: "countdown_cancel" });
+      }
+    }
+    _launchMultiplayerBattle() {
+      this.matchMode = "p2p";
+      const isHost = this.multiplayerRole === "host";
+      const myName = saveSystem.currentUser ? saveSystem.currentUser.nickname : isHost ? "\u623F\u4E3B (1P)" : "\u6311\u6230\u8005 (2P)";
+      const mySkin = this.getEquippedSkin();
+      let p1Data, p2Data;
+      if (isHost) {
+        p1Data = {
+          name: myName,
+          skin: mySkin,
+          loadout: this.loadoutSelection
+        };
+        p2Data = {
+          name: this.multiplayerOpponentData?.name || "\u6311\u6230\u8005 (2P)",
+          skin: this.multiplayerOpponentData?.skin || SKINS[1],
+          loadout: this.multiplayerOpponentData?.loadout || ["SK-01", "SK-02", "SK-06", "SK-16", "SK-17"]
+        };
+      } else {
+        p1Data = {
+          name: this.multiplayerOpponentData?.name || "\u623F\u4E3B (1P)",
+          skin: this.multiplayerOpponentData?.skin || SKINS[0],
+          loadout: this.multiplayerOpponentData?.loadout || ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"]
+        };
+        p2Data = {
+          name: myName,
+          skin: mySkin,
+          loadout: this.loadoutSelection
+        };
+      }
+      this._p2pMatchData = { p1Data, p2Data };
+      this._launchMatch();
+    }
+    leaveMultiplayerRoom() {
+      this._cancelMatchCountdown();
+      p2pNetwork.disconnect();
+      const roomModal = document.getElementById("multiplayerRoomModal");
+      if (roomModal) roomModal.classList.remove("active");
+      this.multiplayerRole = null;
+      this.multiplayerRoomCode = null;
+      this.multiplayerOpponentConnected = false;
+      this.multiplayerMyReady = false;
+      this.multiplayerOpponentReady = false;
+      this.multiplayerOpponentData = null;
+      this._isSimulatedOpponent = false;
+      this.networkP1Input = null;
+      this.networkP2Input = null;
+    }
+    simulateTestOpponent() {
+      this._isSimulatedOpponent = true;
+      this.multiplayerOpponentConnected = true;
+      this.multiplayerOpponentData = {
+        name: "\u91CF\u5B50\u6A21\u64EC\u6230\u53CB (\u6E2C\u8A66)",
+        skin: SKINS[1],
+        loadout: ["SK-01", "SK-04", "SK-08", "SK-15", "SK-18"]
+      };
+      this.multiplayerOpponentReady = true;
+      const badge = document.getElementById("roomConnStatusBadge");
+      if (badge) {
+        badge.innerHTML = "\u{1F916} \u6A21\u64EC\u5C0D\u624B\u5DF2\u52A0\u5165\u4E26\u5DF2\u6E96\u5099\uFF01\u8ACB\u60A8\u6311\u9078\u597D\u6B66\u5668\u5F8C\u6309\u4E0B\u300C\u6E96\u5099\u5B8C\u6210\u300D\u6E2C\u8A66\u5012\u6578\u958B\u6230";
+        badge.style.color = "#00ff66";
+      }
+      soundEngine.playUI("click");
+      this._updateRoomPlayersCard();
+      this._checkBothReady();
+    }
+    _handleP2PStatusChange(status, data) {
+      const badge = document.getElementById("roomConnStatusBadge");
+      if (status === "waiting_guest") {
+        if (badge) {
+          badge.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> \u7B49\u5F85\u597D\u53CB\u8F38\u5165 6 \u4F4D\u4EE3\u78BC\u52A0\u5165\u4E2D...';
+          badge.style.color = "#38bdf8";
+        }
+      } else if (status === "connecting") {
+        if (badge) {
+          badge.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> \u6B63\u5728\u9023\u7DDA\u81F3\u623F\u9593 ${this.multiplayerRoomCode}...`;
+          badge.style.color = "#ffd700";
+        }
+      } else if (status === "connected") {
+        this.multiplayerOpponentConnected = true;
+        if (badge) {
+          badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> \u96D9\u65B9\u9023\u7DDA\u6210\u529F\uFF01\u8ACB\u6311\u9078\u6B66\u5668\u4E26\u6309\u300C\u6E96\u5099\u5B8C\u6210\u300D';
+          badge.style.color = "#00ff66";
+        }
+        soundEngine.playUI("click");
+        p2pNetwork.send({
+          type: "player_info",
+          name: saveSystem.currentUser ? saveSystem.currentUser.nickname : this.multiplayerRole === "host" ? "\u623F\u4E3B" : "\u6311\u6230\u8005",
+          skin: this.getEquippedSkin(),
+          loadout: this.loadoutSelection,
+          ready: this.multiplayerMyReady
+        });
+        this._updateRoomPlayersCard();
+      } else if (status === "disconnected") {
+        this.multiplayerOpponentConnected = false;
+        this.multiplayerOpponentReady = false;
+        this.multiplayerOpponentData = null;
+        if (this.isCountdownActive) this._cancelMatchCountdown();
+        if (badge) {
+          badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> \u5C0D\u624B\u5DF2\u96E2\u958B\u623F\u9593';
+          badge.style.color = "#ff007f";
+        }
+        this._updateRoomPlayersCard();
+      } else if (status === "error") {
+        if (badge) {
+          badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> \u9023\u7DDA\u63D0\u793A\uFF1A${data || "\u672A\u627E\u5230\u623F\u9593\u6216\u5DF2\u903E\u6642"}`;
+          badge.style.color = "#f43f5e";
+        }
+      }
+    }
+    _handleP2PData(data) {
+      if (!data || !data.type) return;
+      if (data.type === "player_info") {
+        this.multiplayerOpponentData = {
+          name: data.name,
+          skin: data.skin,
+          loadout: data.loadout
+        };
+        this.multiplayerOpponentReady = !!data.ready;
+        p2pNetwork.send({
+          type: "player_info_ack",
+          name: saveSystem.currentUser ? saveSystem.currentUser.nickname : this.multiplayerRole === "host" ? "\u623F\u4E3B" : "\u6311\u6230\u8005",
+          skin: this.getEquippedSkin(),
+          loadout: this.loadoutSelection,
+          ready: this.multiplayerMyReady
+        });
+        this._updateRoomPlayersCard();
+        this._checkBothReady();
+      } else if (data.type === "player_info_ack") {
+        this.multiplayerOpponentData = {
+          name: data.name,
+          skin: data.skin,
+          loadout: data.loadout
+        };
+        this.multiplayerOpponentReady = !!data.ready;
+        this._updateRoomPlayersCard();
+        this._checkBothReady();
+      } else if (data.type === "player_update") {
+        if (!this.multiplayerOpponentData) {
+          this.multiplayerOpponentData = {};
+        }
+        if (data.loadout) this.multiplayerOpponentData.loadout = data.loadout;
+        if (data.name) this.multiplayerOpponentData.name = data.name;
+        if (data.skin) this.multiplayerOpponentData.skin = data.skin;
+        this._updateRoomPlayersCard();
+      } else if (data.type === "ready_status") {
+        this.multiplayerOpponentReady = !!data.ready;
+        this._updateRoomPlayersCard();
+        this._checkBothReady();
+      } else if (data.type === "countdown_start") {
+        if (!this.isCountdownActive) {
+          this._startMatchCountdown(false);
+        }
+      } else if (data.type === "countdown_cancel") {
+        this._cancelMatchCountdown();
+      } else if (data.type === "battle_input") {
+        if (data.p1) this.networkP1Input = data.p1;
+        if (data.p2) this.networkP2Input = data.p2;
+      }
     }
   };
   if (typeof window !== "undefined") {

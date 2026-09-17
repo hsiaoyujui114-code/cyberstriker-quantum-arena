@@ -1041,3 +1041,77 @@ body:has(#battleScreen.active) .fab-start-btn {
 .shop-skin-canvas:active {
   transform: scale(0.97);
 }
+
+/* ─── 雙人連線房間大廳與開戰倒數動畫 ─── */
+@keyframes countdown-pop {
+  0% { transform: scale(2.2); opacity: 0; filter: blur(10px); }
+  35% { transform: scale(0.92); opacity: 1; filter: blur(0px); }
+  65% { transform: scale(1.06); }
+  100% { transform: scale(1.0); }
+}
+
+@keyframes countdown-fight {
+  0% { transform: scale(0.4); opacity: 0; filter: brightness(2.5); }
+  45% { transform: scale(1.25); opacity: 1; filter: brightness(1.6); }
+  75% { transform: scale(0.96); }
+  100% { transform: scale(1.0); filter: brightness(1); }
+}
+
+.countdown-anim-pop {
+  animation: countdown-pop 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.countdown-anim-fight {
+  animation: countdown-fight 0.95s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.room-code-badge {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px;
+  font-weight: 900;
+  color: #ffd700;
+  letter-spacing: 6px;
+  text-shadow: 0 0 16px rgba(255, 215, 0, 0.7);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  display: inline-block;
+}
+
+.room-skill-item {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-skill-item:hover {
+  background: rgba(0, 243, 255, 0.1);
+  border-color: #00f3ff;
+  transform: translateY(-1px);
+}
+
+.room-skill-item.equipped {
+  border-color: #00f3ff;
+  background: rgba(0, 243, 255, 0.15);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.25);
+}
+
+.room-slot-card {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1.5px solid rgba(0, 243, 255, 0.25);
+  border-radius: 6px;
+  padding: 6px;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.room-slot-card:hover {
+  border-color: #00f3ff;
+}
