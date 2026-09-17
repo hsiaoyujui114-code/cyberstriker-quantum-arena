@@ -328,8 +328,8 @@ export class CombatEngine {
     }
   }
 
-  forceKO(winner, p1Hp = null, p2Hp = null) {
-    if (this.isOver) return;
+  forceKO(winner, p1Hp = null, p2Hp = null, force = false) {
+    if (this.isOver && !force) return;
     this.isOver = true;
     this.winner = winner;
 
@@ -360,10 +360,17 @@ export class CombatEngine {
         this.p1.vx = 0;
         this.p1.vy = 0;
       } else {
+        // winner === 0 (平手 / Double K.O.)
         this.p1.hp = 0;
         this.p2.hp = 0;
         this.p1.state = 'defeat';
         this.p2.state = 'defeat';
+        this.p1.stateTime = 0;
+        this.p2.stateTime = 0;
+        this.p1.vx = 0;
+        this.p1.vy = 0;
+        this.p2.vx = 0;
+        this.p2.vy = 0;
       }
 
       this.p1.isTakingLegitHit = false;
@@ -386,7 +393,7 @@ export class CombatEngine {
       y: targetY,
       radius: 10,
       maxRadius: 420,
-      color: '#ffd700',
+      color: this.winner === 0 ? '#38bdf8' : '#ffd700',
       duration: 50,
       lineWidth: 8,
       isKO: true
@@ -424,6 +431,22 @@ export class CombatEngine {
         x: this.p2.x,
         y: this.p2.y - 145,
         color: '#ff007f',
+        life: 180
+      });
+    } else if (this.winner === 0) {
+      this.p1.state = 'defeat';
+      this.p1.stateTime = 0;
+      this.p1.vx = 0;
+      this.p1.vy = 0;
+      this.p2.state = 'defeat';
+      this.p2.stateTime = 0;
+      this.p2.vx = 0;
+      this.p2.vy = 0;
+      this.floatingTexts.push({
+        text: 'DOUBLE K.O.!',
+        x: (this.p1.x + this.p2.x) / 2,
+        y: 280,
+        color: '#38bdf8',
         life: 180
       });
     }

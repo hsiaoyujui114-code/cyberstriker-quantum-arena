@@ -53,6 +53,8 @@ class CyberStrikerApp {
     this.networkP2Input = null;
     this._isSimulatedOpponent = false;
     this._p2pMatchData = null;
+    this.rematchRequestedByMe = false;
+    this.rematchRequestedByOpponent = false;
 
     // 自訂技能槽位按鍵綁定 (預設 U, I, O, Y, H)
     let savedKeys = null;
@@ -1421,6 +1423,17 @@ class CyberStrikerApp {
       if (combatEngine.isOver) {
         inputP1 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
         inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+
+        // 房主在戰鬥結束初期的 30 幀內持續廣播終局狀態，確保客端 100% 收到權威勝負裁定
+        if (this.matchMode === 'p2p' && this.multiplayerRole === 'host' && p2pNetwork.isConnected && this.matchEndTimer <= 30) {
+          p2pNetwork.send({
+            type: 'battle_sync',
+            p1: { hp: Math.round(combatEngine.p1.hp) },
+            p2: { hp: Math.round(combatEngine.p2.hp) },
+            isOver: true,
+            winner: combatEngine.winner
+          });
+        }
       } else if (this.matchMode === 'p2p') {
         this._p2pSyncTimer = (this._p2pSyncTimer || 0) + 1;
 
@@ -1497,26 +1510,21 @@ class CyberStrikerApp {
 
       // 4. 檢查對局結算與勝利姿態慶祝展示計時
       if (combatEngine.isOver && !combatEngine.isTraining) {
-        const isLocalWinner = this.matchMode === 'p2p'
+        const isDraw = combatEngine.winner === 0;
+        const isLocalWinner = !isDraw && (this.matchMode === 'p2p'
           ? (this.multiplayerRole === 'guest' ? combatEngine.winner === 2 : combatEngine.winner === 1)
-          : combatEngine.winner === 1;
+          : combatEngine.winner === 1);
+        const winnerFighter = combatEngine.winner === 1 ? combatEngine.p1 : (combatEngine.winner === 2 ? combatEngine.p2 : null);
 
         if (!this.matchEndTimer) {
           this.matchEndTimer = 1;
-          if (isLocalWinner) {
-            // 清除戰鬥雜訊文字，避免擋住 VICTORY
-            combatEngine.floatingTexts = [];
-            announcerEngine.activeBanners = [];
-            const vOverlay = document.getElementById('battleVictoryOverlay');
-            if (vOverlay) vOverlay.style.display = 'block';
-          }
+          combatEngine.floatingTexts = [];
+          announcerEngine.activeBanners = [];
+          this._syncVictoryOverlay(isLocalWinner, isDraw, winnerFighter);
         } else {
           this.matchEndTimer++;
-          if (isLocalWinner) {
-            // 勝利期間持續抑制浮動傷害字與播報雜訊
-            combatEngine.floatingTexts = [];
-            announcerEngine.activeBanners = [];
-          }
+          combatEngine.floatingTexts = [];
+          announcerEngine.activeBanners = [];
         }
 
         // 勝利慶祝展示 110 幀 (~1.8 秒) 後彈出結算對話框，背景姿態動畫持續播放
@@ -3020,23 +3028,35 @@ class CyberStrikerApp {
   }
 
   _drawVictoryBanner(ctx, w, h) {
+    if (!combatEngine.isOver) return;
+
+    const isDraw = combatEngine.winner === 0;
     const isP1Win = combatEngine.winner === 1;
     const isP2Win = combatEngine.winner === 2;
-    if (!isP1Win && !isP2Win) return;
-
-    const winner = isP1Win ? combatEngine.p1 : combatEngine.p2;
-    const isLocalWinner = this.matchMode === 'p2p'
+    const winner = isP1Win ? combatEngine.p1 : (isP2Win ? combatEngine.p2 : null);
+    const isLocalWinner = !isDraw && (this.matchMode === 'p2p'
       ? (this.multiplayerRole === 'guest' ? isP2Win : isP1Win)
-      : isP1Win;
-    const winTitle = isLocalWinner ? 'VICTORY' : 'K.O. 戰鬥結束';
-    const subTitle = isLocalWinner ? '★ 戰鬥勝利！漂亮擊倒對手奪下冠軍 ★' : `${winner.name} 贏得了本場對決！`;
-    const themeColor = isLocalWinner ? '#ffd700' : '#ff007f';
+      : isP1Win);
+
+    let winTitle = 'VICTORY';
+    let subTitle = '★ 戰鬥勝利！漂亮擊倒對手奪下冠軍 ★';
+    let themeColor = '#ffd700';
+
+    if (isDraw) {
+      winTitle = 'DOUBLE K.O.';
+      subTitle = '⚡ 雙方同時倒下！勢均力敵的平手對決 ⚡';
+      themeColor = '#38bdf8';
+    } else if (!isLocalWinner) {
+      winTitle = 'DEFEAT';
+      subTitle = winner ? `⚡ 本場惜敗！${winner.name} 贏得了本場對決 ⚡` : '⚡ 本場惜敗！再接再厲奪回榮耀 ⚡';
+      themeColor = '#ff007f';
+    }
 
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // 背景慶祝暗幕 (勝利時輕度壓暗背景，突出 Victory 橫幅)
+    // 背景慶祝暗幕 (壓暗背景，突出 Victory / Defeat / Draw 橫幅)
     ctx.fillStyle = 'rgba(5, 8, 20, 0.55)';
     ctx.fillRect(0, 0, w, h);
 
@@ -3063,12 +3083,12 @@ class CyberStrikerApp {
       ctx.strokeRect(bx, by, bannerW, bannerH);
     }
 
-    // 主標題文字 (醒目大字 VICTORY，純金黃色)
-    ctx.font = isLocalWinner ? '900 44px "Orbitron", sans-serif' : '900 32px "Orbitron", "Noto Sans TC", sans-serif';
+    // 主標題文字 (統一 900 44px Orbitron 大字)
+    ctx.font = '900 44px "Orbitron", sans-serif';
     ctx.fillStyle = themeColor;
-    ctx.shadowColor = isLocalWinner ? 'rgba(255, 215, 0, 0.95)' : 'rgba(255, 0, 127, 0.95)';
+    ctx.shadowColor = themeColor;
     ctx.shadowBlur = 22;
-    ctx.fillText(winTitle, w / 2, cy - (isLocalWinner ? 13 : 10));
+    ctx.fillText(winTitle, w / 2, cy - 12);
 
     // 副標題文字
     ctx.font = '700 13px "Noto Sans TC", sans-serif';
@@ -3553,17 +3573,45 @@ class CyberStrikerApp {
   _showMatchEndModal() {
     soundEngine.stopBgm();
 
-    const won = this.matchMode === 'p2p'
+    const isDraw = combatEngine.winner === 0;
+    const won = !isDraw && (this.matchMode === 'p2p'
       ? (this.multiplayerRole === 'guest' ? combatEngine.winner === 2 : combatEngine.winner === 1)
-      : combatEngine.winner === 1;
+      : combatEngine.winner === 1);
     const isAi = this.matchMode === 'ai' || this.matchMode === 'arcade';
-    const reward = saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
+    const reward = isDraw
+      ? { gained: 50, newBalance: (saveSystem.currentUser?.credits || 0) + 50 }
+      : saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
+    if (isDraw && saveSystem && typeof saveSystem.addCredits === 'function') {
+      try {
+        saveSystem.addCredits(50);
+      } catch (e) {
+        console.warn('Failed to add draw credits:', e);
+      }
+    }
 
     const endModal = document.getElementById('matchEndModal');
     const resultTitle = document.getElementById('matchResultTitle');
     const creditsReward = document.getElementById('matchRewardAmount');
     const playAgainBtn = document.getElementById('matchPlayAgainBtn');
     const nextStageBtn = document.getElementById('matchNextStageBtn');
+    const statusHint = document.getElementById('matchRematchStatus');
+
+    // 重置再戰旗標與狀態文字
+    this.rematchRequestedByMe = false;
+    this.rematchRequestedByOpponent = false;
+    if (statusHint) {
+      statusHint.textContent = '';
+      statusHint.style.color = '#cbd5e1';
+    }
+
+    if (playAgainBtn) {
+      playAgainBtn.disabled = false;
+      playAgainBtn.style.opacity = '1';
+      playAgainBtn.style.background = 'linear-gradient(135deg, #00f3ff, #00ff66)';
+      playAgainBtn.style.color = '#050814';
+      playAgainBtn.style.boxShadow = '0 0 16px rgba(0, 243, 255, 0.4)';
+      playAgainBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> 再玩一次';
+    }
 
     if (this.matchMode === 'arcade') {
       if (won) {
@@ -3620,11 +3668,18 @@ class CyberStrikerApp {
       if (nextStageBtn) nextStageBtn.style.display = 'none';
       if (playAgainBtn) {
         playAgainBtn.style.display = 'flex';
-        playAgainBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> 再玩一次';
       }
       if (resultTitle) {
-        resultTitle.textContent = won ? 'VICTORY 戰鬥勝利' : 'DEFEAT 戰鬥落敗';
-        resultTitle.style.color = won ? '#ffd700' : '#ff007f';
+        if (isDraw) {
+          resultTitle.textContent = 'DOUBLE K.O. 平手';
+          resultTitle.style.color = '#38bdf8';
+        } else if (won) {
+          resultTitle.textContent = 'VICTORY 戰鬥勝利';
+          resultTitle.style.color = '#ffd700';
+        } else {
+          resultTitle.textContent = 'DEFEAT 戰鬥落敗';
+          resultTitle.style.color = '#ff007f';
+        }
       }
       if (creditsReward) creditsReward.textContent = `+${reward.gained} 能量幣`;
     }
@@ -3664,6 +3719,13 @@ class CyberStrikerApp {
     this.arcadeStreakWins = 0;
     this.updateUserHUD();
 
+    if (this.matchMode === 'p2p') {
+      if (p2pNetwork.isConnected) {
+        p2pNetwork.send({ type: 'rematch_exit' });
+      }
+      this.leaveMultiplayerRoom();
+    }
+
     // 恢復大廳擂台或商城正面預覽循環
     if (this.currentTab === 'skins') {
       this._startPedestalLoop();
@@ -3674,10 +3736,133 @@ class CyberStrikerApp {
 
   playAgain() {
     const endModal = document.getElementById('matchEndModal');
+    const victoryOverlay = document.getElementById('battleVictoryOverlay');
+    const playAgainBtn = document.getElementById('matchPlayAgainBtn');
+    const statusHint = document.getElementById('matchRematchStatus');
+
+    // 1. 若非多人連線 (AI、街機、練習模式)，直接啟動新對局
+    if (this.matchMode !== 'p2p') {
+      if (endModal) endModal.classList.remove('active');
+      if (victoryOverlay) victoryOverlay.style.display = 'none';
+      this._launchMatch();
+      return;
+    }
+
+    // 2. 多人連線模式：方案 B 雙向確認機制
+    if (!p2pNetwork.isConnected) {
+      if (statusHint) {
+        statusHint.textContent = '⚠️ 連線已斷開，無法再戰，請返回大廳重新配對';
+        statusHint.style.color = '#ff4d4d';
+      }
+      if (playAgainBtn) {
+        playAgainBtn.disabled = true;
+        playAgainBtn.style.opacity = '0.5';
+      }
+      return;
+    }
+
+    // 情境 A：對方已經先按了「再玩一次」向我發出請求，我現在點擊「點此同意」！
+    if (this.rematchRequestedByOpponent) {
+      if (playAgainBtn) {
+        playAgainBtn.disabled = true;
+        playAgainBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 準備開始...';
+      }
+      if (statusHint) {
+        statusHint.textContent = '⚡ 雙方已同意再戰！即將進入同步倒數...';
+        statusHint.style.color = '#00ff88';
+      }
+
+      if (this.multiplayerRole === 'host') {
+        p2pNetwork.send({ type: 'rematch_start' });
+        this._launchRematchCountdown();
+      } else {
+        p2pNetwork.send({ type: 'rematch_accept' });
+        // 為防極端延遲，若 600ms 內未收到房主的 start 亦安全啟動
+        setTimeout(() => {
+          if (this.matchMode === 'p2p' && !this.isFighting && !this.isCountdownActive) {
+            this._launchRematchCountdown();
+          }
+        }, 600);
+      }
+      return;
+    }
+
+    // 情境 B：我是第一位按下「再玩一次」的玩家，向對方發出邀請
+    this.rematchRequestedByMe = true;
+    p2pNetwork.send({ type: 'rematch_request' });
+
+    if (playAgainBtn) {
+      playAgainBtn.disabled = true;
+      playAgainBtn.style.opacity = '0.85';
+      playAgainBtn.style.background = 'rgba(255, 255, 255, 0.15)';
+      playAgainBtn.style.color = '#ffd700';
+      playAgainBtn.style.boxShadow = 'none';
+      playAgainBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ⏳ 等待對方同意再戰...';
+    }
+
+    if (statusHint) {
+      statusHint.textContent = '📡 已向對方發送再戰邀請，等待對方確認中...';
+      statusHint.style.color = '#00f3ff';
+    }
+  }
+
+  _launchRematchCountdown() {
+    const endModal = document.getElementById('matchEndModal');
     if (endModal) endModal.classList.remove('active');
     const victoryOverlay = document.getElementById('battleVictoryOverlay');
     if (victoryOverlay) victoryOverlay.style.display = 'none';
-    this._launchMatch();
+
+    this.rematchRequestedByMe = false;
+    this.rematchRequestedByOpponent = false;
+
+    if (this._battleLoopId) {
+      cancelAnimationFrame(this._battleLoopId);
+      this._battleLoopId = null;
+    }
+    this.isFighting = false;
+
+    // 啟動無廣播的 3-2-1 開賽倒數，倒數結束後直接同步進入 _launchMultiplayerBattle()
+    this._startMatchCountdown(false);
+  }
+
+  _syncVictoryOverlay(isLocalWinner, isDraw, winnerFighter) {
+    const vOverlay = document.getElementById('battleVictoryOverlay');
+    const titleEl = document.getElementById('battleVictoryTitle');
+    const subEl = document.getElementById('battleVictorySub');
+    if (!vOverlay || !titleEl || !subEl) return;
+
+    const card = vOverlay.querySelector('div');
+
+    if (isDraw) {
+      if (card) {
+        card.style.borderColor = '#38bdf8';
+        card.style.boxShadow = '0 0 35px rgba(56, 189, 248, 0.75), inset 0 0 15px rgba(56, 189, 248, 0.25)';
+      }
+      titleEl.textContent = 'DOUBLE K.O.';
+      titleEl.style.color = '#38bdf8';
+      titleEl.style.textShadow = '0 0 25px rgba(56, 189, 248, 0.95), 0 0 50px rgba(56, 189, 248, 0.7), 2px 2px 4px #000';
+      subEl.textContent = '⚡ 雙方同時倒下！勢均力敵的平手對決 ⚡';
+    } else if (isLocalWinner) {
+      if (card) {
+        card.style.borderColor = '#ffd700';
+        card.style.boxShadow = '0 0 35px rgba(255, 215, 0, 0.75), inset 0 0 15px rgba(255, 215, 0, 0.25)';
+      }
+      titleEl.textContent = 'VICTORY';
+      titleEl.style.color = '#ffd700';
+      titleEl.style.textShadow = '0 0 25px rgba(255, 215, 0, 0.95), 0 0 50px rgba(255, 215, 0, 0.7), 2px 2px 4px #000';
+      subEl.textContent = '★ 戰鬥勝利！漂亮擊倒對手奪下冠軍 ★';
+    } else {
+      if (card) {
+        card.style.borderColor = '#ff007f';
+        card.style.boxShadow = '0 0 35px rgba(255, 0, 127, 0.75), inset 0 0 15px rgba(255, 0, 127, 0.25)';
+      }
+      titleEl.textContent = 'DEFEAT';
+      titleEl.style.color = '#ff007f';
+      titleEl.style.textShadow = '0 0 25px rgba(255, 0, 127, 0.95), 0 0 50px rgba(255, 0, 127, 0.7), 2px 2px 4px #000';
+      subEl.textContent = winnerFighter ? `⚡ 本場惜敗！${winnerFighter.name} 贏得了本場對決 ⚡` : '⚡ 本場惜敗！再接再厲奪回榮耀 ⚡';
+    }
+
+    vOverlay.style.display = 'block';
   }
 
   // ─── 事件綁定 ───
@@ -4923,6 +5108,8 @@ class CyberStrikerApp {
     this._isSimulatedOpponent = false;
     this.networkP1Input = null;
     this.networkP2Input = null;
+    this.rematchRequestedByMe = false;
+    this.rematchRequestedByOpponent = false;
   }
 
   simulateTestOpponent() {
@@ -5094,19 +5281,25 @@ class CyberStrikerApp {
           combatEngine.roundTime = data.roundTime;
         }
 
-        // 6. 權威勝負同步：若房主判定 K.O. 或任一方血量歸零，無延遲同步觸發
-        if ((data.isOver || data.p1?.hp <= 0 || data.p2?.hp <= 0) && !combatEngine.isOver) {
-          const w = typeof data.winner === 'number' ? data.winner : (data.p1?.hp <= 0 ? 2 : 1);
-          this._applyRemoteKO(w, data.p1?.hp, data.p2?.hp);
+        // 6. 權威勝負同步：客端無條件以房主之 winner 與 isOver 為準 (避免雙方不同步)
+        if (data.isOver || (typeof data.winner === 'number' && data.winner >= 0) || data.p1?.hp <= 0 || data.p2?.hp <= 0) {
+          const w = typeof data.winner === 'number'
+            ? data.winner
+            : ((data.p1?.hp <= 0 && data.p2?.hp <= 0) ? 0 : (data.p1?.hp <= 0 ? 2 : 1));
+          if (!combatEngine.isOver || combatEngine.winner !== w) {
+            this._applyRemoteKO(w, data.p1?.hp, data.p2?.hp, true);
+          }
         }
       }
     } else if (data.type === 'guest_sync') {
       if (this.multiplayerRole === 'host' && combatEngine.p2) {
-        // 如果客端回報血量已歸零且房主尚未觸發 K.O.
-        if (data.hp <= 0 && !combatEngine.isOver) {
-          this._applyRemoteKO(1, combatEngine.p1.hp, 0);
+        // 如果客端回報血量已歸零且房主尚未裁決客端陣亡
+        if (data.hp <= 0 && (!combatEngine.isOver || combatEngine.p2.hp > 0)) {
+          let w = 1;
+          if (combatEngine.p1.hp <= 0) w = 0; // 雙方皆陣亡
+          this._applyRemoteKO(w, combatEngine.p1.hp, 0, true);
           if (p2pNetwork.isConnected) {
-            p2pNetwork.send({ type: 'battle_ko', winner: 1, p1Hp: combatEngine.p1.hp, p2Hp: 0 });
+            p2pNetwork.send({ type: 'battle_ko', winner: w, p1Hp: Math.round(combatEngine.p1.hp), p2Hp: 0 });
           }
         }
       }
@@ -5119,34 +5312,150 @@ class CyberStrikerApp {
         combatEngine.p1.isTakingLegitHit = false;
         combatEngine.p2.isTakingLegitHit = false;
 
-        if ((data.isLethal || combatEngine.p1.hp <= 0 || combatEngine.p2.hp <= 0) && !combatEngine.isOver) {
-          const w = combatEngine.p1.hp <= 0 ? 2 : 1;
-          this._applyRemoteKO(w, combatEngine.p1.hp, combatEngine.p2.hp);
+        if (this.multiplayerRole === 'host') {
+          // 房主為權威仲裁者：若任何一方或雙方瀕死/陣亡，裁定並向客端廣播
+          if (combatEngine.p1.hp <= 0 || combatEngine.p2.hp <= 0) {
+            let w = 1;
+            if (combatEngine.p1.hp <= 0 && combatEngine.p2.hp <= 0) w = 0;
+            else if (combatEngine.p1.hp <= 0) w = 2;
+            else w = 1;
+
+            this._applyRemoteKO(w, combatEngine.p1.hp, combatEngine.p2.hp, true);
+            if (p2pNetwork.isConnected) {
+              p2pNetwork.send({
+                type: 'battle_ko',
+                winner: w,
+                p1Hp: Math.round(combatEngine.p1.hp),
+                p2Hp: Math.round(combatEngine.p2.hp)
+              });
+            }
+          }
+        } else {
+          // 客端：若尚未結束，先依據傷害封包預先觸發；若後續收到房主裁決則以房主為準
+          if ((data.isLethal || combatEngine.p1.hp <= 0 || combatEngine.p2.hp <= 0) && !combatEngine.isOver) {
+            let w = 1;
+            if (combatEngine.p1.hp <= 0 && combatEngine.p2.hp <= 0) w = 0;
+            else if (combatEngine.p1.hp <= 0) w = 2;
+            else w = 1;
+            this._applyRemoteKO(w, combatEngine.p1.hp, combatEngine.p2.hp, false);
+          }
         }
       }
     } else if (data.type === 'battle_ko') {
-      this._applyRemoteKO(data.winner, data.p1Hp, data.p2Hp);
+      if (this.multiplayerRole === 'guest') {
+        // 客端無條件遵從房主的勝負裁定 (forceOverride = true)
+        this._applyRemoteKO(data.winner, data.p1Hp, data.p2Hp, true);
+      } else if (this.multiplayerRole === 'host') {
+        // 房主收到客端請求裁決：房主核查雙方當前實際血量
+        let finalWinner = data.winner;
+        if (combatEngine.p1 && combatEngine.p2) {
+          if (combatEngine.p1.hp <= 0 && combatEngine.p2.hp <= 0) {
+            finalWinner = 0; // 雙方同時倒下 (Double K.O. 平手)
+          } else if (combatEngine.p1.hp <= 0) {
+            finalWinner = 2;
+          } else if (combatEngine.p2.hp <= 0) {
+            finalWinner = 1;
+          }
+        }
+        this._applyRemoteKO(finalWinner, data.p1Hp, data.p2Hp, true);
+        if (p2pNetwork.isConnected) {
+          p2pNetwork.send({
+            type: 'battle_ko',
+            winner: finalWinner,
+            p1Hp: Math.round(combatEngine.p1 ? combatEngine.p1.hp : 0),
+            p2Hp: Math.round(combatEngine.p2 ? combatEngine.p2.hp : 0)
+          });
+        }
+      }
+    } else if (data.type === 'rematch_request') {
+      this.rematchRequestedByOpponent = true;
+      const playAgainBtn = document.getElementById('matchPlayAgainBtn');
+      const statusHint = document.getElementById('matchRematchStatus');
+
+      if (this.rematchRequestedByMe) {
+        // 雙方皆已點擊再玩一次！
+        if (statusHint) {
+          statusHint.textContent = '⚡ 雙方已同意再戰！即將進入同步倒數...';
+          statusHint.style.color = '#00ff88';
+        }
+        if (this.multiplayerRole === 'host') {
+          if (p2pNetwork.isConnected) p2pNetwork.send({ type: 'rematch_start' });
+          this._launchRematchCountdown();
+        } else {
+          if (p2pNetwork.isConnected) p2pNetwork.send({ type: 'rematch_accept' });
+        }
+      } else {
+        // 對方率先發起再戰請求，本機按鈕動態高亮提示點擊同意
+        if (playAgainBtn) {
+          playAgainBtn.disabled = false;
+          playAgainBtn.style.opacity = '1';
+          playAgainBtn.style.background = 'linear-gradient(135deg, #00ff88 0%, #00b4d8 100%)';
+          playAgainBtn.style.color = '#050814';
+          playAgainBtn.style.boxShadow = '0 0 25px rgba(0, 255, 136, 0.75)';
+          playAgainBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> ⚡ 對方請求再玩一次！點此同意';
+        }
+        if (statusHint) {
+          statusHint.textContent = '⚡ 對手已發起再戰請求！點擊上方按鈕即可重開對局';
+          statusHint.style.color = '#00ff88';
+        }
+        soundEngine.playUI('ready');
+      }
+    } else if (data.type === 'rematch_accept') {
+      const statusHint = document.getElementById('matchRematchStatus');
+      if (statusHint) {
+        statusHint.textContent = '⚡ 對手已同意再戰！即將進入同步倒數...';
+        statusHint.style.color = '#00ff88';
+      }
+      if (this.multiplayerRole === 'host') {
+        if (p2pNetwork.isConnected) p2pNetwork.send({ type: 'rematch_start' });
+        this._launchRematchCountdown();
+      } else {
+        this._launchRematchCountdown();
+      }
+    } else if (data.type === 'rematch_start') {
+      this._launchRematchCountdown();
+    } else if (data.type === 'rematch_exit') {
+      this.rematchRequestedByOpponent = false;
+      this.rematchRequestedByMe = false;
+      const playAgainBtn = document.getElementById('matchPlayAgainBtn');
+      const statusHint = document.getElementById('matchRematchStatus');
+      if (playAgainBtn) {
+        playAgainBtn.disabled = true;
+        playAgainBtn.style.opacity = '0.5';
+        playAgainBtn.style.background = 'rgba(255, 255, 255, 0.08)';
+        playAgainBtn.style.color = '#94a3b8';
+        playAgainBtn.style.boxShadow = 'none';
+        playAgainBtn.innerHTML = '<i class="fa-solid fa-user-xmark"></i> 對手已退出對決';
+      }
+      if (statusHint) {
+        statusHint.textContent = '⚠️ 對手已退出對決並返回大廳。';
+        statusHint.style.color = '#f59e0b';
+      }
+      if (this.isCountdownActive) {
+        this._cancelMatchCountdown();
+      }
     }
   }
 
-  _applyRemoteKO(winner, p1Hp = null, p2Hp = null) {
-    if (!this.isFighting || combatEngine.isOver) return;
+  _applyRemoteKO(winner, p1Hp = null, p2Hp = null, forceOverride = false) {
+    if (!this.isFighting) return;
+    if (combatEngine.isOver && !forceOverride) return;
 
-    // 強制雙方畫面同步觸發 K.O. 狀態 (倒地、慢動作、VICTORY橫幅、K.O.播報)
-    combatEngine.forceKO(winner, p1Hp, p2Hp);
+    // 強制雙方畫面同步觸發 K.O. 狀態 (倒地、慢動作、VICTORY/DEFEAT/DRAW 橫幅、K.O.播報)
+    combatEngine.forceKO(winner, p1Hp, p2Hp, forceOverride);
 
-    const isLocalWinner = this.matchMode === 'p2p'
+    const isDraw = winner === 0;
+    const isLocalWinner = !isDraw && (this.matchMode === 'p2p'
       ? (this.multiplayerRole === 'guest' ? winner === 2 : winner === 1)
-      : winner === 1;
+      : winner === 1);
+    const winnerFighter = winner === 1 ? combatEngine.p1 : (winner === 2 ? combatEngine.p2 : null);
 
-    if (!this.matchEndTimer) {
+    combatEngine.floatingTexts = [];
+    announcerEngine.activeBanners = [];
+    this._syncVictoryOverlay(isLocalWinner, isDraw, winnerFighter);
+
+    if (!this.matchEndTimer || forceOverride) {
       this.matchEndTimer = 1;
-      if (isLocalWinner) {
-        combatEngine.floatingTexts = [];
-        announcerEngine.activeBanners = [];
-        const vOverlay = document.getElementById('battleVictoryOverlay');
-        if (vOverlay) vOverlay.style.display = 'block';
-      }
     }
   }
 }

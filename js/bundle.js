@@ -12367,8 +12367,8 @@
         }
       }
     }
-    forceKO(winner, p1Hp = null, p2Hp = null) {
-      if (this.isOver) return;
+    forceKO(winner, p1Hp = null, p2Hp = null, force = false) {
+      if (this.isOver && !force) return;
       this.isOver = true;
       this.winner = winner;
       if (this.p1 && this.p2) {
@@ -12401,6 +12401,12 @@
           this.p2.hp = 0;
           this.p1.state = "defeat";
           this.p2.state = "defeat";
+          this.p1.stateTime = 0;
+          this.p2.stateTime = 0;
+          this.p1.vx = 0;
+          this.p1.vy = 0;
+          this.p2.vx = 0;
+          this.p2.vy = 0;
         }
         this.p1.isTakingLegitHit = false;
         this.p2.isTakingLegitHit = false;
@@ -12420,7 +12426,7 @@
         y: targetY,
         radius: 10,
         maxRadius: 420,
-        color: "#ffd700",
+        color: this.winner === 0 ? "#38bdf8" : "#ffd700",
         duration: 50,
         lineWidth: 8,
         isKO: true
@@ -12457,6 +12463,22 @@
           x: this.p2.x,
           y: this.p2.y - 145,
           color: "#ff007f",
+          life: 180
+        });
+      } else if (this.winner === 0) {
+        this.p1.state = "defeat";
+        this.p1.stateTime = 0;
+        this.p1.vx = 0;
+        this.p1.vy = 0;
+        this.p2.state = "defeat";
+        this.p2.stateTime = 0;
+        this.p2.vx = 0;
+        this.p2.vy = 0;
+        this.floatingTexts.push({
+          text: "DOUBLE K.O.!",
+          x: (this.p1.x + this.p2.x) / 2,
+          y: 280,
+          color: "#38bdf8",
           life: 180
         });
       }
@@ -15534,6 +15556,8 @@
       this.networkP2Input = null;
       this._isSimulatedOpponent = false;
       this._p2pMatchData = null;
+      this.rematchRequestedByMe = false;
+      this.rematchRequestedByOpponent = false;
       let savedKeys = null;
       try {
         savedKeys = JSON.parse(localStorage.getItem("quantum_arena_skill_keys") || "null");
@@ -16699,6 +16723,15 @@
         if (combatEngine.isOver) {
           inputP1 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
           inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+          if (this.matchMode === "p2p" && this.multiplayerRole === "host" && p2pNetwork.isConnected && this.matchEndTimer <= 30) {
+            p2pNetwork.send({
+              type: "battle_sync",
+              p1: { hp: Math.round(combatEngine.p1.hp) },
+              p2: { hp: Math.round(combatEngine.p2.hp) },
+              isOver: true,
+              winner: combatEngine.winner
+            });
+          }
         } else if (this.matchMode === "p2p") {
           this._p2pSyncTimer = (this._p2pSyncTimer || 0) + 1;
           if (this._isSimulatedOpponent) {
@@ -16765,21 +16798,18 @@
         }
         combatEngine.update(inputP1, inputP2);
         if (combatEngine.isOver && !combatEngine.isTraining) {
-          const isLocalWinner = this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? combatEngine.winner === 2 : combatEngine.winner === 1 : combatEngine.winner === 1;
+          const isDraw = combatEngine.winner === 0;
+          const isLocalWinner = !isDraw && (this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? combatEngine.winner === 2 : combatEngine.winner === 1 : combatEngine.winner === 1);
+          const winnerFighter = combatEngine.winner === 1 ? combatEngine.p1 : combatEngine.winner === 2 ? combatEngine.p2 : null;
           if (!this.matchEndTimer) {
             this.matchEndTimer = 1;
-            if (isLocalWinner) {
-              combatEngine.floatingTexts = [];
-              announcerEngine.activeBanners = [];
-              const vOverlay = document.getElementById("battleVictoryOverlay");
-              if (vOverlay) vOverlay.style.display = "block";
-            }
+            combatEngine.floatingTexts = [];
+            announcerEngine.activeBanners = [];
+            this._syncVictoryOverlay(isLocalWinner, isDraw, winnerFighter);
           } else {
             this.matchEndTimer++;
-            if (isLocalWinner) {
-              combatEngine.floatingTexts = [];
-              announcerEngine.activeBanners = [];
-            }
+            combatEngine.floatingTexts = [];
+            announcerEngine.activeBanners = [];
           }
           if (this.matchEndTimer === 110) {
             this._showMatchEndModal();
@@ -17972,14 +18002,24 @@
       renderCombo(p2, false);
     }
     _drawVictoryBanner(ctx, w, h) {
+      if (!combatEngine.isOver) return;
+      const isDraw = combatEngine.winner === 0;
       const isP1Win = combatEngine.winner === 1;
       const isP2Win = combatEngine.winner === 2;
-      if (!isP1Win && !isP2Win) return;
-      const winner = isP1Win ? combatEngine.p1 : combatEngine.p2;
-      const isLocalWinner = this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? isP2Win : isP1Win : isP1Win;
-      const winTitle = isLocalWinner ? "VICTORY" : "K.O. \u6230\u9B25\u7D50\u675F";
-      const subTitle = isLocalWinner ? "\u2605 \u6230\u9B25\u52DD\u5229\uFF01\u6F02\u4EAE\u64CA\u5012\u5C0D\u624B\u596A\u4E0B\u51A0\u8ECD \u2605" : `${winner.name} \u8D0F\u5F97\u4E86\u672C\u5834\u5C0D\u6C7A\uFF01`;
-      const themeColor = isLocalWinner ? "#ffd700" : "#ff007f";
+      const winner = isP1Win ? combatEngine.p1 : isP2Win ? combatEngine.p2 : null;
+      const isLocalWinner = !isDraw && (this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? isP2Win : isP1Win : isP1Win);
+      let winTitle = "VICTORY";
+      let subTitle = "\u2605 \u6230\u9B25\u52DD\u5229\uFF01\u6F02\u4EAE\u64CA\u5012\u5C0D\u624B\u596A\u4E0B\u51A0\u8ECD \u2605";
+      let themeColor = "#ffd700";
+      if (isDraw) {
+        winTitle = "DOUBLE K.O.";
+        subTitle = "\u26A1 \u96D9\u65B9\u540C\u6642\u5012\u4E0B\uFF01\u52E2\u5747\u529B\u6575\u7684\u5E73\u624B\u5C0D\u6C7A \u26A1";
+        themeColor = "#38bdf8";
+      } else if (!isLocalWinner) {
+        winTitle = "DEFEAT";
+        subTitle = winner ? `\u26A1 \u672C\u5834\u60DC\u6557\uFF01${winner.name} \u8D0F\u5F97\u4E86\u672C\u5834\u5C0D\u6C7A \u26A1` : "\u26A1 \u672C\u5834\u60DC\u6557\uFF01\u518D\u63A5\u518D\u53B2\u596A\u56DE\u69AE\u8000 \u26A1";
+        themeColor = "#ff007f";
+      }
       ctx.save();
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -18004,11 +18044,11 @@
         ctx.fillRect(bx, by, bannerW, bannerH);
         ctx.strokeRect(bx, by, bannerW, bannerH);
       }
-      ctx.font = isLocalWinner ? '900 44px "Orbitron", sans-serif' : '900 32px "Orbitron", "Noto Sans TC", sans-serif';
+      ctx.font = '900 44px "Orbitron", sans-serif';
       ctx.fillStyle = themeColor;
-      ctx.shadowColor = isLocalWinner ? "rgba(255, 215, 0, 0.95)" : "rgba(255, 0, 127, 0.95)";
+      ctx.shadowColor = themeColor;
       ctx.shadowBlur = 22;
-      ctx.fillText(winTitle, w / 2, cy - (isLocalWinner ? 13 : 10));
+      ctx.fillText(winTitle, w / 2, cy - 12);
       ctx.font = '700 13px "Noto Sans TC", sans-serif';
       ctx.fillStyle = "#ffffff";
       ctx.shadowBlur = 6;
@@ -18407,14 +18447,37 @@
     // ─── 對決結束與結算面板彈出 ───
     _showMatchEndModal() {
       soundEngine.stopBgm();
-      const won = this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? combatEngine.winner === 2 : combatEngine.winner === 1 : combatEngine.winner === 1;
+      const isDraw = combatEngine.winner === 0;
+      const won = !isDraw && (this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? combatEngine.winner === 2 : combatEngine.winner === 1 : combatEngine.winner === 1);
       const isAi = this.matchMode === "ai" || this.matchMode === "arcade";
-      const reward = saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
+      const reward = isDraw ? { gained: 50, newBalance: (saveSystem.currentUser?.credits || 0) + 50 } : saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
+      if (isDraw && saveSystem && typeof saveSystem.addCredits === "function") {
+        try {
+          saveSystem.addCredits(50);
+        } catch (e) {
+          console.warn("Failed to add draw credits:", e);
+        }
+      }
       const endModal = document.getElementById("matchEndModal");
       const resultTitle = document.getElementById("matchResultTitle");
       const creditsReward = document.getElementById("matchRewardAmount");
       const playAgainBtn = document.getElementById("matchPlayAgainBtn");
       const nextStageBtn = document.getElementById("matchNextStageBtn");
+      const statusHint = document.getElementById("matchRematchStatus");
+      this.rematchRequestedByMe = false;
+      this.rematchRequestedByOpponent = false;
+      if (statusHint) {
+        statusHint.textContent = "";
+        statusHint.style.color = "#cbd5e1";
+      }
+      if (playAgainBtn) {
+        playAgainBtn.disabled = false;
+        playAgainBtn.style.opacity = "1";
+        playAgainBtn.style.background = "linear-gradient(135deg, #00f3ff, #00ff66)";
+        playAgainBtn.style.color = "#050814";
+        playAgainBtn.style.boxShadow = "0 0 16px rgba(0, 243, 255, 0.4)";
+        playAgainBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> \u518D\u73A9\u4E00\u6B21';
+      }
       if (this.matchMode === "arcade") {
         if (won) {
           this.arcadeScore += 18e3 + Math.round(combatEngine.p1.hp * 12);
@@ -18467,11 +18530,18 @@
         if (nextStageBtn) nextStageBtn.style.display = "none";
         if (playAgainBtn) {
           playAgainBtn.style.display = "flex";
-          playAgainBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> \u518D\u73A9\u4E00\u6B21';
         }
         if (resultTitle) {
-          resultTitle.textContent = won ? "VICTORY \u6230\u9B25\u52DD\u5229" : "DEFEAT \u6230\u9B25\u843D\u6557";
-          resultTitle.style.color = won ? "#ffd700" : "#ff007f";
+          if (isDraw) {
+            resultTitle.textContent = "DOUBLE K.O. \u5E73\u624B";
+            resultTitle.style.color = "#38bdf8";
+          } else if (won) {
+            resultTitle.textContent = "VICTORY \u6230\u9B25\u52DD\u5229";
+            resultTitle.style.color = "#ffd700";
+          } else {
+            resultTitle.textContent = "DEFEAT \u6230\u9B25\u843D\u6557";
+            resultTitle.style.color = "#ff007f";
+          }
         }
         if (creditsReward) creditsReward.textContent = `+${reward.gained} \u80FD\u91CF\u5E63`;
       }
@@ -18508,6 +18578,12 @@
       this.arcadeScore = 0;
       this.arcadeStreakWins = 0;
       this.updateUserHUD();
+      if (this.matchMode === "p2p") {
+        if (p2pNetwork.isConnected) {
+          p2pNetwork.send({ type: "rematch_exit" });
+        }
+        this.leaveMultiplayerRoom();
+      }
       if (this.currentTab === "skins") {
         this._startPedestalLoop();
       } else if (this.currentTab === "shop") {
@@ -18516,10 +18592,112 @@
     }
     playAgain() {
       const endModal = document.getElementById("matchEndModal");
+      const victoryOverlay = document.getElementById("battleVictoryOverlay");
+      const playAgainBtn = document.getElementById("matchPlayAgainBtn");
+      const statusHint = document.getElementById("matchRematchStatus");
+      if (this.matchMode !== "p2p") {
+        if (endModal) endModal.classList.remove("active");
+        if (victoryOverlay) victoryOverlay.style.display = "none";
+        this._launchMatch();
+        return;
+      }
+      if (!p2pNetwork.isConnected) {
+        if (statusHint) {
+          statusHint.textContent = "\u26A0\uFE0F \u9023\u7DDA\u5DF2\u65B7\u958B\uFF0C\u7121\u6CD5\u518D\u6230\uFF0C\u8ACB\u8FD4\u56DE\u5927\u5EF3\u91CD\u65B0\u914D\u5C0D";
+          statusHint.style.color = "#ff4d4d";
+        }
+        if (playAgainBtn) {
+          playAgainBtn.disabled = true;
+          playAgainBtn.style.opacity = "0.5";
+        }
+        return;
+      }
+      if (this.rematchRequestedByOpponent) {
+        if (playAgainBtn) {
+          playAgainBtn.disabled = true;
+          playAgainBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> \u6E96\u5099\u958B\u59CB...';
+        }
+        if (statusHint) {
+          statusHint.textContent = "\u26A1 \u96D9\u65B9\u5DF2\u540C\u610F\u518D\u6230\uFF01\u5373\u5C07\u9032\u5165\u540C\u6B65\u5012\u6578...";
+          statusHint.style.color = "#00ff88";
+        }
+        if (this.multiplayerRole === "host") {
+          p2pNetwork.send({ type: "rematch_start" });
+          this._launchRematchCountdown();
+        } else {
+          p2pNetwork.send({ type: "rematch_accept" });
+          setTimeout(() => {
+            if (this.matchMode === "p2p" && !this.isFighting && !this.isCountdownActive) {
+              this._launchRematchCountdown();
+            }
+          }, 600);
+        }
+        return;
+      }
+      this.rematchRequestedByMe = true;
+      p2pNetwork.send({ type: "rematch_request" });
+      if (playAgainBtn) {
+        playAgainBtn.disabled = true;
+        playAgainBtn.style.opacity = "0.85";
+        playAgainBtn.style.background = "rgba(255, 255, 255, 0.15)";
+        playAgainBtn.style.color = "#ffd700";
+        playAgainBtn.style.boxShadow = "none";
+        playAgainBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> \u23F3 \u7B49\u5F85\u5C0D\u65B9\u540C\u610F\u518D\u6230...';
+      }
+      if (statusHint) {
+        statusHint.textContent = "\u{1F4E1} \u5DF2\u5411\u5C0D\u65B9\u767C\u9001\u518D\u6230\u9080\u8ACB\uFF0C\u7B49\u5F85\u5C0D\u65B9\u78BA\u8A8D\u4E2D...";
+        statusHint.style.color = "#00f3ff";
+      }
+    }
+    _launchRematchCountdown() {
+      const endModal = document.getElementById("matchEndModal");
       if (endModal) endModal.classList.remove("active");
       const victoryOverlay = document.getElementById("battleVictoryOverlay");
       if (victoryOverlay) victoryOverlay.style.display = "none";
-      this._launchMatch();
+      this.rematchRequestedByMe = false;
+      this.rematchRequestedByOpponent = false;
+      if (this._battleLoopId) {
+        cancelAnimationFrame(this._battleLoopId);
+        this._battleLoopId = null;
+      }
+      this.isFighting = false;
+      this._startMatchCountdown(false);
+    }
+    _syncVictoryOverlay(isLocalWinner, isDraw, winnerFighter) {
+      const vOverlay = document.getElementById("battleVictoryOverlay");
+      const titleEl = document.getElementById("battleVictoryTitle");
+      const subEl = document.getElementById("battleVictorySub");
+      if (!vOverlay || !titleEl || !subEl) return;
+      const card = vOverlay.querySelector("div");
+      if (isDraw) {
+        if (card) {
+          card.style.borderColor = "#38bdf8";
+          card.style.boxShadow = "0 0 35px rgba(56, 189, 248, 0.75), inset 0 0 15px rgba(56, 189, 248, 0.25)";
+        }
+        titleEl.textContent = "DOUBLE K.O.";
+        titleEl.style.color = "#38bdf8";
+        titleEl.style.textShadow = "0 0 25px rgba(56, 189, 248, 0.95), 0 0 50px rgba(56, 189, 248, 0.7), 2px 2px 4px #000";
+        subEl.textContent = "\u26A1 \u96D9\u65B9\u540C\u6642\u5012\u4E0B\uFF01\u52E2\u5747\u529B\u6575\u7684\u5E73\u624B\u5C0D\u6C7A \u26A1";
+      } else if (isLocalWinner) {
+        if (card) {
+          card.style.borderColor = "#ffd700";
+          card.style.boxShadow = "0 0 35px rgba(255, 215, 0, 0.75), inset 0 0 15px rgba(255, 215, 0, 0.25)";
+        }
+        titleEl.textContent = "VICTORY";
+        titleEl.style.color = "#ffd700";
+        titleEl.style.textShadow = "0 0 25px rgba(255, 215, 0, 0.95), 0 0 50px rgba(255, 215, 0, 0.7), 2px 2px 4px #000";
+        subEl.textContent = "\u2605 \u6230\u9B25\u52DD\u5229\uFF01\u6F02\u4EAE\u64CA\u5012\u5C0D\u624B\u596A\u4E0B\u51A0\u8ECD \u2605";
+      } else {
+        if (card) {
+          card.style.borderColor = "#ff007f";
+          card.style.boxShadow = "0 0 35px rgba(255, 0, 127, 0.75), inset 0 0 15px rgba(255, 0, 127, 0.25)";
+        }
+        titleEl.textContent = "DEFEAT";
+        titleEl.style.color = "#ff007f";
+        titleEl.style.textShadow = "0 0 25px rgba(255, 0, 127, 0.95), 0 0 50px rgba(255, 0, 127, 0.7), 2px 2px 4px #000";
+        subEl.textContent = winnerFighter ? `\u26A1 \u672C\u5834\u60DC\u6557\uFF01${winnerFighter.name} \u8D0F\u5F97\u4E86\u672C\u5834\u5C0D\u6C7A \u26A1` : "\u26A1 \u672C\u5834\u60DC\u6557\uFF01\u518D\u63A5\u518D\u53B2\u596A\u56DE\u69AE\u8000 \u26A1";
+      }
+      vOverlay.style.display = "block";
     }
     // ─── 事件綁定 ───
     _bindDOMEvents() {
@@ -19621,6 +19799,8 @@
       this._isSimulatedOpponent = false;
       this.networkP1Input = null;
       this.networkP2Input = null;
+      this.rematchRequestedByMe = false;
+      this.rematchRequestedByOpponent = false;
     }
     simulateTestOpponent() {
       this._isSimulatedOpponent = true;
@@ -19768,17 +19948,21 @@
           if (typeof data.roundTime === "number") {
             combatEngine.roundTime = data.roundTime;
           }
-          if ((data.isOver || data.p1?.hp <= 0 || data.p2?.hp <= 0) && !combatEngine.isOver) {
-            const w = typeof data.winner === "number" ? data.winner : data.p1?.hp <= 0 ? 2 : 1;
-            this._applyRemoteKO(w, data.p1?.hp, data.p2?.hp);
+          if (data.isOver || typeof data.winner === "number" && data.winner >= 0 || data.p1?.hp <= 0 || data.p2?.hp <= 0) {
+            const w = typeof data.winner === "number" ? data.winner : data.p1?.hp <= 0 && data.p2?.hp <= 0 ? 0 : data.p1?.hp <= 0 ? 2 : 1;
+            if (!combatEngine.isOver || combatEngine.winner !== w) {
+              this._applyRemoteKO(w, data.p1?.hp, data.p2?.hp, true);
+            }
           }
         }
       } else if (data.type === "guest_sync") {
         if (this.multiplayerRole === "host" && combatEngine.p2) {
-          if (data.hp <= 0 && !combatEngine.isOver) {
-            this._applyRemoteKO(1, combatEngine.p1.hp, 0);
+          if (data.hp <= 0 && (!combatEngine.isOver || combatEngine.p2.hp > 0)) {
+            let w = 1;
+            if (combatEngine.p1.hp <= 0) w = 0;
+            this._applyRemoteKO(w, combatEngine.p1.hp, 0, true);
             if (p2pNetwork.isConnected) {
-              p2pNetwork.send({ type: "battle_ko", winner: 1, p1Hp: combatEngine.p1.hp, p2Hp: 0 });
+              p2pNetwork.send({ type: "battle_ko", winner: w, p1Hp: Math.round(combatEngine.p1.hp), p2Hp: 0 });
             }
           }
         }
@@ -19790,27 +19974,134 @@
           if (typeof data.p2Hp === "number") combatEngine.p2.hp = Math.max(0, data.p2Hp);
           combatEngine.p1.isTakingLegitHit = false;
           combatEngine.p2.isTakingLegitHit = false;
-          if ((data.isLethal || combatEngine.p1.hp <= 0 || combatEngine.p2.hp <= 0) && !combatEngine.isOver) {
-            const w = combatEngine.p1.hp <= 0 ? 2 : 1;
-            this._applyRemoteKO(w, combatEngine.p1.hp, combatEngine.p2.hp);
+          if (this.multiplayerRole === "host") {
+            if (combatEngine.p1.hp <= 0 || combatEngine.p2.hp <= 0) {
+              let w = 1;
+              if (combatEngine.p1.hp <= 0 && combatEngine.p2.hp <= 0) w = 0;
+              else if (combatEngine.p1.hp <= 0) w = 2;
+              else w = 1;
+              this._applyRemoteKO(w, combatEngine.p1.hp, combatEngine.p2.hp, true);
+              if (p2pNetwork.isConnected) {
+                p2pNetwork.send({
+                  type: "battle_ko",
+                  winner: w,
+                  p1Hp: Math.round(combatEngine.p1.hp),
+                  p2Hp: Math.round(combatEngine.p2.hp)
+                });
+              }
+            }
+          } else {
+            if ((data.isLethal || combatEngine.p1.hp <= 0 || combatEngine.p2.hp <= 0) && !combatEngine.isOver) {
+              let w = 1;
+              if (combatEngine.p1.hp <= 0 && combatEngine.p2.hp <= 0) w = 0;
+              else if (combatEngine.p1.hp <= 0) w = 2;
+              else w = 1;
+              this._applyRemoteKO(w, combatEngine.p1.hp, combatEngine.p2.hp, false);
+            }
           }
         }
       } else if (data.type === "battle_ko") {
-        this._applyRemoteKO(data.winner, data.p1Hp, data.p2Hp);
+        if (this.multiplayerRole === "guest") {
+          this._applyRemoteKO(data.winner, data.p1Hp, data.p2Hp, true);
+        } else if (this.multiplayerRole === "host") {
+          let finalWinner = data.winner;
+          if (combatEngine.p1 && combatEngine.p2) {
+            if (combatEngine.p1.hp <= 0 && combatEngine.p2.hp <= 0) {
+              finalWinner = 0;
+            } else if (combatEngine.p1.hp <= 0) {
+              finalWinner = 2;
+            } else if (combatEngine.p2.hp <= 0) {
+              finalWinner = 1;
+            }
+          }
+          this._applyRemoteKO(finalWinner, data.p1Hp, data.p2Hp, true);
+          if (p2pNetwork.isConnected) {
+            p2pNetwork.send({
+              type: "battle_ko",
+              winner: finalWinner,
+              p1Hp: Math.round(combatEngine.p1 ? combatEngine.p1.hp : 0),
+              p2Hp: Math.round(combatEngine.p2 ? combatEngine.p2.hp : 0)
+            });
+          }
+        }
+      } else if (data.type === "rematch_request") {
+        this.rematchRequestedByOpponent = true;
+        const playAgainBtn = document.getElementById("matchPlayAgainBtn");
+        const statusHint = document.getElementById("matchRematchStatus");
+        if (this.rematchRequestedByMe) {
+          if (statusHint) {
+            statusHint.textContent = "\u26A1 \u96D9\u65B9\u5DF2\u540C\u610F\u518D\u6230\uFF01\u5373\u5C07\u9032\u5165\u540C\u6B65\u5012\u6578...";
+            statusHint.style.color = "#00ff88";
+          }
+          if (this.multiplayerRole === "host") {
+            if (p2pNetwork.isConnected) p2pNetwork.send({ type: "rematch_start" });
+            this._launchRematchCountdown();
+          } else {
+            if (p2pNetwork.isConnected) p2pNetwork.send({ type: "rematch_accept" });
+          }
+        } else {
+          if (playAgainBtn) {
+            playAgainBtn.disabled = false;
+            playAgainBtn.style.opacity = "1";
+            playAgainBtn.style.background = "linear-gradient(135deg, #00ff88 0%, #00b4d8 100%)";
+            playAgainBtn.style.color = "#050814";
+            playAgainBtn.style.boxShadow = "0 0 25px rgba(0, 255, 136, 0.75)";
+            playAgainBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> \u26A1 \u5C0D\u65B9\u8ACB\u6C42\u518D\u73A9\u4E00\u6B21\uFF01\u9EDE\u6B64\u540C\u610F';
+          }
+          if (statusHint) {
+            statusHint.textContent = "\u26A1 \u5C0D\u624B\u5DF2\u767C\u8D77\u518D\u6230\u8ACB\u6C42\uFF01\u9EDE\u64CA\u4E0A\u65B9\u6309\u9215\u5373\u53EF\u91CD\u958B\u5C0D\u5C40";
+            statusHint.style.color = "#00ff88";
+          }
+          soundEngine.playUI("ready");
+        }
+      } else if (data.type === "rematch_accept") {
+        const statusHint = document.getElementById("matchRematchStatus");
+        if (statusHint) {
+          statusHint.textContent = "\u26A1 \u5C0D\u624B\u5DF2\u540C\u610F\u518D\u6230\uFF01\u5373\u5C07\u9032\u5165\u540C\u6B65\u5012\u6578...";
+          statusHint.style.color = "#00ff88";
+        }
+        if (this.multiplayerRole === "host") {
+          if (p2pNetwork.isConnected) p2pNetwork.send({ type: "rematch_start" });
+          this._launchRematchCountdown();
+        } else {
+          this._launchRematchCountdown();
+        }
+      } else if (data.type === "rematch_start") {
+        this._launchRematchCountdown();
+      } else if (data.type === "rematch_exit") {
+        this.rematchRequestedByOpponent = false;
+        this.rematchRequestedByMe = false;
+        const playAgainBtn = document.getElementById("matchPlayAgainBtn");
+        const statusHint = document.getElementById("matchRematchStatus");
+        if (playAgainBtn) {
+          playAgainBtn.disabled = true;
+          playAgainBtn.style.opacity = "0.5";
+          playAgainBtn.style.background = "rgba(255, 255, 255, 0.08)";
+          playAgainBtn.style.color = "#94a3b8";
+          playAgainBtn.style.boxShadow = "none";
+          playAgainBtn.innerHTML = '<i class="fa-solid fa-user-xmark"></i> \u5C0D\u624B\u5DF2\u9000\u51FA\u5C0D\u6C7A';
+        }
+        if (statusHint) {
+          statusHint.textContent = "\u26A0\uFE0F \u5C0D\u624B\u5DF2\u9000\u51FA\u5C0D\u6C7A\u4E26\u8FD4\u56DE\u5927\u5EF3\u3002";
+          statusHint.style.color = "#f59e0b";
+        }
+        if (this.isCountdownActive) {
+          this._cancelMatchCountdown();
+        }
       }
     }
-    _applyRemoteKO(winner, p1Hp = null, p2Hp = null) {
-      if (!this.isFighting || combatEngine.isOver) return;
-      combatEngine.forceKO(winner, p1Hp, p2Hp);
-      const isLocalWinner = this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? winner === 2 : winner === 1 : winner === 1;
-      if (!this.matchEndTimer) {
+    _applyRemoteKO(winner, p1Hp = null, p2Hp = null, forceOverride = false) {
+      if (!this.isFighting) return;
+      if (combatEngine.isOver && !forceOverride) return;
+      combatEngine.forceKO(winner, p1Hp, p2Hp, forceOverride);
+      const isDraw = winner === 0;
+      const isLocalWinner = !isDraw && (this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? winner === 2 : winner === 1 : winner === 1);
+      const winnerFighter = winner === 1 ? combatEngine.p1 : winner === 2 ? combatEngine.p2 : null;
+      combatEngine.floatingTexts = [];
+      announcerEngine.activeBanners = [];
+      this._syncVictoryOverlay(isLocalWinner, isDraw, winnerFighter);
+      if (!this.matchEndTimer || forceOverride) {
         this.matchEndTimer = 1;
-        if (isLocalWinner) {
-          combatEngine.floatingTexts = [];
-          announcerEngine.activeBanners = [];
-          const vOverlay = document.getElementById("battleVictoryOverlay");
-          if (vOverlay) vOverlay.style.display = "block";
-        }
       }
     }
   };
