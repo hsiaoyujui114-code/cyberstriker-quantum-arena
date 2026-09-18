@@ -1297,6 +1297,10 @@ export class CombatEngine {
       hitChecked: false
     };
 
+    if (typeof this.onSkillCastCallback === 'function') {
+      this.onSkillCastCallback(char.id, slotIdx, skill.id);
+    }
+
     // 招式前搖特效與音效
     switch (skill.id) {
       case 'SK-01': // 能量脈衝彈
@@ -1328,9 +1332,49 @@ export class CombatEngine {
         soundEngine.playHit('dp');
         break;
 
-      case 'SK-06': // 虛空折躍斬 (瞬移穿透)
+      case 'SK-06': { // 虛空折躍傳送棒 (本體直接瞬移傳送至對手正背後，揮棒痛擊 220)
+        // 1. 舊位置生成起點傳送光圈消散特效
+        this.shockwaves.push({
+          x: char.x,
+          y: char.y - 45,
+          radius: 10,
+          maxRadius: 48,
+          color: '#6366f1',
+          duration: 16
+        });
+
+        // 2. 計算對手身後坐標 (距離 50px)
+        const behindOffset = opp.facing * -50;
+        const targetX = Math.max(50, Math.min(this.arenaWidth - 50, opp.x + behindOffset));
+
+        // 3. 人體直接實體瞬移到位！
+        char.x = targetX;
+        char.y = opp.y;
+        char.vx = 0;
+        char.vy = 0;
+        char.isGrounded = opp.isGrounded;
+        char.currentPlatform = opp.currentPlatform;
+        char.facing = opp.facing; // 正對對手的後背！
+
+        // 4. 抵達點生成虛空現身光環特效
+        this.shockwaves.push({
+          x: char.x,
+          y: char.y - 45,
+          radius: 12,
+          maxRadius: 55,
+          color: '#a855f7',
+          duration: 18
+        });
+
+        // 5. 播放高維傳送音效
         soundEngine.playHit('teleport');
+
+        // 6. 若為多人連線，立即向外部回調廣播瞬移坐標事件
+        if (typeof this.onTeleportCallback === 'function') {
+          this.onTeleportCallback(char.id, char.x, char.y, char.facing);
+        }
         break;
+      }
 
       case 'SK-07': // 百裂連擊衝
         char.vx = char.facing * 7.2; // 敏捷突進
@@ -1455,12 +1499,6 @@ export class CombatEngine {
     const t = char.stateTime;
     const hitStart = action.startup;
     const hitEnd = action.startup + action.active;
-
-    // 虛空折躍斬：瞬移判定
-    if (action.id === 'SK-06' && t === action.startup) {
-      char.x = opp.x + (opp.facing * -50); // 瞬移至對手正背後
-      char.facing = char.x < opp.x ? 1 : -1;
-    }
 
     // 招式命中幀檢查
     if (t >= hitStart && t <= hitEnd && !action.hitChecked) {
@@ -1906,6 +1944,13 @@ export class CombatEngine {
       return;
     }
 
+    // 虛空折躍傳送棒 (SK-06)：本體已瞬移至對手正背後，反手精準揮棒痛擊後背 (造成 220 傷害)
+    if (action.id === 'SK-06') {
+      action.hitChecked = true;
+      this._applyHit(char, opp, action);
+      return;
+    }
+
     // 常規近戰範圍判定 (擴大垂直 Y 軸判定，使空中跳躍與平台對戰順暢命中)
     const hitReach = (action.id === 'SK-03' || action.id === 'SK-26') ? 135
       : (action.id === 'SK-25' ? 125
@@ -1960,6 +2005,21 @@ export class CombatEngine {
       if (typeof this.onDamageCallback === 'function') {
         this.onDamageCallback(opp.id, damage, opp.hp);
       }
+      if (typeof this.onHitCallback === 'function') {
+        this.onHitCallback({
+          attackerId: char.id,
+          targetId: opp.id,
+          damage: damage,
+          isBlocked: true,
+          isCounter: false,
+          hitX: opp.x,
+          hitY: opp.y - 70,
+          actionName: action.name,
+          knockdown: false,
+          p1Hp: this.p1.hp,
+          p2Hp: this.p2.hp
+        });
+      }
       soundEngine.playHit('guard');
       this._triggerHaptic(25);
 
@@ -2011,6 +2071,21 @@ export class CombatEngine {
     opp.isTakingLegitHit = false;
     if (typeof this.onDamageCallback === 'function') {
       this.onDamageCallback(opp.id, damage, opp.hp);
+    }
+    if (typeof this.onHitCallback === 'function') {
+      this.onHitCallback({
+        attackerId: char.id,
+        targetId: opp.id,
+        damage: damage,
+        isBlocked: false,
+        isCounter: isCounter,
+        hitX: opp.x,
+        hitY: opp.y - 70,
+        actionName: action.name,
+        knockdown: !!action.knockdown,
+        p1Hp: this.p1.hp,
+        p2Hp: this.p2.hp
+      });
     }
 
     // 充能雙方之終極必殺計量槽 (Super Gauge) 與受擊方的量子爆發計量槽

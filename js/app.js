@@ -55,6 +55,8 @@ class CyberStrikerApp {
     this._p2pMatchData = null;
     this.rematchRequestedByMe = false;
     this.rematchRequestedByOpponent = false;
+    this.isMultiplayerMatchUnlocked = false;
+    this.peerArenaLoaded = false;
 
     // 自訂技能槽位按鍵綁定 (預設 U, I, O, Y, H)
     let savedKeys = null;
@@ -1234,9 +1236,48 @@ class CyberStrikerApp {
       }, 400);
     }
 
-    // 多人連線即時 K.O. 與傷害廣播回調
+    // 多人連線即時 K.O.、瞬移、主動技能施放與權威傷害廣播回調
     if (this.matchMode === 'p2p') {
       this._p2pSyncTimer = 0;
+      this.isMultiplayerMatchUnlocked = false;
+
+      // 1. 瞬移即時廣播 (傳送棒 SK-06 瞬移到位同步)
+      combatEngine.onTeleportCallback = (charId, toX, toY, facing) => {
+        const localCharId = this.multiplayerRole === 'host' ? 'p1' : 'p2';
+        if (charId === localCharId && p2pNetwork.isConnected) {
+          p2pNetwork.send({
+            type: 'teleport_warp',
+            charId,
+            x: toX,
+            y: toY,
+            facing
+          });
+        }
+      };
+
+      // 2. 技能主動施放即時廣播 (保證遠程彈道/大招0延遲同步觸發，絕不遺漏單幀輸入)
+      combatEngine.onSkillCastCallback = (charId, slotIdx, skillId) => {
+        const localCharId = this.multiplayerRole === 'host' ? 'p1' : 'p2';
+        if (charId === localCharId && p2pNetwork.isConnected) {
+          p2pNetwork.send({
+            type: 'skill_cast',
+            charId,
+            slotIdx,
+            skillId
+          });
+        }
+      };
+
+      // 3. 權威打擊命中即時廣播 (傷害、特效、頓幀、震屏在兩端完全同幀呈現)
+      combatEngine.onHitCallback = (hitData) => {
+        if (p2pNetwork.isConnected && this.multiplayerRole === 'host') {
+          p2pNetwork.send({
+            type: 'battle_hit_impact',
+            ...hitData
+          });
+        }
+      };
+
       combatEngine.onKOCallback = (winner, p1Hp, p2Hp) => {
         if (p2pNetwork.isConnected) {
           p2pNetwork.send({
@@ -1260,6 +1301,33 @@ class CyberStrikerApp {
           });
         }
       };
+
+      // 雙方同時開戰鎖步握手 (Lockstep Simultaneous Start)
+      if (this.multiplayerRole === 'guest') {
+        if (p2pNetwork.isConnected) {
+          p2pNetwork.send({ type: 'arena_ready' });
+        }
+      } else if (this.multiplayerRole === 'host') {
+        const unlockBoth = () => {
+          if (this.isMultiplayerMatchUnlocked) return;
+          this.isMultiplayerMatchUnlocked = true;
+          soundEngine.playUI('fight');
+          if (p2pNetwork.isConnected) {
+            p2pNetwork.send({ type: 'battle_unlock' });
+          }
+        };
+
+        if (this.peerArenaLoaded) {
+          unlockBoth();
+        } else {
+          // 最多等待 350ms 即自動解鎖，確保兩端同步解鎖
+          this._unlockSafetyTimer = setTimeout(() => {
+            unlockBoth();
+          }, 350);
+        }
+      }
+    } else {
+      this.isMultiplayerMatchUnlocked = true;
     }
 
     // 街機闖關第 2~5 關生命值恢復機制 (+350 HP 獎勵)
@@ -1456,7 +1524,7 @@ class CyberStrikerApp {
           if (p2pNetwork.isConnected) {
             p2pNetwork.send({ type: 'battle_input', p1: inputP1 });
 
-            // 房主每 2 幀發送一次權威全域戰況同步包 (HP、坐標、動態狀態、勝負)
+            // 房主每 2 幀發送一次權威全域戰況同步包 (HP、坐標、動態狀態、動作、飛行道具、勝負)
             if (this._p2pSyncTimer % 2 === 0) {
               p2pNetwork.send({
                 type: 'battle_sync',
@@ -1469,7 +1537,8 @@ class CyberStrikerApp {
                   state: combatEngine.p1.state,
                   facing: combatEngine.p1.facing,
                   burstMeter: Math.round(combatEngine.p1.burstMeter),
-                  superMeter: Math.round(combatEngine.p1.superMeter)
+                  superMeter: Math.round(combatEngine.p1.superMeter),
+                  actionId: combatEngine.p1.currentAction?.id || null
                 },
                 p2: {
                   hp: Math.round(combatEngine.p2.hp),
@@ -1480,8 +1549,20 @@ class CyberStrikerApp {
                   state: combatEngine.p2.state,
                   facing: combatEngine.p2.facing,
                   burstMeter: Math.round(combatEngine.p2.burstMeter),
-                  superMeter: Math.round(combatEngine.p2.superMeter)
+                  superMeter: Math.round(combatEngine.p2.superMeter),
+                  actionId: combatEngine.p2.currentAction?.id || null
                 },
+                projectiles: combatEngine.projectiles.map(p => ({
+                  type: p.type,
+                  x: Math.round(p.x),
+                  y: Math.round(p.y),
+                  vx: Math.round(p.vx * 10) / 10,
+                  vy: Math.round((p.vy || 0) * 10) / 10,
+                  radius: p.radius,
+                  damage: p.damage,
+                  ownerId: p.ownerId,
+                  life: p.life
+                })),
                 roundTime: combatEngine.roundTime,
                 isOver: combatEngine.isOver,
                 winner: combatEngine.winner
@@ -1515,8 +1596,10 @@ class CyberStrikerApp {
         inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
       }
 
-      // 3. 戰鬥物理精準推進 1 幀 (60 FPS 確定性週期)
-      combatEngine.update(inputP1, inputP2);
+      // 3. 戰鬥物理精準推進 1 幀 (60 FPS 確定性週期，多人模式需待雙方就緒解鎖後同步開始)
+      if (this.matchMode !== 'p2p' || this.isMultiplayerMatchUnlocked) {
+        combatEngine.update(inputP1, inputP2);
+      }
 
       // 4. 檢查對局結算與勝利姿態慶祝展示計時
       if (combatEngine.isOver && !combatEngine.isTraining) {
@@ -2325,6 +2408,30 @@ class CyberStrikerApp {
     if (combatEngine.isOver && !combatEngine.isTraining) {
       this._drawVictoryBanner(ctx, w, h);
     }
+
+    // 13. 多人連線雙方同步就緒提示 (Sync Ready Indicator)
+    if (this.matchMode === 'p2p' && !this.isMultiplayerMatchUnlocked && !combatEngine.isOver) {
+      ctx.save();
+      const cx = w / 2;
+      const cy = h / 2 - 30;
+      ctx.fillStyle = 'rgba(5, 12, 28, 0.85)';
+      ctx.strokeStyle = '#00f3ff';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#00f3ff';
+      ctx.shadowBlur = 20;
+      const bw = 380, bh = 48;
+      if (ctx.roundRect) ctx.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, 8);
+      else ctx.rect(cx - bw / 2, cy - bh / 2, bw, bh);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = '900 16px "Orbitron", "Noto Sans TC", sans-serif';
+      ctx.fillStyle = '#00f3ff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚡ 雙方神經元同步連線中... 即刻開戰！ ⚡', cx, cy);
+      ctx.restore();
+    }
   }
 
   // ─── 打擊爆裂火花與斬芒特效 (Hit Sparks & Impact Rays) ───
@@ -2618,17 +2725,17 @@ class CyberStrikerApp {
         ctx.restore();
       }
 
-      // ─── SK-06 虛空折躍斬 (Void Teleport Slash) ───
+      // ─── SK-06 虛空折躍傳送棒 (Void Teleport Wand Strike) ───
       else if (skillId === 'SK-06') {
         ctx.save();
-        ctx.shadowColor = '#6366f1';
-        ctx.shadowBlur = 26;
+        ctx.shadowColor = '#a855f7';
+        ctx.shadowBlur = 28;
 
-        const slashX = x + facing * 35;
+        const slashX = x + facing * 36;
         const slashY = y - 65;
 
-        // 巨大紫色與白色十文字折躍撕裂光束 (Dimensional Cross Slash)
-        ctx.strokeStyle = '#6366f1';
+        // 紫電與高維量子光流撕裂十字裂隙 (Quantum Cross Rift)
+        ctx.strokeStyle = '#c084fc';
         ctx.lineWidth = 6;
         ctx.beginPath();
         ctx.moveTo(slashX - facing * 45, slashY - 45);
@@ -2641,18 +2748,18 @@ class CyberStrikerApp {
         ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        // 虛空奇點吸積環 (Singularity Glyph)
-        ctx.strokeStyle = '#a5b4fc';
-        ctx.lineWidth = 2;
+        // 傳送棒核心爆發環 (Teleport Wand Energy Ring)
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(slashX, slashY, 28, 0, Math.PI * 2);
+        ctx.arc(slashX, slashY, 32, 0, Math.PI * 2);
         ctx.stroke();
 
-        // 次元暗物質星塵
-        for (let m = 0; m < 8; m++) {
-          const ma = (m * Math.PI) / 4 + t * 0.5;
-          ctx.fillStyle = m % 2 === 0 ? '#c084fc' : '#ffffff';
-          ctx.fillRect(slashX + Math.cos(ma) * 36, slashY + Math.sin(ma) * 36, 3.5, 3.5);
+        // 高維量子星塵 (Quantum Warp Particles)
+        for (let m = 0; m < 10; m++) {
+          const ma = (m * Math.PI) / 5 + t * 0.6;
+          ctx.fillStyle = m % 2 === 0 ? '#38bdf8' : '#ffffff';
+          ctx.fillRect(slashX + Math.cos(ma) * 38, slashY + Math.sin(ma) * 38, 4, 4);
         }
 
         ctx.restore();
@@ -3846,6 +3953,12 @@ class CyberStrikerApp {
 
     this.rematchRequestedByMe = false;
     this.rematchRequestedByOpponent = false;
+    this.isMultiplayerMatchUnlocked = false;
+    this.peerArenaLoaded = false;
+    if (this._unlockSafetyTimer) {
+      clearTimeout(this._unlockSafetyTimer);
+      this._unlockSafetyTimer = null;
+    }
 
     if (this._battleLoopId) {
       cancelAnimationFrame(this._battleLoopId);
@@ -5306,6 +5419,110 @@ class CyberStrikerApp {
       }
     } else if (data.type === 'countdown_cancel') {
       this._cancelMatchCountdown();
+    } else if (data.type === 'arena_ready') {
+      this.peerArenaLoaded = true;
+      if (this.multiplayerRole === 'host' && this.isFighting && !this.isMultiplayerMatchUnlocked) {
+        if (this._unlockSafetyTimer) {
+          clearTimeout(this._unlockSafetyTimer);
+          this._unlockSafetyTimer = null;
+        }
+        this.isMultiplayerMatchUnlocked = true;
+        soundEngine.playUI('fight');
+        if (p2pNetwork.isConnected) {
+          p2pNetwork.send({ type: 'battle_unlock' });
+        }
+      }
+    } else if (data.type === 'battle_unlock') {
+      if (this.multiplayerRole === 'guest') {
+        this.isMultiplayerMatchUnlocked = true;
+        soundEngine.playUI('fight');
+      }
+    } else if (data.type === 'teleport_warp') {
+      const char = data.charId === 'p1' ? combatEngine.p1 : combatEngine.p2;
+      if (char) {
+        combatEngine.shockwaves.push({
+          x: char.x,
+          y: char.y - 45,
+          radius: 10,
+          maxRadius: 48,
+          color: '#6366f1',
+          duration: 16
+        });
+        char.x = data.x;
+        char.y = data.y;
+        char.facing = data.facing;
+        char.vx = 0;
+        char.vy = 0;
+        combatEngine.shockwaves.push({
+          x: char.x,
+          y: char.y - 45,
+          radius: 12,
+          maxRadius: 55,
+          color: '#a855f7',
+          duration: 18
+        });
+        soundEngine.playHit('teleport');
+      }
+    } else if (data.type === 'skill_cast') {
+      const char = data.charId === 'p1' ? combatEngine.p1 : combatEngine.p2;
+      const opp = data.charId === 'p1' ? combatEngine.p2 : combatEngine.p1;
+      if (char && opp && typeof data.slotIdx === 'number') {
+        const alreadyRunning = char.state === 'skill' && char.currentAction?.id === data.skillId && char.stateTime <= 4;
+        if (!alreadyRunning) {
+          combatEngine._executeSkill(char, opp, data.slotIdx);
+        }
+      }
+    } else if (data.type === 'battle_hit_impact') {
+      if (this.multiplayerRole === 'guest' && combatEngine.p1 && combatEngine.p2) {
+        const target = data.targetId === 'p1' ? combatEngine.p1 : combatEngine.p2;
+        const attacker = data.attackerId === 'p1' ? combatEngine.p1 : combatEngine.p2;
+
+        combatEngine.p1.isTakingLegitHit = true;
+        combatEngine.p2.isTakingLegitHit = true;
+        if (typeof data.p1Hp === 'number') combatEngine.p1.hp = data.p1Hp;
+        if (typeof data.p2Hp === 'number') combatEngine.p2.hp = data.p2Hp;
+        combatEngine.p1.isTakingLegitHit = false;
+        combatEngine.p2.isTakingLegitHit = false;
+
+        const hitX = typeof data.hitX === 'number' ? data.hitX : (target ? target.x : 0);
+        const hitY = typeof data.hitY === 'number' ? data.hitY : (target ? target.y - 70 : 0);
+
+        if (data.isBlocked) {
+          soundEngine.playHit('guard');
+          combatEngine.hitStop = Math.max(combatEngine.hitStop, 2);
+          combatEngine.triggerScreenShake(2);
+          combatEngine.floatingTexts.push({
+            text: `SHIELD -${data.damage}`,
+            x: hitX,
+            y: hitY - 10,
+            color: '#38bdf8',
+            life: 32
+          });
+        } else {
+          soundEngine.playHit(data.knockdown ? 'knockdown' : 'heavy');
+          combatEngine.hitStop = Math.max(combatEngine.hitStop, data.knockdown ? 6 : 4);
+          combatEngine.triggerScreenShake(data.knockdown ? 7 : 4);
+          combatEngine.floatingTexts.push({
+            text: `-${data.damage}`,
+            x: hitX,
+            y: hitY - 10,
+            color: data.isCounter ? '#fbbf24' : '#ef4444',
+            life: 36
+          });
+          if (target) {
+            if (data.knockdown) {
+              target.state = 'knockdown';
+              target.stateTimer = 0;
+              target.vx = (attacker ? attacker.facing : 1) * 7.5;
+              target.vy = -6.5;
+            } else {
+              target.state = 'hit_stun';
+              target.stateTimer = 0;
+              target.vx = (attacker ? attacker.facing : 1) * 2;
+            }
+          }
+        }
+      }
     } else if (data.type === 'battle_input') {
       if (data.p1) this.networkP1Input = data.p1;
       if (data.p2) this.networkP2Input = data.p2;
@@ -5363,6 +5580,45 @@ class CyberStrikerApp {
           if (!combatEngine.isOver || combatEngine.winner !== w) {
             this._applyRemoteKO(w, data.p1?.hp, data.p2?.hp, true);
           }
+        }
+
+        // 7. 投射物增量同步 (確保遠程神兵武器如氣功波、苦無、光刃等在客端清晰可見且軌跡一致)
+        if (Array.isArray(data.projectiles)) {
+          const syncedProjectiles = [];
+          for (const sp of data.projectiles) {
+            const existing = combatEngine.projectiles.find(localP =>
+              localP.ownerId === sp.ownerId && localP.type === sp.type && Math.hypot(localP.x - sp.x, localP.y - sp.y) < 70
+            );
+            if (existing) {
+              existing.x = sp.x;
+              existing.y = sp.y;
+              existing.vx = sp.vx;
+              existing.vy = sp.vy;
+              existing.life = sp.life;
+              existing.damage = sp.damage;
+              syncedProjectiles.push(existing);
+            } else {
+              const owner = (sp.ownerId === 'p1' || sp.ownerId === 1) ? combatEngine.p1 : combatEngine.p2;
+              const skill = SKILLS.find(s => s.projectileType === sp.type);
+              syncedProjectiles.push({
+                ownerId: sp.ownerId,
+                type: sp.type,
+                x: sp.x,
+                y: sp.y,
+                vx: sp.vx,
+                vy: sp.vy,
+                radius: sp.radius,
+                damage: sp.damage,
+                skin: owner?.skin || null,
+                color: skill?.projectileColor || '#00f3ff',
+                life: sp.life,
+                piercing: skill?.piercing || false,
+                homing: skill?.homing || false,
+                trail: []
+              });
+            }
+          }
+          combatEngine.projectiles = syncedProjectiles;
         }
       }
     } else if (data.type === 'guest_sync') {

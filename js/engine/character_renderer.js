@@ -191,6 +191,24 @@ export class CharacterRenderer {
       vfx: null
     };
 
+    // 虛空折躍傳送棒專屬瞬移反手重擊姿態 (SK-06 Teleport Wand Strike Pose)
+    if (char && char.currentAction && char.currentAction.id === 'SK-06') {
+      const pProgress = Math.min(1, t / (char.stateDuration || 21));
+      const swing = Math.sin(pProgress * Math.PI);
+      defaultPose.torso.y = -72;
+      defaultPose.torso.angle = 0.22 * swing;
+      defaultPose.frontArm.upperAngle = -0.85 + swing * 1.55;
+      defaultPose.frontArm.foreAngle = 0.35 + swing * 0.45;
+      defaultPose.frontArm.holdingWeapon = 'wand';
+      defaultPose.backArm.upperAngle = 0.5;
+      defaultPose.backArm.foreAngle = 0.8;
+      defaultPose.frontLeg.thighAngle = 0.3;
+      defaultPose.frontLeg.shinAngle = 0.2;
+      defaultPose.backLeg.thighAngle = -0.4;
+      defaultPose.backLeg.shinAngle = 0.3;
+      return defaultPose;
+    }
+
     switch (state) {
       case 'idle': {
         // 自然呼吸起伏
@@ -1376,6 +1394,37 @@ export class CharacterRenderer {
       ctx.roundRect(-8, -12, 16, 10, 2);
       ctx.fill();
       ctx.stroke();
+    } else if (weapon === 'wand') {
+      // 科技量子傳送棒 (Teleport Wand / Rod)
+      ctx.save();
+      const rodGrad = ctx.createLinearGradient(0, -32, 0, 12);
+      rodGrad.addColorStop(0, '#a855f7');
+      rodGrad.addColorStop(0.5, '#6366f1');
+      rodGrad.addColorStop(1, '#1e1b4b');
+      ctx.fillStyle = rodGrad;
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(-2.5, -30, 5, 40, 2.5);
+      else ctx.rect(-2.5, -30, 5, 40);
+      ctx.fill();
+      ctx.stroke();
+
+      // 棒端量子傳送發光星芒寶石
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#a855f7';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.arc(0, -32, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 環形傳送光能環
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(0, -32, 9, 3.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
 
     ctx.restore();

@@ -518,19 +518,19 @@
     },
     {
       "id": "SK-06",
-      "name": "\u865B\u7A7A\u6298\u8E8D\u65AC",
+      "name": "\u865B\u7A7A\u6298\u8E8D\u50B3\u9001\u68D2",
       "category": "melee",
       "type": "teleport",
-      "typeName": "\u4F4D\u79FB\u5947\u8972 / \u8FD1\u6230\u6B66\u85DD",
+      "typeName": "\u77AC\u79FB\u80CC\u523A / \u50B3\u9001\u795E\u5175",
       "cd": 1.8,
-      "damage": 225,
+      "damage": 220,
       "startup": 5,
       "active": 8,
       "recovery": 8,
       "guardType": "all",
       "chipRatio": 0.5,
-      "description": "\u5316\u4F5C\u6B98\u5F71\u76F4\u63A5\u77AC\u79FB\u81F3\u5C0D\u624B\u6B63\u80CC\u5F8C\u5283\u51FA\u6A6B\u65AC\uFF0C\u80FD\u7A7F\u900F\u4E00\u5207\u6CE2\u5C0E\u8207\u98DB\u884C\u9053\u5177\u3002",
-      "counterGuide": "\u5C0D\u624B\u77AC\u79FB\u6D88\u5931\u77AC\u9593\uFF0C\u9700\u7ACB\u523B\u8F49\u8EAB\u62C9\u5411\u53CD\u65B9\u5411\u7DAD\u6301\u9632\u5B88\u59FF\u614B\u3002",
+      "description": "\u9AD8\u7DAD\u91CF\u5B50\u50B3\u9001\u795E\u68D2\uFF01\u4F7F\u7528\u8005\u5316\u70BA\u7A7A\u9593\u6B98\u5F71\u76F4\u63A5\u77AC\u79FB\u50B3\u9001\u5230\u5C0D\u624B\u6B63\u5F8C\u65B9\uFF0C\u53CD\u624B\u63EE\u64CA\u50B3\u9001\u68D2\u91CD\u64CA\u5176\u5F8C\u80CC\u9020\u6210 220 \u6BC0\u6EC5\u50B7\u5BB3\uFF01",
+      "counterGuide": "\u5C0D\u624B\u77AC\u79FB\u6D88\u5931\u4E4B\u77AC\u9593\uFF0C\u9700\u7ACB\u523B\u8F49\u8EAB\u62C9\u5411\u53CD\u65B9\u5411\u53EC\u559A\u9632\u8B77\u7F69\u9632\u5B88\uFF01",
       "icon": "fa-solid fa-wand-magic-sparkles",
       "color": "#6366f1",
       "tier": "normal",
@@ -10399,6 +10399,22 @@
         backLeg: { hipX: -6, hipY: -42, thighAngle: -0.2, shinAngle: 0.1 },
         vfx: null
       };
+      if (char && char.currentAction && char.currentAction.id === "SK-06") {
+        const pProgress = Math.min(1, t / (char.stateDuration || 21));
+        const swing = Math.sin(pProgress * Math.PI);
+        defaultPose.torso.y = -72;
+        defaultPose.torso.angle = 0.22 * swing;
+        defaultPose.frontArm.upperAngle = -0.85 + swing * 1.55;
+        defaultPose.frontArm.foreAngle = 0.35 + swing * 0.45;
+        defaultPose.frontArm.holdingWeapon = "wand";
+        defaultPose.backArm.upperAngle = 0.5;
+        defaultPose.backArm.foreAngle = 0.8;
+        defaultPose.frontLeg.thighAngle = 0.3;
+        defaultPose.frontLeg.shinAngle = 0.2;
+        defaultPose.backLeg.thighAngle = -0.4;
+        defaultPose.backLeg.shinAngle = 0.3;
+        return defaultPose;
+      }
       switch (state) {
         case "idle": {
           const breath = Math.sin(t * 0.08) * 3;
@@ -11346,6 +11362,32 @@
         ctx.roundRect(-8, -12, 16, 10, 2);
         ctx.fill();
         ctx.stroke();
+      } else if (weapon === "wand") {
+        ctx.save();
+        const rodGrad = ctx.createLinearGradient(0, -32, 0, 12);
+        rodGrad.addColorStop(0, "#a855f7");
+        rodGrad.addColorStop(0.5, "#6366f1");
+        rodGrad.addColorStop(1, "#1e1b4b");
+        ctx.fillStyle = rodGrad;
+        ctx.strokeStyle = "#c084fc";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(-2.5, -30, 5, 40, 2.5);
+        else ctx.rect(-2.5, -30, 5, 40);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "#a855f7";
+        ctx.shadowBlur = 14;
+        ctx.beginPath();
+        ctx.arc(0, -32, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(0, -32, 9, 3.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
       }
       ctx.restore();
     }
@@ -13231,6 +13273,9 @@
         ...skill,
         hitChecked: false
       };
+      if (typeof this.onSkillCastCallback === "function") {
+        this.onSkillCastCallback(char.id, slotIdx, skill.id);
+      }
       switch (skill.id) {
         case "SK-01":
           soundEngine.playHit("laser");
@@ -13256,9 +13301,38 @@
           char.vx = char.facing * 10;
           soundEngine.playHit("dp");
           break;
-        case "SK-06":
+        case "SK-06": {
+          this.shockwaves.push({
+            x: char.x,
+            y: char.y - 45,
+            radius: 10,
+            maxRadius: 48,
+            color: "#6366f1",
+            duration: 16
+          });
+          const behindOffset = opp.facing * -50;
+          const targetX = Math.max(50, Math.min(this.arenaWidth - 50, opp.x + behindOffset));
+          char.x = targetX;
+          char.y = opp.y;
+          char.vx = 0;
+          char.vy = 0;
+          char.isGrounded = opp.isGrounded;
+          char.currentPlatform = opp.currentPlatform;
+          char.facing = opp.facing;
+          this.shockwaves.push({
+            x: char.x,
+            y: char.y - 45,
+            radius: 12,
+            maxRadius: 55,
+            color: "#a855f7",
+            duration: 18
+          });
           soundEngine.playHit("teleport");
+          if (typeof this.onTeleportCallback === "function") {
+            this.onTeleportCallback(char.id, char.x, char.y, char.facing);
+          }
           break;
+        }
         case "SK-07":
           char.vx = char.facing * 7.2;
           soundEngine.playHit("punch");
@@ -13357,10 +13431,6 @@
       const t = char.stateTime;
       const hitStart = action.startup;
       const hitEnd = action.startup + action.active;
-      if (action.id === "SK-06" && t === action.startup) {
-        char.x = opp.x + opp.facing * -50;
-        char.facing = char.x < opp.x ? 1 : -1;
-      }
       if (t >= hitStart && t <= hitEnd && !action.hitChecked) {
         this._checkHitbox(char, opp, action);
       }
@@ -13763,6 +13833,11 @@
         }
         return;
       }
+      if (action.id === "SK-06") {
+        action.hitChecked = true;
+        this._applyHit(char, opp, action);
+        return;
+      }
       const hitReach = action.id === "SK-03" || action.id === "SK-26" ? 135 : action.id === "SK-25" ? 125 : action.id === "SK-05" || action.id === "SK-23" || action.id === "SK-30" ? 115 : action.id === "SK-08" ? 100 : 90;
       const inRange = Math.abs(char.x - opp.x) <= hitReach && Math.abs(char.y - opp.y) <= 125;
       const isFacingOpp = char.facing === 1 && opp.x >= char.x - 20 || char.facing === -1 && opp.x <= char.x + 20;
@@ -13797,6 +13872,21 @@
         opp.isTakingLegitHit = false;
         if (typeof this.onDamageCallback === "function") {
           this.onDamageCallback(opp.id, damage, opp.hp);
+        }
+        if (typeof this.onHitCallback === "function") {
+          this.onHitCallback({
+            attackerId: char.id,
+            targetId: opp.id,
+            damage,
+            isBlocked: true,
+            isCounter: false,
+            hitX: opp.x,
+            hitY: opp.y - 70,
+            actionName: action.name,
+            knockdown: false,
+            p1Hp: this.p1.hp,
+            p2Hp: this.p2.hp
+          });
         }
         soundEngine.playHit("guard");
         this._triggerHaptic(25);
@@ -13840,6 +13930,21 @@
       opp.isTakingLegitHit = false;
       if (typeof this.onDamageCallback === "function") {
         this.onDamageCallback(opp.id, damage, opp.hp);
+      }
+      if (typeof this.onHitCallback === "function") {
+        this.onHitCallback({
+          attackerId: char.id,
+          targetId: opp.id,
+          damage,
+          isBlocked: false,
+          isCounter,
+          hitX: opp.x,
+          hitY: opp.y - 70,
+          actionName: action.name,
+          knockdown: !!action.knockdown,
+          p1Hp: this.p1.hp,
+          p2Hp: this.p2.hp
+        });
       }
       char.superMeter = Math.min(char.superMax, (char.superMeter || 0) + 45);
       opp.superMeter = Math.min(opp.superMax, (opp.superMeter || 0) + 60);
@@ -15558,6 +15663,8 @@
       this._p2pMatchData = null;
       this.rematchRequestedByMe = false;
       this.rematchRequestedByOpponent = false;
+      this.isMultiplayerMatchUnlocked = false;
+      this.peerArenaLoaded = false;
       let savedKeys = null;
       try {
         savedKeys = JSON.parse(localStorage.getItem("quantum_arena_skill_keys") || "null");
@@ -16558,6 +16665,38 @@
       }
       if (this.matchMode === "p2p") {
         this._p2pSyncTimer = 0;
+        this.isMultiplayerMatchUnlocked = false;
+        combatEngine.onTeleportCallback = (charId, toX, toY, facing) => {
+          const localCharId = this.multiplayerRole === "host" ? "p1" : "p2";
+          if (charId === localCharId && p2pNetwork.isConnected) {
+            p2pNetwork.send({
+              type: "teleport_warp",
+              charId,
+              x: toX,
+              y: toY,
+              facing
+            });
+          }
+        };
+        combatEngine.onSkillCastCallback = (charId, slotIdx, skillId) => {
+          const localCharId = this.multiplayerRole === "host" ? "p1" : "p2";
+          if (charId === localCharId && p2pNetwork.isConnected) {
+            p2pNetwork.send({
+              type: "skill_cast",
+              charId,
+              slotIdx,
+              skillId
+            });
+          }
+        };
+        combatEngine.onHitCallback = (hitData) => {
+          if (p2pNetwork.isConnected && this.multiplayerRole === "host") {
+            p2pNetwork.send({
+              type: "battle_hit_impact",
+              ...hitData
+            });
+          }
+        };
         combatEngine.onKOCallback = (winner, p1Hp, p2Hp) => {
           if (p2pNetwork.isConnected) {
             p2pNetwork.send({
@@ -16580,6 +16719,29 @@
             });
           }
         };
+        if (this.multiplayerRole === "guest") {
+          if (p2pNetwork.isConnected) {
+            p2pNetwork.send({ type: "arena_ready" });
+          }
+        } else if (this.multiplayerRole === "host") {
+          const unlockBoth = () => {
+            if (this.isMultiplayerMatchUnlocked) return;
+            this.isMultiplayerMatchUnlocked = true;
+            soundEngine.playUI("fight");
+            if (p2pNetwork.isConnected) {
+              p2pNetwork.send({ type: "battle_unlock" });
+            }
+          };
+          if (this.peerArenaLoaded) {
+            unlockBoth();
+          } else {
+            this._unlockSafetyTimer = setTimeout(() => {
+              unlockBoth();
+            }, 350);
+          }
+        }
+      } else {
+        this.isMultiplayerMatchUnlocked = true;
       }
       if (this.matchMode === "arcade" && this.arcadeStage > 1) {
         combatEngine.p1.hp = Math.min(combatEngine.p1.maxHp, 650 + 350);
@@ -16763,7 +16925,8 @@
                     state: combatEngine.p1.state,
                     facing: combatEngine.p1.facing,
                     burstMeter: Math.round(combatEngine.p1.burstMeter),
-                    superMeter: Math.round(combatEngine.p1.superMeter)
+                    superMeter: Math.round(combatEngine.p1.superMeter),
+                    actionId: combatEngine.p1.currentAction?.id || null
                   },
                   p2: {
                     hp: Math.round(combatEngine.p2.hp),
@@ -16774,8 +16937,20 @@
                     state: combatEngine.p2.state,
                     facing: combatEngine.p2.facing,
                     burstMeter: Math.round(combatEngine.p2.burstMeter),
-                    superMeter: Math.round(combatEngine.p2.superMeter)
+                    superMeter: Math.round(combatEngine.p2.superMeter),
+                    actionId: combatEngine.p2.currentAction?.id || null
                   },
+                  projectiles: combatEngine.projectiles.map((p) => ({
+                    type: p.type,
+                    x: Math.round(p.x),
+                    y: Math.round(p.y),
+                    vx: Math.round(p.vx * 10) / 10,
+                    vy: Math.round((p.vy || 0) * 10) / 10,
+                    radius: p.radius,
+                    damage: p.damage,
+                    ownerId: p.ownerId,
+                    life: p.life
+                  })),
                   roundTime: combatEngine.roundTime,
                   isOver: combatEngine.isOver,
                   winner: combatEngine.winner
@@ -16805,7 +16980,9 @@
           inputP1 = this._gatherInputsP1();
           inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
         }
-        combatEngine.update(inputP1, inputP2);
+        if (this.matchMode !== "p2p" || this.isMultiplayerMatchUnlocked) {
+          combatEngine.update(inputP1, inputP2);
+        }
         if (combatEngine.isOver && !combatEngine.isTraining) {
           const isDraw = combatEngine.winner === 0;
           const isLocalWinner = !isDraw && (this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? combatEngine.winner === 2 : combatEngine.winner === 1 : combatEngine.winner === 1);
@@ -17456,6 +17633,27 @@
       if (combatEngine.isOver && !combatEngine.isTraining) {
         this._drawVictoryBanner(ctx, w, h);
       }
+      if (this.matchMode === "p2p" && !this.isMultiplayerMatchUnlocked && !combatEngine.isOver) {
+        ctx.save();
+        const cx = w / 2;
+        const cy = h / 2 - 30;
+        ctx.fillStyle = "rgba(5, 12, 28, 0.85)";
+        ctx.strokeStyle = "#00f3ff";
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = "#00f3ff";
+        ctx.shadowBlur = 20;
+        const bw = 380, bh = 48;
+        if (ctx.roundRect) ctx.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, 8);
+        else ctx.rect(cx - bw / 2, cy - bh / 2, bw, bh);
+        ctx.fill();
+        ctx.stroke();
+        ctx.font = '900 16px "Orbitron", "Noto Sans TC", sans-serif';
+        ctx.fillStyle = "#00f3ff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("\u26A1 \u96D9\u65B9\u795E\u7D93\u5143\u540C\u6B65\u9023\u7DDA\u4E2D... \u5373\u523B\u958B\u6230\uFF01 \u26A1", cx, cy);
+        ctx.restore();
+      }
     }
     // ─── 打擊爆裂火花與斬芒特效 (Hit Sparks & Impact Rays) ───
     _drawHitSparks(ctx) {
@@ -17690,11 +17888,11 @@
           ctx.restore();
         } else if (skillId === "SK-06") {
           ctx.save();
-          ctx.shadowColor = "#6366f1";
-          ctx.shadowBlur = 26;
-          const slashX = x + facing * 35;
+          ctx.shadowColor = "#a855f7";
+          ctx.shadowBlur = 28;
+          const slashX = x + facing * 36;
           const slashY = y - 65;
-          ctx.strokeStyle = "#6366f1";
+          ctx.strokeStyle = "#c084fc";
           ctx.lineWidth = 6;
           ctx.beginPath();
           ctx.moveTo(slashX - facing * 45, slashY - 45);
@@ -17705,15 +17903,15 @@
           ctx.strokeStyle = "#ffffff";
           ctx.lineWidth = 2.5;
           ctx.stroke();
-          ctx.strokeStyle = "#a5b4fc";
-          ctx.lineWidth = 2;
+          ctx.strokeStyle = "#38bdf8";
+          ctx.lineWidth = 2.5;
           ctx.beginPath();
-          ctx.arc(slashX, slashY, 28, 0, Math.PI * 2);
+          ctx.arc(slashX, slashY, 32, 0, Math.PI * 2);
           ctx.stroke();
-          for (let m = 0; m < 8; m++) {
-            const ma = m * Math.PI / 4 + t * 0.5;
-            ctx.fillStyle = m % 2 === 0 ? "#c084fc" : "#ffffff";
-            ctx.fillRect(slashX + Math.cos(ma) * 36, slashY + Math.sin(ma) * 36, 3.5, 3.5);
+          for (let m = 0; m < 10; m++) {
+            const ma = m * Math.PI / 5 + t * 0.6;
+            ctx.fillStyle = m % 2 === 0 ? "#38bdf8" : "#ffffff";
+            ctx.fillRect(slashX + Math.cos(ma) * 38, slashY + Math.sin(ma) * 38, 4, 4);
           }
           ctx.restore();
         } else if (skillId === "SK-07") {
@@ -18684,6 +18882,12 @@
       if (victoryOverlay) victoryOverlay.style.display = "none";
       this.rematchRequestedByMe = false;
       this.rematchRequestedByOpponent = false;
+      this.isMultiplayerMatchUnlocked = false;
+      this.peerArenaLoaded = false;
+      if (this._unlockSafetyTimer) {
+        clearTimeout(this._unlockSafetyTimer);
+        this._unlockSafetyTimer = null;
+      }
       if (this._battleLoopId) {
         cancelAnimationFrame(this._battleLoopId);
         this._battleLoopId = null;
@@ -19976,6 +20180,107 @@
         }
       } else if (data.type === "countdown_cancel") {
         this._cancelMatchCountdown();
+      } else if (data.type === "arena_ready") {
+        this.peerArenaLoaded = true;
+        if (this.multiplayerRole === "host" && this.isFighting && !this.isMultiplayerMatchUnlocked) {
+          if (this._unlockSafetyTimer) {
+            clearTimeout(this._unlockSafetyTimer);
+            this._unlockSafetyTimer = null;
+          }
+          this.isMultiplayerMatchUnlocked = true;
+          soundEngine.playUI("fight");
+          if (p2pNetwork.isConnected) {
+            p2pNetwork.send({ type: "battle_unlock" });
+          }
+        }
+      } else if (data.type === "battle_unlock") {
+        if (this.multiplayerRole === "guest") {
+          this.isMultiplayerMatchUnlocked = true;
+          soundEngine.playUI("fight");
+        }
+      } else if (data.type === "teleport_warp") {
+        const char = data.charId === "p1" ? combatEngine.p1 : combatEngine.p2;
+        if (char) {
+          combatEngine.shockwaves.push({
+            x: char.x,
+            y: char.y - 45,
+            radius: 10,
+            maxRadius: 48,
+            color: "#6366f1",
+            duration: 16
+          });
+          char.x = data.x;
+          char.y = data.y;
+          char.facing = data.facing;
+          char.vx = 0;
+          char.vy = 0;
+          combatEngine.shockwaves.push({
+            x: char.x,
+            y: char.y - 45,
+            radius: 12,
+            maxRadius: 55,
+            color: "#a855f7",
+            duration: 18
+          });
+          soundEngine.playHit("teleport");
+        }
+      } else if (data.type === "skill_cast") {
+        const char = data.charId === "p1" ? combatEngine.p1 : combatEngine.p2;
+        const opp = data.charId === "p1" ? combatEngine.p2 : combatEngine.p1;
+        if (char && opp && typeof data.slotIdx === "number") {
+          const alreadyRunning = char.state === "skill" && char.currentAction?.id === data.skillId && char.stateTime <= 4;
+          if (!alreadyRunning) {
+            combatEngine._executeSkill(char, opp, data.slotIdx);
+          }
+        }
+      } else if (data.type === "battle_hit_impact") {
+        if (this.multiplayerRole === "guest" && combatEngine.p1 && combatEngine.p2) {
+          const target = data.targetId === "p1" ? combatEngine.p1 : combatEngine.p2;
+          const attacker = data.attackerId === "p1" ? combatEngine.p1 : combatEngine.p2;
+          combatEngine.p1.isTakingLegitHit = true;
+          combatEngine.p2.isTakingLegitHit = true;
+          if (typeof data.p1Hp === "number") combatEngine.p1.hp = data.p1Hp;
+          if (typeof data.p2Hp === "number") combatEngine.p2.hp = data.p2Hp;
+          combatEngine.p1.isTakingLegitHit = false;
+          combatEngine.p2.isTakingLegitHit = false;
+          const hitX = typeof data.hitX === "number" ? data.hitX : target ? target.x : 0;
+          const hitY = typeof data.hitY === "number" ? data.hitY : target ? target.y - 70 : 0;
+          if (data.isBlocked) {
+            soundEngine.playHit("guard");
+            combatEngine.hitStop = Math.max(combatEngine.hitStop, 2);
+            combatEngine.triggerScreenShake(2);
+            combatEngine.floatingTexts.push({
+              text: `SHIELD -${data.damage}`,
+              x: hitX,
+              y: hitY - 10,
+              color: "#38bdf8",
+              life: 32
+            });
+          } else {
+            soundEngine.playHit(data.knockdown ? "knockdown" : "heavy");
+            combatEngine.hitStop = Math.max(combatEngine.hitStop, data.knockdown ? 6 : 4);
+            combatEngine.triggerScreenShake(data.knockdown ? 7 : 4);
+            combatEngine.floatingTexts.push({
+              text: `-${data.damage}`,
+              x: hitX,
+              y: hitY - 10,
+              color: data.isCounter ? "#fbbf24" : "#ef4444",
+              life: 36
+            });
+            if (target) {
+              if (data.knockdown) {
+                target.state = "knockdown";
+                target.stateTimer = 0;
+                target.vx = (attacker ? attacker.facing : 1) * 7.5;
+                target.vy = -6.5;
+              } else {
+                target.state = "hit_stun";
+                target.stateTimer = 0;
+                target.vx = (attacker ? attacker.facing : 1) * 2;
+              }
+            }
+          }
+        }
       } else if (data.type === "battle_input") {
         if (data.p1) this.networkP1Input = data.p1;
         if (data.p2) this.networkP2Input = data.p2;
@@ -20020,6 +20325,43 @@
             if (!combatEngine.isOver || combatEngine.winner !== w) {
               this._applyRemoteKO(w, data.p1?.hp, data.p2?.hp, true);
             }
+          }
+          if (Array.isArray(data.projectiles)) {
+            const syncedProjectiles = [];
+            for (const sp of data.projectiles) {
+              const existing = combatEngine.projectiles.find(
+                (localP) => localP.ownerId === sp.ownerId && localP.type === sp.type && Math.hypot(localP.x - sp.x, localP.y - sp.y) < 70
+              );
+              if (existing) {
+                existing.x = sp.x;
+                existing.y = sp.y;
+                existing.vx = sp.vx;
+                existing.vy = sp.vy;
+                existing.life = sp.life;
+                existing.damage = sp.damage;
+                syncedProjectiles.push(existing);
+              } else {
+                const owner = sp.ownerId === "p1" || sp.ownerId === 1 ? combatEngine.p1 : combatEngine.p2;
+                const skill = SKILLS.find((s) => s.projectileType === sp.type);
+                syncedProjectiles.push({
+                  ownerId: sp.ownerId,
+                  type: sp.type,
+                  x: sp.x,
+                  y: sp.y,
+                  vx: sp.vx,
+                  vy: sp.vy,
+                  radius: sp.radius,
+                  damage: sp.damage,
+                  skin: owner?.skin || null,
+                  color: skill?.projectileColor || "#00f3ff",
+                  life: sp.life,
+                  piercing: skill?.piercing || false,
+                  homing: skill?.homing || false,
+                  trail: []
+                });
+              }
+            }
+            combatEngine.projectiles = syncedProjectiles;
           }
         }
       } else if (data.type === "guest_sync") {
