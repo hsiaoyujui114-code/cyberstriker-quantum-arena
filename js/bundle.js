@@ -2481,7 +2481,10 @@
      */
     generateSaveSignature(user) {
       if (!user) return "";
-      const raw = `${user.id}_${user.credits}_${(user.skins || []).sort().join(",")}_${user.wins || 0}_${this.saveSalt}`;
+      const userId = user.uid || user.id || "";
+      const skinsStr = Array.isArray(user.skins) ? [...user.skins].sort().join(",") : "";
+      const wins = user.stats?.wins || user.wins || 0;
+      const raw = `${userId}_${user.credits}_${skinsStr}_${wins}_${this.saveSalt}`;
       return this._hashString(raw);
     }
     verifySaveIntegrity(user) {
@@ -2604,46 +2607,27 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           const defaultStarterSkins = ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"];
-          const shopOnlyTribute = [
-            "skin_iron_man",
-            "skin_spiderman",
-            "skin_captain_america",
-            "skin_thor",
-            "skin_thanos",
-            "skin_hawkeye",
-            "skin_goku_ssj",
-            "skin_vegeta_ssj",
-            "skin_trunks_future",
-            "skin_piccolo",
-            "skin_golden_frieza",
-            "skin_brawl_shelly",
-            "skin_brawl_colt",
-            "skin_brawl_spike",
-            "skin_brawl_el_primo",
-            "skin_brawl_crow",
-            "skin_brawl_leon"
-          ];
           for (const email in parsed) {
             if (parsed[email]) {
-              if ((parsed[email].credits || 0) < 3e4) {
-                parsed[email].credits = 5e4;
-              }
               if (!Array.isArray(parsed[email].purchasedSkins)) {
                 parsed[email].purchasedSkins = [];
               }
-              if (Array.isArray(parsed[email].skins)) {
-                parsed[email].skins = parsed[email].skins.filter((sid) => {
-                  if (shopOnlyTribute.includes(sid)) {
-                    return parsed[email].purchasedSkins.includes(sid);
-                  }
-                  return true;
-                });
-                defaultStarterSkins.forEach((sid) => {
-                  if (!parsed[email].skins.includes(sid)) parsed[email].skins.push(sid);
-                });
-                if (!parsed[email].skins.includes(parsed[email].equippedSkin)) {
-                  parsed[email].equippedSkin = "skin_cyber_warrior";
+              if (!Array.isArray(parsed[email].skins)) {
+                parsed[email].skins = [...defaultStarterSkins];
+              }
+              defaultStarterSkins.forEach((sid) => {
+                if (!parsed[email].skins.includes(sid)) parsed[email].skins.push(sid);
+              });
+              parsed[email].purchasedSkins.forEach((sid) => {
+                if (!parsed[email].skins.includes(sid)) parsed[email].skins.push(sid);
+              });
+              parsed[email].skins.forEach((sid) => {
+                if (!defaultStarterSkins.includes(sid) && !parsed[email].purchasedSkins.includes(sid)) {
+                  parsed[email].purchasedSkins.push(sid);
                 }
+              });
+              if (!parsed[email].skins.includes(parsed[email].equippedSkin)) {
+                parsed[email].equippedSkin = parsed[email].skins[0] || "skin_cyber_warrior";
               }
             }
           }
@@ -2670,8 +2654,8 @@
           loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
           stats: { total: 18, wins: 14, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: false } },
           preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
-          lastLogin: new Date(Date.now() - 36e5 * 2).toISOString(),
-          updatedAt: new Date(Date.now() - 36e5 * 2).toISOString()
+          lastLogin: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z"
         },
         "ethan.cyber@gmail.com": {
           uid: "CY-UID-773902",
@@ -2690,8 +2674,8 @@
           loadout: ["SK-03", "SK-04", "SK-07", "SK-22", "SK-27"],
           stats: { total: 42, wins: 38, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: true } },
           preferences: { bgmVol: 0.5, sfxVol: 0.85, haptics: true },
-          lastLogin: new Date(Date.now() - 864e5).toISOString(),
-          updatedAt: new Date(Date.now() - 864e5).toISOString()
+          lastLogin: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z"
         }
       };
       safeSetItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(initialAccounts));
@@ -2715,30 +2699,25 @@
           if (sessionData.isGuest) {
             this.loginAsGuest(sessionData.user);
             return;
-          } else if (sessionData.email && this.accounts[sessionData.email]) {
-            this.currentUser = this.accounts[sessionData.email];
-            antiCheat.verifySaveIntegrity(this.currentUser);
-            this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
-            this._saveAccountsToStorage();
-            this.syncWithCloud(sessionData.email).catch((err) => {
-              console.warn("Background sync on init:", err);
-            });
-            return;
+          } else if (sessionData.email) {
+            const acc = this.accounts[sessionData.email] || sessionData.user;
+            if (acc) {
+              this.currentUser = acc;
+              this.accounts[sessionData.email] = acc;
+              antiCheat.verifySaveIntegrity(this.currentUser);
+              this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
+              this._saveAccountsToStorage();
+              this.syncWithCloud(sessionData.email).catch((err) => {
+                console.warn("Background sync on init:", err);
+              });
+              return;
+            }
           }
         }
       } catch (e) {
         console.warn("Session resume failed, defaulting to first or guest:", e);
       }
-      const firstEmail = Object.keys(this.accounts)[0];
-      if (firstEmail && this.accounts[firstEmail]) {
-        this.currentUser = this.accounts[firstEmail];
-        this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
-        this.isGuest = false;
-        this._persistSession();
-        this.syncWithCloud(firstEmail).catch(console.warn);
-      } else {
-        this.loginAsGuest();
-      }
+      this.loginAsGuest();
     }
     /**
      * 雲端存檔讀取 (GET from kvdb.io)
@@ -2814,42 +2793,30 @@
       if (!local) return cloud;
       const cloudTime = new Date(cloud.updatedAt || 0).getTime();
       const localTime = new Date(local.updatedAt || 0).getTime();
+      const defaultStarterSkins = ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"];
+      const cloudPurchased = Array.isArray(cloud.purchasedSkins) ? cloud.purchasedSkins : [];
+      const localPurchased = Array.isArray(local.purchasedSkins) ? local.purchasedSkins : [];
+      const cloudSkins = Array.isArray(cloud.skins) ? cloud.skins : [];
+      const localSkins = Array.isArray(local.skins) ? local.skins : [];
       const mergedPurchased = Array.from(/* @__PURE__ */ new Set([
-        ...Array.isArray(cloud.purchasedSkins) ? cloud.purchasedSkins : [],
-        ...Array.isArray(local.purchasedSkins) ? local.purchasedSkins : []
+        ...cloudPurchased,
+        ...localPurchased,
+        ...cloudSkins.filter((sid) => !defaultStarterSkins.includes(sid)),
+        ...localSkins.filter((sid) => !defaultStarterSkins.includes(sid))
       ]));
-      const shopOnlyMarvelDB = [
-        "skin_iron_man",
-        "skin_spiderman",
-        "skin_captain_america",
-        "skin_thor",
-        "skin_thanos",
-        "skin_goku_ssj",
-        "skin_vegeta_ssj",
-        "skin_trunks_future",
-        "skin_piccolo",
-        "skin_golden_frieza"
-      ];
-      const rawSkins = Array.from(/* @__PURE__ */ new Set([
-        ...Array.isArray(cloud.skins) ? cloud.skins : [],
-        ...Array.isArray(local.skins) ? local.skins : []
+      const allSkins = Array.from(/* @__PURE__ */ new Set([
+        ...defaultStarterSkins,
+        ...cloudSkins,
+        ...localSkins,
+        ...mergedPurchased
       ]));
-      const allSkins = rawSkins.filter((sid) => {
-        if (shopOnlyMarvelDB.includes(sid)) {
-          return mergedPurchased.includes(sid);
-        }
-        return true;
-      });
-      ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"].forEach((sid) => {
-        if (!allSkins.includes(sid)) allSkins.push(sid);
-      });
       const newerAcc = cloudTime >= localTime ? cloud : local;
-      let equipped = newerAcc.equippedSkin;
+      let equipped = newerAcc.equippedSkin || cloud.equippedSkin || local.equippedSkin;
       if (!allSkins.includes(equipped)) {
         equipped = allSkins[0] || "skin_cyber_warrior";
       }
-      const credits = Math.max(0, Number(newerAcc.credits) || 0);
-      const eventTokens = Math.max(0, Number(newerAcc.eventTokens) || 0);
+      const credits = Math.max(Number(cloud.credits) || 0, Number(local.credits) || 0);
+      const eventTokens = Math.max(Number(cloud.eventTokens) || 0, Number(local.eventTokens) || 0);
       const stats = {
         total: Math.max(cloud.stats?.total || 0, local.stats?.total || 0),
         wins: Math.max(cloud.stats?.wins || 0, local.stats?.wins || 0),
@@ -2871,7 +2838,7 @@
         purchasedSkins: mergedPurchased,
         skins: allSkins,
         equippedSkin: equipped,
-        loadout: Array.isArray(newerAcc.loadout) && newerAcc.loadout.length > 0 ? newerAcc.loadout : local.loadout || ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
+        loadout: Array.isArray(newerAcc.loadout) && newerAcc.loadout.length > 0 ? newerAcc.loadout : cloud.loadout || local.loadout || ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
         stats,
         preferences: { ...cloud.preferences || {}, ...local.preferences || {} },
         lastLogin: (/* @__PURE__ */ new Date()).toISOString(),
@@ -3197,10 +3164,11 @@
      */
     _saveCurrent() {
       if (this.currentUser) {
+        this.currentUser.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
         this.currentUser._sig = antiCheat.generateSaveSignature(this.currentUser);
       }
       if (!this.isGuest && this.currentUser && this.currentUser.email) {
-        this.accounts[this.currentUser.email] = { ...this.currentUser, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+        this.accounts[this.currentUser.email] = { ...this.currentUser };
         this._saveAccountsToStorage();
         this.saveToCloud(this.currentUser).catch((err) => {
           console.warn("Auto cloud sync failed:", err);
@@ -15698,6 +15666,13 @@
       saveSystem.init();
       saveSystem.onSyncChange((state, msg) => {
         this.updateCloudSyncUI(state, msg);
+        if (state === "synced") {
+          this.updateUserHUD();
+          this.renderSkinsInventory();
+          this.renderShopCatalog();
+          this.pedestalSkin = this.getEquippedSkin();
+          this.renderRegisteredAccounts();
+        }
       });
       this.pedestalSkin = this.getEquippedSkin();
       this.canvas = document.getElementById("gameCanvas");
@@ -15771,6 +15746,9 @@
             splash.style.display = "none";
             if (splash.parentNode) {
               splash.parentNode.removeChild(splash);
+            }
+            if (!saveSystem.currentUser || saveSystem.isGuest) {
+              this.openAuthModal();
             }
           }, 350);
         }
@@ -15911,6 +15889,22 @@
       if (credEl) credEl.textContent = u.credits.toLocaleString();
       if (avatarEl) avatarEl.src = u.avatar;
       if (guestBadge) guestBadge.style.display = saveSystem.isGuest ? "inline-block" : "none";
+      const headerLoginBtn = document.getElementById("headerLoginBtn");
+      if (headerLoginBtn) {
+        if (saveSystem.isGuest) {
+          headerLoginBtn.innerHTML = '<i class="fa-brands fa-google"></i> Google \u767B\u5165';
+          headerLoginBtn.style.borderColor = "#00f3ff";
+          headerLoginBtn.style.color = "#00f3ff";
+          headerLoginBtn.style.background = "rgba(0, 243, 255, 0.12)";
+          headerLoginBtn.title = "\u9EDE\u64CA\u9032\u884C Google \u5E33\u865F\u767B\u5165 (\u91CF\u5B50\u8EAB\u5206\u6388\u6B0A\u5100)\uFF0C\u540C\u6B65\u6240\u6709\u5916\u89C0\u8207\u9032\u5EA6";
+        } else {
+          headerLoginBtn.innerHTML = `<i class="fa-solid fa-cloud-check" style="color: #10b981;"></i> \u96F2\u7AEF\u5B58\u6A94: ${u.nickname || "\u5DF2\u767B\u5165"}`;
+          headerLoginBtn.style.borderColor = "#10b981";
+          headerLoginBtn.style.color = "#10b981";
+          headerLoginBtn.style.background = "rgba(16, 185, 129, 0.12)";
+          headerLoginBtn.title = `\u5DF2\u767B\u5165\uFF1A${u.email} (\u9EDE\u64CA\u53EF\u5207\u63DB\u5E33\u865F\u6216\u7ACB\u5373\u540C\u6B65)`;
+        }
+      }
       this.updateCloudSyncUI(saveSystem.syncState, saveSystem.lastSyncMessage);
       if (u.preferences) {
         soundEngine.setBgmVolume(u.preferences.bgmVol || 0.4);
@@ -18936,9 +18930,19 @@
       document.querySelectorAll(".nav-tab-btn[data-tab]").forEach((btn) => {
         btn.addEventListener("click", () => this.switchTab(btn.dataset.tab));
       });
+      const headerLoginBtn = document.getElementById("headerLoginBtn");
+      if (headerLoginBtn) {
+        headerLoginBtn.addEventListener("click", () => {
+          soundEngine.playUI("click");
+          this.openAuthModal();
+        });
+      }
       const userBadge = document.getElementById("userBadge");
       if (userBadge) {
-        userBadge.addEventListener("click", () => this.openAuthModal());
+        userBadge.addEventListener("click", () => {
+          soundEngine.playUI("click");
+          this.openAuthModal();
+        });
       }
       const pPunch = document.getElementById("pedestalPunchBtn");
       const pKick = document.getElementById("pedestalKickBtn");
@@ -19166,18 +19170,32 @@
           try {
             const res = await saveSystem.loginWithEmail(email, nick);
             soundEngine.playUI("equip");
+            const skinNames = (res.user.skins || []).map((sid) => {
+              const sk = SKINS.find((s) => s.id === sid);
+              return sk ? sk.name : sid;
+            }).join("\u3001");
             if (res.restoreSource === "cloud") {
               alert(`\u2601\uFE0F \u8DE8\u96FB\u8166\u96F2\u7AEF\u5B58\u6A94\u9084\u539F\u6210\u529F\uFF01
 \u6B61\u8FCE\u56DE\u4F86\uFF0C${res.user.nickname}\uFF01
-\u5DF2\u6210\u529F\u81EA\u5168\u7403\u96F2\u7AEF\u540C\u6B65\u60A8\u4E0A\u6B21\u904A\u73A9\u4E4B\u80FD\u91CF\u5E63 (${res.user.credits.toLocaleString()}) \u8207\u6240\u6709\u5916\u89C0\u3002`);
+\u5DF2\u6210\u529F\u81EA\u5168\u7403\u96F2\u7AEF\u540C\u6B65\uFF1A
+\u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
+\u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
+${skinNames}`);
             } else if (res.isNewUser) {
-              alert(`\u{1F389} \u6B61\u8FCE\u65B0\u6230\u58EB\uFF01\u5DF2\u767C\u653E 1,200 \u80FD\u91CF\u5E63\u8207 3 \u5957\u9810\u8A2D\u9020\u578B\uFF0C\u4E26\u5EFA\u7ACB\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u3002`);
+              alert(`\u{1F389} \u6B61\u8FCE\u65B0\u6230\u58EB\uFF01\u5DF2\u767C\u653E 50,000 \u80FD\u91CF\u5E63\u8207\u521D\u59CB\u9020\u578B\uFF0C\u4E26\u5EFA\u7ACB\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u3002
+\u{1F94B} \u7576\u524D\u5916\u89C0\uFF1A
+${skinNames}`);
             } else {
-              alert(`\u2705 \u6B61\u8FCE\u56DE\u4F86\uFF01\u5DF2\u8F09\u5165\u9032\u5EA6\u4E26\u540C\u6B65\u81F3\u5168\u7403\u96F2\u7AEF\u3002`);
+              alert(`\u2705 \u6B61\u8FCE\u56DE\u4F86\uFF01\u5DF2\u8F09\u5165\u9032\u5EA6\u4E26\u540C\u6B65\u81F3\u5168\u7403\u96F2\u7AEF\u3002
+\u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
+\u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
+${skinNames}`);
             }
             this.updateUserHUD();
             this.renderSkinsInventory();
             this.renderShopCatalog();
+            this.pedestalSkin = this.getEquippedSkin();
+            this.renderPedestal();
             this.closeAuthModal();
           } catch (err) {
             console.error("Login error:", err);
@@ -19203,15 +19221,23 @@
           forceCloudSyncBtn.disabled = false;
           forceCloudSyncBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> \u7ACB\u5373\u540C\u6B65';
           if (res.success) {
+            const skinNames = (res.user.skins || []).map((sid) => {
+              const sk = SKINS.find((s) => s.id === sid);
+              return sk ? sk.name : sid;
+            }).join("\u3001");
             soundEngine.playUI("equip");
             this.updateUserHUD();
             this.renderSkinsInventory();
             this.renderShopCatalog();
             this.renderRegisteredAccounts();
+            this.pedestalSkin = this.getEquippedSkin();
+            this.renderPedestal();
             alert(`\u2705 \u8DE8\u96FB\u8166\u96D9\u5411\u540C\u6B65\u6210\u529F\uFF01
 \u5DF2\u62C9\u53D6\u6700\u65B0\u96F2\u7AEF\u5B58\u6A94\u3002
 \u76EE\u524D\u5E33\u865F\uFF1A${res.user.email}
-\u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}`);
+\u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
+\u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
+${skinNames}`);
           } else {
             soundEngine.playHit("guard");
             alert(`\u26A0\uFE0F \u540C\u6B65\u5931\u6557\uFF1A${res.reason || res.error || "\u7DB2\u8DEF\u7570\u5E38"}`);
@@ -19245,15 +19271,23 @@
           if (!token || !token.trim()) return;
           const res = await saveSystem.importSaveToken(token.trim());
           if (res.success) {
+            const skinNames = (res.user.skins || []).map((sid) => {
+              const sk = SKINS.find((s) => s.id === sid);
+              return sk ? sk.name : sid;
+            }).join("\u3001");
             soundEngine.playUI("equip");
             this.updateUserHUD();
             this.renderSkinsInventory();
             this.renderShopCatalog();
             this.renderRegisteredAccounts();
+            this.pedestalSkin = this.getEquippedSkin();
+            this.renderPedestal();
             alert(`\u{1F389} \u5B58\u6A94\u4EE3\u78BC\u5C0E\u5165\u6210\u529F\uFF01
 \u5E33\u865F\uFF1A${res.user.email}
 \u66B1\u7A31\uFF1A${res.user.nickname}
-\u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
+\u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
+\u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
+${skinNames}
 \u5DF2\u81EA\u52D5\u540C\u6B65\u81F3\u5168\u7403\u96F2\u7AEF\uFF01`);
           } else {
             soundEngine.playHit("guard");
@@ -19266,6 +19300,10 @@
         guestBtn.onclick = () => {
           saveSystem.loginAsGuest();
           this.updateUserHUD();
+          this.renderSkinsInventory();
+          this.renderShopCatalog();
+          this.pedestalSkin = this.getEquippedSkin();
+          this.renderPedestal();
           this.closeAuthModal();
           soundEngine.playUI("click");
         };
@@ -20019,6 +20057,11 @@
       const isHost = this.multiplayerRole === "host";
       const myName = saveSystem.currentUser ? saveSystem.currentUser.nickname : isHost ? "\u623F\u4E3B (1P)" : "\u6311\u6230\u8005 (2P)";
       const mySkin = this.getEquippedSkin();
+      const resolveSkin = (skinData, fallbackIndex = 0) => {
+        if (!skinData) return SKINS[fallbackIndex];
+        const skinId = typeof skinData === "string" ? skinData : skinData.id;
+        return SKINS.find((s) => s.id === skinId) || (typeof skinData === "object" ? skinData : SKINS[fallbackIndex]);
+      };
       let p1Data, p2Data;
       if (isHost) {
         p1Data = {
@@ -20029,14 +20072,14 @@
         };
         p2Data = {
           name: this.multiplayerOpponentData?.name || "\u6311\u6230\u8005 (2P)",
-          skin: this.multiplayerOpponentData?.skin || SKINS[1],
+          skin: resolveSkin(this.multiplayerOpponentData?.skin, 1),
           loadout: this.multiplayerOpponentData?.loadout || ["SK-01", "SK-02", "SK-06", "SK-16", "SK-17"],
           isAi: false
         };
       } else {
         p1Data = {
           name: this.multiplayerOpponentData?.name || "\u623F\u4E3B (1P)",
-          skin: this.multiplayerOpponentData?.skin || SKINS[0],
+          skin: resolveSkin(this.multiplayerOpponentData?.skin, 0),
           loadout: this.multiplayerOpponentData?.loadout || ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
           isAi: false
         };
@@ -20137,10 +20180,15 @@
     }
     _handleP2PData(data) {
       if (!data || !data.type) return;
+      const resolveSkin = (skinData, fallbackIndex = 0) => {
+        if (!skinData) return SKINS[fallbackIndex];
+        const skinId = typeof skinData === "string" ? skinData : skinData.id;
+        return SKINS.find((s) => s.id === skinId) || (typeof skinData === "object" ? skinData : SKINS[fallbackIndex]);
+      };
       if (data.type === "player_info") {
         this.multiplayerOpponentData = {
           name: data.name,
-          skin: data.skin,
+          skin: resolveSkin(data.skin, 1),
           loadout: data.loadout
         };
         this.multiplayerOpponentReady = !!data.ready;
@@ -20156,7 +20204,7 @@
       } else if (data.type === "player_info_ack") {
         this.multiplayerOpponentData = {
           name: data.name,
-          skin: data.skin,
+          skin: resolveSkin(data.skin, 0),
           loadout: data.loadout
         };
         this.multiplayerOpponentReady = !!data.ready;
@@ -20168,7 +20216,7 @@
         }
         if (data.loadout) this.multiplayerOpponentData.loadout = data.loadout;
         if (data.name) this.multiplayerOpponentData.name = data.name;
-        if (data.skin) this.multiplayerOpponentData.skin = data.skin;
+        if (data.skin) this.multiplayerOpponentData.skin = resolveSkin(data.skin, 1);
         this._updateRoomPlayersCard();
       } else if (data.type === "ready_status") {
         this.multiplayerOpponentReady = !!data.ready;

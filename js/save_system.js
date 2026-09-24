@@ -113,37 +113,31 @@ export class SaveSystem {
       if (raw) {
         const parsed = JSON.parse(raw);
         const defaultStarterSkins = ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"];
-        const shopOnlyTribute = [
-          "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos", "skin_hawkeye",
-          "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza",
-          "skin_brawl_shelly", "skin_brawl_colt", "skin_brawl_spike", "skin_brawl_el_primo", "skin_brawl_crow", "skin_brawl_leon"
-        ];
 
         for (const email in parsed) {
           if (parsed[email]) {
-            // 確保玩家擁有足夠能量幣 (50,000) 可隨心於商城選購漫威、七龍珠與荒野亂鬥角色
-            if ((parsed[email].credits || 0) < 30000) {
-              parsed[email].credits = 50000;
-            }
             if (!Array.isArray(parsed[email].purchasedSkins)) {
               parsed[email].purchasedSkins = [];
             }
-            // 漫威、七龍珠與荒野亂鬥角色必須在商城購買：非購買所得之快取造型移出已擁有名單
-            if (Array.isArray(parsed[email].skins)) {
-              parsed[email].skins = parsed[email].skins.filter(sid => {
-                if (shopOnlyTribute.includes(sid)) {
-                  return parsed[email].purchasedSkins.includes(sid);
-                }
-                return true;
-              });
-              // 確保 3 套初始預設外觀都在
-              defaultStarterSkins.forEach(sid => {
-                if (!parsed[email].skins.includes(sid)) parsed[email].skins.push(sid);
-              });
-              // 穿戴外觀若未擁有則切回預設賽博武者
-              if (!parsed[email].skins.includes(parsed[email].equippedSkin)) {
-                parsed[email].equippedSkin = "skin_cyber_warrior";
+            if (!Array.isArray(parsed[email].skins)) {
+              parsed[email].skins = [...defaultStarterSkins];
+            }
+            // 確保 3 套初始預設外觀都在
+            defaultStarterSkins.forEach(sid => {
+              if (!parsed[email].skins.includes(sid)) parsed[email].skins.push(sid);
+            });
+            // 雙向確保：purchasedSkins 內的所有造型都納入 skins，skins 內的所有非預設造型也都納入 purchasedSkins
+            parsed[email].purchasedSkins.forEach(sid => {
+              if (!parsed[email].skins.includes(sid)) parsed[email].skins.push(sid);
+            });
+            parsed[email].skins.forEach(sid => {
+              if (!defaultStarterSkins.includes(sid) && !parsed[email].purchasedSkins.includes(sid)) {
+                parsed[email].purchasedSkins.push(sid);
               }
+            });
+            // 穿戴外觀若未擁有則切回預設賽博武者
+            if (!parsed[email].skins.includes(parsed[email].equippedSkin)) {
+              parsed[email].equippedSkin = parsed[email].skins[0] || "skin_cyber_warrior";
             }
           }
         }
@@ -169,8 +163,8 @@ export class SaveSystem {
         loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
         stats: { total: 18, wins: 14, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: false } },
         preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
-        lastLogin: new Date(Date.now() - 3600000 * 2).toISOString(),
-        updatedAt: new Date(Date.now() - 3600000 * 2).toISOString()
+        lastLogin: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
       },
       "ethan.cyber@gmail.com": {
         uid: "CY-UID-773902",
@@ -187,8 +181,8 @@ export class SaveSystem {
         loadout: ["SK-03", "SK-04", "SK-07", "SK-22", "SK-27"],
         stats: { total: 42, wins: 38, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: true } },
         preferences: { bgmVol: 0.5, sfxVol: 0.85, haptics: true },
-        lastLogin: new Date(Date.now() - 86400000).toISOString(),
-        updatedAt: new Date(Date.now() - 86400000).toISOString()
+        lastLogin: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
       }
     };
 
@@ -215,33 +209,29 @@ export class SaveSystem {
         if (sessionData.isGuest) {
           this.loginAsGuest(sessionData.user);
           return;
-        } else if (sessionData.email && this.accounts[sessionData.email]) {
-          this.currentUser = this.accounts[sessionData.email];
-          antiCheat.verifySaveIntegrity(this.currentUser);
-          this.currentUser.lastLogin = new Date().toISOString();
-          this._saveAccountsToStorage();
+        } else if (sessionData.email) {
+          const acc = this.accounts[sessionData.email] || sessionData.user;
+          if (acc) {
+            this.currentUser = acc;
+            this.accounts[sessionData.email] = acc;
+            antiCheat.verifySaveIntegrity(this.currentUser);
+            this.currentUser.lastLogin = new Date().toISOString();
+            this._saveAccountsToStorage();
 
-          // 背景靜默同步雲端資料（若玩家在別台電腦玩過，無縫拉回最新進度）
-          this.syncWithCloud(sessionData.email).catch(err => {
-            console.warn("Background sync on init:", err);
-          });
-          return;
+            // 背景靜默同步雲端資料（若玩家在別台電腦玩過，無縫拉回最新進度）
+            this.syncWithCloud(sessionData.email).catch(err => {
+              console.warn("Background sync on init:", err);
+            });
+            return;
+          }
         }
       }
     } catch (e) {
       console.warn("Session resume failed, defaulting to first or guest:", e);
     }
 
-    const firstEmail = Object.keys(this.accounts)[0];
-    if (firstEmail && this.accounts[firstEmail]) {
-      this.currentUser = this.accounts[firstEmail];
-      this.currentUser.lastLogin = new Date().toISOString();
-      this.isGuest = false;
-      this._persistSession();
-      this.syncWithCloud(firstEmail).catch(console.warn);
-    } else {
-      this.loginAsGuest();
-    }
+    // 若無前次登入紀錄，初始為訪客身分，使開場能主動彈出登入授權儀供玩家輸入帳號
+    this.loginAsGuest();
   }
 
   /**
@@ -328,43 +318,38 @@ export class SaveSystem {
 
     const cloudTime = new Date(cloud.updatedAt || 0).getTime();
     const localTime = new Date(local.updatedAt || 0).getTime();
+    const defaultStarterSkins = ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"];
 
-    // 購買紀錄合併（兩邊購買過的項目皆完整繼承）
+    // 購買紀錄與造型完整聯集（兩端購買或解鎖過之任何造型，100% 完整雙向繼承！）
+    const cloudPurchased = Array.isArray(cloud.purchasedSkins) ? cloud.purchasedSkins : [];
+    const localPurchased = Array.isArray(local.purchasedSkins) ? local.purchasedSkins : [];
+    const cloudSkins = Array.isArray(cloud.skins) ? cloud.skins : [];
+    const localSkins = Array.isArray(local.skins) ? local.skins : [];
+
     const mergedPurchased = Array.from(new Set([
-      ...(Array.isArray(cloud.purchasedSkins) ? cloud.purchasedSkins : []),
-      ...(Array.isArray(local.purchasedSkins) ? local.purchasedSkins : [])
+      ...cloudPurchased,
+      ...localPurchased,
+      ...cloudSkins.filter(sid => !defaultStarterSkins.includes(sid)),
+      ...localSkins.filter(sid => !defaultStarterSkins.includes(sid))
     ]));
 
-    const shopOnlyMarvelDB = [
-      "skin_iron_man", "skin_spiderman", "skin_captain_america", "skin_thor", "skin_thanos",
-      "skin_goku_ssj", "skin_vegeta_ssj", "skin_trunks_future", "skin_piccolo", "skin_golden_frieza"
-    ];
-
-    // 外觀集合（漫威與七龍珠角色必須為購買項目，預設造型永遠擁有）
-    const rawSkins = Array.from(new Set([
-      ...(Array.isArray(cloud.skins) ? cloud.skins : []),
-      ...(Array.isArray(local.skins) ? local.skins : [])
+    const allSkins = Array.from(new Set([
+      ...defaultStarterSkins,
+      ...cloudSkins,
+      ...localSkins,
+      ...mergedPurchased
     ]));
-    const allSkins = rawSkins.filter(sid => {
-      if (shopOnlyMarvelDB.includes(sid)) {
-        return mergedPurchased.includes(sid);
-      }
-      return true;
-    });
-    ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"].forEach(sid => {
-      if (!allSkins.includes(sid)) allSkins.push(sid);
-    });
 
-    // 當前穿戴外觀（依較新紀錄，或保證在擁有名單內）
+    // 當前穿戴外觀（優先遵從較新紀錄，且保證在擁有名單內）
     const newerAcc = cloudTime >= localTime ? cloud : local;
-    let equipped = newerAcc.equippedSkin;
+    let equipped = newerAcc.equippedSkin || cloud.equippedSkin || local.equippedSkin;
     if (!allSkins.includes(equipped)) {
       equipped = allSkins[0] || "skin_cyber_warrior";
     }
 
-    // 能量幣與活動代幣依據最新操作紀錄 (兼顧獲得與購買扣除)
-    const credits = Math.max(0, Number(newerAcc.credits) || 0);
-    const eventTokens = Math.max(0, Number(newerAcc.eventTokens) || 0);
+    // 能量幣與活動代幣：取兩端最大值，防止任何一方進度被覆蓋
+    const credits = Math.max(Number(cloud.credits) || 0, Number(local.credits) || 0);
+    const eventTokens = Math.max(Number(cloud.eventTokens) || 0, Number(local.eventTokens) || 0);
 
     // 戰績合併
     const stats = {
@@ -389,7 +374,7 @@ export class SaveSystem {
       purchasedSkins: mergedPurchased,
       skins: allSkins,
       equippedSkin: equipped,
-      loadout: (Array.isArray(newerAcc.loadout) && newerAcc.loadout.length > 0) ? newerAcc.loadout : (local.loadout || ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"]),
+      loadout: (Array.isArray(newerAcc.loadout) && newerAcc.loadout.length > 0) ? newerAcc.loadout : (cloud.loadout || local.loadout || ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"]),
       stats: stats,
       preferences: { ...(cloud.preferences || {}), ...(local.preferences || {}) },
       lastLogin: new Date().toISOString(),
@@ -750,12 +735,13 @@ export class SaveSystem {
    */
   _saveCurrent() {
     if (this.currentUser) {
+      this.currentUser.updatedAt = new Date().toISOString();
       // 數位簽名防篡改保護
       this.currentUser._sig = antiCheat.generateSaveSignature(this.currentUser);
     }
 
     if (!this.isGuest && this.currentUser && this.currentUser.email) {
-      this.accounts[this.currentUser.email] = { ...this.currentUser, updatedAt: new Date().toISOString() };
+      this.accounts[this.currentUser.email] = { ...this.currentUser };
       this._saveAccountsToStorage();
 
       // 背景向全球雲端持久化儲存（不阻塞前台畫面渲染）

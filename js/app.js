@@ -102,6 +102,13 @@ class CyberStrikerApp {
     saveSystem.init();
     saveSystem.onSyncChange((state, msg) => {
       this.updateCloudSyncUI(state, msg);
+      if (state === 'synced') {
+        this.updateUserHUD();
+        this.renderSkinsInventory();
+        this.renderShopCatalog();
+        this.pedestalSkin = this.getEquippedSkin();
+        this.renderRegisteredAccounts();
+      }
     });
     this.pedestalSkin = this.getEquippedSkin();
 
@@ -196,6 +203,10 @@ class CyberStrikerApp {
           splash.style.display = 'none';
           if (splash.parentNode) {
             splash.parentNode.removeChild(splash);
+          }
+          // 進入遊戲：若尚未登入 Google 帳號或為訪客，主動喚起量子身分授權儀裝置
+          if (!saveSystem.currentUser || saveSystem.isGuest) {
+            this.openAuthModal();
           }
         }, 350);
       }
@@ -364,6 +375,25 @@ class CyberStrikerApp {
     if (credEl) credEl.textContent = u.credits.toLocaleString();
     if (avatarEl) avatarEl.src = u.avatar;
     if (guestBadge) guestBadge.style.display = saveSystem.isGuest ? 'inline-block' : 'none';
+
+    // 頂部 Google 登入 / 雲端身分按鈕狀態
+    const headerLoginBtn = document.getElementById('headerLoginBtn');
+    if (headerLoginBtn) {
+      if (saveSystem.isGuest) {
+        headerLoginBtn.innerHTML = '<i class="fa-brands fa-google"></i> Google 登入';
+        headerLoginBtn.style.borderColor = '#00f3ff';
+        headerLoginBtn.style.color = '#00f3ff';
+        headerLoginBtn.style.background = 'rgba(0, 243, 255, 0.12)';
+        headerLoginBtn.title = '點擊進行 Google 帳號登入 (量子身分授權儀)，同步所有外觀與進度';
+      } else {
+        headerLoginBtn.innerHTML = `<i class="fa-solid fa-cloud-check" style="color: #10b981;"></i> 雲端存檔: ${u.nickname || '已登入'}`;
+        headerLoginBtn.style.borderColor = '#10b981';
+        headerLoginBtn.style.color = '#10b981';
+        headerLoginBtn.style.background = 'rgba(16, 185, 129, 0.12)';
+        headerLoginBtn.title = `已登入：${u.email} (點擊可切換帳號或立即同步)`;
+      }
+    }
+
     this.updateCloudSyncUI(saveSystem.syncState, saveSystem.lastSyncMessage);
 
     // 更新設定滑桿
@@ -4017,10 +4047,22 @@ class CyberStrikerApp {
       btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
     });
 
+    // 頂部 Google 登入按鈕
+    const headerLoginBtn = document.getElementById('headerLoginBtn');
+    if (headerLoginBtn) {
+      headerLoginBtn.addEventListener('click', () => {
+        soundEngine.playUI('click');
+        this.openAuthModal();
+      });
+    }
+
     // 點擊使用者頭像打開量子授權儀
     const userBadge = document.getElementById('userBadge');
     if (userBadge) {
-      userBadge.addEventListener('click', () => this.openAuthModal());
+      userBadge.addEventListener('click', () => {
+        soundEngine.playUI('click');
+        this.openAuthModal();
+      });
     }
 
     // 展示台 4 大動作按鈕
@@ -4287,17 +4329,24 @@ class CyberStrikerApp {
           const res = await saveSystem.loginWithEmail(email, nick);
           soundEngine.playUI('equip');
 
+          const skinNames = (res.user.skins || []).map(sid => {
+            const sk = SKINS.find(s => s.id === sid);
+            return sk ? sk.name : sid;
+          }).join('、');
+
           if (res.restoreSource === 'cloud') {
-            alert(`☁️ 跨電腦雲端存檔還原成功！\n歡迎回來，${res.user.nickname}！\n已成功自全球雲端同步您上次遊玩之能量幣 (${res.user.credits.toLocaleString()}) 與所有外觀。`);
+            alert(`☁️ 跨電腦雲端存檔還原成功！\n歡迎回來，${res.user.nickname}！\n已成功自全球雲端同步：\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
           } else if (res.isNewUser) {
-            alert(`🎉 歡迎新戰士！已發放 1,200 能量幣與 3 套預設造型，並建立全球雲端存檔。`);
+            alert(`🎉 歡迎新戰士！已發放 50,000 能量幣與初始造型，並建立全球雲端存檔。\n🥋 當前外觀：\n${skinNames}`);
           } else {
-            alert(`✅ 歡迎回來！已載入進度並同步至全球雲端。`);
+            alert(`✅ 歡迎回來！已載入進度並同步至全球雲端。\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
           }
 
           this.updateUserHUD();
           this.renderSkinsInventory();
           this.renderShopCatalog();
+          this.pedestalSkin = this.getEquippedSkin();
+          this.renderPedestal();
           this.closeAuthModal();
         } catch (err) {
           console.error('Login error:', err);
@@ -4326,12 +4375,19 @@ class CyberStrikerApp {
         forceCloudSyncBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> 立即同步';
 
         if (res.success) {
+          const skinNames = (res.user.skins || []).map(sid => {
+            const sk = SKINS.find(s => s.id === sid);
+            return sk ? sk.name : sid;
+          }).join('、');
+
           soundEngine.playUI('equip');
           this.updateUserHUD();
           this.renderSkinsInventory();
           this.renderShopCatalog();
           this.renderRegisteredAccounts();
-          alert(`✅ 跨電腦雙向同步成功！\n已拉取最新雲端存檔。\n目前帳號：${res.user.email}\n能量幣：${res.user.credits.toLocaleString()}`);
+          this.pedestalSkin = this.getEquippedSkin();
+          this.renderPedestal();
+          alert(`✅ 跨電腦雙向同步成功！\n已拉取最新雲端存檔。\n目前帳號：${res.user.email}\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
         } else {
           soundEngine.playHit('guard');
           alert(`⚠️ 同步失敗：${res.reason || res.error || '網路異常'}`);
@@ -4370,12 +4426,19 @@ class CyberStrikerApp {
 
         const res = await saveSystem.importSaveToken(token.trim());
         if (res.success) {
+          const skinNames = (res.user.skins || []).map(sid => {
+            const sk = SKINS.find(s => s.id === sid);
+            return sk ? sk.name : sid;
+          }).join('、');
+
           soundEngine.playUI('equip');
           this.updateUserHUD();
           this.renderSkinsInventory();
           this.renderShopCatalog();
           this.renderRegisteredAccounts();
-          alert(`🎉 存檔代碼導入成功！\n帳號：${res.user.email}\n暱稱：${res.user.nickname}\n能量幣：${res.user.credits.toLocaleString()}\n已自動同步至全球雲端！`);
+          this.pedestalSkin = this.getEquippedSkin();
+          this.renderPedestal();
+          alert(`🎉 存檔代碼導入成功！\n帳號：${res.user.email}\n暱稱：${res.user.nickname}\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}\n已自動同步至全球雲端！`);
         } else {
           soundEngine.playHit('guard');
           alert(`❌ 存檔代碼導入失敗：${res.reason || '代碼無效'}`);
@@ -4389,6 +4452,10 @@ class CyberStrikerApp {
       guestBtn.onclick = () => {
         saveSystem.loginAsGuest();
         this.updateUserHUD();
+        this.renderSkinsInventory();
+        this.renderShopCatalog();
+        this.pedestalSkin = this.getEquippedSkin();
+        this.renderPedestal();
         this.closeAuthModal();
         soundEngine.playUI('click');
       };
@@ -5241,6 +5308,12 @@ class CyberStrikerApp {
     const myName = saveSystem.currentUser ? saveSystem.currentUser.nickname : (isHost ? '房主 (1P)' : '挑戰者 (2P)');
     const mySkin = this.getEquippedSkin();
 
+    const resolveSkin = (skinData, fallbackIndex = 0) => {
+      if (!skinData) return SKINS[fallbackIndex];
+      const skinId = typeof skinData === 'string' ? skinData : skinData.id;
+      return SKINS.find(s => s.id === skinId) || (typeof skinData === 'object' ? skinData : SKINS[fallbackIndex]);
+    };
+
     let p1Data, p2Data;
     if (isHost) {
       p1Data = {
@@ -5251,14 +5324,14 @@ class CyberStrikerApp {
       };
       p2Data = {
         name: this.multiplayerOpponentData?.name || '挑戰者 (2P)',
-        skin: this.multiplayerOpponentData?.skin || SKINS[1],
+        skin: resolveSkin(this.multiplayerOpponentData?.skin, 1),
         loadout: this.multiplayerOpponentData?.loadout || ['SK-01', 'SK-02', 'SK-06', 'SK-16', 'SK-17'],
         isAi: false
       };
     } else {
       p1Data = {
         name: this.multiplayerOpponentData?.name || '房主 (1P)',
-        skin: this.multiplayerOpponentData?.skin || SKINS[0],
+        skin: resolveSkin(this.multiplayerOpponentData?.skin, 0),
         loadout: this.multiplayerOpponentData?.loadout || ['SK-01', 'SK-02', 'SK-03', 'SK-10', 'SK-11'],
         isAi: false
       };
@@ -5373,10 +5446,16 @@ class CyberStrikerApp {
   _handleP2PData(data) {
     if (!data || !data.type) return;
 
+    const resolveSkin = (skinData, fallbackIndex = 0) => {
+      if (!skinData) return SKINS[fallbackIndex];
+      const skinId = typeof skinData === 'string' ? skinData : skinData.id;
+      return SKINS.find(s => s.id === skinId) || (typeof skinData === 'object' ? skinData : SKINS[fallbackIndex]);
+    };
+
     if (data.type === 'player_info') {
       this.multiplayerOpponentData = {
         name: data.name,
-        skin: data.skin,
+        skin: resolveSkin(data.skin, 1),
         loadout: data.loadout
       };
       this.multiplayerOpponentReady = !!data.ready;
@@ -5395,7 +5474,7 @@ class CyberStrikerApp {
     } else if (data.type === 'player_info_ack') {
       this.multiplayerOpponentData = {
         name: data.name,
-        skin: data.skin,
+        skin: resolveSkin(data.skin, 0),
         loadout: data.loadout
       };
       this.multiplayerOpponentReady = !!data.ready;
@@ -5407,7 +5486,7 @@ class CyberStrikerApp {
       }
       if (data.loadout) this.multiplayerOpponentData.loadout = data.loadout;
       if (data.name) this.multiplayerOpponentData.name = data.name;
-      if (data.skin) this.multiplayerOpponentData.skin = data.skin;
+      if (data.skin) this.multiplayerOpponentData.skin = resolveSkin(data.skin, 1);
       this._updateRoomPlayersCard();
     } else if (data.type === 'ready_status') {
       this.multiplayerOpponentReady = !!data.ready;

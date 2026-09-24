@@ -188,7 +188,10 @@ export class AntiCheatEngine {
    */
   generateSaveSignature(user) {
     if (!user) return '';
-    const raw = `${user.id}_${user.credits}_${(user.skins || []).sort().join(',')}_${user.wins || 0}_${this.saveSalt}`;
+    const userId = user.uid || user.id || '';
+    const skinsStr = Array.isArray(user.skins) ? [...user.skins].sort().join(',') : '';
+    const wins = user.stats?.wins || user.wins || 0;
+    const raw = `${userId}_${user.credits}_${skinsStr}_${wins}_${this.saveSalt}`;
     return this._hashString(raw);
   }
 
