@@ -2457,6 +2457,14 @@
       fighter._lastValidY = fighter.y;
     }
     /**
+     * 將當前坐標登記為合法位置 (瞬移技能、訓練重置、連線權威校正等遊戲本身的位移)
+     */
+    acceptPosition(fighter) {
+      if (!fighter) return;
+      fighter._lastValidX = fighter.x;
+      fighter._lastValidY = fighter.y;
+    }
+    /**
      * 3. 異常傷害與秒殺攔截 (Damage Spoofing Filter)
      */
     filterDamage(rawDamage, attackType = "normal") {
@@ -13287,6 +13295,7 @@
           char.isGrounded = opp.isGrounded;
           char.currentPlatform = opp.currentPlatform;
           char.facing = opp.facing;
+          antiCheat.acceptPosition(char);
           this.shockwaves.push({
             x: char.x,
             y: char.y - 45,
@@ -16651,9 +16660,9 @@
             x: combatEngine.arenaWidth / 2,
             y: combatEngine.floorY - 140,
             color: tierObj.color,
-            duration: 130,
-            vy: -0.35,
-            fontSize: 14
+            life: 130,
+            fontSize: 14,
+            align: "center"
           });
         }, 400);
       }
@@ -17614,11 +17623,16 @@
       this._drawHitSparks(ctx);
       combatEngine.floatingTexts.forEach((t) => {
         ctx.save();
-        ctx.font = "bold 18px Orbitron, sans-serif";
+        ctx.font = `bold ${t.fontSize || 18}px Orbitron, sans-serif`;
         ctx.fillStyle = t.color;
         ctx.shadowColor = t.color;
         ctx.shadowBlur = 10;
-        ctx.fillText(t.text, t.x - 40, t.y);
+        if (t.align === "center") {
+          ctx.textAlign = "center";
+          ctx.fillText(t.text, t.x, t.y);
+        } else {
+          ctx.fillText(t.text, t.x - 40, t.y);
+        }
         ctx.restore();
       });
       ctx.restore();
@@ -18508,7 +18522,8 @@
       const badgeW2 = Math.max(168, p2Label.length * 12 + 65);
       const badgeH2 = 28;
       const badgeX2 = p2.x - badgeW2 / 2;
-      const badgeY2 = p2HeadY - 9 - badgeH2;
+      const labelsOverlap = Math.abs(p1.x - p2.x) < (badgeW1 + badgeW2) / 2 + 8 && Math.abs(p1.y - p2.y) < 60;
+      const badgeY2 = p2HeadY - 9 - badgeH2 - (labelsOverlap ? 58 : 0);
       ctx.fillStyle = p2IsMe ? "rgba(5, 15, 30, 0.9)" : "rgba(25, 5, 15, 0.9)";
       ctx.strokeStyle = p2IsMe ? "#00f3ff" : "#ff007f";
       ctx.lineWidth = 2;
@@ -18591,10 +18606,6 @@
       if (hp2El) hp2El.style.width = `${p2Hp / p2Max * 100}%`;
       if (hp1Text) hp1Text.textContent = `${p1Hp} / ${p1Max}`;
       if (hp2Text) hp2Text.textContent = `${p2Hp} / ${p2Max}`;
-      const p1HpBig = document.getElementById("p1HpBigText");
-      const p2HpBig = document.getElementById("p2HpBigText");
-      if (p1HpBig) p1HpBig.textContent = `${p1Hp} / ${p1Max}`;
-      if (p2HpBig) p2HpBig.textContent = `${p2Hp} / ${p2Max}`;
       const timerEl = document.getElementById("roundTimerText");
       if (timerEl) {
         timerEl.textContent = combatEngine.isTraining ? "\u221E" : combatEngine.roundTime;
@@ -19195,7 +19206,6 @@ ${skinNames}`);
             this.renderSkinsInventory();
             this.renderShopCatalog();
             this.pedestalSkin = this.getEquippedSkin();
-            this.renderPedestal();
             this.closeAuthModal();
           } catch (err) {
             console.error("Login error:", err);
@@ -19231,7 +19241,6 @@ ${skinNames}`);
             this.renderShopCatalog();
             this.renderRegisteredAccounts();
             this.pedestalSkin = this.getEquippedSkin();
-            this.renderPedestal();
             alert(`\u2705 \u8DE8\u96FB\u8166\u96D9\u5411\u540C\u6B65\u6210\u529F\uFF01
 \u5DF2\u62C9\u53D6\u6700\u65B0\u96F2\u7AEF\u5B58\u6A94\u3002
 \u76EE\u524D\u5E33\u865F\uFF1A${res.user.email}
@@ -19281,7 +19290,6 @@ ${skinNames}`);
             this.renderShopCatalog();
             this.renderRegisteredAccounts();
             this.pedestalSkin = this.getEquippedSkin();
-            this.renderPedestal();
             alert(`\u{1F389} \u5B58\u6A94\u4EE3\u78BC\u5C0E\u5165\u6210\u529F\uFF01
 \u5E33\u865F\uFF1A${res.user.email}
 \u66B1\u7A31\uFF1A${res.user.nickname}
@@ -19303,7 +19311,6 @@ ${skinNames}
           this.renderSkinsInventory();
           this.renderShopCatalog();
           this.pedestalSkin = this.getEquippedSkin();
-          this.renderPedestal();
           this.closeAuthModal();
           soundEngine.playUI("click");
         };
@@ -19338,10 +19345,6 @@ ${skinNames}
       if (cornerExitBtn) {
         cornerExitBtn.onclick = () => this.exitBattleToLobby();
       }
-      const hudExitBtn = document.getElementById("battleHudExitBtn");
-      if (hudExitBtn) {
-        hudExitBtn.onclick = () => this.exitBattleToLobby();
-      }
       const exitTrainingBtn = document.getElementById("exitTrainingBtn");
       if (exitTrainingBtn) {
         exitTrainingBtn.onclick = () => this.exitBattleToLobby();
@@ -19353,6 +19356,8 @@ ${skinNames}
           combatEngine.p2.hp = combatEngine.p2.maxHp;
           combatEngine.p1.x = 200;
           combatEngine.p2.x = 800;
+          antiCheat.acceptPosition(combatEngine.p1);
+          antiCheat.acceptPosition(combatEngine.p2);
           combatEngine.p1.vx = 0;
           combatEngine.p1.vy = 0;
           combatEngine.p2.vx = 0;
@@ -20262,6 +20267,7 @@ ${skinNames}
           char.facing = data.facing;
           char.vx = 0;
           char.vy = 0;
+          antiCheat.acceptPosition(char);
           combatEngine.shockwaves.push({
             x: char.x,
             y: char.y - 45,
@@ -20354,6 +20360,7 @@ ${skinNames}
               combatEngine.p1.x += dx1 * 0.45;
               combatEngine.p1.y += dy1 * 0.45;
             }
+            antiCheat.acceptPosition(combatEngine.p1);
             combatEngine.p1.facing = data.p1.facing;
             if (["knockdown", "hit_stun", "victory", "defeat"].includes(data.p1.state)) {
               combatEngine.p1.state = data.p1.state;
@@ -20363,6 +20370,7 @@ ${skinNames}
             const dx2 = data.p2.x - combatEngine.p2.x;
             if (Math.abs(dx2) > 90) {
               combatEngine.p2.x += dx2 * 0.35;
+              antiCheat.acceptPosition(combatEngine.p2);
             }
           }
           if (typeof data.roundTime === "number") {

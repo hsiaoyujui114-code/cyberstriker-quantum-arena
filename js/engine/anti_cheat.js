@@ -162,6 +162,15 @@ export class AntiCheatEngine {
   }
 
   /**
+   * 將當前坐標登記為合法位置 (瞬移技能、訓練重置、連線權威校正等遊戲本身的位移)
+   */
+  acceptPosition(fighter) {
+    if (!fighter) return;
+    fighter._lastValidX = fighter.x;
+    fighter._lastValidY = fighter.y;
+  }
+
+  /**
    * 3. 異常傷害與秒殺攔截 (Damage Spoofing Filter)
    */
   filterDamage(rawDamage, attackType = 'normal') {

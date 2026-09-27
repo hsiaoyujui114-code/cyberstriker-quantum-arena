@@ -14,6 +14,7 @@ import { combatEngine } from './engine/combat.js';
 import { stageRenderer } from './engine/stage_renderer.js';
 import { announcerEngine } from './engine/announcer.js';
 import { aiController } from './engine/ai.js';
+import { antiCheat } from './engine/anti_cheat.js';
 import { p2pNetwork } from './network/p2p.js';
 
 class CyberStrikerApp {
@@ -1259,9 +1260,9 @@ class CyberStrikerApp {
           x: combatEngine.arenaWidth / 2,
           y: combatEngine.floorY - 140,
           color: tierObj.color,
-          duration: 130,
-          vy: -0.35,
-          fontSize: 14
+          life: 130,
+          fontSize: 14,
+          align: 'center'
         });
       }, 400);
     }
@@ -2417,11 +2418,16 @@ class CyberStrikerApp {
     // 9. 繪製浮動傷害與提示文字 (Floating Texts)
     combatEngine.floatingTexts.forEach(t => {
       ctx.save();
-      ctx.font = 'bold 18px Orbitron, sans-serif';
+      ctx.font = `bold ${t.fontSize || 18}px Orbitron, sans-serif`;
       ctx.fillStyle = t.color;
       ctx.shadowColor = t.color;
       ctx.shadowBlur = 10;
-      ctx.fillText(t.text, t.x - 40, t.y);
+      if (t.align === 'center') {
+        ctx.textAlign = 'center';
+        ctx.fillText(t.text, t.x, t.y);
+      } else {
+        ctx.fillText(t.text, t.x - 40, t.y);
+      }
       ctx.restore();
     });
 
@@ -3554,7 +3560,9 @@ class CyberStrikerApp {
     const badgeW2 = Math.max(168, p2Label.length * 12 + 65);
     const badgeH2 = 28;
     const badgeX2 = p2.x - badgeW2 / 2;
-    const badgeY2 = p2HeadY - 9 - badgeH2;
+    // 雙方貼身時名牌會互相遮擋：2P 名牌 (連同招式標籤) 整組上移一層
+    const labelsOverlap = Math.abs(p1.x - p2.x) < (badgeW1 + badgeW2) / 2 + 8 && Math.abs(p1.y - p2.y) < 60;
+    const badgeY2 = p2HeadY - 9 - badgeH2 - (labelsOverlap ? 58 : 0);
 
     ctx.fillStyle = p2IsMe ? 'rgba(5, 15, 30, 0.9)' : 'rgba(25, 5, 15, 0.9)';
     ctx.strokeStyle = p2IsMe ? '#00f3ff' : '#ff007f';
@@ -3648,11 +3656,6 @@ class CyberStrikerApp {
     if (hp2El) hp2El.style.width = `${(p2Hp / p2Max) * 100}%`;
     if (hp1Text) hp1Text.textContent = `${p1Hp} / ${p1Max}`;
     if (hp2Text) hp2Text.textContent = `${p2Hp} / ${p2Max}`;
-
-    const p1HpBig = document.getElementById('p1HpBigText');
-    const p2HpBig = document.getElementById('p2HpBigText');
-    if (p1HpBig) p1HpBig.textContent = `${p1Hp} / ${p1Max}`;
-    if (p2HpBig) p2HpBig.textContent = `${p2Hp} / ${p2Max}`;
 
     // 2. 倒數計時 (訓練模式顯示 ∞)
     const timerEl = document.getElementById('roundTimerText');
@@ -4346,7 +4349,6 @@ class CyberStrikerApp {
           this.renderSkinsInventory();
           this.renderShopCatalog();
           this.pedestalSkin = this.getEquippedSkin();
-          this.renderPedestal();
           this.closeAuthModal();
         } catch (err) {
           console.error('Login error:', err);
@@ -4386,7 +4388,6 @@ class CyberStrikerApp {
           this.renderShopCatalog();
           this.renderRegisteredAccounts();
           this.pedestalSkin = this.getEquippedSkin();
-          this.renderPedestal();
           alert(`✅ 跨電腦雙向同步成功！\n已拉取最新雲端存檔。\n目前帳號：${res.user.email}\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
         } else {
           soundEngine.playHit('guard');
@@ -4437,7 +4438,6 @@ class CyberStrikerApp {
           this.renderShopCatalog();
           this.renderRegisteredAccounts();
           this.pedestalSkin = this.getEquippedSkin();
-          this.renderPedestal();
           alert(`🎉 存檔代碼導入成功！\n帳號：${res.user.email}\n暱稱：${res.user.nickname}\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}\n已自動同步至全球雲端！`);
         } else {
           soundEngine.playHit('guard');
@@ -4455,7 +4455,6 @@ class CyberStrikerApp {
         this.renderSkinsInventory();
         this.renderShopCatalog();
         this.pedestalSkin = this.getEquippedSkin();
-        this.renderPedestal();
         this.closeAuthModal();
         soundEngine.playUI('click');
       };
@@ -4499,12 +4498,6 @@ class CyberStrikerApp {
       cornerExitBtn.onclick = () => this.exitBattleToLobby();
     }
 
-    // HUD 中央計時器下方退出鈕
-    const hudExitBtn = document.getElementById('battleHudExitBtn');
-    if (hudExitBtn) {
-      hudExitBtn.onclick = () => this.exitBattleToLobby();
-    }
-
     // 自由訓練營退出按鈕
     const exitTrainingBtn = document.getElementById('exitTrainingBtn');
     if (exitTrainingBtn) {
@@ -4519,6 +4512,8 @@ class CyberStrikerApp {
         combatEngine.p2.hp = combatEngine.p2.maxHp;
         combatEngine.p1.x = 200;
         combatEngine.p2.x = 800;
+        antiCheat.acceptPosition(combatEngine.p1);
+        antiCheat.acceptPosition(combatEngine.p2);
         combatEngine.p1.vx = 0;
         combatEngine.p1.vy = 0;
         combatEngine.p2.vx = 0;
@@ -5532,6 +5527,7 @@ class CyberStrikerApp {
         char.facing = data.facing;
         char.vx = 0;
         char.vy = 0;
+        antiCheat.acceptPosition(char);
         combatEngine.shockwaves.push({
           x: char.x,
           y: char.y - 45,
@@ -5632,6 +5628,7 @@ class CyberStrikerApp {
             combatEngine.p1.x += dx1 * 0.45;
             combatEngine.p1.y += dy1 * 0.45;
           }
+          antiCheat.acceptPosition(combatEngine.p1);
           combatEngine.p1.facing = data.p1.facing;
           if (['knockdown', 'hit_stun', 'victory', 'defeat'].includes(data.p1.state)) {
             combatEngine.p1.state = data.p1.state;
@@ -5643,6 +5640,7 @@ class CyberStrikerApp {
           const dx2 = data.p2.x - combatEngine.p2.x;
           if (Math.abs(dx2) > 90) {
             combatEngine.p2.x += dx2 * 0.35;
+            antiCheat.acceptPosition(combatEngine.p2);
           }
         }
 

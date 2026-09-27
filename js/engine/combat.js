@@ -1355,6 +1355,7 @@ export class CombatEngine {
         char.isGrounded = opp.isGrounded;
         char.currentPlatform = opp.currentPlatform;
         char.facing = opp.facing; // 正對對手的後背！
+        antiCheat.acceptPosition(char);
 
         // 4. 抵達點生成虛空現身光環特效
         this.shockwaves.push({

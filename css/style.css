@@ -730,27 +730,6 @@ body:has(#battleScreen.active) .fab-start-btn {
   transform: scale(1.05);
 }
 
-.battle-hud-exit-btn {
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 800;
-  color: #ff007f;
-  background: rgba(11, 17, 32, 0.92);
-  border: 1px solid #ff007f;
-  border-radius: 4px;
-  cursor: pointer;
-  pointer-events: auto;
-  box-shadow: 0 0 8px rgba(255, 0, 127, 0.3);
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.battle-hud-exit-btn:hover {
-  background: #ff007f;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(255, 0, 127, 0.8);
-}
-
 .round-timer-box {
   width: 70px;
   height: 56px;
@@ -1114,4 +1093,15 @@ body:has(#battleScreen.active) .fab-start-btn {
 
 .room-slot-card:hover {
   border-color: #00f3ff;
+}
+
+/* 直向排列的 HUD 內 flex: 1 會把血條高度壓成 0，改用固定高度 */
+.fighter-hud-box .hp-bar-outer {
+  flex: none;
+}
+
+.fighter-hud-box .hud-role-badge,
+#p1NameDisplay,
+#p2NameDisplay {
+  white-space: nowrap;
 }
