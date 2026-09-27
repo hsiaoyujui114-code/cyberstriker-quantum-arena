@@ -147,44 +147,8 @@ export class SaveSystem {
       console.warn("Failed to parse saved accounts:", e);
     }
 
-    const initialAccounts = {
-      "player@gmail.com": {
-        uid: "CY-UID-882101",
-        email: "player@gmail.com",
-        nickname: "量子先鋒",
-        avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=QuantumVanguard",
-        credits: 50000,
-        eventTokens: 120,
-        skins: [
-          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"
-        ],
-        purchasedSkins: [],
-        equippedSkin: "skin_cyber_warrior",
-        loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
-        stats: { total: 18, wins: 14, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: false } },
-        preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
-        lastLogin: "2026-01-01T00:00:00.000Z",
-        updatedAt: "2026-01-01T00:00:00.000Z"
-      },
-      "ethan.cyber@gmail.com": {
-        uid: "CY-UID-773902",
-        email: "ethan.cyber@gmail.com",
-        nickname: "伊森大師",
-        avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=EthanStriker",
-        credits: 50000,
-        eventTokens: 350,
-        skins: [
-          "skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"
-        ],
-        purchasedSkins: [],
-        equippedSkin: "skin_cyber_warrior",
-        loadout: ["SK-03", "SK-04", "SK-07", "SK-22", "SK-27"],
-        stats: { total: 42, wins: 38, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: true } },
-        preferences: { bgmVol: 0.5, sfxVol: 0.85, haptics: true },
-        lastLogin: "2026-01-01T00:00:00.000Z",
-        updatedAt: "2026-01-01T00:00:00.000Z"
-      }
-    };
+    // 不預載示範帳號：預載的 Gmail 會讓所有訪客共用並覆寫同一份雲端存檔，且可繞過 Google 登入
+    const initialAccounts = {};
 
     safeSetItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(initialAccounts));
     return initialAccounts;

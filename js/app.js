@@ -17,6 +17,11 @@ import { aiController } from './engine/ai.js';
 import { antiCheat } from './engine/anti_cheat.js';
 import { p2pNetwork } from './network/p2p.js';
 
+// Google 登入 OAuth 用戶端 ID：於 Google Cloud Console 建立「網頁應用程式」類型憑證，
+// 「已授權的 JavaScript 來源」加入 https://hsiaoyujui114-code.github.io 後填入此處。
+// 留空時維持手動輸入 Email 的舊流程。
+const GOOGLE_CLIENT_ID = '';
+
 class CyberStrikerApp {
   constructor() {
     this.currentTab = 'skins';
@@ -744,6 +749,7 @@ class CyberStrikerApp {
     if (!modal) return;
     modal.classList.add('active');
 
+    this.initGoogleSignIn();
     this.renderRegisteredAccounts();
     this.updateCloudSyncUI(saveSystem.syncState, saveSystem.lastSyncMessage);
   }
@@ -787,6 +793,80 @@ class CyberStrikerApp {
   closeAuthModal() {
     const modal = document.getElementById('authModal');
     if (modal) modal.classList.remove('active');
+  }
+
+  // ─── Google Identity Services 真實 Google 登入 ───
+  initGoogleSignIn() {
+    const container = document.getElementById('googleSignInBtn');
+    if (!GOOGLE_CLIENT_ID || !container || this._googleSignInReady) return;
+    if (!window.google?.accounts?.id) {
+      // gsi/client 為 async 載入，載入完成後會呼叫此回呼
+      window.onGoogleLibraryLoad = () => this.initGoogleSignIn();
+      return;
+    }
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: (response) => this.handleGoogleCredential(response)
+    });
+    google.accounts.id.renderButton(container, {
+      theme: 'filled_black',
+      size: 'large',
+      text: 'signin_with',
+      locale: 'zh-TW',
+      width: 320
+    });
+    container.style.display = 'flex';
+
+    // 啟用 Google 登入後隱藏手動輸入 Email，避免填入他人信箱讀寫其存檔
+    const emailForm = document.getElementById('manualEmailForm');
+    if (emailForm) emailForm.style.display = 'none';
+    this._googleSignInReady = true;
+  }
+
+  async handleGoogleCredential(response) {
+    let payload;
+    try {
+      const b64 = response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      payload = JSON.parse(decodeURIComponent(escape(atob(b64))));
+    } catch (e) {
+      alert('Google 登入憑證解析失敗，請再試一次。');
+      return;
+    }
+    if (!payload.email || !payload.email_verified) {
+      alert('此 Google 帳號沒有已驗證的 Email，無法登入。');
+      return;
+    }
+    await this._completeEmailLogin(payload.email, '');
+  }
+
+  // Email 登入共用流程：自雲端還原進度、提示結果並刷新大廳
+  async _completeEmailLogin(email, nick) {
+    try {
+      const res = await saveSystem.loginWithEmail(email, nick);
+      soundEngine.playUI('equip');
+
+      const skinNames = (res.user.skins || []).map(sid => {
+        const sk = SKINS.find(s => s.id === sid);
+        return sk ? sk.name : sid;
+      }).join('、');
+
+      if (res.restoreSource === 'cloud') {
+        alert(`☁️ 跨電腦雲端存檔還原成功！\n歡迎回來，${res.user.nickname}！\n已成功自全球雲端同步：\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
+      } else if (res.isNewUser) {
+        alert(`🎉 歡迎新戰士！已發放 50,000 能量幣與初始造型，並建立全球雲端存檔。\n🥋 當前外觀：\n${skinNames}`);
+      } else {
+        alert(`✅ 歡迎回來！已載入進度並同步至全球雲端。\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
+      }
+
+      this.updateUserHUD();
+      this.renderSkinsInventory();
+      this.renderShopCatalog();
+      this.pedestalSkin = this.getEquippedSkin();
+      this.closeAuthModal();
+    } catch (err) {
+      console.error('Login error:', err);
+      alert('登入處理發生問題，請再試一次。');
+    }
   }
 
   // ─── 模式選擇視窗 (Mode Select Modal) ───
@@ -1176,12 +1256,12 @@ class CyberStrikerApp {
       if (this.arcadeStage === 1) {
         p2Skin = SKINS.find(s => s.id === 'skin_spiderman') || SKINS[1];
         p2Name = '第 1 關：彼得帕克・蜘蛛人';
-        p2Diff = 'normal';
+        p2Diff = 'easy';
         this.currentStage = getStageById('stage_stark_tower');
       } else if (this.arcadeStage === 2) {
         p2Skin = SKINS.find(s => s.id === 'skin_piccolo') || SKINS[2];
         p2Name = '第 2 關：魔族大師・比克';
-        p2Diff = 'hard';
+        p2Diff = 'normal';
         this.currentStage = getStageById('stage_namek');
       } else if (this.arcadeStage === 3) {
         p2Skin = SKINS.find(s => s.id === 'skin_trunks_future') || SKINS[3];
@@ -4329,30 +4409,7 @@ class CyberStrikerApp {
         }
 
         try {
-          const res = await saveSystem.loginWithEmail(email, nick);
-          soundEngine.playUI('equip');
-
-          const skinNames = (res.user.skins || []).map(sid => {
-            const sk = SKINS.find(s => s.id === sid);
-            return sk ? sk.name : sid;
-          }).join('、');
-
-          if (res.restoreSource === 'cloud') {
-            alert(`☁️ 跨電腦雲端存檔還原成功！\n歡迎回來，${res.user.nickname}！\n已成功自全球雲端同步：\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
-          } else if (res.isNewUser) {
-            alert(`🎉 歡迎新戰士！已發放 50,000 能量幣與初始造型，並建立全球雲端存檔。\n🥋 當前外觀：\n${skinNames}`);
-          } else {
-            alert(`✅ 歡迎回來！已載入進度並同步至全球雲端。\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
-          }
-
-          this.updateUserHUD();
-          this.renderSkinsInventory();
-          this.renderShopCatalog();
-          this.pedestalSkin = this.getEquippedSkin();
-          this.closeAuthModal();
-        } catch (err) {
-          console.error('Login error:', err);
-          alert('登入處理發生問題，請再試一次。');
+          await this._completeEmailLogin(email, nick);
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false;

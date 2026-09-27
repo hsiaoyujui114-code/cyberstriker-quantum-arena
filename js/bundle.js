@@ -2644,48 +2644,7 @@
       } catch (e) {
         console.warn("Failed to parse saved accounts:", e);
       }
-      const initialAccounts = {
-        "player@gmail.com": {
-          uid: "CY-UID-882101",
-          email: "player@gmail.com",
-          nickname: "\u91CF\u5B50\u5148\u92D2",
-          avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=QuantumVanguard",
-          credits: 5e4,
-          eventTokens: 120,
-          skins: [
-            "skin_cyber_warrior",
-            "skin_neon_shadow",
-            "skin_pulse_enforcer"
-          ],
-          purchasedSkins: [],
-          equippedSkin: "skin_cyber_warrior",
-          loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
-          stats: { total: 18, wins: 14, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: false } },
-          preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
-          lastLogin: "2026-01-01T00:00:00.000Z",
-          updatedAt: "2026-01-01T00:00:00.000Z"
-        },
-        "ethan.cyber@gmail.com": {
-          uid: "CY-UID-773902",
-          email: "ethan.cyber@gmail.com",
-          nickname: "\u4F0A\u68EE\u5927\u5E2B",
-          avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=EthanStriker",
-          credits: 5e4,
-          eventTokens: 350,
-          skins: [
-            "skin_cyber_warrior",
-            "skin_neon_shadow",
-            "skin_pulse_enforcer"
-          ],
-          purchasedSkins: [],
-          equippedSkin: "skin_cyber_warrior",
-          loadout: ["SK-03", "SK-04", "SK-07", "SK-22", "SK-27"],
-          stats: { total: 42, wins: 38, losses: 4, aiBeaten: { easy: true, normal: true, hard: true, nightmare: true } },
-          preferences: { bgmVol: 0.5, sfxVol: 0.85, haptics: true },
-          lastLogin: "2026-01-01T00:00:00.000Z",
-          updatedAt: "2026-01-01T00:00:00.000Z"
-        }
-      };
+      const initialAccounts = {};
       safeSetItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(initialAccounts));
       return initialAccounts;
     }
@@ -15607,6 +15566,7 @@
   var p2pNetwork = new P2PNetwork();
 
   // js/app.js
+  var GOOGLE_CLIENT_ID = "";
   var CyberStrikerApp = class {
     constructor() {
       this.currentTab = "skins";
@@ -16219,6 +16179,7 @@
       const modal = document.getElementById("authModal");
       if (!modal) return;
       modal.classList.add("active");
+      this.initGoogleSignIn();
       this.renderRegisteredAccounts();
       this.updateCloudSyncUI(saveSystem.syncState, saveSystem.lastSyncMessage);
     }
@@ -16258,6 +16219,81 @@
     closeAuthModal() {
       const modal = document.getElementById("authModal");
       if (modal) modal.classList.remove("active");
+    }
+    // ─── Google Identity Services 真實 Google 登入 ───
+    initGoogleSignIn() {
+      const container = document.getElementById("googleSignInBtn");
+      if (!GOOGLE_CLIENT_ID || !container || this._googleSignInReady) return;
+      if (!window.google?.accounts?.id) {
+        window.onGoogleLibraryLoad = () => this.initGoogleSignIn();
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response) => this.handleGoogleCredential(response)
+      });
+      google.accounts.id.renderButton(container, {
+        theme: "filled_black",
+        size: "large",
+        text: "signin_with",
+        locale: "zh-TW",
+        width: 320
+      });
+      container.style.display = "flex";
+      const emailForm = document.getElementById("manualEmailForm");
+      if (emailForm) emailForm.style.display = "none";
+      this._googleSignInReady = true;
+    }
+    async handleGoogleCredential(response) {
+      let payload;
+      try {
+        const b64 = response.credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+        payload = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      } catch (e) {
+        alert("Google \u767B\u5165\u6191\u8B49\u89E3\u6790\u5931\u6557\uFF0C\u8ACB\u518D\u8A66\u4E00\u6B21\u3002");
+        return;
+      }
+      if (!payload.email || !payload.email_verified) {
+        alert("\u6B64 Google \u5E33\u865F\u6C92\u6709\u5DF2\u9A57\u8B49\u7684 Email\uFF0C\u7121\u6CD5\u767B\u5165\u3002");
+        return;
+      }
+      await this._completeEmailLogin(payload.email, "");
+    }
+    // Email 登入共用流程：自雲端還原進度、提示結果並刷新大廳
+    async _completeEmailLogin(email, nick) {
+      try {
+        const res = await saveSystem.loginWithEmail(email, nick);
+        soundEngine.playUI("equip");
+        const skinNames = (res.user.skins || []).map((sid) => {
+          const sk = SKINS.find((s) => s.id === sid);
+          return sk ? sk.name : sid;
+        }).join("\u3001");
+        if (res.restoreSource === "cloud") {
+          alert(`\u2601\uFE0F \u8DE8\u96FB\u8166\u96F2\u7AEF\u5B58\u6A94\u9084\u539F\u6210\u529F\uFF01
+\u6B61\u8FCE\u56DE\u4F86\uFF0C${res.user.nickname}\uFF01
+\u5DF2\u6210\u529F\u81EA\u5168\u7403\u96F2\u7AEF\u540C\u6B65\uFF1A
+\u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
+\u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
+${skinNames}`);
+        } else if (res.isNewUser) {
+          alert(`\u{1F389} \u6B61\u8FCE\u65B0\u6230\u58EB\uFF01\u5DF2\u767C\u653E 50,000 \u80FD\u91CF\u5E63\u8207\u521D\u59CB\u9020\u578B\uFF0C\u4E26\u5EFA\u7ACB\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u3002
+\u{1F94B} \u7576\u524D\u5916\u89C0\uFF1A
+${skinNames}`);
+        } else {
+          alert(`\u2705 \u6B61\u8FCE\u56DE\u4F86\uFF01\u5DF2\u8F09\u5165\u9032\u5EA6\u4E26\u540C\u6B65\u81F3\u5168\u7403\u96F2\u7AEF\u3002
+\u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
+\u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
+${skinNames}`);
+        }
+        this.updateUserHUD();
+        this.renderSkinsInventory();
+        this.renderShopCatalog();
+        this.pedestalSkin = this.getEquippedSkin();
+        this.closeAuthModal();
+      } catch (err) {
+        console.error("Login error:", err);
+        alert("\u767B\u5165\u8655\u7406\u767C\u751F\u554F\u984C\uFF0C\u8ACB\u518D\u8A66\u4E00\u6B21\u3002");
+      }
     }
     // ─── 模式選擇視窗 (Mode Select Modal) ───
     openModeSelectModal() {
@@ -16592,12 +16628,12 @@
         if (this.arcadeStage === 1) {
           p2Skin = SKINS.find((s) => s.id === "skin_spiderman") || SKINS[1];
           p2Name = "\u7B2C 1 \u95DC\uFF1A\u5F7C\u5F97\u5E15\u514B\u30FB\u8718\u86DB\u4EBA";
-          p2Diff = "normal";
+          p2Diff = "easy";
           this.currentStage = getStageById("stage_stark_tower");
         } else if (this.arcadeStage === 2) {
           p2Skin = SKINS.find((s) => s.id === "skin_piccolo") || SKINS[2];
           p2Name = "\u7B2C 2 \u95DC\uFF1A\u9B54\u65CF\u5927\u5E2B\u30FB\u6BD4\u514B";
-          p2Diff = "hard";
+          p2Diff = "normal";
           this.currentStage = getStageById("stage_namek");
         } else if (this.arcadeStage === 3) {
           p2Skin = SKINS.find((s) => s.id === "skin_trunks_future") || SKINS[3];
@@ -19179,37 +19215,7 @@
             submitBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> \u6B63\u5728\u6AA2\u7D22\u96F2\u7AEF\u5B58\u6A94...';
           }
           try {
-            const res = await saveSystem.loginWithEmail(email, nick);
-            soundEngine.playUI("equip");
-            const skinNames = (res.user.skins || []).map((sid) => {
-              const sk = SKINS.find((s) => s.id === sid);
-              return sk ? sk.name : sid;
-            }).join("\u3001");
-            if (res.restoreSource === "cloud") {
-              alert(`\u2601\uFE0F \u8DE8\u96FB\u8166\u96F2\u7AEF\u5B58\u6A94\u9084\u539F\u6210\u529F\uFF01
-\u6B61\u8FCE\u56DE\u4F86\uFF0C${res.user.nickname}\uFF01
-\u5DF2\u6210\u529F\u81EA\u5168\u7403\u96F2\u7AEF\u540C\u6B65\uFF1A
-\u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
-\u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
-${skinNames}`);
-            } else if (res.isNewUser) {
-              alert(`\u{1F389} \u6B61\u8FCE\u65B0\u6230\u58EB\uFF01\u5DF2\u767C\u653E 50,000 \u80FD\u91CF\u5E63\u8207\u521D\u59CB\u9020\u578B\uFF0C\u4E26\u5EFA\u7ACB\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u3002
-\u{1F94B} \u7576\u524D\u5916\u89C0\uFF1A
-${skinNames}`);
-            } else {
-              alert(`\u2705 \u6B61\u8FCE\u56DE\u4F86\uFF01\u5DF2\u8F09\u5165\u9032\u5EA6\u4E26\u540C\u6B65\u81F3\u5168\u7403\u96F2\u7AEF\u3002
-\u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
-\u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
-${skinNames}`);
-            }
-            this.updateUserHUD();
-            this.renderSkinsInventory();
-            this.renderShopCatalog();
-            this.pedestalSkin = this.getEquippedSkin();
-            this.closeAuthModal();
-          } catch (err) {
-            console.error("Login error:", err);
-            alert("\u767B\u5165\u8655\u7406\u767C\u751F\u554F\u984C\uFF0C\u8ACB\u518D\u8A66\u4E00\u6B21\u3002");
+            await this._completeEmailLogin(email, nick);
           } finally {
             if (submitBtn) {
               submitBtn.disabled = false;
