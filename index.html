@@ -4,7 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>CyberStriker: Quantum Arena | 賽博衝擊：量子競技場</title>
-  <meta name="description" content="《CyberStriker: Quantum Arena》2D 橫向科技風格鬥競技場。純技術立回，十技自由選三，零數值課金壓制，全憑格鬥硬實力！支援 Google 雙軌登入、量子逆轉爆發、60 FPS 幀數判定與跨裝置存檔。">
+  <meta name="description" content="《CyberStriker: Quantum Arena》2D 橫向科技風格鬥競技場。純技術立回，三十神兵自由選五，零數值課金壓制，全憑格鬥硬實力！支援 Google 登入、量子逆轉爆發、60 FPS 幀數判定與跨裝置存檔。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+
+  <!-- 社群分享預覽 (Open Graph) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="CyberStriker: Quantum Arena | 賽博衝擊：量子競技場">
+  <meta property="og:description" content="2D 橫向格鬥競技場：三十神兵自由選五、零數值課金、6 位數房號 P2P 連線對戰，打開瀏覽器即玩。">
+  <meta property="og:url" content="https://hsiaoyujui114-code.github.io/cyberstriker-quantum-arena/">
+  <meta property="og:image" content="https://hsiaoyujui114-code.github.io/cyberstriker-quantum-arena/assets/og-cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +30,7 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=20260927_hud_fix">
+  <link rel="stylesheet" href="css/style.css?v=20260927_mobile_v2">
 </head>
 <body>
 
@@ -717,6 +726,13 @@
       <!-- 動態填充 3 招 HUD + Burst 鈕 -->
     </div>
 
+    <!-- 直向握持手機時的橫放提示 (點擊關閉) -->
+    <div class="rotate-hint" onclick="this.remove()">
+      <i class="fa-solid fa-mobile-screen-button fa-rotate-90"></i>
+      <div>請將手機橫放，獲得完整的對戰畫面</div>
+      <div style="font-size: 12px; color: var(--text-muted);">點擊任意處以直向繼續</div>
+    </div>
+
     <!-- 行動裝置觸控層 -->
     <div class="mobile-controls-layer" id="mobileControlsLayer">
       <div class="mobile-joystick-zone" id="mobileJoystickZone"></div>
@@ -1030,7 +1046,7 @@
   </div>
 
   <!-- 主邏輯入口模組 -->
-  <script src="js/bundle.js?v=20260927_guest_hud_fix"></script>
+  <script src="js/bundle.js?v=20260927_polish_v2"></script>
   <script src="js/control_feel.js?v=20260916_control_v1"></script>
 </body>
 </html>

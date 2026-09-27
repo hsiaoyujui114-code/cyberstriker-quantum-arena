@@ -15567,6 +15567,9 @@
 
   // js/app.js
   var GOOGLE_CLIENT_ID = "";
+  function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  }
   var CyberStrikerApp = class {
     constructor() {
       this.currentTab = "skins";
@@ -15653,8 +15656,9 @@
       this.pedestalCanvas = document.getElementById("pedestalCanvas");
       if (this.pedestalCanvas) {
         this.pedestalCtx = this.pedestalCanvas.getContext("2d");
-        this.pedestalCanvas.width = 400;
-        this.pedestalCanvas.height = 360;
+        this.pedestalDpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 3);
+        this.pedestalCanvas.width = Math.round(400 * this.pedestalDpr);
+        this.pedestalCanvas.height = Math.round(360 * this.pedestalDpr);
       }
       this._bindDOMEvents();
       this._bindKeyboardEvents();
@@ -15716,7 +15720,7 @@
             if (splash.parentNode) {
               splash.parentNode.removeChild(splash);
             }
-            if (!saveSystem.currentUser || saveSystem.isGuest) {
+            if ((!saveSystem.currentUser || saveSystem.isGuest) && !this.isFighting) {
               this.openAuthModal();
             }
           }, 350);
@@ -15733,8 +15737,10 @@
         this.pedestalTime++;
         if (this.pedestalCanvas && this.pedestalCtx) {
           const ctx = this.pedestalCtx;
-          const w = this.pedestalCanvas.width;
-          const h = this.pedestalCanvas.height;
+          const dpr = this.pedestalDpr || 1;
+          const w = this.pedestalCanvas.width / dpr;
+          const h = this.pedestalCanvas.height / dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
           ctx.clearRect(0, 0, w, h);
           const currentSkin = this.pedestalSkin || SKINS[0];
           characterRenderer.drawPedestal(ctx, w / 2, h - 50, 90, currentSkin, this.pedestalTime);
@@ -15867,7 +15873,7 @@
           headerLoginBtn.style.background = "rgba(0, 243, 255, 0.12)";
           headerLoginBtn.title = "\u9EDE\u64CA\u9032\u884C Google \u5E33\u865F\u767B\u5165 (\u91CF\u5B50\u8EAB\u5206\u6388\u6B0A\u5100)\uFF0C\u540C\u6B65\u6240\u6709\u5916\u89C0\u8207\u9032\u5EA6";
         } else {
-          headerLoginBtn.innerHTML = `<i class="fa-solid fa-cloud-check" style="color: #10b981;"></i> \u96F2\u7AEF\u5B58\u6A94: ${u.nickname || "\u5DF2\u767B\u5165"}`;
+          headerLoginBtn.innerHTML = `<i class="fa-solid fa-cloud-check" style="color: #10b981;"></i> \u96F2\u7AEF\u5B58\u6A94: ${escapeHtml(u.nickname || "\u5DF2\u767B\u5165")}`;
           headerLoginBtn.style.borderColor = "#10b981";
           headerLoginBtn.style.color = "#10b981";
           headerLoginBtn.style.background = "rgba(16, 185, 129, 0.12)";
@@ -16190,13 +16196,13 @@
         listContainer.innerHTML = accounts.map((acc) => `
         <div class="google-account-card ${acc.isCurrent ? "current" : ""}" style="background: rgba(255,255,255,0.04); border: 1px solid ${acc.isCurrent ? "#00f3ff" : "rgba(255,255,255,0.1)"}; border-radius: 8px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <img src="${acc.avatar}" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid #00f3ff;">
+            <img src="${escapeHtml(acc.avatar)}" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid #00f3ff;">
             <div>
-              <div style="font-weight: 800; font-size: 14px;">${acc.nickname} ${acc.isCurrent ? '<span style="color:#00f3ff; font-size: 11px;">(\u7576\u524D\u4F7F\u7528)</span>' : ""}</div>
-              <div style="font-size: 12px; color: #94a3b8;">${acc.email}</div>
+              <div style="font-weight: 800; font-size: 14px;">${escapeHtml(acc.nickname)} ${acc.isCurrent ? '<span style="color:#00f3ff; font-size: 11px;">(\u7576\u524D\u4F7F\u7528)</span>' : ""}</div>
+              <div style="font-size: 12px; color: #94a3b8;">${escapeHtml(acc.email)}</div>
             </div>
           </div>
-          <button class="nav-tab-btn switch-acc-btn" data-email="${acc.email}" style="padding: 6px 12px; font-size: 12px; border-color: #00f3ff; color: #00f3ff;">
+          <button class="nav-tab-btn switch-acc-btn" data-email="${escapeHtml(acc.email)}" style="padding: 6px 12px; font-size: 12px; border-color: #00f3ff; color: #00f3ff;">
             \u4E00\u9375\u5207\u63DB
           </button>
         </div>
@@ -16786,6 +16792,11 @@ ${skinNames}`);
         combatEngine.p1.hp = Math.min(combatEngine.p1.maxHp, 650 + 350);
       }
       this.isFighting = true;
+      if (this.pedestalAnimId) {
+        cancelAnimationFrame(this.pedestalAnimId);
+        this.pedestalAnimId = null;
+      }
+      this._stopShopPreviewLoop();
       soundEngine.playUI("fight");
       soundEngine.startBgm();
       announcerEngine.startRoundIntro(1);
@@ -16798,9 +16809,9 @@ ${skinNames}`);
       if (this.matchMode === "p2p") {
         if (this.multiplayerRole === "host") {
           if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-crown"></i> \u623F\u4E3B (\u6211\u65B9 YOU)`;
-          if (p2RoleTag) p2RoleTag.innerHTML = `<i class="fa-solid fa-user"></i> \u9023\u7DDA\u597D\u53CB (${p2Data.name})`;
+          if (p2RoleTag) p2RoleTag.innerHTML = `<i class="fa-solid fa-user"></i> \u9023\u7DDA\u597D\u53CB (${escapeHtml(p2Data.name)})`;
         } else {
-          if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-crown"></i> \u9023\u7DDA\u623F\u4E3B (${p1Data.name})`;
+          if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-crown"></i> \u9023\u7DDA\u623F\u4E3B (${escapeHtml(p1Data.name)})`;
           if (p2RoleTag) p2RoleTag.innerHTML = `<i class="fa-solid fa-user-check"></i> \u6311\u6230\u8005 (\u6211\u65B9 YOU)`;
         }
       } else {

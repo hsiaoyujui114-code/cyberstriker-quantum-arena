@@ -433,7 +433,7 @@ body {
 
 /* ─── 分頁三：活動殿堂 (Event Hall) ─── */
 .event-hero-banner {
-  background: linear-gradient(135deg, rgba(255, 69, 0, 0.2), rgba(255, 0, 127, 0.2)), url('assets/hero.jpg') center/cover;
+  background: linear-gradient(135deg, rgba(255, 69, 0, 0.2), rgba(255, 0, 127, 0.2));
   border: 1px solid rgba(255, 69, 0, 0.5);
   border-radius: 12px;
   padding: 36px;
@@ -905,11 +905,28 @@ body:has(#battleScreen.active) .fab-start-btn {
     grid-template-columns: 1fr;
     height: auto;
   }
-  .nav-tabs {
-    display: none; /* 行動端抽屜化 */
+  /* 窄螢幕：頂部列換行，四大分頁移至獨立一列並可橫向滑動 (原本直接隱藏導致無法進入商店等分頁) */
+  .app-header {
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    padding: 10px 16px;
   }
-  .mobile-controls-layer {
-    display: block;
+  .nav-tabs {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-tabs .nav-tab-btn {
+    flex-shrink: 0;
+  }
+  .header-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
   }
 }
 
@@ -1104,4 +1121,72 @@ body:has(#battleScreen.active) .fab-start-btn {
 #p1NameDisplay,
 #p2NameDisplay {
   white-space: nowrap;
+}
+
+/* 觸控裝置才顯示觸控層 (原本以寬度判斷：桌機縮小視窗也會出現，手機則與技能列重複) */
+@media (pointer: coarse) {
+  .mobile-controls-layer {
+    display: block;
+  }
+  /* 技能卡列本身支援觸控並顯示冷卻，隱藏重複的圓形技能鍵，只保留左側移動搖桿 */
+  .mobile-buttons-arc {
+    display: none;
+  }
+  .battle-action-bar {
+    left: auto;
+    right: 12px;
+    bottom: 12px;
+    transform: none;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: calc(100vw - 220px);
+  }
+  .battle-action-bar .skill-hud-card,
+  .battle-action-bar .guard-hud-card,
+  .battle-action-bar .burst-hud-card {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+/* 窄螢幕戰鬥：退出鈕只留圖示，頂部 HUD 內縮避免與退出鈕重疊 */
+@media (max-width: 1100px) {
+  .battle-corner-exit-btn {
+    top: 10px;
+    left: 8px;
+    padding: 6px 9px;
+    font-size: 0;
+  }
+  .battle-corner-exit-btn i {
+    font-size: 14px;
+  }
+  .battle-hud-top {
+    width: calc(100% - 110px);
+  }
+}
+
+/* 直向握持手機時提示橫放 (點擊可關閉) */
+.rotate-hint {
+  display: none;
+}
+@media (pointer: coarse) and (orientation: portrait) {
+  body.in-battle .rotate-hint {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 24px;
+    background: rgba(4, 7, 17, 0.94);
+    color: var(--primary-cyan);
+    font-weight: 800;
+    text-align: center;
+  }
+  .rotate-hint i {
+    font-size: 42px;
+  }
 }

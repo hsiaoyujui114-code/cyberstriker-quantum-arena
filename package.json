@@ -1,0 +1,13 @@
+{
+  "name": "cyberstriker-quantum-arena",
+  "private": true,
+  "description": "2D competitive arena fighter built with HTML5 Canvas",
+  "scripts": {
+    "build": "esbuild js/app.js --bundle --format=iife --outfile=js/bundle.js",
+    "watch": "esbuild js/app.js --bundle --format=iife --outfile=js/bundle.js --watch",
+    "start": "python3 -m http.server 3000"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.0"
+  }
+}

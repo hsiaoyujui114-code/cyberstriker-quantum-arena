@@ -22,6 +22,11 @@ import { p2pNetwork } from './network/p2p.js';
 // 留空時維持手動輸入 Email 的舊流程。
 const GOOGLE_CLIENT_ID = '';
 
+// 玩家暱稱、Email 與連線對手傳來的名稱插入 innerHTML 前先跳脫，避免 XSS
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 class CyberStrikerApp {
   constructor() {
     this.currentTab = 'skins';
@@ -129,8 +134,10 @@ class CyberStrikerApp {
     this.pedestalCanvas = document.getElementById('pedestalCanvas');
     if (this.pedestalCanvas) {
       this.pedestalCtx = this.pedestalCanvas.getContext('2d');
-      this.pedestalCanvas.width = 400;
-      this.pedestalCanvas.height = 360;
+      // 依裝置像素比例放大畫布解析度，避免 Retina / 手機螢幕上展示台模糊 (繪製仍使用 400x360 邏輯座標)
+      this.pedestalDpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 3);
+      this.pedestalCanvas.width = Math.round(400 * this.pedestalDpr);
+      this.pedestalCanvas.height = Math.round(360 * this.pedestalDpr);
     }
 
     // 3. 綁定全域事件
@@ -210,8 +217,8 @@ class CyberStrikerApp {
           if (splash.parentNode) {
             splash.parentNode.removeChild(splash);
           }
-          // 進入遊戲：若尚未登入 Google 帳號或為訪客，主動喚起量子身分授權儀裝置
-          if (!saveSystem.currentUser || saveSystem.isGuest) {
+          // 進入遊戲：若尚未登入 Google 帳號或為訪客，主動喚起量子身分授權儀裝置 (已進入戰鬥則不打擾)
+          if ((!saveSystem.currentUser || saveSystem.isGuest) && !this.isFighting) {
             this.openAuthModal();
           }
         }, 350);
@@ -230,8 +237,10 @@ class CyberStrikerApp {
       this.pedestalTime++;
       if (this.pedestalCanvas && this.pedestalCtx) {
         const ctx = this.pedestalCtx;
-        const w = this.pedestalCanvas.width;
-        const h = this.pedestalCanvas.height;
+        const dpr = this.pedestalDpr || 1;
+        const w = this.pedestalCanvas.width / dpr;
+        const h = this.pedestalCanvas.height / dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, w, h);
 
         const currentSkin = this.pedestalSkin || SKINS[0];
@@ -392,7 +401,7 @@ class CyberStrikerApp {
         headerLoginBtn.style.background = 'rgba(0, 243, 255, 0.12)';
         headerLoginBtn.title = '點擊進行 Google 帳號登入 (量子身分授權儀)，同步所有外觀與進度';
       } else {
-        headerLoginBtn.innerHTML = `<i class="fa-solid fa-cloud-check" style="color: #10b981;"></i> 雲端存檔: ${u.nickname || '已登入'}`;
+        headerLoginBtn.innerHTML = `<i class="fa-solid fa-cloud-check" style="color: #10b981;"></i> 雲端存檔: ${escapeHtml(u.nickname || '已登入')}`;
         headerLoginBtn.style.borderColor = '#10b981';
         headerLoginBtn.style.color = '#10b981';
         headerLoginBtn.style.background = 'rgba(16, 185, 129, 0.12)';
@@ -762,13 +771,13 @@ class CyberStrikerApp {
       listContainer.innerHTML = accounts.map(acc => `
         <div class="google-account-card ${acc.isCurrent ? 'current' : ''}" style="background: rgba(255,255,255,0.04); border: 1px solid ${acc.isCurrent ? '#00f3ff' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <img src="${acc.avatar}" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid #00f3ff;">
+            <img src="${escapeHtml(acc.avatar)}" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid #00f3ff;">
             <div>
-              <div style="font-weight: 800; font-size: 14px;">${acc.nickname} ${acc.isCurrent ? '<span style="color:#00f3ff; font-size: 11px;">(當前使用)</span>' : ''}</div>
-              <div style="font-size: 12px; color: #94a3b8;">${acc.email}</div>
+              <div style="font-weight: 800; font-size: 14px;">${escapeHtml(acc.nickname)} ${acc.isCurrent ? '<span style="color:#00f3ff; font-size: 11px;">(當前使用)</span>' : ''}</div>
+              <div style="font-size: 12px; color: #94a3b8;">${escapeHtml(acc.email)}</div>
             </div>
           </div>
-          <button class="nav-tab-btn switch-acc-btn" data-email="${acc.email}" style="padding: 6px 12px; font-size: 12px; border-color: #00f3ff; color: #00f3ff;">
+          <button class="nav-tab-btn switch-acc-btn" data-email="${escapeHtml(acc.email)}" style="padding: 6px 12px; font-size: 12px; border-color: #00f3ff; color: #00f3ff;">
             一鍵切換
           </button>
         </div>
@@ -1447,6 +1456,14 @@ class CyberStrikerApp {
     }
 
     this.isFighting = true;
+
+    // 戰鬥中停止大廳展示台與商城預覽動畫，避免在背景每幀重繪角色
+    if (this.pedestalAnimId) {
+      cancelAnimationFrame(this.pedestalAnimId);
+      this.pedestalAnimId = null;
+    }
+    this._stopShopPreviewLoop();
+
     soundEngine.playUI('fight');
     soundEngine.startBgm();
 
@@ -1464,9 +1481,9 @@ class CyberStrikerApp {
     if (this.matchMode === 'p2p') {
       if (this.multiplayerRole === 'host') {
         if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-crown"></i> 房主 (我方 YOU)`;
-        if (p2RoleTag) p2RoleTag.innerHTML = `<i class="fa-solid fa-user"></i> 連線好友 (${p2Data.name})`;
+        if (p2RoleTag) p2RoleTag.innerHTML = `<i class="fa-solid fa-user"></i> 連線好友 (${escapeHtml(p2Data.name)})`;
       } else {
-        if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-crown"></i> 連線房主 (${p1Data.name})`;
+        if (p1RoleTag) p1RoleTag.innerHTML = `<i class="fa-solid fa-crown"></i> 連線房主 (${escapeHtml(p1Data.name)})`;
         if (p2RoleTag) p2RoleTag.innerHTML = `<i class="fa-solid fa-user-check"></i> 挑戰者 (我方 YOU)`;
       }
     } else {

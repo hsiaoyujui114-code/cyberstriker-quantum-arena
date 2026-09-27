@@ -65,10 +65,15 @@
 }
 ```
 
-### 第 3 步：本機免編譯即時測試
-本遊戲為**純前端靜態結構**，完全不需要安裝龐大環境！
-- 直接使用瀏覽器雙擊打開 `index.html` 即可立即進入遊戲試玩。
-- 或在 VS Code 中點擊 `Go Live` (Live Server) 進行即時預覽除錯。
+### 第 3 步：重新打包並本機測試
+網頁實際載入的是打包後的 `js/bundle.js`，修改 `js/` 底下任何原始碼後都必須重新打包，否則畫面不會有任何變化：
+```bash
+npm install      # 首次執行，安裝 esbuild
+npm run build    # 重新產生 js/bundle.js (開發時可改用 npm run watch 自動打包)
+npm start        # 於 http://localhost:3000/ 預覽
+```
+- 也可以直接用瀏覽器開啟 `index.html`，或在 VS Code 使用 `Go Live` (Live Server) 預覽。
+- 提交 PR 時請一併提交重新產生的 `js/bundle.js`。
 
 ### 第 4 步：提交 Pull Request (PR)
 1. 將您的修改提交（Commit）並推送（Push）到您的 Fork 倉庫。

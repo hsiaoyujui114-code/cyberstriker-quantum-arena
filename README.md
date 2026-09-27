@@ -10,7 +10,8 @@
 
 - 🚀 **GitHub Pages 線上直接玩**：[https://hsiaoyujui114-code.github.io/cyberstriker-quantum-arena/](https://hsiaoyujui114-code.github.io/cyberstriker-quantum-arena/)
 - 📦 **GitHub 專案倉庫**：[https://github.com/hsiaoyujui114-code/cyberstriker-quantum-arena](https://github.com/hsiaoyujui114-code/cyberstriker-quantum-arena)
-- 💻 **本機預覽**：開啟 `index.html` 或執行 `python3 -m http.server 3000` 造訪 `http://localhost:3000/`
+- 💻 **本機預覽**：開啟 `index.html` 或執行 `npm start` 造訪 `http://localhost:3000/`
+- 🔧 **修改原始碼後**：執行 `npm install && npm run build` 重新產生 `js/bundle.js`（網頁實際載入的檔案）
 
 ---
 
