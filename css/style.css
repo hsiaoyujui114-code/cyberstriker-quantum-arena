@@ -1190,3 +1190,13 @@ body:has(#battleScreen.active) .fab-start-btn {
     font-size: 42px;
   }
 }
+
+/* ─── 戰鬥血量自訂對話框 (HP Selection Modal) ─── */
+@media (max-width: 600px) {
+  .hp-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .hp-preset-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

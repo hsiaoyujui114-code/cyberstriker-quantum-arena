@@ -46,6 +46,10 @@ class CyberStrikerApp {
     this.isFighting = false;
     this.matchMode = 'ai'; // 'ai', 'local_2p', 'p2p', 'training', 'arcade'
     this.aiDifficulty = 'normal';
+    this.battleP1Hp = 1000;
+    this.battleP2Hp = 1000;
+    this._pendingBattleMode = 'ai';
+    this._pendingBattleDiff = 'normal';
     this.loadoutSelection = ['SK-01', 'SK-02', 'SK-03', 'SK-10', 'SK-11'];
     this.loadoutTimer = 15;
     this.loadoutInterval = null;
@@ -891,6 +895,79 @@ class CyberStrikerApp {
     if (modal) modal.classList.remove('active');
   }
 
+  // ─── 戰鬥血量自訂視窗 (HP Selection Modal) ───
+  openHpSelectModal(mode = 'ai', diff = 'normal') {
+    this._pendingBattleMode = mode;
+    this._pendingBattleDiff = diff;
+
+    // 先關閉模式選擇視窗
+    this.closeModeSelectModal();
+
+    const modal = document.getElementById('hpSelectModal');
+    if (!modal) {
+      // 容錯降級：若無 HP 視窗則直接開啟常規對戰
+      this.startBattle(mode, diff);
+      return;
+    }
+
+    soundEngine.playUI('click');
+    modal.classList.add('active');
+
+    // 難度徽章與對手標籤更新
+    const badge = document.getElementById('hpModalDiffBadge');
+    const p2Label = document.getElementById('hpP2LabelText');
+    if (badge) {
+      if (mode === 'local_2p') {
+        badge.textContent = '👥 同機雙人對決';
+        badge.style.borderColor = '#c084fc';
+        badge.style.color = '#c084fc';
+      } else {
+        const diffLabels = {
+          easy: { label: '🟢 簡單 (Easy)', color: '#00f3ff' },
+          normal: { label: '🟡 普通 (Normal)', color: '#38bdf8' },
+          hard: { label: '🟠 困難 (Hard)', color: '#ffd700' },
+          nightmare: { label: '🔴 惡夢 (Nightmare)', color: '#ff007f' }
+        };
+        const cfg = diffLabels[diff] || diffLabels.normal;
+        badge.textContent = cfg.label;
+        badge.style.borderColor = cfg.color;
+        badge.style.color = cfg.color;
+      }
+    }
+
+    if (p2Label) {
+      p2Label.textContent = mode === 'local_2p' ? '2P 挑戰者好友血量' : `2P 電腦 AI (${diff.toUpperCase()}) 血量`;
+    }
+
+    // 初始化當前血量數值 (預設為前次設定或 1000)
+    if (!this.battleP1Hp) this.battleP1Hp = 1000;
+    if (!this.battleP2Hp) this.battleP2Hp = 1000;
+
+    this._updateHpSelectInputs(this.battleP1Hp, this.battleP2Hp);
+  }
+
+  closeHpSelectModal() {
+    const modal = document.getElementById('hpSelectModal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  _updateHpSelectInputs(p1Val, p2Val) {
+    p1Val = Math.min(5000, Math.max(200, Math.round(Number(p1Val) || 1000)));
+    p2Val = Math.min(5000, Math.max(200, Math.round(Number(p2Val) || 1000)));
+    this.battleP1Hp = p1Val;
+    this.battleP2Hp = p2Val;
+
+    const p1Display = document.getElementById('hpP1Display');
+    const p2Display = document.getElementById('hpP2Display');
+    const p1Slider = document.getElementById('hpP1Slider');
+    const p2Slider = document.getElementById('hpP2Slider');
+
+    if (p1Display) p1Display.textContent = p1Val;
+    if (p2Display) p2Display.textContent = p2Val;
+    if (p1Slider) p1Slider.value = p1Val;
+    if (p2Slider) p2Slider.value = p2Val;
+  }
+
   // ─── 賽前戰術武器與技能配置視窗 (30 款純攻擊自由挑選 5 項・無時間限制) ───
   openLoadoutModal(startMatchCallback) {
     const modal = document.getElementById('loadoutModal');
@@ -1200,10 +1277,12 @@ class CyberStrikerApp {
   }
 
   // ─── 進入對戰系統 ───
-  startBattle(mode = 'ai', diff = 'normal') {
+  startBattle(mode = 'ai', diff = 'normal', p1Hp = null, p2Hp = null) {
     this.matchMode = mode;
     this.aiDifficulty = diff;
     aiController.setDifficulty(diff);
+    if (p1Hp !== null && p1Hp !== undefined) this.battleP1Hp = Math.min(5000, Math.max(200, Math.round(Number(p1Hp) || 1000)));
+    if (p2Hp !== null && p2Hp !== undefined) this.battleP2Hp = Math.min(5000, Math.max(200, Math.round(Number(p2Hp) || 1000)));
 
     // 主題場景挑選 (隨機或指定)
     if (this.selectedStageId === 'random') {
@@ -1222,7 +1301,9 @@ class CyberStrikerApp {
     this.arcadeStage = 1;
     this.arcadeScore = 0;
     this.arcadeStreakWins = 0;
-    this.startBattle('arcade', 'normal');
+    this.battleP1Hp = 1000;
+    this.battleP2Hp = 1000;
+    this.startBattle('arcade', 'normal', 1000, 1000);
   }
 
   nextArcadeStage() {
@@ -1319,7 +1400,8 @@ class CyberStrikerApp {
           name: saveSystem.currentUser ? saveSystem.currentUser.nickname : 'Player 1',
           skin: p1Skin,
           isAi: false,
-          loadout: this.loadoutSelection
+          loadout: this.loadoutSelection,
+          maxHp: this.battleP1Hp || 1000
         };
 
     const p2Data = (this.matchMode === 'p2p' && this._p2pMatchData)
@@ -1328,7 +1410,8 @@ class CyberStrikerApp {
           name: p2Name,
           skin: p2Skin,
           isAi: isAiOpponent,
-          loadout: p2Loadout
+          loadout: p2Loadout,
+          maxHp: this.battleP2Hp || 1000
         };
 
     // 戰鬥前確保畫布尺寸與擂台邊界自適應當前螢幕
@@ -3811,7 +3894,7 @@ class CyberStrikerApp {
     const super2El = document.getElementById('p2SuperFill');
     const superBtn = document.getElementById('superHudBtn');
     const touchSuperBtn = document.getElementById('touchSuperBtn');
-    const isP1SuperReady = (combatEngine.p1.superMeter >= combatEngine.p1.superMax) || (combatEngine.p1.hp <= 350 && !combatEngine.p1.usedCrisisSuper);
+    const isP1SuperReady = (combatEngine.p1.superMeter >= combatEngine.p1.superMax) || (combatEngine.p1.hp <= combatEngine.p1.maxHp * 0.35 && !combatEngine.p1.usedCrisisSuper);
 
     if (super1El) {
       const super1Ratio = isP1SuperReady ? 1 : (combatEngine.p1.superMeter / combatEngine.p1.superMax);
@@ -4198,21 +4281,141 @@ class CyberStrikerApp {
       });
     }
 
-    // 模式選擇：對戰 AI (4 種難度)
+    // 模式選擇：對戰 AI (4 種難度) 點擊後開啟血量自訂對話框
     document.querySelectorAll('.select-ai-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const diff = btn.dataset.diff;
-        document.getElementById('modeSelectModal').classList.remove('active');
-        this.startBattle('ai', diff);
+        this.openHpSelectModal('ai', diff);
       });
     });
 
     // 模式選擇：本地同機雙人
     const local2pBtn = document.getElementById('selectLocal2pBtn');
     if (local2pBtn) {
-      local2pBtn.onclick = () => {
-        document.getElementById('modeSelectModal').classList.remove('active');
-        this.startBattle('local_2p');
+      local2pBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.openHpSelectModal('local_2p', 'normal');
+      };
+    }
+
+    // ─── 戰鬥血量自訂對話框 (HP Select Modal) 交互事件 ───
+    const hpModal = document.getElementById('hpSelectModal');
+    const hpCloseBtn = document.getElementById('hpModalCloseBtn');
+    const hpBackBtn = document.getElementById('hpBackToModeBtn');
+    const hpConfirmBtn = document.getElementById('hpConfirmBattleBtn');
+    const hpSyncToggle = document.getElementById('hpSyncToggle');
+    const p1Slider = document.getElementById('hpP1Slider');
+    const p2Slider = document.getElementById('hpP2Slider');
+
+    const closeHpAndReopenMode = () => {
+      this.closeHpSelectModal();
+      this.openModeSelectModal();
+      soundEngine.playUI('click');
+    };
+
+    if (hpCloseBtn) hpCloseBtn.onclick = closeHpAndReopenMode;
+    if (hpBackBtn) hpBackBtn.onclick = closeHpAndReopenMode;
+
+    if (hpModal) {
+      hpModal.addEventListener('click', (e) => {
+        if (e.target === hpModal) {
+          closeHpAndReopenMode();
+        }
+      });
+    }
+
+    if (p1Slider) {
+      p1Slider.addEventListener('input', () => {
+        const val = parseInt(p1Slider.value, 10);
+        if (hpSyncToggle && hpSyncToggle.checked) {
+          this._updateHpSelectInputs(val, val);
+        } else {
+          this._updateHpSelectInputs(val, this.battleP2Hp);
+        }
+      });
+    }
+
+    if (p2Slider) {
+      p2Slider.addEventListener('input', () => {
+        const val = parseInt(p2Slider.value, 10);
+        if (hpSyncToggle && hpSyncToggle.checked) {
+          this._updateHpSelectInputs(val, val);
+        } else {
+          this._updateHpSelectInputs(this.battleP1Hp, val);
+        }
+      });
+    }
+
+    // 雙方血量同步勾選框：勾選時立刻以 1P 血量同步至 2P
+    if (hpSyncToggle) {
+      hpSyncToggle.addEventListener('change', () => {
+        soundEngine.playUI('click');
+        if (hpSyncToggle.checked) {
+          this._updateHpSelectInputs(this.battleP1Hp, this.battleP1Hp);
+        }
+      });
+    }
+
+    // 微調按鈕 (-100 / +100)
+    document.querySelectorAll('.hp-adj-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        soundEngine.playUI('click');
+        const target = btn.dataset.target;
+        const delta = parseInt(btn.dataset.delta, 10);
+        const isSync = hpSyncToggle && hpSyncToggle.checked;
+
+        if (target === 'p1') {
+          const newVal = (this.battleP1Hp || 1000) + delta;
+          if (isSync) this._updateHpSelectInputs(newVal, newVal);
+          else this._updateHpSelectInputs(newVal, this.battleP2Hp);
+        } else {
+          const newVal = (this.battleP2Hp || 1000) + delta;
+          if (isSync) this._updateHpSelectInputs(newVal, newVal);
+          else this._updateHpSelectInputs(this.battleP1Hp, newVal);
+        }
+      });
+    });
+
+    // 快捷數值按鈕 (500 / 1000 / 2000)
+    document.querySelectorAll('.hp-quick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        soundEngine.playUI('click');
+        const target = btn.dataset.target;
+        const val = parseInt(btn.dataset.val, 10);
+        const isSync = hpSyncToggle && hpSyncToggle.checked;
+
+        if (target === 'p1') {
+          if (isSync) this._updateHpSelectInputs(val, val);
+          else this._updateHpSelectInputs(val, this.battleP2Hp);
+        } else {
+          if (isSync) this._updateHpSelectInputs(val, val);
+          else this._updateHpSelectInputs(this.battleP1Hp, val);
+        }
+      });
+    });
+
+    // 快速對抗預設按鈕 (標準、死鬥、耐久、首領、無雙)
+    document.querySelectorAll('.hp-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        soundEngine.playUI('equip');
+        const p1 = parseInt(btn.dataset.p1, 10);
+        const p2 = parseInt(btn.dataset.p2, 10);
+        if (hpSyncToggle && p1 === p2) {
+          hpSyncToggle.checked = true;
+        } else if (hpSyncToggle && p1 !== p2) {
+          hpSyncToggle.checked = false;
+        }
+        this._updateHpSelectInputs(p1, p2);
+      });
+    });
+
+    // 確認按鈕：前往挑選神兵與開始對戰
+    if (hpConfirmBtn) {
+      hpConfirmBtn.onclick = () => {
+        soundEngine.playUI('equip');
+        this.closeHpSelectModal();
+        this.startBattle(this._pendingBattleMode || 'ai', this._pendingBattleDiff || 'normal', this.battleP1Hp, this.battleP2Hp);
       };
     }
 

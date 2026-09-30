@@ -158,8 +158,8 @@ export class CombatEngine {
       dropThroughCooldown: 0,
       lastDownTapTimer: 0,
       prevDownInput: false,
-      maxHp: 1000,
-      hp: 1000,
+      maxHp: Math.max(100, Math.round(Number(data.maxHp || data.hp) || 1000)),
+      hp: Math.max(100, Math.round(Number(data.maxHp || data.hp) || 1000)),
       state: 'idle', // idle, walk_fwd, walk_back, jump, high_guard, light_punch, heavy_kick, ranged_attack, skill, hit_stun, knockdown, wakeup, super_move
       stateTime: 0,
       stateDuration: 0,
@@ -707,7 +707,7 @@ export class CombatEngine {
     }
 
     // 0. 角色專屬終極必殺大絕招 (Level 3 Super Move - 滿能量或逆境覺醒按 [P] 或 [SUPER])
-    if (input.superMove && (char.superMeter >= char.superMax || (char.hp <= 350 && !char.usedCrisisSuper))) {
+    if (input.superMove && (char.superMeter >= char.superMax || (char.hp <= char.maxHp * 0.35 && !char.usedCrisisSuper))) {
       this._executeSuperMove(char, opp);
       return;
     }
@@ -843,7 +843,7 @@ export class CombatEngine {
   // ─── 角色專屬終極必殺大絕招 (Cinematic Super Moves - 26 外觀各自專屬奧義) ───
   _executeSuperMove(char, opp) {
     char.superMeter = 0;
-    if (char.hp <= 350) char.usedCrisisSuper = true;
+    if (char.hp <= char.maxHp * 0.35) char.usedCrisisSuper = true;
 
     const meta = getSkinSuperMeta(char.skin);
     this.superFreeze = 42; // 時空凍結 42 幀 (全屏暗幕與人物特寫)

@@ -12202,8 +12202,8 @@
         dropThroughCooldown: 0,
         lastDownTapTimer: 0,
         prevDownInput: false,
-        maxHp: 1e3,
-        hp: 1e3,
+        maxHp: Math.max(100, Math.round(Number(data.maxHp || data.hp) || 1e3)),
+        hp: Math.max(100, Math.round(Number(data.maxHp || data.hp) || 1e3)),
         state: "idle",
         // idle, walk_fwd, walk_back, jump, high_guard, light_punch, heavy_kick, ranged_attack, skill, hit_stun, knockdown, wakeup, super_move
         stateTime: 0,
@@ -12671,7 +12671,7 @@
       if (char.isGrounded) {
         char.facing = char.x < opp.x ? 1 : -1;
       }
-      if (input.superMove && (char.superMeter >= char.superMax || char.hp <= 350 && !char.usedCrisisSuper)) {
+      if (input.superMove && (char.superMeter >= char.superMax || char.hp <= char.maxHp * 0.35 && !char.usedCrisisSuper)) {
         this._executeSuperMove(char, opp);
         return;
       }
@@ -12784,7 +12784,7 @@
     // ─── 角色專屬終極必殺大絕招 (Cinematic Super Moves - 26 外觀各自專屬奧義) ───
     _executeSuperMove(char, opp) {
       char.superMeter = 0;
-      if (char.hp <= 350) char.usedCrisisSuper = true;
+      if (char.hp <= char.maxHp * 0.35) char.usedCrisisSuper = true;
       const meta = getSkinSuperMeta(char.skin);
       this.superFreeze = 42;
       char.invincibleTimer = 55;
@@ -15585,6 +15585,10 @@
       this.isFighting = false;
       this.matchMode = "ai";
       this.aiDifficulty = "normal";
+      this.battleP1Hp = 1e3;
+      this.battleP2Hp = 1e3;
+      this._pendingBattleMode = "ai";
+      this._pendingBattleDiff = "normal";
       this.loadoutSelection = ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"];
       this.loadoutTimer = 15;
       this.loadoutInterval = null;
@@ -16312,6 +16316,63 @@ ${skinNames}`);
       const modal = document.getElementById("modeSelectModal");
       if (modal) modal.classList.remove("active");
     }
+    // ─── 戰鬥血量自訂視窗 (HP Selection Modal) ───
+    openHpSelectModal(mode = "ai", diff = "normal") {
+      this._pendingBattleMode = mode;
+      this._pendingBattleDiff = diff;
+      this.closeModeSelectModal();
+      const modal = document.getElementById("hpSelectModal");
+      if (!modal) {
+        this.startBattle(mode, diff);
+        return;
+      }
+      soundEngine.playUI("click");
+      modal.classList.add("active");
+      const badge = document.getElementById("hpModalDiffBadge");
+      const p2Label = document.getElementById("hpP2LabelText");
+      if (badge) {
+        if (mode === "local_2p") {
+          badge.textContent = "\u{1F465} \u540C\u6A5F\u96D9\u4EBA\u5C0D\u6C7A";
+          badge.style.borderColor = "#c084fc";
+          badge.style.color = "#c084fc";
+        } else {
+          const diffLabels = {
+            easy: { label: "\u{1F7E2} \u7C21\u55AE (Easy)", color: "#00f3ff" },
+            normal: { label: "\u{1F7E1} \u666E\u901A (Normal)", color: "#38bdf8" },
+            hard: { label: "\u{1F7E0} \u56F0\u96E3 (Hard)", color: "#ffd700" },
+            nightmare: { label: "\u{1F534} \u60E1\u5922 (Nightmare)", color: "#ff007f" }
+          };
+          const cfg = diffLabels[diff] || diffLabels.normal;
+          badge.textContent = cfg.label;
+          badge.style.borderColor = cfg.color;
+          badge.style.color = cfg.color;
+        }
+      }
+      if (p2Label) {
+        p2Label.textContent = mode === "local_2p" ? "2P \u6311\u6230\u8005\u597D\u53CB\u8840\u91CF" : `2P \u96FB\u8166 AI (${diff.toUpperCase()}) \u8840\u91CF`;
+      }
+      if (!this.battleP1Hp) this.battleP1Hp = 1e3;
+      if (!this.battleP2Hp) this.battleP2Hp = 1e3;
+      this._updateHpSelectInputs(this.battleP1Hp, this.battleP2Hp);
+    }
+    closeHpSelectModal() {
+      const modal = document.getElementById("hpSelectModal");
+      if (modal) modal.classList.remove("active");
+    }
+    _updateHpSelectInputs(p1Val, p2Val) {
+      p1Val = Math.min(5e3, Math.max(200, Math.round(Number(p1Val) || 1e3)));
+      p2Val = Math.min(5e3, Math.max(200, Math.round(Number(p2Val) || 1e3)));
+      this.battleP1Hp = p1Val;
+      this.battleP2Hp = p2Val;
+      const p1Display = document.getElementById("hpP1Display");
+      const p2Display = document.getElementById("hpP2Display");
+      const p1Slider = document.getElementById("hpP1Slider");
+      const p2Slider = document.getElementById("hpP2Slider");
+      if (p1Display) p1Display.textContent = p1Val;
+      if (p2Display) p2Display.textContent = p2Val;
+      if (p1Slider) p1Slider.value = p1Val;
+      if (p2Slider) p2Slider.value = p2Val;
+    }
     // ─── 賽前戰術武器與技能配置視窗 (30 款純攻擊自由挑選 5 項・無時間限制) ───
     openLoadoutModal(startMatchCallback) {
       const modal = document.getElementById("loadoutModal");
@@ -16580,10 +16641,12 @@ ${skinNames}`);
       if (callback) callback();
     }
     // ─── 進入對戰系統 ───
-    startBattle(mode = "ai", diff = "normal") {
+    startBattle(mode = "ai", diff = "normal", p1Hp = null, p2Hp = null) {
       this.matchMode = mode;
       this.aiDifficulty = diff;
       aiController.setDifficulty(diff);
+      if (p1Hp !== null && p1Hp !== void 0) this.battleP1Hp = Math.min(5e3, Math.max(200, Math.round(Number(p1Hp) || 1e3)));
+      if (p2Hp !== null && p2Hp !== void 0) this.battleP2Hp = Math.min(5e3, Math.max(200, Math.round(Number(p2Hp) || 1e3)));
       if (this.selectedStageId === "random") {
         this.currentStage = getRandomStage();
       } else {
@@ -16598,7 +16661,9 @@ ${skinNames}`);
       this.arcadeStage = 1;
       this.arcadeScore = 0;
       this.arcadeStreakWins = 0;
-      this.startBattle("arcade", "normal");
+      this.battleP1Hp = 1e3;
+      this.battleP2Hp = 1e3;
+      this.startBattle("arcade", "normal", 1e3, 1e3);
     }
     nextArcadeStage() {
       const endModal = document.getElementById("matchEndModal");
@@ -16680,13 +16745,15 @@ ${skinNames}`);
         name: saveSystem.currentUser ? saveSystem.currentUser.nickname : "Player 1",
         skin: p1Skin,
         isAi: false,
-        loadout: this.loadoutSelection
+        loadout: this.loadoutSelection,
+        maxHp: this.battleP1Hp || 1e3
       };
       const p2Data = this.matchMode === "p2p" && this._p2pMatchData ? { ...this._p2pMatchData.p2Data, isAi: false } : {
         name: p2Name,
         skin: p2Skin,
         isAi: isAiOpponent,
-        loadout: p2Loadout
+        loadout: p2Loadout,
+        maxHp: this.battleP2Hp || 1e3
       };
       this._resizeCanvas();
       this.matchEndTimer = 0;
@@ -18699,7 +18766,7 @@ ${skinNames}`);
       const super2El = document.getElementById("p2SuperFill");
       const superBtn = document.getElementById("superHudBtn");
       const touchSuperBtn = document.getElementById("touchSuperBtn");
-      const isP1SuperReady = combatEngine.p1.superMeter >= combatEngine.p1.superMax || combatEngine.p1.hp <= 350 && !combatEngine.p1.usedCrisisSuper;
+      const isP1SuperReady = combatEngine.p1.superMeter >= combatEngine.p1.superMax || combatEngine.p1.hp <= combatEngine.p1.maxHp * 0.35 && !combatEngine.p1.usedCrisisSuper;
       if (super1El) {
         const super1Ratio = isP1SuperReady ? 1 : combatEngine.p1.superMeter / combatEngine.p1.superMax;
         super1El.style.width = `${Math.min(100, Math.round(super1Ratio * 100))}%`;
@@ -19029,17 +19096,118 @@ ${skinNames}`);
         });
       }
       document.querySelectorAll(".select-ai-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
           const diff = btn.dataset.diff;
-          document.getElementById("modeSelectModal").classList.remove("active");
-          this.startBattle("ai", diff);
+          this.openHpSelectModal("ai", diff);
         });
       });
       const local2pBtn = document.getElementById("selectLocal2pBtn");
       if (local2pBtn) {
-        local2pBtn.onclick = () => {
-          document.getElementById("modeSelectModal").classList.remove("active");
-          this.startBattle("local_2p");
+        local2pBtn.onclick = (e) => {
+          e.stopPropagation();
+          this.openHpSelectModal("local_2p", "normal");
+        };
+      }
+      const hpModal = document.getElementById("hpSelectModal");
+      const hpCloseBtn = document.getElementById("hpModalCloseBtn");
+      const hpBackBtn = document.getElementById("hpBackToModeBtn");
+      const hpConfirmBtn = document.getElementById("hpConfirmBattleBtn");
+      const hpSyncToggle = document.getElementById("hpSyncToggle");
+      const p1Slider = document.getElementById("hpP1Slider");
+      const p2Slider = document.getElementById("hpP2Slider");
+      const closeHpAndReopenMode = () => {
+        this.closeHpSelectModal();
+        this.openModeSelectModal();
+        soundEngine.playUI("click");
+      };
+      if (hpCloseBtn) hpCloseBtn.onclick = closeHpAndReopenMode;
+      if (hpBackBtn) hpBackBtn.onclick = closeHpAndReopenMode;
+      if (hpModal) {
+        hpModal.addEventListener("click", (e) => {
+          if (e.target === hpModal) {
+            closeHpAndReopenMode();
+          }
+        });
+      }
+      if (p1Slider) {
+        p1Slider.addEventListener("input", () => {
+          const val = parseInt(p1Slider.value, 10);
+          if (hpSyncToggle && hpSyncToggle.checked) {
+            this._updateHpSelectInputs(val, val);
+          } else {
+            this._updateHpSelectInputs(val, this.battleP2Hp);
+          }
+        });
+      }
+      if (p2Slider) {
+        p2Slider.addEventListener("input", () => {
+          const val = parseInt(p2Slider.value, 10);
+          if (hpSyncToggle && hpSyncToggle.checked) {
+            this._updateHpSelectInputs(val, val);
+          } else {
+            this._updateHpSelectInputs(this.battleP1Hp, val);
+          }
+        });
+      }
+      if (hpSyncToggle) {
+        hpSyncToggle.addEventListener("change", () => {
+          soundEngine.playUI("click");
+          if (hpSyncToggle.checked) {
+            this._updateHpSelectInputs(this.battleP1Hp, this.battleP1Hp);
+          }
+        });
+      }
+      document.querySelectorAll(".hp-adj-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          soundEngine.playUI("click");
+          const target = btn.dataset.target;
+          const delta = parseInt(btn.dataset.delta, 10);
+          const isSync = hpSyncToggle && hpSyncToggle.checked;
+          if (target === "p1") {
+            const newVal = (this.battleP1Hp || 1e3) + delta;
+            if (isSync) this._updateHpSelectInputs(newVal, newVal);
+            else this._updateHpSelectInputs(newVal, this.battleP2Hp);
+          } else {
+            const newVal = (this.battleP2Hp || 1e3) + delta;
+            if (isSync) this._updateHpSelectInputs(newVal, newVal);
+            else this._updateHpSelectInputs(this.battleP1Hp, newVal);
+          }
+        });
+      });
+      document.querySelectorAll(".hp-quick-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          soundEngine.playUI("click");
+          const target = btn.dataset.target;
+          const val = parseInt(btn.dataset.val, 10);
+          const isSync = hpSyncToggle && hpSyncToggle.checked;
+          if (target === "p1") {
+            if (isSync) this._updateHpSelectInputs(val, val);
+            else this._updateHpSelectInputs(val, this.battleP2Hp);
+          } else {
+            if (isSync) this._updateHpSelectInputs(val, val);
+            else this._updateHpSelectInputs(this.battleP1Hp, val);
+          }
+        });
+      });
+      document.querySelectorAll(".hp-preset-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          soundEngine.playUI("equip");
+          const p1 = parseInt(btn.dataset.p1, 10);
+          const p2 = parseInt(btn.dataset.p2, 10);
+          if (hpSyncToggle && p1 === p2) {
+            hpSyncToggle.checked = true;
+          } else if (hpSyncToggle && p1 !== p2) {
+            hpSyncToggle.checked = false;
+          }
+          this._updateHpSelectInputs(p1, p2);
+        });
+      });
+      if (hpConfirmBtn) {
+        hpConfirmBtn.onclick = () => {
+          soundEngine.playUI("equip");
+          this.closeHpSelectModal();
+          this.startBattle(this._pendingBattleMode || "ai", this._pendingBattleDiff || "normal", this.battleP1Hp, this.battleP2Hp);
         };
       }
       const startArcadeBtn = document.getElementById("startArcadeModeBtn");

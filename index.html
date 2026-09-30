@@ -349,12 +349,15 @@
 
         <!-- 1. 對戰 AI -->
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
-          <div style="font-weight: 800; margin-bottom: 8px; color: #00f3ff;"><i class="fa-solid fa-robot"></i> 對戰 AI (4 大難度行為樹)</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-weight: 800; color: #00f3ff;"><i class="fa-solid fa-robot"></i> 對戰 AI (4 大難度行為樹)</div>
+            <span style="font-size: 11px; color: #94a3b8;"><i class="fa-solid fa-heart-pulse"></i> 點選後可自訂雙方血量</span>
+          </div>
           <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-            <button class="nav-tab-btn select-ai-btn" data-diff="easy" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('ai', 'easy'); }" style="justify-content: center; padding: 8px 4px;">簡單</button>
-            <button class="nav-tab-btn select-ai-btn" data-diff="normal" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('ai', 'normal'); }" style="justify-content: center; padding: 8px 4px;">普通</button>
-            <button class="nav-tab-btn select-ai-btn" data-diff="hard" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('ai', 'hard'); }" style="justify-content: center; padding: 8px 4px; border-color: #ffd700; color: #ffd700;">困難</button>
-            <button class="nav-tab-btn select-ai-btn" data-diff="nightmare" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('ai', 'nightmare'); }" style="justify-content: center; padding: 8px 4px; border-color: #ff007f; color: #ff007f;">惡夢</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="easy" onclick="if(window.app){ window.app.openHpSelectModal('ai', 'easy'); }" style="justify-content: center; padding: 8px 4px;">簡單</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="normal" onclick="if(window.app){ window.app.openHpSelectModal('ai', 'normal'); }" style="justify-content: center; padding: 8px 4px;">普通</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="hard" onclick="if(window.app){ window.app.openHpSelectModal('ai', 'hard'); }" style="justify-content: center; padding: 8px 4px; border-color: #ffd700; color: #ffd700;">困難</button>
+            <button class="nav-tab-btn select-ai-btn" data-diff="nightmare" onclick="if(window.app){ window.app.openHpSelectModal('ai', 'nightmare'); }" style="justify-content: center; padding: 8px 4px; border-color: #ff007f; color: #ff007f;">惡夢</button>
           </div>
         </div>
 
@@ -362,7 +365,7 @@
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
           <div style="font-weight: 800; margin-bottom: 8px; color: #a855f7;"><i class="fa-solid fa-user-group"></i> 雙人對打</div>
           <div style="display: flex; gap: 8px;">
-            <button class="nav-tab-btn" id="selectLocal2pBtn" onclick="document.getElementById('modeSelectModal').classList.remove('active'); if(window.app){ window.app.startBattle('local_2p'); }" style="flex: 1; justify-content: center; border-color: #a855f7; color: #c084fc;">
+            <button class="nav-tab-btn" id="selectLocal2pBtn" onclick="if(window.app){ window.app.openHpSelectModal('local_2p', 'normal'); }" style="flex: 1; justify-content: center; border-color: #a855f7; color: #c084fc;">
               <i class="fa-solid fa-keyboard"></i> 同機同鍵盤雙人
             </button>
             <button class="nav-tab-btn" id="hostRoomBtn" style="flex: 1; justify-content: center;">
@@ -394,6 +397,103 @@
             <button class="nav-tab-btn stage-select-btn" data-stage="stage_namek" style="justify-content: center; padding: 6px 2px; font-size: 11px; border-color: #10b981; color: #86efac;">那美克星</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 戰鬥血量自訂對話框 (HP Selection Modal) ── -->
+  <div class="modal-overlay" id="hpSelectModal">
+    <div class="modal-card" style="max-width: 580px;">
+      <button class="modal-close-btn" id="hpModalCloseBtn">&times;</button>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+        <h2 style="color: var(--primary-cyan); margin: 0; font-size: 1.25rem;">
+          <i class="fa-solid fa-heart-pulse"></i> 自訂雙方戰鬥血量
+        </h2>
+        <span id="hpModalDiffBadge" class="skin-tag" style="border-color: #00f3ff; color: #00f3ff; font-weight: 800; font-size: 12px; white-space: nowrap;">
+          🟢 簡單 (Easy)
+        </span>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+        在展開對決前，您可以自由調節雙方的生命值（HP），打造專屬對抗強度：
+      </p>
+
+      <!-- 快速預設組合 (Quick Presets) -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px;">
+        <div style="font-size: 12px; font-weight: 800; color: #cbd5e1; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+          <span><i class="fa-solid fa-bolt"></i> 快速推薦對抗組合</span>
+          <label style="font-size: 11px; color: #94a3b8; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="hpSyncToggle" style="accent-color: #00f3ff; cursor: pointer;">
+            <span>雙方血量同步連動</span>
+          </label>
+        </div>
+        <div class="hp-preset-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;">
+          <button type="button" class="nav-tab-btn hp-preset-btn" data-p1="1000" data-p2="1000" style="justify-content: center; padding: 6px 2px; font-size: 11px; border-color: #00f3ff; color: #00f3ff;">⚖️ 標準 1000</button>
+          <button type="button" class="nav-tab-btn hp-preset-btn" data-p1="500" data-p2="500" style="justify-content: center; padding: 6px 2px; font-size: 11px; border-color: #f59e0b; color: #f59e0b;">⚡ 死鬥 500</button>
+          <button type="button" class="nav-tab-btn hp-preset-btn" data-p1="2000" data-p2="2000" style="justify-content: center; padding: 6px 2px; font-size: 11px; border-color: #10b981; color: #10b981;">🛡️ 耐久 2000</button>
+          <button type="button" class="nav-tab-btn hp-preset-btn" data-p1="1000" data-p2="3000" style="justify-content: center; padding: 6px 2px; font-size: 11px; border-color: #ef4444; color: #ef4444;">👑 討伐 Boss 3000</button>
+          <button type="button" class="nav-tab-btn hp-preset-btn" data-p1="2000" data-p2="600" style="justify-content: center; padding: 6px 2px; font-size: 11px; border-color: #a855f7; color: #a855f7;">⚔️ 無雙割草</button>
+        </div>
+      </div>
+
+      <!-- 雙方血量獨立調整面板 -->
+      <div class="hp-cards-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <!-- 1P 玩家血量卡片 -->
+        <div style="background: rgba(0, 243, 255, 0.04); border: 1.5px solid rgba(0, 243, 255, 0.35); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 800; font-size: 13px; color: #00f3ff;">
+              <i class="fa-solid fa-user-shield"></i> <span id="hpP1LabelText">1P 玩家血量</span>
+            </span>
+            <span style="font-family: 'Orbitron', monospace; font-weight: 900; font-size: 18px; color: #00f3ff; text-shadow: 0 0 10px rgba(0,243,255,0.5);">
+              <span id="hpP1Display">1000</span> <span style="font-size: 11px; font-weight: 700;">HP</span>
+            </span>
+          </div>
+
+          <!-- 滑桿 -->
+          <input type="range" id="hpP1Slider" min="200" max="5000" step="50" value="1000" style="width: 100%; accent-color: #00f3ff; cursor: pointer;">
+
+          <!-- 微調與快速點選按鈕 -->
+          <div style="display: flex; gap: 4px; justify-content: space-between;">
+            <button type="button" class="nav-tab-btn hp-adj-btn" data-target="p1" data-delta="-100" style="padding: 3px 6px; font-size: 11px;">-100</button>
+            <button type="button" class="nav-tab-btn hp-quick-btn" data-target="p1" data-val="500" style="padding: 3px 6px; font-size: 11px;">500</button>
+            <button type="button" class="nav-tab-btn hp-quick-btn" data-target="p1" data-val="1000" style="padding: 3px 6px; font-size: 11px; border-color: #00f3ff;">1000</button>
+            <button type="button" class="nav-tab-btn hp-quick-btn" data-target="p1" data-val="2000" style="padding: 3px 6px; font-size: 11px;">2000</button>
+            <button type="button" class="nav-tab-btn hp-adj-btn" data-target="p1" data-delta="100" style="padding: 3px 6px; font-size: 11px;">+100</button>
+          </div>
+        </div>
+
+        <!-- 2P 對手血量卡片 -->
+        <div style="background: rgba(255, 0, 127, 0.04); border: 1.5px solid rgba(255, 0, 127, 0.35); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 800; font-size: 13px; color: #ff007f;">
+              <i class="fa-solid fa-robot"></i> <span id="hpP2LabelText">2P 對手血量</span>
+            </span>
+            <span style="font-family: 'Orbitron', monospace; font-weight: 900; font-size: 18px; color: #ff007f; text-shadow: 0 0 10px rgba(255,0,127,0.5);">
+              <span id="hpP2Display">1000</span> <span style="font-size: 11px; font-weight: 700;">HP</span>
+            </span>
+          </div>
+
+          <!-- 滑桿 -->
+          <input type="range" id="hpP2Slider" min="200" max="5000" step="50" value="1000" style="width: 100%; accent-color: #ff007f; cursor: pointer;">
+
+          <!-- 微調與快速點選按鈕 -->
+          <div style="display: flex; gap: 4px; justify-content: space-between;">
+            <button type="button" class="nav-tab-btn hp-adj-btn" data-target="p2" data-delta="-100" style="padding: 3px 6px; font-size: 11px;">-100</button>
+            <button type="button" class="nav-tab-btn hp-quick-btn" data-target="p2" data-val="500" style="padding: 3px 6px; font-size: 11px;">500</button>
+            <button type="button" class="nav-tab-btn hp-quick-btn" data-target="p2" data-val="1000" style="padding: 3px 6px; font-size: 11px; border-color: #ff007f;">1000</button>
+            <button type="button" class="nav-tab-btn hp-quick-btn" data-target="p2" data-val="2000" style="padding: 3px 6px; font-size: 11px;">2000</button>
+            <button type="button" class="nav-tab-btn hp-adj-btn" data-target="p2" data-delta="100" style="padding: 3px 6px; font-size: 11px;">+100</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作底部按鈕 -->
+      <div style="display: flex; gap: 10px; margin-top: 4px;">
+        <button type="button" class="nav-tab-btn" id="hpBackToModeBtn" style="flex: 1; justify-content: center; padding: 10px;">
+          <i class="fa-solid fa-arrow-left"></i> 返回重選模式
+        </button>
+        <button type="button" class="nav-tab-btn" id="hpConfirmBattleBtn" style="flex: 2; justify-content: center; background: linear-gradient(90deg, rgba(0,243,255,0.25), rgba(255,0,127,0.25)); border-color: #00f3ff; color: #fff; font-weight: 900; font-size: 14px; padding: 10px; box-shadow: 0 0 16px rgba(0,243,255,0.3);">
+          <i class="fa-solid fa-shield-halved"></i> 確認血量・前往挑選神兵 <i class="fa-solid fa-chevron-right"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -1046,7 +1146,7 @@
   </div>
 
   <!-- 主邏輯入口模組 -->
-  <script src="js/bundle.js?v=20260927_polish_v2"></script>
+  <script src="js/bundle.js?v=20260930_hp_select_v1"></script>
   <script src="js/control_feel.js?v=20260916_control_v1"></script>
 </body>
 </html>
