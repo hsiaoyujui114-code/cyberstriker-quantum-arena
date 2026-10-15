@@ -7022,6 +7022,18 @@
         <div class="callout-title">🔗 shared-data.js 單一資料源規範</div>
         落實「改動時主檔附檔兩邊都要改」之鐵律：將雙北 41 行政特區、萬家福/樂家康真實門市、10 大首發示範案件全面抽離至 <code>shared-data.js</code>。主檔 <code>index.html</code> 與附檔 <code>cyber-realmap.html</code> 統一載入，徹底消除版本分歧！
       </div>
+
+      <h3>11.8 超微觀巨型角色 RPG 特寫系統、視角頂部嚴密跟隨、宏觀板塊動態過濾與 160x 深度沉浸渲染 (第 85 項核心需求指標)</h3>
+      <div class="callout success">
+        <div class="callout-title">👤 第 85 項核心需求指標落實</div>
+        <p>為徹底落實委託人指示：「我的人物會放非常大，非常非常非常大。我發現現在你這個地圖還沒辦法放得非常大，還是會一直看到很多區塊。我不想要這樣子，我想要可以放非常非常非常大，讓視角剛好在我人物上方，人物移動再跟著移動過去，這樣子比較有人物的感覺」：</p>
+        <ul>
+          <li><b>角色動態等比超大放大渲染 (Dynamic Anime Character RPG Scaling)</b>：廢除過去靜態固定 14px 寫死尺寸，導入動態縮放率 <code>pScale = Math.max(1.0, scale * 0.22)</code>，在 65x ~ 160x 特寫下身高達數百至上千像素！全面刻劃動態地面陰影、戰術光環指針、懸浮滑板、步態雙腿皮靴、深藍動漫風衣、領帶胸章、靈魂高光動漫大眼與帥氣軟呢帽。</li>
+          <li><b>攝影機上限擴增至 160.0x ✕ 視角頂部嚴密鎖定 (cameraLockToPlayer)</b>：攝影機無級縮放拉升至 160x，在地面模式下嚴密鎖定於人物正上方（<code>camera.x = playerPos.x; camera.z = playerPos.z;</code>），人物始終保持於螢幕中心，移動時街景平滑跟隨推進。</li>
+          <li><b>徹底消除「一直看到很多區塊」</b>：實裝 LOD 視錐智慧過濾，當 <code>scale > 7.5</code> 時自動全面隱藏 41 特區賽博板塊底色、霓虹框線、折角與 41 區巨幅 HUD 銘板，並於 <code>scale > 12.0</code> 時淡出經緯網格，純淨呈現真實街道地磚與店家門市立面。</li>
+          <li><b>雙端控制面板升級</b>：主檔 <code>index.html</code> 實裝 <code>[👤 超大微觀人物特寫 (RPG Close-Up)]</code>、<code>[🎯 鎖定人物正上方]</code>、<code>[🏙️ 街區標準]</code> 與 <code>[🗺️ 雙北全景]</code>；附檔 <code>cyber-realmap.html</code> ✕ <code>cyber-realmap.js</code> 提升 Leaflet 至 22 級極限特寫，實裝巡航者 GPS 標記與 <code>[👤 超微觀角色特寫 20x]</code> 按鈕。</li>
+        </ul>
+      </div>
     </div>
 
   </div>
