@@ -1239,5 +1239,36 @@ flowchart LR
 #### 4. 雙軌必修鐵律嚴格執行
 - 主檔 `index.html` ✕ `game.js`、附檔 `cyber-realmap.html` ✕ `cyber-realmap.js`、資料庫 `shared-data.js` 及鏡像庫 `city-pulse-detective/` 全部同步更新完成，`node -c` 檢驗 100% 通過，HTTP 200 回應正常。
 
+### 11.12 整體地圖放大背景極致抗模糊系統：全域 Retina HiDPI 畫布、微觀向量石材地坪與高解析度真實道路標線 ✕ Leaflet @2x 視網膜瓦片與 Crisp 抗插值渲染 (第 87 項核心需求指標)
+為徹底落實委託人指示：「我不是說捷運，我是說整張地圖放大之後，背景會變模糊，幫我修這點」，本專案於主檔與附檔雙端實裝第 87 項核心需求指標：
+
+#### 1. 主檔沙盤全域 Retina HiDPI 畫布實裝 (`window.devicePixelRatio`)
+- **突破 Canvas 畫布雙線性模糊元兇**：
+  - 過去 Canvas 尺寸僅綁定 `window.innerWidth` 與 `window.innerHeight`，在 Mac Retina 及現代高解析度螢幕（DPR = 2.0 ~ 3.0）下，畫布物理像素僅為螢幕物理像素之一半，瀏覽器強制 2x 雙線性放大導致全屏背景、線條與文字產生嚴重視覺模糊！
+  - 導入動態高解析度畫布引擎：以 `dpr = Math.min(window.devicePixelRatio || 1, 2.5)` 即時計算物理畫布寬高（`canvas.width = cssW * dpr; canvas.height = cssH * dpr;`），並於 `renderScene()` 啟用 `ctx.scale(dpr, dpr)` 座標映射。
+  - 畫布像素密度即刻躍升至 200%~250%，徹底消除畫布放大插值模糊，所有向量筆刷、文字、路網與圖示達到 4K/5K 視網膜級極致銳利！
+
+#### 2. 主檔沙盤超微觀街廓向量石材地坪與高解析度道路標線
+- **告別空洞純黑與模糊漸層 (`Urban Plaza Ground Base`)**：
+  - 當玩家放大至 `scale >= 4.0` 時，自動在雙北城區基底鋪滿現代都會深藍灰石材地坪（`#0b1324`），並以純向量繪製 1px 晶透接縫線（`#1e293b`），依縮放等級自動遞進呈現 5m、2.5m 至 1m 之精緻石板地磚，超特寫下更浮現十字交錯高光點，徹底消除背景空洞模糊感！
+- **真實道路白漆邊界線與車道分道虛線**：
+  - 所有幹道與巷弄於 `scale >= 5.0` 時呈現車道外側邊界白實線（`#ffffff`，0.2m 寬）；忠孝西路、中山北路等大道繪製一般車道分道虛線與公車專用道白色虛線。
+- **人行道石板磚、3D 立體路緣石與黃色導盲磚**：
+  - 人行道以石板基底（`#334155`）搭配橫向接縫線；道路邊界繪製 3D 立體路緣石（頂部 `#64748b` 斜角高光 + 下緣 `#0f172a` 水溝排水暗部）；人行道中央配置鮮明黃色視障導盲引導磚帶（`#eab308`）。
+- **高解析度鑄鐵人孔蓋與車道箭頭**：
+  - 於 `scale >= 14.0` 時動態呈現純向量幾何直行箭頭（`#f8fafc`）與鑄鐵十字浮雕人孔蓋（`#1e293b` ✕ `#64748b`），放大至 160x 依然分毫畢現！
+
+#### 3. 附檔 1:1 全息地圖 Retina @2x 視網膜瓦片與 Crisp 抗插值渲染
+- **強制開啟 Crisp 銳利渲染 CSS (`image-rendering: -webkit-optimize-contrast`)**：
+  - 在 `.leaflet-tile` 導入 `-webkit-optimize-contrast !important` 與 `crisp-edges !important`，並啟用硬體加速 `transform: translateZ(0)`，徹底禁用瀏覽器低品質雙線性模糊濾鏡，保留邊緣最高對比度與文字清晰度。
+- **瓦片層全面升級 `detectRetina: true` ✕ 預設 CARTO Voyager HD**：
+  - 預設啟用 CARTO Voyager HD 512x512 `@2x` Retina 原生超高解析度瓦片，解析度翻倍，放大至 22x 極限微觀特寫下文字與路網依然清澈銳利！
+  - 新增內政部國土測繪中心（NLSC）官方「臺灣通用電子地圖」WMTS 20 級原生最高解析度圖資選項，提供雙北最精確之建築外框與門牌號碼。
+  - 將 `zoomSnap` 調整為 `0.5`，消除奇異浮點縮放導致的瓦片雙線性模糊。
+
+#### 4. 雙軌必修鐵律嚴格執行
+- 主檔 `index.html` ✕ `game.js`、附檔 `cyber-realmap.html` ✕ `cyber-realmap.js`、資料庫 `shared-data.js` 及鏡像庫 `city-pulse-detective/` 全部同步更新完成，`node -c` 檢驗 100% 通過，HTTP 200 回應正常。
+
+
 
 

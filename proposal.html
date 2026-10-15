@@ -7070,6 +7070,18 @@
           <li><b>雙軌必修鐵律嚴格執行</b>：主檔與附檔雙端同步上線，<code>node -c</code> 語法檢驗 100% 通過，HTTP 200 回應正常。</li>
         </ul>
       </div>
+
+      <h3>11.12 整體地圖放大背景極致抗模糊系統：全域 Retina HiDPI 畫布、微觀向量石材地坪與高解析度真實道路標線 ✕ Leaflet @2x 視網膜瓦片與 Crisp 抗插值渲染 (第 87 項核心需求指標)</h3>
+      <div class="callout success">
+        <div class="callout-title">🔍 第 87 項核心需求指標落實</div>
+        <p>為徹底落實委託人指示：「我不是說捷運，我是說整張地圖放大之後，背景會變模糊，幫我修這點」：</p>
+        <ul>
+          <li><b>主檔沙盤全域 Retina HiDPI 畫布實裝 (<code>window.devicePixelRatio</code>)</b>：突破過去 Canvas 僅綁定 CSS 像素導致的高畫質螢幕雙線性放大模糊，以 <code>dpr = Math.min(window.devicePixelRatio || 1, 2.5)</code> 即時計算物理畫布寬高（<code>canvas.width = cssW * dpr; canvas.height = cssH * dpr;</code>），並於 <code>renderScene()</code> 啟用 <code>ctx.scale(dpr, dpr)</code> 座標映射，全屏背景、線條與文字躍升至 200%~250% 物理銳利度，徹底消除模糊！</li>
+          <li><b>超微觀街廓向量石材地坪與高解析度道路標線</b>：於 <code>scale >= 4.0</code> 鋪設現代都會深藍灰石材地坪（<code>#0b1324</code>），純向量繪製 1px 晶透接縫線（<code>#1e293b</code>），隨縮放呈現 5m、2.5m 至 1m 精密石磚與交錯高光點；實裝真實道路白邊界線、車道分道虛線、人行道石板基底、3D 立體路緣石（<code>#64748b</code> 高光 + <code>#0f172a</code> 水溝暗部）、黃色視障導盲引導磚帶（<code>#eab308</code>）、鑄鐵人孔蓋與車道箭頭，超微觀特寫下分毫畢現。</li>
+          <li><b>附檔 1:1 全息地圖 Retina @2x 視網膜瓦片與 Crisp 抗插值渲染</b>：在 <code>.leaflet-tile</code> 導入 <code>image-rendering: -webkit-optimize-contrast !important; image-rendering: crisp-edges !important;</code> 與硬體加速，徹底禁用低品質模糊濾鏡；所有圖層啟用 <code>detectRetina: true</code>，預設採用 CARTO Voyager HD 512x512 <code>@2x</code> 視網膜瓦片，新增內政部國土測繪中心（NLSC）WMTS 20 級原生圖資，並調整 <code>zoomSnap: 0.5</code>，徹底告別模糊。</li>
+          <li><b>雙軌必修鐵律嚴格執行</b>：主檔與附檔雙端同步上線，<code>node -c</code> 語法檢驗 100% 通過，HTTP 200 回應正常。</li>
+        </ul>
+      </div>
     </div>
 
   </div>
@@ -7161,6 +7173,11 @@
    - 家樂福標示徹底廢除「家」/「萬」字圈圈，導入正統紅白藍雙翼白 C 向量標誌；縮小時隱藏，放大到一定大小時在上方顯示小巧精緻標示。
    - 台北捷運官方 Logo 明確回答為「科技藍（#0070bc）」與「生機綠（#00a650）」；出入口柱並列路線色標（如板南線 BL、淡水信義線 R）。
    - 捷運出入口（drawMrtEscalatorEntrance）全面重構為超高畫質波浪採光天棚、立體雙色藍綠捷運 Logo 柱、動態發光電扶梯（踏階金屬槽與黃色安全線 #facc15）、地面導盲磚；台北車站大樓廡殿頂宮殿與三鐵看板超高畫質重構。
+21. 🔍 【整體地圖放大背景極致抗模糊系統 ✕ 全域 Retina HiDPI 畫布 ✕ 向量石材地坪與白漆標線 ✕ Leaflet @2x 視網膜瓦片與 Crisp 抗插值渲染（第 87 項核心指標）】：
+   - 依據委託人指示：「我不是說捷運，我是說整張地圖放大之後，背景會變模糊，幫我修這點」！
+   - 主檔沙盤全域 Retina HiDPI 畫布實裝（dpr = Math.min(window.devicePixelRatio || 1, 2.5)），物理畫布以 DPR 縮放並配合 ctx.scale(dpr, dpr)，徹底破除高解析度螢幕雙線性拉伸模糊，向量線條與文字極致銳利。
+   - 主檔街廓向量石材地坪（Urban Plaza Base Paving，#0b1324），依縮放等級自動細化呈現 5m、2.5m 至 1m 精密石板地磚接縫線與高光點；實裝真實道路白邊界線、車道分道虛線、3D 立體路緣石、黃色導盲磚、鑄鐵人孔蓋與車道箭頭，高倍率特寫下絕無空洞模糊！
+   - 附檔 1:1 地圖全面導入 -webkit-optimize-contrast 與 crisp-edges CSS 銳利渲染；所有圖層全面啟用 detectRetina: true，預設載入 CARTO Voyager 512x512 @2x 原生視網膜瓦片；整合內政部 NLSC 臺灣通用電子地圖 WMTS 20 級超高解析度圖資；調整 zoomSnap: 0.5 消除奇異浮點插值模糊。
 
 🚀 【請你現在執行的第一步】：
 1. 請確認你已閱讀完 AI_HANDOFF_PROJECT_SPEC.md 與 docs/ 內的交接文件。

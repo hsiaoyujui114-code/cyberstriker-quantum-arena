@@ -3126,6 +3126,79 @@ flowchart TD
 - `PROJECT_PROPOSAL.md`、`PROPOSAL.md`、`proposal.html` 全面收錄第 86 項核心需求指標。
 - 鏡像複製至 `city-pulse-detective/`，三大倉庫保持 100% 同步！
 
+---
+
+## 🏆 第 70 回合：整體地圖放大背景極致抗模糊系統：全域 Retina HiDPI 畫布、微觀向量石材地坪與高解析度真實道路標線 ✕ Leaflet @2x 視網膜瓦片與 Crisp 抗插值渲染
+
+### 📅 對話時序與委託人核心指示
+- **時間戳**：2026-10-15
+- **委託人原始指令**：
+  > 「我不是說捷運，我是說整張地圖放大之後，背景會變模糊，幫我修這點。」
+
+---
+
+### 🔍 根本原因診斷（Root Cause Analysis）
+在委託人下達指令後，團隊立即對主檔（2.5D Canvas 沙盤）與附檔（Leaflet 1:1 地圖）進行深度光學與渲染排查，精準定位「整張地圖放大後背景變模糊」的兩大核心底層癥結：
+1. **主檔 Canvas 畫布在高解析度螢幕（Retina / HiDPI）下的雙線性放大拉伸模糊**：
+   - 過去 Canvas 寬高僅簡單設定為 `window.innerWidth` 與 `window.innerHeight`（CSS 像素）。在 MacBook Retina 或現代 2K/4K 高解析度螢幕（`window.devicePixelRatio` 達到 2.0 ~ 3.0）下，瀏覽器被迫將 1x 的點陣畫布拉伸 200%~300% 填滿物理螢幕，啟動雙線性插值，導致全屏背景深色漸層、網格、道路及所有邊緣均產生嚴重的毛邊與朦朧霧感。
+   - 此外，當相機縮放達到 `scale > 15` 特寫時，原先道路以外的背景僅為單純純色徑向漸層，缺乏微觀材質細節，道路本體亦缺少真實道路工程標線，使得高倍率放大時視覺感受如同巨大色塊塗抹而模糊。
+2. **附檔 Leaflet 瓦片地圖的點陣縮放模糊與小數點插值**：
+   - Leaflet 預設圖資採用標準 256x256 點陣圖片，當放大至 19~22 級超微觀級別時，超出圖資原生解析度，瀏覽器預設的雙線性過濾會將圖磚像素平滑模糊化。
+   - `zoomSnap: 0.1` 導致任意小數點縮放比例（如 16.38 級），使圖磚處於非整數 CSS 變形拉伸狀態，加劇全域模糊感。
+
+---
+
+### 🌟 本次核心實作與重大交付成果
+
+#### 1. 🖥️ 主檔沙盤全域 Retina HiDPI 畫布引擎實裝 (`window.devicePixelRatio`)
+- **動態物理像素與邏輯像素對齊**：
+  - 導入高動態 DPR 適配邏輯：`dpr = Math.min(window.devicePixelRatio || 1, 2.5)`。
+  - 將 Canvas 物理像素緩衝區放大為物理像素：
+    ```javascript
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    ```
+  - 在 `renderScene()` 頂層外圍以 `ctx.save(); ctx.scale(dpr, dpr);` ... `ctx.restore();` 封裝，內部所有繪製邏輯維持標準邏輯座標系統，但渲染輸出直達 200%~250% 物理銳利度！
+  - 點擊事件、拖曳與視窗 Resize 事件同步校準為 CSS 邏輯像素與 DPR 映射，杜絕任何座標偏移。
+  - 徹底根除 Canvas 雙線性拉伸插值模糊，所有向量繪製、文字、陰影在 Retina 螢幕上達到印刷級極致清晰！
+
+#### 2. 🏛️ 主檔沙盤超微觀街廓向量石材地坪 (`Urban Plaza Base Paving`) 與精緻道路標線
+- **告別空洞與純色模糊（都會微觀石材地坪）**：
+  - 當玩家放大至 `scale >= 4.0` 時，在雙北城區基底動態鋪滿現代都會深藍灰石材地坪（`#0b1324`）。
+  - 純向量繪製 1px 晶透接縫線（`#1e293b`），隨相機縮放自動遞進細分呈現 5m、2.5m 至 1m 之精密石板地磚接縫線；在超微觀特寫下地磚交會處自動浮現微光十字亮點，使背景充滿扎實的都市建築質感，徹底告別背景模糊感！
+- **真實道路白漆邊界線與車道分道虛線**：
+  - 所有幹道與巷弄於 `scale >= 5.0` 時，精準繪製道路外緣白實線（`#ffffff`，0.2m 寬）；忠孝西路、中山北路等主幹道於 `scale >= 7.0` 時呈現車道白色分道虛線與公車專用道虛線標線。
+- **人行道石板地坪、3D 立體路緣石與黃色導盲磚**：
+  - 人行道以石板基底（`#334155`）搭配橫向磚紋接縫；道路外側邊緣繪製 3D 立體路緣石（頂部 `#64748b` 斜角高光 + 下緣 `#0f172a` 水溝排水暗部）。
+  - 人行道中央貫穿鮮明黃色視障導盲引導磚帶（`#eab308`，凸起條狀觸感導引紋路）。
+- **高解析度鑄鐵人孔蓋與車道箭頭**：
+  - 於 `scale >= 14.0` 時動態呈現純向量幾何直行箭頭（`#f8fafc`）與鑄鐵十字浮雕人孔蓋（`#1e293b` ✕ `#64748b`），放大至 160x 依然分毫畢現！
+
+#### 3. 🗺️ 附檔 1:1 全息地圖 Retina @2x 視網膜瓦片與 Crisp 抗插值渲染
+- **強制啟用 Crisp 銳利渲染 CSS (`image-rendering: -webkit-optimize-contrast`)**：
+  - 在 `cyber-realmap.css` 為 `.leaflet-tile` 注入：
+    ```css
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: crisp-edges !important;
+    -ms-interpolation-mode: nearest-neighbor !important;
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    ```
+  - 同時為 `.leaflet-tile-pane` 增強對比與飽和度（`filter: contrast(106%) saturate(104%)`），抑制地圖暗部發灰與發糊。
+- **全圖層全面升級 `detectRetina: true` ✕ 預設 CARTO Voyager HD**：
+  - 所有底圖圖層全面開啟 `detectRetina: true`，在 Retina 螢幕上自動請求 `@2x` 512x512 高清切片或自動超取樣。
+  - 預設切換為 CARTO Voyager HD 512x512 `@2x` 原生視網膜瓦片，字體與路網清晰度翻倍！
+  - 新增內政部國土測繪中心（NLSC）官方「臺灣通用電子地圖」WMTS 20 級原生最高解析度圖資選項，支援雙北 1:1 原生高清航測與地圖。
+  - 將 `zoomSnap` 調整為 `0.5`，消除奇異小數點縮放引起的瀏覽器模糊。
+
+#### 4. 📋 企劃書升級至第 87 項核心指示與雙軌同步
+- `PROJECT_PROPOSAL.md`、`PROPOSAL.md`、`proposal.html` 完整收錄第 87 項核心需求指標（章節 11.12）。
+- 鏡像同步至 `city-pulse-detective/`。
+- 本地伺服器與 Node.js 語法檢驗 100% 通過（HTTP 200）。
+
 
 
 
