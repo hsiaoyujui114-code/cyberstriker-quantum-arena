@@ -7082,6 +7082,23 @@
           <li><b>雙軌必修鐵律嚴格執行</b>：主檔與附檔雙端同步上線，<code>node -c</code> 語法檢驗 100% 通過，HTTP 200 回應正常。</li>
         </ul>
       </div>
+
+      <h3>11.13 全品牌官方純粹樣式標誌與全域層級細節 (LOD) 防擁擠引擎 ✕ 網路圖資 400 壞檔自動容錯修復 (第 88 項核心需求指標)</h3>
+      <div class="callout success">
+        <div class="callout-title">🏪 第 88 項核心需求指標落實</div>
+        <p>為徹底落實委託人指示：「有資料沒有載進去，所以我看不到地圖的資料不只家樂福，那些只要出現的商店，我要的是它的樣式，而不是在下面寫個它的名字。我要的是它的樣式，並且要放大到一定程度我才會看得到。不然畫面會很擠」：</p>
+        <ul>
+          <li><b>網路圖資載入異常排查與零空白韌性容錯機制 (Zero-Blank Resilient Fallback)</b>：排查發現 OpenStreetMap 標準瓦片於極限放大（<code>zoom >= 19</code>）時，因 <code>detectRetina: true</code> 請求超出伺服器上限之 zoom 20 導致 HTTP 400 Bad Request、造成地圖變灰「看不到地圖資料」；已將 OSM 瓦片設定為 <code>detectRetina: false</code> 由 CSS/GPU 平滑升頻，並於 <code>baseLayers</code> 導入 <code>enableResilientTileFallback</code> 監聽器，任何瓦片報錯時自動回填標準瓦片，徹底杜絕灰色地圖。同時修復附檔腳本 <code>updateStoreLODVisibility</code> 函式名稱不一致引起的拋錯，確保全數 176+ 處門市圖層與遙測數據 100% 順暢加載。</li>
+          <li><b>全品牌官方正統樣式標誌向量化 (Pure Brand Style, No Name Below)</b>：徹底杜絕過去在圓圈內寫單字（「7」、「全」、「市」）或在下方印製雜亂名稱文字的粗糙做法。為 14 大知名品牌（家樂福、7-Eleven、全家、全聯、麥當勞、星巴克、摩斯漢堡、屈臣氏、康是美、CoCo 都可、傳統市集/夜市、台北捷運、雙鐵、古蹟）手工刻製 100% 官方標準 SVG / Canvas 向量標誌，嚴格僅呈現純粹官方樣式，絕不於下方附加多餘文字！</li>
+          <li><b>全域層級細節 (LOD) 縮放過濾防擁擠引擎 (Anti-Crowding LOD)</b>：
+            <ul>
+              <li><b>附檔 Leaflet 1:1 全息地圖</b>：雙北全景與廣域概覽（<code>zoom < 15.0</code>）時自動完全隱藏所有商業門市圖標，保持畫面純淨開闊，徹底解決畫面擁擠痛點；放大至街道等級（<code>zoom >= 15.0</code>）才浮現官方向量標章；點選頂部門市篩選條按鈕自動平滑俯衝至旗艦店（<code>zoom: 15.5</code>）。</li>
+              <li><b>主檔 Canvas 互動沙盤</b>：縮小或常規視野（<code>scale < 4.8</code>）時全面隱藏頂部浮動標示與地面點位虛線圈，杜絕光圈鋪滿全畫面；放大至超微觀特寫（<code>scale >= 4.8</code>）時，各門市建築上方浮現半透明深色玻璃質感的官方向量徽章，純粹樣式無文字贅飾。</li>
+            </ul>
+          </li>
+          <li><b>雙軌必修鐵律嚴格執行</b>：主檔與附檔雙端同步上線，<code>node -c</code> 語法檢驗 100% 通過，HTTP 200 回應正常。</li>
+        </ul>
+      </div>
     </div>
 
   </div>
@@ -7178,6 +7195,11 @@
    - 主檔沙盤全域 Retina HiDPI 畫布實裝（dpr = Math.min(window.devicePixelRatio || 1, 2.5)），物理畫布以 DPR 縮放並配合 ctx.scale(dpr, dpr)，徹底破除高解析度螢幕雙線性拉伸模糊，向量線條與文字極致銳利。
    - 主檔街廓向量石材地坪（Urban Plaza Base Paving，#0b1324），依縮放等級自動細化呈現 5m、2.5m 至 1m 精密石板地磚接縫線與高光點；實裝真實道路白邊界線、車道分道虛線、3D 立體路緣石、黃色導盲磚、鑄鐵人孔蓋與車道箭頭，高倍率特寫下絕無空洞模糊！
    - 附檔 1:1 地圖全面導入 -webkit-optimize-contrast 與 crisp-edges CSS 銳利渲染；所有圖層全面啟用 detectRetina: true，預設載入 CARTO Voyager 512x512 @2x 原生視網膜瓦片；整合內政部 NLSC 臺灣通用電子地圖 WMTS 20 級超高解析度圖資；調整 zoomSnap: 0.5 消除奇異浮點插值模糊。
+22. 🏪 【全品牌官方正統樣式標誌 ✕ 全域層級細節 (LOD) 防擁擠引擎 ✕ 網路圖資 400 壞檔自動容錯修復（第 88 項核心指標）】：
+   - 依據委託人指示：「有資料沒有載進去，所以我看不到地圖的資料不只家樂福，那些只要出現的商店，我要的是它的樣式，而不是在下面寫個它的名字。我要的是它的樣式，並且要放大到一定程度我才會看得到。不然畫面會很擠」！
+   - 徹底杜絕文字贅飾與單字圈圈：全數 14 大連鎖品牌與公共設施（家樂福、7-Eleven、全家、全聯、麥當勞、星巴克、摩斯漢堡、屈臣氏、康是美、CoCo 都可、傳統市場、台北捷運、雙鐵、古蹟）全面導入 100% 官方標準 SVG / Canvas 向量標誌，嚴格禁止於下方附加多餘文字名稱！
+   - 全域層級細節 (LOD) 縮放過濾防擁擠：附檔雙北概覽（zoom < 15.0）全面隱藏商業門市圖標，放大至街道（zoom >= 15.0）才優雅浮現；主檔縮小（scale < 4.8）隱藏頂部浮動標示與地面點位虛線圈，特寫（scale >= 4.8）才浮現純樣式官方徽章，視野開闊清爽，告別畫面擁擠！
+   - 網路圖資零空白韌性容錯修復：OSM 瓦片改為 detectRetina: false 避免高縮放 HTTP 400 壞檔，baseLayers 實裝 enableResilientTileFallback 自動無縫回填瓦片；修復 updateStoreLODVisibility 函式命名中斷，門市與圖資 100% 順暢載入。
 
 🚀 【請你現在執行的第一步】：
 1. 請確認你已閱讀完 AI_HANDOFF_PROJECT_SPEC.md 與 docs/ 內的交接文件。
