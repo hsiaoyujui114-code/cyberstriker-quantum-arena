@@ -96,6 +96,29 @@ export class SaveSystem {
     });
   }
 
+  /**
+   * 戰績欄位正規化：舊存檔只有 total/wins/losses/aiBeaten，
+   * 補上 draws（平手）、currentStreak（目前連勝）、bestStreak（最高連勝）。
+   * 注意：防竄改簽名只算 uid、能量幣、外觀和 wins，補欄位不會觸發誤判。
+   */
+  _normalizeStats(stats) {
+    const s = stats || {};
+    return {
+      total: Number(s.total) || 0,
+      wins: Number(s.wins) || 0,
+      losses: Number(s.losses) || 0,
+      draws: Number(s.draws) || 0,
+      currentStreak: Number(s.currentStreak) || 0,
+      bestStreak: Number(s.bestStreak) || 0,
+      aiBeaten: {
+        easy: !!(s.aiBeaten?.easy),
+        normal: !!(s.aiBeaten?.normal),
+        hard: !!(s.aiBeaten?.hard),
+        nightmare: !!(s.aiBeaten?.nightmare)
+      }
+    };
+  }
+
   _loadAccountsFromStorage() {
     try {
       const raw = safeGetItem(STORAGE_KEY_ACCOUNTS);
@@ -105,6 +128,7 @@ export class SaveSystem {
 
         for (const email in parsed) {
           if (parsed[email]) {
+            parsed[email].stats = this._normalizeStats(parsed[email].stats);
             if (!Array.isArray(parsed[email].purchasedSkins)) {
               parsed[email].purchasedSkins = [];
             }
@@ -249,6 +273,9 @@ export class SaveSystem {
       total: Math.max(cloud.stats?.total || 0, local.stats?.total || 0),
       wins: Math.max(cloud.stats?.wins || 0, local.stats?.wins || 0),
       losses: Math.max(cloud.stats?.losses || 0, local.stats?.losses || 0),
+      draws: Math.max(cloud.stats?.draws || 0, local.stats?.draws || 0),
+      currentStreak: Number(newerAcc.stats?.currentStreak) || 0,
+      bestStreak: Math.max(cloud.stats?.bestStreak || 0, local.stats?.bestStreak || 0),
       aiBeaten: {
         easy: !!(cloud.stats?.aiBeaten?.easy || local.stats?.aiBeaten?.easy),
         normal: !!(cloud.stats?.aiBeaten?.normal || local.stats?.aiBeaten?.normal),
@@ -329,7 +356,7 @@ export class SaveSystem {
         purchasedSkins: [],
         equippedSkin: "skin_cyber_warrior",
         loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
-        stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
+        stats: { total: 0, wins: 0, losses: 0, draws: 0, currentStreak: 0, bestStreak: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
         preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
         lastLogin: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -381,7 +408,7 @@ export class SaveSystem {
       purchasedSkins: [],
       equippedSkin: "skin_cyber_warrior",
       loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
-      stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
+      stats: { total: 0, wins: 0, losses: 0, draws: 0, currentStreak: 0, bestStreak: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
       preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
       lastLogin: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -405,9 +432,14 @@ export class SaveSystem {
     } else {
       const existing = this.accounts[email];
       existing.credits += this.currentUser.credits;
-      existing.stats.total += this.currentUser.stats.total;
-      existing.stats.wins += this.currentUser.stats.wins;
-      existing.stats.losses += this.currentUser.stats.losses;
+      existing.stats = this._normalizeStats(existing.stats);
+      const g = this._normalizeStats(this.currentUser.stats);
+      existing.stats.total += g.total;
+      existing.stats.wins += g.wins;
+      existing.stats.losses += g.losses;
+      existing.stats.draws += g.draws;
+      existing.stats.bestStreak = Math.max(existing.stats.bestStreak, g.bestStreak);
+      existing.stats.currentStreak = Math.max(existing.stats.currentStreak, g.currentStreak);
       this.currentUser = existing;
     }
     this.isGuest = false;
@@ -434,28 +466,73 @@ export class SaveSystem {
   /**
    * 戰鬥獲勝/落敗經濟收益結算
    */
-  recordBattleResult(won, difficulty = "normal", isAi = true) {
+  recordBattleResult(won, difficulty = "normal", isAi = true, isDraw = false) {
     if (!this.currentUser) return { gained: 0, total: 0 };
 
-    let gained = won ? 350 : 120;
+    // 平手：+50 幣，記一場平手，連勝不中斷也不延長
+    let gained = isDraw ? 50 : (won ? 350 : 120);
     if (won && (difficulty === "hard" || difficulty === "nightmare")) {
       gained += 200;
     }
 
     this.currentUser.credits += gained;
+    this.currentUser.stats = this._normalizeStats(this.currentUser.stats);
     this.currentUser.stats.total++;
-    if (won) {
+    if (isDraw) {
+      this.currentUser.stats.draws++;
+    } else if (won) {
       this.currentUser.stats.wins++;
+      this.currentUser.stats.currentStreak++;
+      this.currentUser.stats.bestStreak = Math.max(this.currentUser.stats.bestStreak, this.currentUser.stats.currentStreak);
       if (isAi && this.currentUser.stats.aiBeaten) {
         this.currentUser.stats.aiBeaten[difficulty] = true;
       }
     } else {
       this.currentUser.stats.losses++;
+      this.currentUser.stats.currentStreak = 0;
     }
 
     this.currentUser.updatedAt = new Date().toISOString();
     this._saveCurrent();
     return { gained, total: this.currentUser.credits };
+  }
+
+  /**
+   * 我的戰績：場次、勝敗平手、勝率、目前連勝、最高連勝
+   */
+  getMyStats() {
+    const s = this._normalizeStats(this.currentUser?.stats);
+    const winRate = s.total > 0 ? (s.wins / s.total) * 100 : 0;
+    return { ...s, winRate };
+  }
+
+  /**
+   * 本機排行榜：這台瀏覽器上登入過的帳號，依勝場排，勝場相同比勝率。
+   * 雲端同步已停用，所以沒有全服排行——只有這台電腦的榜。
+   * 訪客帳號不進榜（只存在工作階段裡）。
+   */
+  getLocalLeaderboard(limit = 10) {
+    const rows = Object.values(this.accounts)
+      .filter(acc => acc && acc.email && !String(acc.email).includes("offline.local"))
+      .map(acc => {
+        const s = this._normalizeStats(acc.stats);
+        return {
+          nickname: acc.nickname || "量子戰士",
+          email: acc.email,
+          avatar: acc.avatar || "",
+          total: s.total,
+          wins: s.wins,
+          losses: s.losses,
+          draws: s.draws,
+          winRate: s.total > 0 ? (s.wins / s.total) * 100 : 0,
+          currentStreak: s.currentStreak,
+          bestStreak: s.bestStreak,
+          isCurrent: !this.isGuest && this.currentUser && this.currentUser.email === acc.email
+        };
+      })
+      .filter(r => r.total > 0)
+      .sort((a, b) => (b.wins - a.wins) || (b.winRate - a.winRate) || (b.total - a.total) || (a.nickname.localeCompare(b.nickname, "zh-Hant")));
+    return rows.slice(0, limit).map((r, i) => ({ rank: i + 1, ...r }));
   }
 
   equipSkin(skinId) {

@@ -376,9 +376,55 @@ class CyberStrikerApp {
       this._startPedestalLoop();
     } else if (tabId === 'shop') {
       this._startShopPreviewLoop();
+    } else if (tabId === 'rank') {
+      this._renderRankTab();
+      this._stopShopPreviewLoop();
     } else {
       this._stopShopPreviewLoop();
     }
+  }
+
+  // ─── 排行榜分頁：我的戰績 + 本機排行榜 ───
+  _renderRankTab() {
+    const stats = saveSystem.getMyStats();
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setText('rankMyTotal', stats.total);
+    setText('rankMyWins', stats.wins);
+    setText('rankMyLosses', stats.losses);
+    setText('rankMyDraws', stats.draws);
+    setText('rankMyWinRate', stats.total > 0 ? `${stats.winRate.toFixed(1)}%` : '—');
+    setText('rankMyStreak', stats.currentStreak > 0 ? `${stats.currentStreak} 連勝` : '—');
+    setText('rankMyBestStreak', stats.bestStreak > 0 ? `${stats.bestStreak} 連勝` : '—');
+
+    const list = document.getElementById('leaderboardList');
+    if (!list) return;
+    const rows = saveSystem.getLocalLeaderboard(10);
+    if (rows.length === 0) {
+      list.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 24px; font-size: 14px;">還沒有人打過對戰，打一場就會上榜！</div>';
+      return;
+    }
+    const medal = ['🥇', '🥈', '🥉'];
+    list.innerHTML = rows.map(r => {
+      const mark = r.isCurrent ? '<span style="font-size: 11px; color: #00f3ff; border: 1px solid #00f3ff; border-radius: 4px; padding: 1px 6px; margin-left: 6px;">你</span>' : '';
+      return `<div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); ${r.isCurrent ? 'background: rgba(0,243,255,0.07);' : ''}">
+        <span style="width: 32px; text-align: center; font-size: 16px; font-weight: 900;">${medal[r.rank - 1] || r.rank}</span>
+        <img src="${escapeHtml(r.avatar)}" alt="" style="width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(0,243,255,0.4);">
+        <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800;">${escapeHtml(r.nickname)}${mark}</span>
+        <span style="font-size: 13px; color: #cbd5e1; white-space: nowrap;">${r.wins} 勝 ${r.losses} 敗 ${r.draws} 平</span>
+        <span style="font-size: 13px; color: #ffd700; font-weight: 900; white-space: nowrap;">勝率 ${r.winRate.toFixed(1)}%</span>
+        <span style="font-size: 12px; color: #94a3b8; white-space: nowrap;">最高 ${r.bestStreak} 連勝</span>
+      </div>`;
+    }).join('');
+  }
+
+  // 結算畫面底下顯示目前戰績（打完馬上看得到勝率和連勝變了）
+  _updateMatchStatsLine() {
+    const el = document.getElementById('matchStatsLine');
+    if (!el) return;
+    const s = saveSystem.getMyStats();
+    el.textContent = s.total > 0
+      ? `目前戰績：${s.total} 場 ${s.wins} 勝 ${s.losses} 敗 ${s.draws} 平・勝率 ${s.winRate.toFixed(1)}%・${s.currentStreak > 0 ? `目前 ${s.currentStreak} 連勝` : '目前無連勝'}・最高 ${s.bestStreak} 連勝`
+      : '';
   }
 
   updateUserHUD() {
@@ -4001,15 +4047,9 @@ class CyberStrikerApp {
     const reward = this._isReplayPlayback
       ? { gained: 0, newBalance: (saveSystem.currentUser?.credits || 0) }
       : isDraw
-      ? { gained: 50, newBalance: (saveSystem.currentUser?.credits || 0) + 50 }
+      ? saveSystem.recordBattleResult(false, this.aiDifficulty, isAi, true)
       : saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
-    if (isDraw && !this._isReplayPlayback && saveSystem && typeof saveSystem.addCredits === 'function') {
-      try {
-        saveSystem.addCredits(50);
-      } catch (e) {
-        console.warn('Failed to add draw credits:', e);
-      }
-    }
+    // 平手 +50 幣已經在 recordBattleResult 裡發了，這裡不再另外加（以前是分開加，改完要小心不要發兩次）
 
     const endModal = document.getElementById('matchEndModal');
     const resultTitle = document.getElementById('matchResultTitle');
@@ -4108,6 +4148,9 @@ class CyberStrikerApp {
 
     // 結算畫面顯示本場重播碼（播重播時不換碼，留著上一場的）
     this._updateMatchReplayBox();
+
+    // 結算畫面顯示目前戰績
+    this._updateMatchStatsLine();
 
     if (endModal) endModal.classList.add('active');
     this.updateUserHUD();

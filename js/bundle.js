@@ -2602,6 +2602,28 @@
         }
       });
     }
+    /**
+     * 戰績欄位正規化：舊存檔只有 total/wins/losses/aiBeaten，
+     * 補上 draws（平手）、currentStreak（目前連勝）、bestStreak（最高連勝）。
+     * 注意：防竄改簽名只算 uid、能量幣、外觀和 wins，補欄位不會觸發誤判。
+     */
+    _normalizeStats(stats) {
+      const s = stats || {};
+      return {
+        total: Number(s.total) || 0,
+        wins: Number(s.wins) || 0,
+        losses: Number(s.losses) || 0,
+        draws: Number(s.draws) || 0,
+        currentStreak: Number(s.currentStreak) || 0,
+        bestStreak: Number(s.bestStreak) || 0,
+        aiBeaten: {
+          easy: !!s.aiBeaten?.easy,
+          normal: !!s.aiBeaten?.normal,
+          hard: !!s.aiBeaten?.hard,
+          nightmare: !!s.aiBeaten?.nightmare
+        }
+      };
+    }
     _loadAccountsFromStorage() {
       try {
         const raw = safeGetItem(STORAGE_KEY_ACCOUNTS);
@@ -2610,6 +2632,7 @@
           const defaultStarterSkins = ["skin_cyber_warrior", "skin_neon_shadow", "skin_pulse_enforcer"];
           for (const email in parsed) {
             if (parsed[email]) {
+              parsed[email].stats = this._normalizeStats(parsed[email].stats);
               if (!Array.isArray(parsed[email].purchasedSkins)) {
                 parsed[email].purchasedSkins = [];
               }
@@ -2728,6 +2751,9 @@
         total: Math.max(cloud.stats?.total || 0, local.stats?.total || 0),
         wins: Math.max(cloud.stats?.wins || 0, local.stats?.wins || 0),
         losses: Math.max(cloud.stats?.losses || 0, local.stats?.losses || 0),
+        draws: Math.max(cloud.stats?.draws || 0, local.stats?.draws || 0),
+        currentStreak: Number(newerAcc.stats?.currentStreak) || 0,
+        bestStreak: Math.max(cloud.stats?.bestStreak || 0, local.stats?.bestStreak || 0),
         aiBeaten: {
           easy: !!(cloud.stats?.aiBeaten?.easy || local.stats?.aiBeaten?.easy),
           normal: !!(cloud.stats?.aiBeaten?.normal || local.stats?.aiBeaten?.normal),
@@ -2802,7 +2828,7 @@
           purchasedSkins: [],
           equippedSkin: "skin_cyber_warrior",
           loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
-          stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
+          stats: { total: 0, wins: 0, losses: 0, draws: 0, currentStreak: 0, bestStreak: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
           preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
           lastLogin: (/* @__PURE__ */ new Date()).toISOString(),
           updatedAt: (/* @__PURE__ */ new Date()).toISOString()
@@ -2850,7 +2876,7 @@
         purchasedSkins: [],
         equippedSkin: "skin_cyber_warrior",
         loadout: ["SK-01", "SK-02", "SK-03", "SK-10", "SK-11"],
-        stats: { total: 0, wins: 0, losses: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
+        stats: { total: 0, wins: 0, losses: 0, draws: 0, currentStreak: 0, bestStreak: 0, aiBeaten: { easy: false, normal: false, hard: false, nightmare: false } },
         preferences: { bgmVol: 0.4, sfxVol: 0.8, haptics: true },
         lastLogin: (/* @__PURE__ */ new Date()).toISOString(),
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
@@ -2873,9 +2899,14 @@
       } else {
         const existing = this.accounts[email];
         existing.credits += this.currentUser.credits;
-        existing.stats.total += this.currentUser.stats.total;
-        existing.stats.wins += this.currentUser.stats.wins;
-        existing.stats.losses += this.currentUser.stats.losses;
+        existing.stats = this._normalizeStats(existing.stats);
+        const g = this._normalizeStats(this.currentUser.stats);
+        existing.stats.total += g.total;
+        existing.stats.wins += g.wins;
+        existing.stats.losses += g.losses;
+        existing.stats.draws += g.draws;
+        existing.stats.bestStreak = Math.max(existing.stats.bestStreak, g.bestStreak);
+        existing.stats.currentStreak = Math.max(existing.stats.currentStreak, g.currentStreak);
         this.currentUser = existing;
       }
       this.isGuest = false;
@@ -2900,25 +2931,63 @@
     /**
      * 戰鬥獲勝/落敗經濟收益結算
      */
-    recordBattleResult(won, difficulty = "normal", isAi = true) {
+    recordBattleResult(won, difficulty = "normal", isAi = true, isDraw = false) {
       if (!this.currentUser) return { gained: 0, total: 0 };
-      let gained = won ? 350 : 120;
+      let gained = isDraw ? 50 : won ? 350 : 120;
       if (won && (difficulty === "hard" || difficulty === "nightmare")) {
         gained += 200;
       }
       this.currentUser.credits += gained;
+      this.currentUser.stats = this._normalizeStats(this.currentUser.stats);
       this.currentUser.stats.total++;
-      if (won) {
+      if (isDraw) {
+        this.currentUser.stats.draws++;
+      } else if (won) {
         this.currentUser.stats.wins++;
+        this.currentUser.stats.currentStreak++;
+        this.currentUser.stats.bestStreak = Math.max(this.currentUser.stats.bestStreak, this.currentUser.stats.currentStreak);
         if (isAi && this.currentUser.stats.aiBeaten) {
           this.currentUser.stats.aiBeaten[difficulty] = true;
         }
       } else {
         this.currentUser.stats.losses++;
+        this.currentUser.stats.currentStreak = 0;
       }
       this.currentUser.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
       this._saveCurrent();
       return { gained, total: this.currentUser.credits };
+    }
+    /**
+     * 我的戰績：場次、勝敗平手、勝率、目前連勝、最高連勝
+     */
+    getMyStats() {
+      const s = this._normalizeStats(this.currentUser?.stats);
+      const winRate = s.total > 0 ? s.wins / s.total * 100 : 0;
+      return { ...s, winRate };
+    }
+    /**
+     * 本機排行榜：這台瀏覽器上登入過的帳號，依勝場排，勝場相同比勝率。
+     * 雲端同步已停用，所以沒有全服排行——只有這台電腦的榜。
+     * 訪客帳號不進榜（只存在工作階段裡）。
+     */
+    getLocalLeaderboard(limit = 10) {
+      const rows = Object.values(this.accounts).filter((acc) => acc && acc.email && !String(acc.email).includes("offline.local")).map((acc) => {
+        const s = this._normalizeStats(acc.stats);
+        return {
+          nickname: acc.nickname || "\u91CF\u5B50\u6230\u58EB",
+          email: acc.email,
+          avatar: acc.avatar || "",
+          total: s.total,
+          wins: s.wins,
+          losses: s.losses,
+          draws: s.draws,
+          winRate: s.total > 0 ? s.wins / s.total * 100 : 0,
+          currentStreak: s.currentStreak,
+          bestStreak: s.bestStreak,
+          isCurrent: !this.isGuest && this.currentUser && this.currentUser.email === acc.email
+        };
+      }).filter((r) => r.total > 0).sort((a, b) => b.wins - a.wins || b.winRate - a.winRate || b.total - a.total || a.nickname.localeCompare(b.nickname, "zh-Hant"));
+      return rows.slice(0, limit).map((r, i) => ({ rank: i + 1, ...r }));
     }
     equipSkin(skinId) {
       if (!this.currentUser) return false;
@@ -15889,9 +15958,53 @@
         this._startPedestalLoop();
       } else if (tabId === "shop") {
         this._startShopPreviewLoop();
+      } else if (tabId === "rank") {
+        this._renderRankTab();
+        this._stopShopPreviewLoop();
       } else {
         this._stopShopPreviewLoop();
       }
+    }
+    // ─── 排行榜分頁：我的戰績 + 本機排行榜 ───
+    _renderRankTab() {
+      const stats = saveSystem.getMyStats();
+      const setText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+      setText("rankMyTotal", stats.total);
+      setText("rankMyWins", stats.wins);
+      setText("rankMyLosses", stats.losses);
+      setText("rankMyDraws", stats.draws);
+      setText("rankMyWinRate", stats.total > 0 ? `${stats.winRate.toFixed(1)}%` : "\u2014");
+      setText("rankMyStreak", stats.currentStreak > 0 ? `${stats.currentStreak} \u9023\u52DD` : "\u2014");
+      setText("rankMyBestStreak", stats.bestStreak > 0 ? `${stats.bestStreak} \u9023\u52DD` : "\u2014");
+      const list = document.getElementById("leaderboardList");
+      if (!list) return;
+      const rows = saveSystem.getLocalLeaderboard(10);
+      if (rows.length === 0) {
+        list.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 24px; font-size: 14px;">\u9084\u6C92\u6709\u4EBA\u6253\u904E\u5C0D\u6230\uFF0C\u6253\u4E00\u5834\u5C31\u6703\u4E0A\u699C\uFF01</div>';
+        return;
+      }
+      const medal = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+      list.innerHTML = rows.map((r) => {
+        const mark = r.isCurrent ? '<span style="font-size: 11px; color: #00f3ff; border: 1px solid #00f3ff; border-radius: 4px; padding: 1px 6px; margin-left: 6px;">\u4F60</span>' : "";
+        return `<div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); ${r.isCurrent ? "background: rgba(0,243,255,0.07);" : ""}">
+        <span style="width: 32px; text-align: center; font-size: 16px; font-weight: 900;">${medal[r.rank - 1] || r.rank}</span>
+        <img src="${escapeHtml(r.avatar)}" alt="" style="width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(0,243,255,0.4);">
+        <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800;">${escapeHtml(r.nickname)}${mark}</span>
+        <span style="font-size: 13px; color: #cbd5e1; white-space: nowrap;">${r.wins} \u52DD ${r.losses} \u6557 ${r.draws} \u5E73</span>
+        <span style="font-size: 13px; color: #ffd700; font-weight: 900; white-space: nowrap;">\u52DD\u7387 ${r.winRate.toFixed(1)}%</span>
+        <span style="font-size: 12px; color: #94a3b8; white-space: nowrap;">\u6700\u9AD8 ${r.bestStreak} \u9023\u52DD</span>
+      </div>`;
+      }).join("");
+    }
+    // 結算畫面底下顯示目前戰績（打完馬上看得到勝率和連勝變了）
+    _updateMatchStatsLine() {
+      const el = document.getElementById("matchStatsLine");
+      if (!el) return;
+      const s = saveSystem.getMyStats();
+      el.textContent = s.total > 0 ? `\u76EE\u524D\u6230\u7E3E\uFF1A${s.total} \u5834 ${s.wins} \u52DD ${s.losses} \u6557 ${s.draws} \u5E73\u30FB\u52DD\u7387 ${s.winRate.toFixed(1)}%\u30FB${s.currentStreak > 0 ? `\u76EE\u524D ${s.currentStreak} \u9023\u52DD` : "\u76EE\u524D\u7121\u9023\u52DD"}\u30FB\u6700\u9AD8 ${s.bestStreak} \u9023\u52DD` : "";
     }
     updateUserHUD() {
       const u = saveSystem.currentUser;
@@ -18882,14 +18995,7 @@ ${skinNames}`);
       const isDraw = combatEngine.winner === 0;
       const won = !isDraw && (this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? combatEngine.winner === 2 : combatEngine.winner === 1 : combatEngine.winner === 1);
       const isAi = this.matchMode === "ai" || this.matchMode === "arcade";
-      const reward = this._isReplayPlayback ? { gained: 0, newBalance: saveSystem.currentUser?.credits || 0 } : isDraw ? { gained: 50, newBalance: (saveSystem.currentUser?.credits || 0) + 50 } : saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
-      if (isDraw && !this._isReplayPlayback && saveSystem && typeof saveSystem.addCredits === "function") {
-        try {
-          saveSystem.addCredits(50);
-        } catch (e) {
-          console.warn("Failed to add draw credits:", e);
-        }
-      }
+      const reward = this._isReplayPlayback ? { gained: 0, newBalance: saveSystem.currentUser?.credits || 0 } : isDraw ? saveSystem.recordBattleResult(false, this.aiDifficulty, isAi, true) : saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
       const endModal = document.getElementById("matchEndModal");
       const resultTitle = document.getElementById("matchResultTitle");
       const creditsReward = document.getElementById("matchRewardAmount");
@@ -18978,6 +19084,7 @@ ${skinNames}`);
         if (creditsReward) creditsReward.textContent = `+${reward.gained} \u80FD\u91CF\u5E63`;
       }
       this._updateMatchReplayBox();
+      this._updateMatchStatsLine();
       if (endModal) endModal.classList.add("active");
       this.updateUserHUD();
     }
