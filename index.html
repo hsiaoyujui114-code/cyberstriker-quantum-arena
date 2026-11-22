@@ -117,8 +117,8 @@
           <span class="user-name" id="userNickDisplay">量子先鋒</span>
           <div style="display: flex; align-items: center; gap: 4px;">
             <span id="guestStatusBadge" style="font-size: 9px; color: #ffd700; display: none;">訪客離線</span>
-            <span id="cloudSyncHeaderBadge" style="font-size: 9px; color: #00f3ff; display: inline-flex; align-items: center; gap: 3px;" title="全球雲端存檔服務">
-              <i class="fa-solid fa-cloud"></i> <span>雲端同步</span>
+            <span id="cloudSyncHeaderBadge" style="font-size: 9px; color: #00f3ff; display: inline-flex; align-items: center; gap: 3px;" title="本機存檔服務">
+              <i class="fa-solid fa-cloud"></i> <span>本機存檔</span>
             </span>
           </div>
         </div>
@@ -858,6 +858,21 @@
       <div class="stat-capsule" id="matchRewardAmount" style="font-size: 18px; margin-bottom: 14px;">+350 能量幣</div>
       <div id="matchRematchStatus" style="font-size: 13px; color: #cbd5e1; margin-bottom: 18px; min-height: 20px; transition: all 0.3s ease;"></div>
 
+      <!-- 戰鬥重播：本場重播碼 + 重播本場 + 輸入代碼載入 -->
+      <div id="matchReplayBox" style="display: none; width: 100%; background: rgba(0,243,255,0.06); border: 1px solid rgba(0,243,255,0.35); border-radius: 8px; padding: 10px; margin-bottom: 14px; text-align: left;">
+        <div style="font-size: 12px; color: #67e8f9; font-weight: 800;">🎬 本場重播碼</div>
+        <div id="matchReplayCode" style="font-family: 'Orbitron', monospace; font-size: 16px; color: #fff; letter-spacing: 1px; margin: 4px 0 8px;">—</div>
+        <div style="display: flex; gap: 8px;">
+          <button class="nav-tab-btn" id="matchReplayBtn" style="flex: 1; background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; justify-content: center; padding: 10px; font-size: 14px; font-weight: 900; border: none; cursor: pointer;"><i class="fa-solid fa-play"></i> 重播本場</button>
+          <button class="nav-tab-btn" id="matchCopyReplayBtn" style="flex: 1; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); color: #fff; justify-content: center; padding: 10px; font-size: 14px; font-weight: 700; cursor: pointer;"><i class="fa-solid fa-copy"></i> 複製代碼</button>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <input id="matchReplayCodeInput" placeholder="輸入 CY-REP-XXXXXX" style="flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; color: #fff; padding: 10px; font-size: 13px; min-width: 0;">
+          <button class="nav-tab-btn" id="matchLoadReplayBtn" style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); color: #fff; justify-content: center; padding: 10px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;">載入重播</button>
+        </div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 6px;">重播碼只存在錄下它的那台電腦、那個瀏覽器；播重播不重發能量幣。</div>
+      </div>
+
       <div style="display: flex; gap: 14px; width: 100%;">
         <button class="nav-tab-btn" id="matchNextStageBtn" style="display: none; flex: 1; background: linear-gradient(135deg, #ffd700, #f59e0b); color: #000; justify-content: center; padding: 12px; font-size: 15px; font-weight: 900; border: none; box-shadow: 0 0 16px rgba(255, 215, 0, 0.5); cursor: pointer;">
           <i class="fa-solid fa-forward-step"></i> 進入下一關
@@ -919,16 +934,16 @@
         <i class="fa-brands fa-google" style="color: #00f3ff; font-size: 26px;"></i>
         <div>
           <h2 style="font-size: 18px; color: var(--primary-cyan);">Google 帳號登入 (量子身分授權儀)</h2>
-          <p style="font-size: 12px; color: var(--text-muted);">請選擇或輸入您的 Google 帳號，進度跨電腦即時永久雲端漫遊</p>
+          <p style="font-size: 12px; color: var(--text-muted);">請選擇或輸入您的 Google 帳號，進度存在這台瀏覽器</p>
         </div>
       </div>
 
-      <!-- 全球雲端同步狀態面板 -->
+      <!-- 本機存檔狀態面板 -->
       <div style="background: rgba(0,243,255,0.06); border: 1px solid rgba(0,243,255,0.25); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span id="cloudSyncModalIcon" style="font-size: 18px; color: #00f3ff;"><i class="fa-solid fa-cloud-arrow-up"></i></span>
           <div>
-            <div id="cloudSyncModalTitle" style="font-size: 13px; font-weight: 800; color: #00f3ff;">全球雲端存檔服務：已就緒</div>
+            <div id="cloudSyncModalTitle" style="font-size: 13px; font-weight: 800; color: #00f3ff;">本機存檔服務：已就緒</div>
             <div id="cloudSyncModalDesc" style="font-size: 11px; color: #94a3b8;">登入同一個 Email 即可在任何電腦自動同步金幣、造型與戰績</div>
           </div>
         </div>
@@ -959,7 +974,7 @@
           <input type="text" class="form-input" id="authNicknameInput" placeholder="預設採用信箱前綴">
         </div>
         <button type="submit" class="nav-tab-btn" id="authSubmitBtn" style="background: linear-gradient(135deg, #00f3ff, #ff007f); color: #fff; justify-content: center; padding: 10px; font-weight: 800;">
-          <i class="fa-solid fa-cloud-arrow-down"></i> 確認登入並自雲端還原進度
+          <i class="fa-solid fa-cloud-arrow-down"></i> 確認登入並還原本機進度
         </button>
       </form>
 

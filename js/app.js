@@ -15,6 +15,7 @@ import { stageRenderer } from './engine/stage_renderer.js';
 import { announcerEngine } from './engine/announcer.js';
 import { aiController } from './engine/ai.js';
 import { antiCheat } from './engine/anti_cheat.js';
+import { replaySystem } from './engine/replay.js';
 import { p2pNetwork } from './network/p2p.js';
 
 // Google 登入 OAuth 用戶端 ID：於 Google Cloud Console 建立「網頁應用程式」類型憑證，
@@ -200,7 +201,7 @@ class CyberStrikerApp {
     const stages = [
       { p: 35, text: '正在初始化量子戰鬥引擎 (60 FPS Physical Engine)...' },
       { p: 75, text: '正在編譯 10 大核心技能矩陣數據庫...' },
-      { p: 100, text: '正在連接全息裝備網絡與雲端資料庫...' }
+      { p: 100, text: '正在讀取本機存檔...' }
     ];
 
     const interval = setInterval(() => {
@@ -405,7 +406,7 @@ class CyberStrikerApp {
         headerLoginBtn.style.background = 'rgba(0, 243, 255, 0.12)';
         headerLoginBtn.title = '點擊進行 Google 帳號登入 (量子身分授權儀)，同步所有外觀與進度';
       } else {
-        headerLoginBtn.innerHTML = `<i class="fa-solid fa-cloud-check" style="color: #10b981;"></i> 雲端存檔: ${escapeHtml(u.nickname || '已登入')}`;
+        headerLoginBtn.innerHTML = `<i class="fa-solid fa-cloud-check" style="color: #10b981;"></i> 本機存檔: ${escapeHtml(u.nickname || '已登入')}`;
         headerLoginBtn.style.borderColor = '#10b981';
         headerLoginBtn.style.color = '#10b981';
         headerLoginBtn.style.background = 'rgba(16, 185, 129, 0.12)';
@@ -459,15 +460,15 @@ class CyberStrikerApp {
         headerBadge.style.display = 'inline-flex';
         if (state === 'syncing') {
           headerBadge.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color: #ffd700;"></i> <span style="color: #ffd700;">同步中...</span>';
-          headerBadge.title = message || '正在與全球雲端同步存檔';
+          headerBadge.title = message || '正在讀取本機存檔';
         } else if (state === 'synced') {
           headerBadge.innerHTML = '<i class="fa-solid fa-cloud" style="color: #00f3ff;"></i> <span style="color: #00f3ff;">雲端同步</span>';
-          headerBadge.title = message || '已連線至全球雲端伺服器 (進度跨電腦同步中)';
+          headerBadge.title = message || '進度只存在這台瀏覽器';
         } else if (state === 'error') {
           headerBadge.innerHTML = '<i class="fa-solid fa-cloud-slash" style="color: #ff007f;"></i> <span style="color: #ff007f;">本機快取</span>';
           headerBadge.title = message || '雲端連線受限，進度暫存於本機';
         } else {
-          headerBadge.innerHTML = '<i class="fa-solid fa-cloud" style="color: #94a3b8;"></i> <span>雲端存檔</span>';
+          headerBadge.innerHTML = '<i class="fa-solid fa-cloud" style="color: #94a3b8;"></i> <span>本機存檔</span>';
         }
       }
     }
@@ -481,27 +482,27 @@ class CyberStrikerApp {
         if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-user-ninja" style="color: #ffd700;"></i>';
         modalTitle.textContent = '訪客模式：進度僅儲存於本機';
         modalTitle.style.color = '#ffd700';
-        if (modalDesc) modalDesc.textContent = '輸入下方 Gmail 信箱即可升級為全球雲端帳號，跨電腦永不丟失！';
+        if (modalDesc) modalDesc.textContent = '登入後進度存在這台瀏覽器，換電腦請用存檔代碼搬移。';
       } else if (state === 'syncing') {
         if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color: #ffd700;"></i>';
-        modalTitle.textContent = '全球雲端存檔：正在雙向同步資料...';
+        modalTitle.textContent = '本機存檔：正在讀取資料...';
         modalTitle.style.color = '#ffd700';
-        if (modalDesc) modalDesc.textContent = message || '正在驗證跨電腦進度並合併最新外觀與金幣';
+        if (modalDesc) modalDesc.textContent = message || '正在讀取本機進度';
       } else if (state === 'synced') {
         if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud-check" style="color: #00f3ff;"></i>';
-        modalTitle.textContent = '全球雲端存檔服務：已同步最新紀錄 🟢';
+        modalTitle.textContent = '本機存檔：已儲存最新紀錄 🟢';
         modalTitle.style.color = '#00f3ff';
-        if (modalDesc) modalDesc.textContent = message || '在任何電腦登入此帳號，皆能自動接續遊玩！';
+        if (modalDesc) modalDesc.textContent = message || '進度已存在這台瀏覽器。';
       } else if (state === 'error') {
         if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud-slash" style="color: #ff007f;"></i>';
-        modalTitle.textContent = '全球雲端存檔服務：連線暫時受限 🟡';
+        modalTitle.textContent = '本機存檔：連線暫時受限 🟡';
         modalTitle.style.color = '#ff007f';
-        if (modalDesc) modalDesc.textContent = message || '已先儲存至本機，網路恢復時將自動補推至雲端。';
+        if (modalDesc) modalDesc.textContent = message || '已先儲存至本機。';
       } else {
         if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud" style="color: #00f3ff;"></i>';
-        modalTitle.textContent = '全球雲端存檔服務：已就緒';
+        modalTitle.textContent = '本機存檔服務：已就緒';
         modalTitle.style.color = '#00f3ff';
-        if (modalDesc) modalDesc.textContent = '登入同一個 Email 即可在任何電腦自動同步金幣、造型與戰績';
+        if (modalDesc) modalDesc.textContent = '進度只存在這台瀏覽器，換電腦請用「量子存檔代碼」搬移';
       }
     }
   }
@@ -852,7 +853,7 @@ class CyberStrikerApp {
     await this._completeEmailLogin(payload.email, '');
   }
 
-  // Email 登入共用流程：自雲端還原進度、提示結果並刷新大廳
+  // Email 登入共用流程：讀取本機進度、提示結果並刷新大廳
   async _completeEmailLogin(email, nick) {
     try {
       const res = await saveSystem.loginWithEmail(email, nick);
@@ -864,11 +865,11 @@ class CyberStrikerApp {
       }).join('、');
 
       if (res.restoreSource === 'cloud') {
-        alert(`☁️ 跨電腦雲端存檔還原成功！\n歡迎回來，${res.user.nickname}！\n已成功自全球雲端同步：\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
+        alert(`☁️ 本機存檔還原成功！\n歡迎回來，${res.user.nickname}！\n已成功載入這台電腦的進度：\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
       } else if (res.isNewUser) {
-        alert(`🎉 歡迎新戰士！已發放 50,000 能量幣與初始造型，並建立全球雲端存檔。\n🥋 當前外觀：\n${skinNames}`);
+        alert(`🎉 歡迎新戰士！已發放 50,000 能量幣與初始造型，並建立本機存檔。\n🥋 當前外觀：\n${skinNames}`);
       } else {
-        alert(`✅ 歡迎回來！已載入進度並同步至全球雲端。\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
+        alert(`✅ 歡迎回來！已載入這台電腦的進度（本機存檔）。\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}`);
       }
 
       this.updateUserHUD();
@@ -986,7 +987,7 @@ class CyberStrikerApp {
       this.loadoutInterval = null;
     }
 
-    // 優先還原玩家上次選用的武裝配置 (LocalStorage 或 雲端存檔)
+    // 優先還原玩家上次選用的武裝配置 (本機 LocalStorage)
     let savedLoadout = null;
     try {
       const raw = localStorage.getItem('quantum_arena_last_loadout');
@@ -1384,17 +1385,30 @@ class CyberStrikerApp {
       else if (this.matchMode === 'local_2p') p2Name = 'Player 2';
     }
 
-    const isAiOpponent = this.matchMode === 'p2p'
+    const isAiOpponent = this._pendingReplayData
       ? false
-      : (this.matchMode === 'ai' || this.matchMode === 'arcade' || this.matchMode === 'training');
+      : (this.matchMode === 'p2p'
+      ? false
+      : (this.matchMode === 'ai' || this.matchMode === 'arcade' || this.matchMode === 'training'));
+
+    // 重播播放：用錄好的對戰資料（造型、武器、名字），不要隨機重抽
+    if (this._pendingReplayData) {
+      p2Name = this._pendingReplayData.p2.name;
+      p1Skin = this._pendingReplayData.p1.skin;
+      p2Skin = this._pendingReplayData.p2.skin;
+    }
 
     // AI 武器抽取機制：依據難度（簡單、普通、困難、噩夢），從對應強度的武器庫中隨機抽取 3 把神兵武器
     let p2Loadout = ['SK-01', 'SK-02', 'SK-06'];
-    if (isAiOpponent) {
+    if (this._pendingReplayData) {
+      p2Loadout = [...this._pendingReplayData.p2.loadout];
+    } else if (isAiOpponent) {
       p2Loadout = getRandomAiWeapons(p2Diff, 3);
     }
 
-    const p1Data = (this.matchMode === 'p2p' && this._p2pMatchData)
+    const p1Data = this._pendingReplayData
+      ? { ...this._pendingReplayData.p1, isAi: false }
+      : (this.matchMode === 'p2p' && this._p2pMatchData)
       ? { ...this._p2pMatchData.p1Data, isAi: false }
       : {
           name: saveSystem.currentUser ? saveSystem.currentUser.nickname : 'Player 1',
@@ -1404,7 +1418,9 @@ class CyberStrikerApp {
           maxHp: this.battleP1Hp || 1000
         };
 
-    const p2Data = (this.matchMode === 'p2p' && this._p2pMatchData)
+    const p2Data = this._pendingReplayData
+      ? { ...this._pendingReplayData.p2, isAi: false }
+      : (this.matchMode === 'p2p' && this._p2pMatchData)
       ? { ...this._p2pMatchData.p2Data, isAi: false }
       : {
           name: p2Name,
@@ -1421,6 +1437,29 @@ class CyberStrikerApp {
     this._timeAccumulator = 0;
 
     combatEngine.initMatch(p1Data, p2Data, this.matchMode === 'training');
+
+    // 重播錄製：錄下本場的逐幀輸入，打完產生 CY-REP 短碼（見 _showMatchEndModal）。
+    // 傷害是固定數值、亂數只用在粒子和震屏，所以用錄好的輸入重播能打出同一場。
+    // 重播播放時不重錄，改用上一場的重播包從頭播。
+    if (this._pendingReplayData) {
+      try {
+        replaySystem.startPlayback(this._pendingReplayData.pkg);
+        this._replayPlayback = true;
+      } catch (e) {
+        console.warn('Replay playback failed to start:', e);
+        this._replayPlayback = false;
+      }
+      this._pendingReplayData = null;
+    } else {
+      this.lastReplayCode = null;
+      this._isReplayPlayback = false;
+      this._replayPlayback = false;
+      try {
+        replaySystem.startRecording(Date.now() % 100000, p1Data, p2Data, this.matchMode);
+      } catch (e) {
+        console.warn('Replay recording failed to start:', e);
+      }
+    }
 
     // 開局提示 AI 本場隨機抽取的 3 把神兵武器 (僅單人對戰 AI / 街機模式觸發)
     if (isAiOpponent && combatEngine.p2 && Array.isArray(combatEngine.p2.skills)) {
@@ -1712,7 +1751,19 @@ class CyberStrikerApp {
       let inputP1 = null;
       let inputP2 = null;
 
-      if (combatEngine.isOver) {
+      // 重播播放中：直接餵錄好的逐幀輸入，不採集鍵盤、不用 AI。
+      // 錄好的幀播完就停在原地，等結算畫面（戰鬥那時已經打完了）。
+      if (this._replayPlayback) {
+        const frame = replaySystem.getNextFrameInputs();
+        if (frame) {
+          inputP1 = frame.p1;
+          inputP2 = frame.p2;
+        } else {
+          this._replayPlayback = false;
+          inputP1 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+          inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+        }
+      } else if (combatEngine.isOver) {
         inputP1 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
         inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
 
@@ -1809,6 +1860,10 @@ class CyberStrikerApp {
 
       // 3. 戰鬥物理精準推進 1 幀 (60 FPS 確定性週期，多人模式需待雙方就緒解鎖後同步開始)
       if (this.matchMode !== 'p2p' || this.isMultiplayerMatchUnlocked) {
+        // 錄下這一幀雙方實際打出的輸入（重播播放時不錄）
+        if (!this._replayPlayback && replaySystem.isRecording) {
+          try { replaySystem.recordFrame(inputP1, inputP2); } catch (e) { /* 錄影失敗不影響戰鬥 */ }
+        }
         combatEngine.update(inputP1, inputP2);
       }
 
@@ -3925,15 +3980,30 @@ class CyberStrikerApp {
   _showMatchEndModal() {
     soundEngine.stopBgm();
 
+    // 重播結算：把這場錄好的輸入存起來，產生 CY-REP 短碼。
+    // 播重播時不重錄、也不重發獎勵（獎勵上一場已經發過了）。
+    if (this._isReplayPlayback) {
+      // 播放重播：不錄、不發獎勵
+    } else if (replaySystem.isRecording) {
+      try {
+        this.lastReplayCode = replaySystem.stopRecording();
+      } catch (e) {
+        console.warn('Replay stop failed:', e);
+        this.lastReplayCode = null;
+      }
+    }
+
     const isDraw = combatEngine.winner === 0;
     const won = !isDraw && (this.matchMode === 'p2p'
       ? (this.multiplayerRole === 'guest' ? combatEngine.winner === 2 : combatEngine.winner === 1)
       : combatEngine.winner === 1);
     const isAi = this.matchMode === 'ai' || this.matchMode === 'arcade';
-    const reward = isDraw
+    const reward = this._isReplayPlayback
+      ? { gained: 0, newBalance: (saveSystem.currentUser?.credits || 0) }
+      : isDraw
       ? { gained: 50, newBalance: (saveSystem.currentUser?.credits || 0) + 50 }
       : saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
-    if (isDraw && saveSystem && typeof saveSystem.addCredits === 'function') {
+    if (isDraw && !this._isReplayPlayback && saveSystem && typeof saveSystem.addCredits === 'function') {
       try {
         saveSystem.addCredits(50);
       } catch (e) {
@@ -4036,11 +4106,88 @@ class CyberStrikerApp {
       if (creditsReward) creditsReward.textContent = `+${reward.gained} 能量幣`;
     }
 
+    // 結算畫面顯示本場重播碼（播重播時不換碼，留著上一場的）
+    this._updateMatchReplayBox();
+
     if (endModal) endModal.classList.add('active');
     this.updateUserHUD();
   }
 
+  // ─── 戰鬥重播：結算畫面的重播碼、重播本場、輸入代碼載入 ───
+  _updateMatchReplayBox() {
+    const box = document.getElementById('matchReplayBox');
+    if (!box) return;
+    const codeEl = document.getElementById('matchReplayCode');
+    if (this.lastReplayCode) {
+      box.style.display = 'block';
+      if (codeEl) codeEl.textContent = this.lastReplayCode;
+    } else {
+      box.style.display = 'none';
+      return;
+    }
+
+    const replayBtn = document.getElementById('matchReplayBtn');
+    if (replayBtn) {
+      replayBtn.onclick = () => {
+        const pkg = this.lastReplayCode ? replaySystem.getReplayPackage(this.lastReplayCode) : null;
+        if (pkg) this._startReplayPlayback(pkg);
+        else alert('找不到這場的重播，請重新打一場。');
+      };
+    }
+    const copyBtn = document.getElementById('matchCopyReplayBtn');
+    if (copyBtn) {
+      copyBtn.onclick = async () => {
+        if (!this.lastReplayCode) return;
+        try {
+          await navigator.clipboard.writeText(this.lastReplayCode);
+          copyBtn.textContent = '已複製 ✓';
+          setTimeout(() => { copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 複製代碼'; }, 1500);
+        } catch (e) {
+          prompt('請手動複製重播碼：', this.lastReplayCode);
+        }
+      };
+    }
+    const loadBtn = document.getElementById('matchLoadReplayBtn');
+    if (loadBtn) {
+      loadBtn.onclick = () => {
+        const input = document.getElementById('matchReplayCodeInput');
+        const code = (input ? input.value : '').trim().toUpperCase();
+        if (!code) { alert('請先輸入重播碼，例如 CY-REP-123456'); return; }
+        const pkg = replaySystem.getReplayPackage(code);
+        if (!pkg) { alert('找不到這個重播碼。重播碼只存在錄下它的那台電腦、那個瀏覽器。'); return; }
+        this._startReplayPlayback(pkg);
+      };
+    }
+  }
+
+  // 用錄好的重播包從頭打一次：雙方造型、武器都照錄好的來，輸入也照錄好的餵，
+  // 所以打出的結果跟原本同一場一樣（粒子、震屏是隨機特效，看起來會有一點不同）。
+  _startReplayPlayback(pkg) {
+    if (!pkg || !pkg.meta) return;
+    const findSkin = (id) => SKINS.find(s => s.id === id) || SKINS[0];
+    this._pendingReplayData = {
+      pkg,
+      p1: { name: pkg.meta.p1.name, skin: findSkin(pkg.meta.p1.skin), loadout: pkg.meta.p1.loadout, maxHp: 1000 },
+      p2: { name: pkg.meta.p2.name, skin: findSkin(pkg.meta.p2.skin), loadout: pkg.meta.p2.loadout, maxHp: 1000 }
+    };
+    this._isReplayPlayback = true;
+    this._p2pMatchData = null;
+    this.matchMode = 'ai';
+    this.aiDifficulty = 'normal';
+    this.battleP1Hp = 1000;
+    this.battleP2Hp = 1000;
+    const endModal = document.getElementById('matchEndModal');
+    if (endModal) endModal.classList.remove('active');
+    this._launchMatch();
+  }
+
   exitBattleToLobby() {
+    // 離開戰鬥時若還在錄重播，先結算短碼（訓練模式沒有結算畫面，走這裡）。
+    if (replaySystem.isRecording && !this._isReplayPlayback) {
+      try { this.lastReplayCode = replaySystem.stopRecording(); } catch (e) { /* 錄影失敗不影響離開 */ }
+    }
+    this._isReplayPlayback = false;
+    this._replayPlayback = false;
     this.isFighting = false;
     if (this._battleLoopId) {
       cancelAnimationFrame(this._battleLoopId);
@@ -4625,7 +4772,7 @@ class CyberStrikerApp {
 
         if (submitBtn) {
           submitBtn.disabled = true;
-          submitBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> 正在檢索雲端存檔...';
+          submitBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> 正在讀取本機存檔...';
         }
 
         try {
@@ -4715,7 +4862,7 @@ class CyberStrikerApp {
           this.renderShopCatalog();
           this.renderRegisteredAccounts();
           this.pedestalSkin = this.getEquippedSkin();
-          alert(`🎉 存檔代碼導入成功！\n帳號：${res.user.email}\n暱稱：${res.user.nickname}\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}\n已自動同步至全球雲端！`);
+          alert(`🎉 存檔代碼導入成功！\n帳號：${res.user.email}\n暱稱：${res.user.nickname}\n💰 能量幣：${res.user.credits.toLocaleString()}\n🥋 同步外觀 (${res.user.skins?.length || 0} 套)：\n${skinNames}\n已儲存於本機。`);
         } else {
           soundEngine.playHit('guard');
           alert(`❌ 存檔代碼導入失敗：${res.reason || '代碼無效'}`);

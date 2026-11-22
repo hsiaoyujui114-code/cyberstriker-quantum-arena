@@ -1,14 +1,16 @@
 /**
  * 《CyberStriker: Quantum Arena》
- * 跨裝置全球雲端存檔與雙軌驗證系統 (Save System & Cloud Sync)
- * 支援跨電腦 / 跨瀏覽器自動同步進度、雲端代碼備份與時間戳智能合併
+ * 本機存檔系統 (Save System)
+ * 進度只存在這台瀏覽器的 localStorage。2026-11-22 起停用雲端同步：
+ * 舊的雲端用 kvdb.io 公開 bucket、沒有密碼，知道網址的人就能讀寫
+ * 別人的存檔（Email、能量幣、造型全在裡面）。換電腦請用下方的
+ * CY-SAVE- 量子存檔代碼手動搬移，不要再把存檔推上公開雲端。
  */
 
 import { antiCheat } from './engine/anti_cheat.js';
 
 const STORAGE_KEY_CURRENT = "cyberstriker_current_session";
 const STORAGE_KEY_ACCOUNTS = "cyberstriker_cloud_accounts";
-const CLOUD_KV_ENDPOINT = "https://kvdb.io/LjcEsRKfWahraYeimuojjQ/";
 
 /**
  * 輔助：安全 UTF-8 Base64 編碼（支援中文字符）
@@ -36,18 +38,6 @@ function base64ToUtf8(b64) {
   } catch (e) {
     return atob(b64);
   }
-}
-
-/**
- * 將使用者 Email 轉換為雲端安全的 Key
- */
-function emailToCloudKey(email) {
-  const clean = email.trim().toLowerCase();
-  const safeB64 = utf8ToBase64(clean)
-    .replace(/=/g, "")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
-  return "cs_u_" + safeB64;
 }
 
 function safeGetItem(key) {
@@ -80,10 +70,9 @@ export class SaveSystem {
     this.currentUser = null;
     this.isGuest = false;
     this.accounts = this._loadAccountsFromStorage();
-    this.cloudEndpoint = CLOUD_KV_ENDPOINT;
     this.syncListeners = [];
     this.syncState = "idle"; // "idle" | "syncing" | "synced" | "error"
-    this.lastSyncMessage = "雲端就緒";
+    this.lastSyncMessage = "本機存檔";
   }
 
   /**
@@ -163,7 +152,7 @@ export class SaveSystem {
   }
 
   /**
-   * 初始化系統：自動嘗試恢復前次登入，並在背景向雲端驗證有無最新資料
+   * 初始化系統：自動嘗試恢復前次登入（只讀本機）
    */
   init() {
     try {
@@ -182,10 +171,7 @@ export class SaveSystem {
             this.currentUser.lastLogin = new Date().toISOString();
             this._saveAccountsToStorage();
 
-            // 背景靜默同步雲端資料（若玩家在別台電腦玩過，無縫拉回最新進度）
-            this.syncWithCloud(sessionData.email).catch(err => {
-              console.warn("Background sync on init:", err);
-            });
+            // 雲端同步已停用，這裡不再向外連線
             return;
           }
         }
@@ -199,78 +185,21 @@ export class SaveSystem {
   }
 
   /**
-   * 雲端存檔讀取 (GET from kvdb.io)
+   * 雲端存檔讀取：已停用（2026-11-22）。
+   * 舊的 kvdb.io bucket 沒有密碼、任何人都能讀寫，改回只讀本機。
+   * 保留這個函式是為了不改壞呼叫它的地方，一律回傳 null（= 本機沒有雲端紀錄）。
    */
   async fetchFromCloud(email) {
-    if (!email || email.includes("offline.local")) return null;
-    const key = emailToCloudKey(email);
-    const url = this.cloudEndpoint + key;
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
-
-    try {
-      const res = await fetch(url, {
-        method: "GET",
-        headers: { "Accept": "application/json" },
-        signal: controller.signal
-      });
-      clearTimeout(timer);
-
-      if (res.status === 200) {
-        const data = await res.json();
-        return data;
-      } else if (res.status === 404) {
-        return null;
-      } else {
-        console.warn("Cloud fetch returned status " + res.status);
-        return null;
-      }
-    } catch (e) {
-      clearTimeout(timer);
-      console.warn("Cloud fetch failed or timed out:", e.message);
-      return null;
-    }
+    return null;
   }
 
   /**
-   * 雲端存檔寫入 (POST to kvdb.io)
+   * 雲端存檔寫入：已停用（2026-11-22），見 fetchFromCloud 的說明。
+   * 存檔已經在 _saveCurrent() 寫進本機 localStorage，這裡只回報「已存本機」。
    */
   async saveToCloud(userData) {
-    if (!userData || !userData.email || userData.email.includes("offline.local")) {
-      return false;
-    }
-
-    this._setSyncState("syncing", "正在上傳存檔至全球雲端...");
-    const key = emailToCloudKey(userData.email);
-    const url = this.cloudEndpoint + key;
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
-
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-        signal: controller.signal
-      });
-      clearTimeout(timer);
-
-      if (res.ok) {
-        this._setSyncState("synced", "已於 " + new Date().toLocaleTimeString() + " 成功同步至雲端");
-        return true;
-      } else {
-        console.warn("Cloud save status " + res.status);
-        this._setSyncState("error", "雲端同步回應異常，已保存於本機");
-        return false;
-      }
-    } catch (e) {
-      clearTimeout(timer);
-      console.warn("Cloud save failed:", e.message);
-      this._setSyncState("error", "網路連線受限，存檔暫存於本機");
-      return false;
-    }
+    this._setSyncState("idle", "已儲存於本機");
+    return false;
   }
 
   /**
@@ -347,7 +276,8 @@ export class SaveSystem {
   }
 
   /**
-   * 手動或定時強制向雲端進行雙向同步
+   * 手動同步：已停用（2026-11-22），舊的公開雲端不安全，見 fetchFromCloud。
+   * 永遠回傳失敗 + 原因，讓按「立即同步」的人知道改用存檔代碼搬移。
    */
   async syncWithCloud(targetEmail = null) {
     const email = targetEmail || (this.currentUser ? this.currentUser.email : null);
@@ -355,72 +285,25 @@ export class SaveSystem {
       return { success: false, reason: "訪客帳號無法進行雲端同步" };
     }
 
-    this._setSyncState("syncing", "正在連接全球雲端資料庫...");
-    try {
-      const cloudData = await this.fetchFromCloud(email);
-      const localData = this.accounts[email] || this.currentUser;
-
-      let merged;
-      if (cloudData && localData) {
-        merged = this._mergeAccounts(cloudData, localData);
-      } else if (cloudData) {
-        merged = cloudData;
-      } else if (localData) {
-        merged = localData;
-      } else {
-        return { success: false, reason: "找不到帳號資料" };
-      }
-
-      merged.updatedAt = new Date().toISOString();
-      this.accounts[email] = merged;
-      if (this.currentUser && this.currentUser.email === email) {
-        this.currentUser = merged;
-      }
-
-      this._saveAccountsToStorage();
-      this._persistSession();
-
-      // 同步回推給雲端
-      await this.saveToCloud(merged);
-      this._setSyncState("synced", "已完成跨電腦雙向同步 (" + new Date().toLocaleTimeString() + ")");
-      return { success: true, user: merged };
-    } catch (e) {
-      console.error("syncWithCloud error:", e);
-      this._setSyncState("error", "雲端同步失敗，已維持本機進度");
-      return { success: false, error: e.message };
-    }
+    this._setSyncState("idle", "本機存檔（雲端同步已停用）");
+    return {
+      success: false,
+      reason: "雲端同步已停用：舊的雲端空間沒有密碼，任何人都讀得到存檔。進度只存在這台電腦，換電腦請用「複製備用量子存檔代碼」搬過去。"
+    };
   }
 
   /**
-   * 途徑一：手動輸入 Gmail 信箱（非同步雲端查找與漫遊恢復）
+   * 途徑一：手動輸入 Gmail 信箱（只讀本機存檔，雲端同步已停用）
    */
   async loginWithEmail(email, customNickname = "") {
     email = email.trim().toLowerCase();
-    this._setSyncState("syncing", "正在檢索雲端伺服器存檔...");
 
     const localData = this.accounts[email] || null;
-    let cloudData = null;
     let isNewUser = false;
     let restoreSource = "local";
 
-    try {
-      cloudData = await this.fetchFromCloud(email);
-    } catch (e) {
-      console.warn("Failed to query cloud on login:", e);
-    }
-
-    if (cloudData) {
-      // 雲端有紀錄：跨電腦登入成功！執行智慧合併
-      restoreSource = "cloud";
-      isNewUser = false;
-      this.currentUser = this._mergeAccounts(cloudData, localData);
-      if (customNickname && customNickname.trim()) {
-        this.currentUser.nickname = customNickname.trim().slice(0, 12);
-      }
-      this.currentUser.lastLogin = new Date().toISOString();
-      this.accounts[email] = this.currentUser;
-    } else if (localData) {
-      // 本機有紀錄但雲端尚無：自動上傳至雲端
+    if (localData) {
+      // 本機有紀錄：直接用本機進度
       restoreSource = "local";
       isNewUser = false;
       this.currentUser = localData;
@@ -429,7 +312,7 @@ export class SaveSystem {
       }
       this.currentUser.lastLogin = new Date().toISOString();
     } else {
-      // 兩端皆無：初次創建新帳號
+      // 本機沒有：初次創建新帳號
       isNewUser = true;
       restoreSource = "new";
       const defaultNick = customNickname.trim() || email.split("@")[0];
@@ -458,11 +341,7 @@ export class SaveSystem {
     this.isGuest = false;
     this._persistSession();
     this._saveAccountsToStorage();
-
-    // 背景推播最新進度至雲端以確保跨電腦即時生效
-    this.saveToCloud(this.currentUser).catch(err => {
-      console.warn("Initial cloud push failed:", err);
-    });
+    this._setSyncState("idle", "已儲存於本機");
 
     return { user: this.currentUser, isNewUser, restoreSource };
   }
@@ -478,8 +357,7 @@ export class SaveSystem {
       this._persistSession();
       this._saveAccountsToStorage();
 
-      // 切換後於背景同步該帳號之最新雲端紀錄
-      this.syncWithCloud(email).catch(e => console.warn("Switch sync error:", e));
+      // 雲端同步已停用，帳號只存在本機
       return this.currentUser;
     }
     return null;
@@ -514,7 +392,7 @@ export class SaveSystem {
   }
 
   /**
-   * 將訪客帳號綁定至真實 Gmail (資料無痛轉移並上傳雲端)
+   * 將訪客帳號綁定至真實 Gmail (資料無痛轉移，只存本機)
    */
   async bindGuestToEmail(email, nickname = "") {
     email = email.trim().toLowerCase();
@@ -695,7 +573,7 @@ export class SaveSystem {
   }
 
   /**
-   * 存檔核心：先寫入本機 localStorage，並在背景非同步上傳至全球雲端
+   * 存檔核心：寫入本機 localStorage（雲端同步已停用）
    */
   _saveCurrent() {
     if (this.currentUser) {
@@ -708,10 +586,7 @@ export class SaveSystem {
       this.accounts[this.currentUser.email] = { ...this.currentUser };
       this._saveAccountsToStorage();
 
-      // 背景向全球雲端持久化儲存（不阻塞前台畫面渲染）
-      this.saveToCloud(this.currentUser).catch(err => {
-        console.warn("Auto cloud sync failed:", err);
-      });
+      // 只存本機，不再上傳雲端
     }
     this._persistSession();
   }
@@ -771,8 +646,7 @@ export class SaveSystem {
       this._saveAccountsToStorage();
       this._persistSession();
 
-      // 上傳至全球雲端
-      await this.saveToCloud(merged);
+      // 只存本機，不再上傳雲端
       return { success: true, user: merged };
     } catch (e) {
       console.error("Failed to parse save token:", e);

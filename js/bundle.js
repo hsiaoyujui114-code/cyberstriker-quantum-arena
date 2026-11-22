@@ -2530,7 +2530,6 @@
   // js/save_system.js
   var STORAGE_KEY_CURRENT = "cyberstriker_current_session";
   var STORAGE_KEY_ACCOUNTS = "cyberstriker_cloud_accounts";
-  var CLOUD_KV_ENDPOINT = "https://kvdb.io/LjcEsRKfWahraYeimuojjQ/";
   function utf8ToBase64(str) {
     try {
       if (typeof btoa === "function") {
@@ -2550,11 +2549,6 @@
     } catch (e) {
       return atob(b64);
     }
-  }
-  function emailToCloudKey(email) {
-    const clean = email.trim().toLowerCase();
-    const safeB64 = utf8ToBase64(clean).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-    return "cs_u_" + safeB64;
   }
   function safeGetItem(key) {
     try {
@@ -2585,10 +2579,9 @@
       this.currentUser = null;
       this.isGuest = false;
       this.accounts = this._loadAccountsFromStorage();
-      this.cloudEndpoint = CLOUD_KV_ENDPOINT;
       this.syncListeners = [];
       this.syncState = "idle";
-      this.lastSyncMessage = "\u96F2\u7AEF\u5C31\u7DD2";
+      this.lastSyncMessage = "\u672C\u6A5F\u5B58\u6A94";
     }
     /**
      * 註冊雲端同步狀態變更監聽器
@@ -2656,7 +2649,7 @@
       }
     }
     /**
-     * 初始化系統：自動嘗試恢復前次登入，並在背景向雲端驗證有無最新資料
+     * 初始化系統：自動嘗試恢復前次登入（只讀本機）
      */
     init() {
       try {
@@ -2674,9 +2667,6 @@
               antiCheat.verifySaveIntegrity(this.currentUser);
               this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
               this._saveAccountsToStorage();
-              this.syncWithCloud(sessionData.email).catch((err) => {
-                console.warn("Background sync on init:", err);
-              });
               return;
             }
           }
@@ -2687,70 +2677,20 @@
       this.loginAsGuest();
     }
     /**
-     * 雲端存檔讀取 (GET from kvdb.io)
+     * 雲端存檔讀取：已停用（2026-11-22）。
+     * 舊的 kvdb.io bucket 沒有密碼、任何人都能讀寫，改回只讀本機。
+     * 保留這個函式是為了不改壞呼叫它的地方，一律回傳 null（= 本機沒有雲端紀錄）。
      */
     async fetchFromCloud(email) {
-      if (!email || email.includes("offline.local")) return null;
-      const key = emailToCloudKey(email);
-      const url = this.cloudEndpoint + key;
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 6e3);
-      try {
-        const res = await fetch(url, {
-          method: "GET",
-          headers: { "Accept": "application/json" },
-          signal: controller.signal
-        });
-        clearTimeout(timer);
-        if (res.status === 200) {
-          const data = await res.json();
-          return data;
-        } else if (res.status === 404) {
-          return null;
-        } else {
-          console.warn("Cloud fetch returned status " + res.status);
-          return null;
-        }
-      } catch (e) {
-        clearTimeout(timer);
-        console.warn("Cloud fetch failed or timed out:", e.message);
-        return null;
-      }
+      return null;
     }
     /**
-     * 雲端存檔寫入 (POST to kvdb.io)
+     * 雲端存檔寫入：已停用（2026-11-22），見 fetchFromCloud 的說明。
+     * 存檔已經在 _saveCurrent() 寫進本機 localStorage，這裡只回報「已存本機」。
      */
     async saveToCloud(userData) {
-      if (!userData || !userData.email || userData.email.includes("offline.local")) {
-        return false;
-      }
-      this._setSyncState("syncing", "\u6B63\u5728\u4E0A\u50B3\u5B58\u6A94\u81F3\u5168\u7403\u96F2\u7AEF...");
-      const key = emailToCloudKey(userData.email);
-      const url = this.cloudEndpoint + key;
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 6e3);
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userData),
-          signal: controller.signal
-        });
-        clearTimeout(timer);
-        if (res.ok) {
-          this._setSyncState("synced", "\u5DF2\u65BC " + (/* @__PURE__ */ new Date()).toLocaleTimeString() + " \u6210\u529F\u540C\u6B65\u81F3\u96F2\u7AEF");
-          return true;
-        } else {
-          console.warn("Cloud save status " + res.status);
-          this._setSyncState("error", "\u96F2\u7AEF\u540C\u6B65\u56DE\u61C9\u7570\u5E38\uFF0C\u5DF2\u4FDD\u5B58\u65BC\u672C\u6A5F");
-          return false;
-        }
-      } catch (e) {
-        clearTimeout(timer);
-        console.warn("Cloud save failed:", e.message);
-        this._setSyncState("error", "\u7DB2\u8DEF\u9023\u7DDA\u53D7\u9650\uFF0C\u5B58\u6A94\u66AB\u5B58\u65BC\u672C\u6A5F");
-        return false;
-      }
+      this._setSyncState("idle", "\u5DF2\u5132\u5B58\u65BC\u672C\u6A5F");
+      return false;
     }
     /**
      * 智能合併演算法：確保任何裝置解鎖的造型與最高能量幣永遠不遺失
@@ -2813,68 +2753,29 @@
       };
     }
     /**
-     * 手動或定時強制向雲端進行雙向同步
+     * 手動同步：已停用（2026-11-22），舊的公開雲端不安全，見 fetchFromCloud。
+     * 永遠回傳失敗 + 原因，讓按「立即同步」的人知道改用存檔代碼搬移。
      */
     async syncWithCloud(targetEmail = null) {
       const email = targetEmail || (this.currentUser ? this.currentUser.email : null);
       if (!email || email.includes("offline.local")) {
         return { success: false, reason: "\u8A2A\u5BA2\u5E33\u865F\u7121\u6CD5\u9032\u884C\u96F2\u7AEF\u540C\u6B65" };
       }
-      this._setSyncState("syncing", "\u6B63\u5728\u9023\u63A5\u5168\u7403\u96F2\u7AEF\u8CC7\u6599\u5EAB...");
-      try {
-        const cloudData = await this.fetchFromCloud(email);
-        const localData = this.accounts[email] || this.currentUser;
-        let merged;
-        if (cloudData && localData) {
-          merged = this._mergeAccounts(cloudData, localData);
-        } else if (cloudData) {
-          merged = cloudData;
-        } else if (localData) {
-          merged = localData;
-        } else {
-          return { success: false, reason: "\u627E\u4E0D\u5230\u5E33\u865F\u8CC7\u6599" };
-        }
-        merged.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
-        this.accounts[email] = merged;
-        if (this.currentUser && this.currentUser.email === email) {
-          this.currentUser = merged;
-        }
-        this._saveAccountsToStorage();
-        this._persistSession();
-        await this.saveToCloud(merged);
-        this._setSyncState("synced", "\u5DF2\u5B8C\u6210\u8DE8\u96FB\u8166\u96D9\u5411\u540C\u6B65 (" + (/* @__PURE__ */ new Date()).toLocaleTimeString() + ")");
-        return { success: true, user: merged };
-      } catch (e) {
-        console.error("syncWithCloud error:", e);
-        this._setSyncState("error", "\u96F2\u7AEF\u540C\u6B65\u5931\u6557\uFF0C\u5DF2\u7DAD\u6301\u672C\u6A5F\u9032\u5EA6");
-        return { success: false, error: e.message };
-      }
+      this._setSyncState("idle", "\u672C\u6A5F\u5B58\u6A94\uFF08\u96F2\u7AEF\u540C\u6B65\u5DF2\u505C\u7528\uFF09");
+      return {
+        success: false,
+        reason: "\u96F2\u7AEF\u540C\u6B65\u5DF2\u505C\u7528\uFF1A\u820A\u7684\u96F2\u7AEF\u7A7A\u9593\u6C92\u6709\u5BC6\u78BC\uFF0C\u4EFB\u4F55\u4EBA\u90FD\u8B80\u5F97\u5230\u5B58\u6A94\u3002\u9032\u5EA6\u53EA\u5B58\u5728\u9019\u53F0\u96FB\u8166\uFF0C\u63DB\u96FB\u8166\u8ACB\u7528\u300C\u8907\u88FD\u5099\u7528\u91CF\u5B50\u5B58\u6A94\u4EE3\u78BC\u300D\u642C\u904E\u53BB\u3002"
+      };
     }
     /**
-     * 途徑一：手動輸入 Gmail 信箱（非同步雲端查找與漫遊恢復）
+     * 途徑一：手動輸入 Gmail 信箱（只讀本機存檔，雲端同步已停用）
      */
     async loginWithEmail(email, customNickname = "") {
       email = email.trim().toLowerCase();
-      this._setSyncState("syncing", "\u6B63\u5728\u6AA2\u7D22\u96F2\u7AEF\u4F3A\u670D\u5668\u5B58\u6A94...");
       const localData = this.accounts[email] || null;
-      let cloudData = null;
       let isNewUser = false;
       let restoreSource = "local";
-      try {
-        cloudData = await this.fetchFromCloud(email);
-      } catch (e) {
-        console.warn("Failed to query cloud on login:", e);
-      }
-      if (cloudData) {
-        restoreSource = "cloud";
-        isNewUser = false;
-        this.currentUser = this._mergeAccounts(cloudData, localData);
-        if (customNickname && customNickname.trim()) {
-          this.currentUser.nickname = customNickname.trim().slice(0, 12);
-        }
-        this.currentUser.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
-        this.accounts[email] = this.currentUser;
-      } else if (localData) {
+      if (localData) {
         restoreSource = "local";
         isNewUser = false;
         this.currentUser = localData;
@@ -2912,9 +2813,7 @@
       this.isGuest = false;
       this._persistSession();
       this._saveAccountsToStorage();
-      this.saveToCloud(this.currentUser).catch((err) => {
-        console.warn("Initial cloud push failed:", err);
-      });
+      this._setSyncState("idle", "\u5DF2\u5132\u5B58\u65BC\u672C\u6A5F");
       return { user: this.currentUser, isNewUser, restoreSource };
     }
     /**
@@ -2927,7 +2826,6 @@
         this.isGuest = false;
         this._persistSession();
         this._saveAccountsToStorage();
-        this.syncWithCloud(email).catch((e) => console.warn("Switch sync error:", e));
         return this.currentUser;
       }
       return null;
@@ -2962,7 +2860,7 @@
       return this.currentUser;
     }
     /**
-     * 將訪客帳號綁定至真實 Gmail (資料無痛轉移並上傳雲端)
+     * 將訪客帳號綁定至真實 Gmail (資料無痛轉移，只存本機)
      */
     async bindGuestToEmail(email, nickname = "") {
       email = email.trim().toLowerCase();
@@ -3127,7 +3025,7 @@
       this._saveCurrent();
     }
     /**
-     * 存檔核心：先寫入本機 localStorage，並在背景非同步上傳至全球雲端
+     * 存檔核心：寫入本機 localStorage（雲端同步已停用）
      */
     _saveCurrent() {
       if (this.currentUser) {
@@ -3137,9 +3035,6 @@
       if (!this.isGuest && this.currentUser && this.currentUser.email) {
         this.accounts[this.currentUser.email] = { ...this.currentUser };
         this._saveAccountsToStorage();
-        this.saveToCloud(this.currentUser).catch((err) => {
-          console.warn("Auto cloud sync failed:", err);
-        });
       }
       this._persistSession();
     }
@@ -3190,7 +3085,6 @@
         this.isGuest = false;
         this._saveAccountsToStorage();
         this._persistSession();
-        await this.saveToCloud(merged);
         return { success: true, user: merged };
       } catch (e) {
         console.error("Failed to parse save token:", e);
@@ -15443,6 +15337,148 @@
   };
   var aiController = new AiController("normal");
 
+  // js/engine/replay.js
+  var ReplaySystem = class {
+    constructor() {
+      this.isRecording = false;
+      this.isPlaying = false;
+      this.currentSeed = 12345;
+      this.meta = null;
+      this.frames = [];
+      this.playIndex = 0;
+      this.playbackSpeed = 1;
+      this.isPaused = false;
+      this.shortcodeMap = {};
+    }
+    startRecording(seed, p1Data, p2Data, mode = "ai") {
+      this.isRecording = true;
+      this.isPlaying = false;
+      this.currentSeed = seed || Math.floor(Math.random() * 1e5);
+      this.meta = {
+        version: "1.0",
+        timestamp: Date.now(),
+        mode,
+        p1: { name: p1Data.name, skin: p1Data.skin.id, loadout: p1Data.loadout },
+        p2: { name: p2Data.name, skin: p2Data.skin.id, loadout: p2Data.loadout }
+      };
+      this.frames = [];
+    }
+    recordFrame(inputP1, inputP2) {
+      if (!this.isRecording) return;
+      const p1Bits = this._encodeInput(inputP1);
+      const p2Bits = this._encodeInput(inputP2);
+      this.frames.push([p1Bits, p2Bits]);
+    }
+    stopRecording() {
+      this.isRecording = false;
+      return this.generateShortcode();
+    }
+    // ─── 按鍵輸入位元編碼 ───
+    // bit 0: Left, bit 1: Right, bit 2: Up, bit 3: Down
+    // bit 4: Punch, bit 5: Kick, bit 6: Skill1, bit 7: Skill2, bit 8: Skill3, bit 9: Burst, bit 10: Guard
+    // bit 11: Skill4, bit 12: Skill5（2026-11-22 補上：本來只錄到 Skill3，
+    // 第 4、5 招在重播裡會直接消失，播出來的跟原本那場不一樣）
+    _encodeInput(inp) {
+      if (!inp) return 0;
+      let b = 0;
+      if (inp.x < -0.2) b |= 1;
+      if (inp.x > 0.2) b |= 2;
+      if (inp.y < -0.4) b |= 4;
+      if (inp.y > 0.4) b |= 8;
+      if (inp.punch) b |= 16;
+      if (inp.kick) b |= 32;
+      if (inp.skill1) b |= 64;
+      if (inp.skill2) b |= 128;
+      if (inp.skill3) b |= 256;
+      if (inp.burst) b |= 512;
+      if (inp.guard) b |= 1024;
+      if (inp.skill4) b |= 2048;
+      if (inp.skill5) b |= 4096;
+      return b;
+    }
+    _decodeInput(bits) {
+      return {
+        x: (bits & 1 ? -1 : 0) + (bits & 2 ? 1 : 0),
+        y: (bits & 4 ? -1 : 0) + (bits & 8 ? 1 : 0),
+        punch: !!(bits & 16),
+        kick: !!(bits & 32),
+        skill1: !!(bits & 64),
+        skill2: !!(bits & 128),
+        skill3: !!(bits & 256),
+        burst: !!(bits & 512),
+        guard: !!(bits & 1024),
+        skill4: !!(bits & 2048),
+        skill5: !!(bits & 4096)
+      };
+    }
+    // ─── 產生 CY-REP-XXXXXX 戰鬥重播短碼 ───
+    generateShortcode() {
+      const code = "CY-REP-" + Math.floor(1e5 + Math.random() * 9e5);
+      const replayPackage = {
+        meta: this.meta,
+        seed: this.currentSeed,
+        frames: this.frames
+      };
+      this.shortcodeMap[code] = replayPackage;
+      try {
+        localStorage.setItem("cyber_replay_" + code, JSON.stringify(replayPackage));
+      } catch (e) {
+        console.warn("Replay storage quota exceeded:", e);
+      }
+      return code;
+    }
+    getReplayPackage(code) {
+      if (this.shortcodeMap[code]) return this.shortcodeMap[code];
+      try {
+        const raw = localStorage.getItem("cyber_replay_" + code);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {
+        console.warn("Failed to load replay for", code, e);
+      }
+      return null;
+    }
+    startPlayback(replayPackage) {
+      this.isRecording = false;
+      this.isPlaying = true;
+      this.isPaused = false;
+      this.playbackSpeed = 1;
+      this.playIndex = 0;
+      this.currentReplay = replayPackage;
+      return replayPackage.meta;
+    }
+    getNextFrameInputs() {
+      if (!this.isPlaying || !this.currentReplay) return null;
+      if (this.playIndex >= this.currentReplay.frames.length) {
+        this.isPlaying = false;
+        return null;
+      }
+      const [b1, b2] = this.currentReplay.frames[this.playIndex];
+      this.playIndex++;
+      return {
+        p1: this._decodeInput(b1),
+        p2: this._decodeInput(b2),
+        progress: this.playIndex / this.currentReplay.frames.length
+      };
+    }
+    togglePause() {
+      this.isPaused = !this.isPaused;
+      return this.isPaused;
+    }
+    stepForward() {
+      if (!this.currentReplay || this.playIndex >= this.currentReplay.frames.length) return null;
+      const [b1, b2] = this.currentReplay.frames[this.playIndex];
+      this.playIndex++;
+      return {
+        p1: this._decodeInput(b1),
+        p2: this._decodeInput(b2)
+      };
+    }
+    setSpeed(speed) {
+      this.playbackSpeed = speed;
+    }
+  };
+  var replaySystem = new ReplaySystem();
+
   // js/network/p2p.js
   var P2PNetwork = class {
     constructor() {
@@ -15706,7 +15742,7 @@
       const stages = [
         { p: 35, text: "\u6B63\u5728\u521D\u59CB\u5316\u91CF\u5B50\u6230\u9B25\u5F15\u64CE (60 FPS Physical Engine)..." },
         { p: 75, text: "\u6B63\u5728\u7DE8\u8B6F 10 \u5927\u6838\u5FC3\u6280\u80FD\u77E9\u9663\u6578\u64DA\u5EAB..." },
-        { p: 100, text: "\u6B63\u5728\u9023\u63A5\u5168\u606F\u88DD\u5099\u7DB2\u7D61\u8207\u96F2\u7AEF\u8CC7\u6599\u5EAB..." }
+        { p: 100, text: "\u6B63\u5728\u8B80\u53D6\u672C\u6A5F\u5B58\u6A94..." }
       ];
       const interval = setInterval(() => {
         progress += 2;
@@ -15877,7 +15913,7 @@
           headerLoginBtn.style.background = "rgba(0, 243, 255, 0.12)";
           headerLoginBtn.title = "\u9EDE\u64CA\u9032\u884C Google \u5E33\u865F\u767B\u5165 (\u91CF\u5B50\u8EAB\u5206\u6388\u6B0A\u5100)\uFF0C\u540C\u6B65\u6240\u6709\u5916\u89C0\u8207\u9032\u5EA6";
         } else {
-          headerLoginBtn.innerHTML = `<i class="fa-solid fa-cloud-check" style="color: #10b981;"></i> \u96F2\u7AEF\u5B58\u6A94: ${escapeHtml(u.nickname || "\u5DF2\u767B\u5165")}`;
+          headerLoginBtn.innerHTML = `<i class="fa-solid fa-cloud-check" style="color: #10b981;"></i> \u672C\u6A5F\u5B58\u6A94: ${escapeHtml(u.nickname || "\u5DF2\u767B\u5165")}`;
           headerLoginBtn.style.borderColor = "#10b981";
           headerLoginBtn.style.color = "#10b981";
           headerLoginBtn.style.background = "rgba(16, 185, 129, 0.12)";
@@ -15924,15 +15960,15 @@
           headerBadge.style.display = "inline-flex";
           if (state === "syncing") {
             headerBadge.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color: #ffd700;"></i> <span style="color: #ffd700;">\u540C\u6B65\u4E2D...</span>';
-            headerBadge.title = message || "\u6B63\u5728\u8207\u5168\u7403\u96F2\u7AEF\u540C\u6B65\u5B58\u6A94";
+            headerBadge.title = message || "\u6B63\u5728\u8B80\u53D6\u672C\u6A5F\u5B58\u6A94";
           } else if (state === "synced") {
             headerBadge.innerHTML = '<i class="fa-solid fa-cloud" style="color: #00f3ff;"></i> <span style="color: #00f3ff;">\u96F2\u7AEF\u540C\u6B65</span>';
-            headerBadge.title = message || "\u5DF2\u9023\u7DDA\u81F3\u5168\u7403\u96F2\u7AEF\u4F3A\u670D\u5668 (\u9032\u5EA6\u8DE8\u96FB\u8166\u540C\u6B65\u4E2D)";
+            headerBadge.title = message || "\u9032\u5EA6\u53EA\u5B58\u5728\u9019\u53F0\u700F\u89BD\u5668";
           } else if (state === "error") {
             headerBadge.innerHTML = '<i class="fa-solid fa-cloud-slash" style="color: #ff007f;"></i> <span style="color: #ff007f;">\u672C\u6A5F\u5FEB\u53D6</span>';
             headerBadge.title = message || "\u96F2\u7AEF\u9023\u7DDA\u53D7\u9650\uFF0C\u9032\u5EA6\u66AB\u5B58\u65BC\u672C\u6A5F";
           } else {
-            headerBadge.innerHTML = '<i class="fa-solid fa-cloud" style="color: #94a3b8;"></i> <span>\u96F2\u7AEF\u5B58\u6A94</span>';
+            headerBadge.innerHTML = '<i class="fa-solid fa-cloud" style="color: #94a3b8;"></i> <span>\u672C\u6A5F\u5B58\u6A94</span>';
           }
         }
       }
@@ -15944,27 +15980,27 @@
           if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-user-ninja" style="color: #ffd700;"></i>';
           modalTitle.textContent = "\u8A2A\u5BA2\u6A21\u5F0F\uFF1A\u9032\u5EA6\u50C5\u5132\u5B58\u65BC\u672C\u6A5F";
           modalTitle.style.color = "#ffd700";
-          if (modalDesc) modalDesc.textContent = "\u8F38\u5165\u4E0B\u65B9 Gmail \u4FE1\u7BB1\u5373\u53EF\u5347\u7D1A\u70BA\u5168\u7403\u96F2\u7AEF\u5E33\u865F\uFF0C\u8DE8\u96FB\u8166\u6C38\u4E0D\u4E1F\u5931\uFF01";
+          if (modalDesc) modalDesc.textContent = "\u767B\u5165\u5F8C\u9032\u5EA6\u5B58\u5728\u9019\u53F0\u700F\u89BD\u5668\uFF0C\u63DB\u96FB\u8166\u8ACB\u7528\u5B58\u6A94\u4EE3\u78BC\u642C\u79FB\u3002";
         } else if (state === "syncing") {
           if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color: #ffd700;"></i>';
-          modalTitle.textContent = "\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\uFF1A\u6B63\u5728\u96D9\u5411\u540C\u6B65\u8CC7\u6599...";
+          modalTitle.textContent = "\u672C\u6A5F\u5B58\u6A94\uFF1A\u6B63\u5728\u8B80\u53D6\u8CC7\u6599...";
           modalTitle.style.color = "#ffd700";
-          if (modalDesc) modalDesc.textContent = message || "\u6B63\u5728\u9A57\u8B49\u8DE8\u96FB\u8166\u9032\u5EA6\u4E26\u5408\u4F75\u6700\u65B0\u5916\u89C0\u8207\u91D1\u5E63";
+          if (modalDesc) modalDesc.textContent = message || "\u6B63\u5728\u8B80\u53D6\u672C\u6A5F\u9032\u5EA6";
         } else if (state === "synced") {
           if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud-check" style="color: #00f3ff;"></i>';
-          modalTitle.textContent = "\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u670D\u52D9\uFF1A\u5DF2\u540C\u6B65\u6700\u65B0\u7D00\u9304 \u{1F7E2}";
+          modalTitle.textContent = "\u672C\u6A5F\u5B58\u6A94\uFF1A\u5DF2\u5132\u5B58\u6700\u65B0\u7D00\u9304 \u{1F7E2}";
           modalTitle.style.color = "#00f3ff";
-          if (modalDesc) modalDesc.textContent = message || "\u5728\u4EFB\u4F55\u96FB\u8166\u767B\u5165\u6B64\u5E33\u865F\uFF0C\u7686\u80FD\u81EA\u52D5\u63A5\u7E8C\u904A\u73A9\uFF01";
+          if (modalDesc) modalDesc.textContent = message || "\u9032\u5EA6\u5DF2\u5B58\u5728\u9019\u53F0\u700F\u89BD\u5668\u3002";
         } else if (state === "error") {
           if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud-slash" style="color: #ff007f;"></i>';
-          modalTitle.textContent = "\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u670D\u52D9\uFF1A\u9023\u7DDA\u66AB\u6642\u53D7\u9650 \u{1F7E1}";
+          modalTitle.textContent = "\u672C\u6A5F\u5B58\u6A94\uFF1A\u9023\u7DDA\u66AB\u6642\u53D7\u9650 \u{1F7E1}";
           modalTitle.style.color = "#ff007f";
-          if (modalDesc) modalDesc.textContent = message || "\u5DF2\u5148\u5132\u5B58\u81F3\u672C\u6A5F\uFF0C\u7DB2\u8DEF\u6062\u5FA9\u6642\u5C07\u81EA\u52D5\u88DC\u63A8\u81F3\u96F2\u7AEF\u3002";
+          if (modalDesc) modalDesc.textContent = message || "\u5DF2\u5148\u5132\u5B58\u81F3\u672C\u6A5F\u3002";
         } else {
           if (modalIcon) modalIcon.innerHTML = '<i class="fa-solid fa-cloud" style="color: #00f3ff;"></i>';
-          modalTitle.textContent = "\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u670D\u52D9\uFF1A\u5DF2\u5C31\u7DD2";
+          modalTitle.textContent = "\u672C\u6A5F\u5B58\u6A94\u670D\u52D9\uFF1A\u5DF2\u5C31\u7DD2";
           modalTitle.style.color = "#00f3ff";
-          if (modalDesc) modalDesc.textContent = "\u767B\u5165\u540C\u4E00\u500B Email \u5373\u53EF\u5728\u4EFB\u4F55\u96FB\u8166\u81EA\u52D5\u540C\u6B65\u91D1\u5E63\u3001\u9020\u578B\u8207\u6230\u7E3E";
+          if (modalDesc) modalDesc.textContent = "\u9032\u5EA6\u53EA\u5B58\u5728\u9019\u53F0\u700F\u89BD\u5668\uFF0C\u63DB\u96FB\u8166\u8ACB\u7528\u300C\u91CF\u5B50\u5B58\u6A94\u4EE3\u78BC\u300D\u642C\u79FB";
         }
       }
     }
@@ -16269,7 +16305,7 @@
       }
       await this._completeEmailLogin(payload.email, "");
     }
-    // Email 登入共用流程：自雲端還原進度、提示結果並刷新大廳
+    // Email 登入共用流程：讀取本機進度、提示結果並刷新大廳
     async _completeEmailLogin(email, nick) {
       try {
         const res = await saveSystem.loginWithEmail(email, nick);
@@ -16279,20 +16315,20 @@
           return sk ? sk.name : sid;
         }).join("\u3001");
         if (res.restoreSource === "cloud") {
-          alert(`\u2601\uFE0F \u8DE8\u96FB\u8166\u96F2\u7AEF\u5B58\u6A94\u9084\u539F\u6210\u529F\uFF01
+          alert(`\u2601\uFE0F \u672C\u6A5F\u5B58\u6A94\u9084\u539F\u6210\u529F\uFF01
 \u6B61\u8FCE\u56DE\u4F86\uFF0C${res.user.nickname}\uFF01
-\u5DF2\u6210\u529F\u81EA\u5168\u7403\u96F2\u7AEF\u540C\u6B65\uFF1A
+\u5DF2\u6210\u529F\u8F09\u5165\u9019\u53F0\u96FB\u8166\u7684\u9032\u5EA6\uFF1A
 \u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
-\u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
+\u{1F94B} \u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
 ${skinNames}`);
         } else if (res.isNewUser) {
-          alert(`\u{1F389} \u6B61\u8FCE\u65B0\u6230\u58EB\uFF01\u5DF2\u767C\u653E 50,000 \u80FD\u91CF\u5E63\u8207\u521D\u59CB\u9020\u578B\uFF0C\u4E26\u5EFA\u7ACB\u5168\u7403\u96F2\u7AEF\u5B58\u6A94\u3002
+          alert(`\u{1F389} \u6B61\u8FCE\u65B0\u6230\u58EB\uFF01\u5DF2\u767C\u653E 50,000 \u80FD\u91CF\u5E63\u8207\u521D\u59CB\u9020\u578B\uFF0C\u4E26\u5EFA\u7ACB\u672C\u6A5F\u5B58\u6A94\u3002
 \u{1F94B} \u7576\u524D\u5916\u89C0\uFF1A
 ${skinNames}`);
         } else {
-          alert(`\u2705 \u6B61\u8FCE\u56DE\u4F86\uFF01\u5DF2\u8F09\u5165\u9032\u5EA6\u4E26\u540C\u6B65\u81F3\u5168\u7403\u96F2\u7AEF\u3002
+          alert(`\u2705 \u6B61\u8FCE\u56DE\u4F86\uFF01\u5DF2\u8F09\u5165\u9019\u53F0\u96FB\u8166\u7684\u9032\u5EA6\uFF08\u672C\u6A5F\u5B58\u6A94\uFF09\u3002
 \u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
-\u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
+\u{1F94B} \u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
 ${skinNames}`);
         }
         this.updateUserHUD();
@@ -16736,19 +16772,26 @@ ${skinNames}`);
         if (this.matchMode === "training") p2Name = "\u7DF4\u7FD2\u6728\u6A01\u5047\u4EBA";
         else if (this.matchMode === "local_2p") p2Name = "Player 2";
       }
-      const isAiOpponent = this.matchMode === "p2p" ? false : this.matchMode === "ai" || this.matchMode === "arcade" || this.matchMode === "training";
+      const isAiOpponent = this._pendingReplayData ? false : this.matchMode === "p2p" ? false : this.matchMode === "ai" || this.matchMode === "arcade" || this.matchMode === "training";
+      if (this._pendingReplayData) {
+        p2Name = this._pendingReplayData.p2.name;
+        p1Skin = this._pendingReplayData.p1.skin;
+        p2Skin = this._pendingReplayData.p2.skin;
+      }
       let p2Loadout = ["SK-01", "SK-02", "SK-06"];
-      if (isAiOpponent) {
+      if (this._pendingReplayData) {
+        p2Loadout = [...this._pendingReplayData.p2.loadout];
+      } else if (isAiOpponent) {
         p2Loadout = getRandomAiWeapons(p2Diff, 3);
       }
-      const p1Data = this.matchMode === "p2p" && this._p2pMatchData ? { ...this._p2pMatchData.p1Data, isAi: false } : {
+      const p1Data = this._pendingReplayData ? { ...this._pendingReplayData.p1, isAi: false } : this.matchMode === "p2p" && this._p2pMatchData ? { ...this._p2pMatchData.p1Data, isAi: false } : {
         name: saveSystem.currentUser ? saveSystem.currentUser.nickname : "Player 1",
         skin: p1Skin,
         isAi: false,
         loadout: this.loadoutSelection,
         maxHp: this.battleP1Hp || 1e3
       };
-      const p2Data = this.matchMode === "p2p" && this._p2pMatchData ? { ...this._p2pMatchData.p2Data, isAi: false } : {
+      const p2Data = this._pendingReplayData ? { ...this._pendingReplayData.p2, isAi: false } : this.matchMode === "p2p" && this._p2pMatchData ? { ...this._p2pMatchData.p2Data, isAi: false } : {
         name: p2Name,
         skin: p2Skin,
         isAi: isAiOpponent,
@@ -16760,6 +16803,25 @@ ${skinNames}`);
       this._lastFrameTime = 0;
       this._timeAccumulator = 0;
       combatEngine.initMatch(p1Data, p2Data, this.matchMode === "training");
+      if (this._pendingReplayData) {
+        try {
+          replaySystem.startPlayback(this._pendingReplayData.pkg);
+          this._replayPlayback = true;
+        } catch (e) {
+          console.warn("Replay playback failed to start:", e);
+          this._replayPlayback = false;
+        }
+        this._pendingReplayData = null;
+      } else {
+        this.lastReplayCode = null;
+        this._isReplayPlayback = false;
+        this._replayPlayback = false;
+        try {
+          replaySystem.startRecording(Date.now() % 1e5, p1Data, p2Data, this.matchMode);
+        } catch (e) {
+          console.warn("Replay recording failed to start:", e);
+        }
+      }
       if (isAiOpponent && combatEngine.p2 && Array.isArray(combatEngine.p2.skills)) {
         const drawnNames = combatEngine.p2.skills.map((s) => `\u3010${s.name}\u3011`).join(" ");
         const tierObj = TIER_CONFIG[p2Diff] || TIER_CONFIG.normal;
@@ -17011,7 +17073,17 @@ ${skinNames}`);
       while (this._timeAccumulator >= FIXED_STEP && steps < 3) {
         let inputP1 = null;
         let inputP2 = null;
-        if (combatEngine.isOver) {
+        if (this._replayPlayback) {
+          const frame = replaySystem.getNextFrameInputs();
+          if (frame) {
+            inputP1 = frame.p1;
+            inputP2 = frame.p2;
+          } else {
+            this._replayPlayback = false;
+            inputP1 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+            inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
+          }
+        } else if (combatEngine.isOver) {
           inputP1 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
           inputP2 = { x: 0, y: 0, punch: false, kick: false, guard: false, skill1: false, skill2: false, skill3: false, skill4: false, skill5: false, burst: false };
           if (this.matchMode === "p2p" && this.multiplayerRole === "host" && p2pNetwork.isConnected && this.matchEndTimer <= 30) {
@@ -17098,6 +17170,12 @@ ${skinNames}`);
           inputP2 = aiController.decide(combatEngine.p2, combatEngine.p1, combatEngine);
         }
         if (this.matchMode !== "p2p" || this.isMultiplayerMatchUnlocked) {
+          if (!this._replayPlayback && replaySystem.isRecording) {
+            try {
+              replaySystem.recordFrame(inputP1, inputP2);
+            } catch (e) {
+            }
+          }
           combatEngine.update(inputP1, inputP2);
         }
         if (combatEngine.isOver && !combatEngine.isTraining) {
@@ -18792,11 +18870,20 @@ ${skinNames}`);
     // ─── 對決結束與結算面板彈出 ───
     _showMatchEndModal() {
       soundEngine.stopBgm();
+      if (this._isReplayPlayback) {
+      } else if (replaySystem.isRecording) {
+        try {
+          this.lastReplayCode = replaySystem.stopRecording();
+        } catch (e) {
+          console.warn("Replay stop failed:", e);
+          this.lastReplayCode = null;
+        }
+      }
       const isDraw = combatEngine.winner === 0;
       const won = !isDraw && (this.matchMode === "p2p" ? this.multiplayerRole === "guest" ? combatEngine.winner === 2 : combatEngine.winner === 1 : combatEngine.winner === 1);
       const isAi = this.matchMode === "ai" || this.matchMode === "arcade";
-      const reward = isDraw ? { gained: 50, newBalance: (saveSystem.currentUser?.credits || 0) + 50 } : saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
-      if (isDraw && saveSystem && typeof saveSystem.addCredits === "function") {
+      const reward = this._isReplayPlayback ? { gained: 0, newBalance: saveSystem.currentUser?.credits || 0 } : isDraw ? { gained: 50, newBalance: (saveSystem.currentUser?.credits || 0) + 50 } : saveSystem.recordBattleResult(won, this.aiDifficulty, isAi);
+      if (isDraw && !this._isReplayPlayback && saveSystem && typeof saveSystem.addCredits === "function") {
         try {
           saveSystem.addCredits(50);
         } catch (e) {
@@ -18890,10 +18977,92 @@ ${skinNames}`);
         }
         if (creditsReward) creditsReward.textContent = `+${reward.gained} \u80FD\u91CF\u5E63`;
       }
+      this._updateMatchReplayBox();
       if (endModal) endModal.classList.add("active");
       this.updateUserHUD();
     }
+    // ─── 戰鬥重播：結算畫面的重播碼、重播本場、輸入代碼載入 ───
+    _updateMatchReplayBox() {
+      const box = document.getElementById("matchReplayBox");
+      if (!box) return;
+      const codeEl = document.getElementById("matchReplayCode");
+      if (this.lastReplayCode) {
+        box.style.display = "block";
+        if (codeEl) codeEl.textContent = this.lastReplayCode;
+      } else {
+        box.style.display = "none";
+        return;
+      }
+      const replayBtn = document.getElementById("matchReplayBtn");
+      if (replayBtn) {
+        replayBtn.onclick = () => {
+          const pkg = this.lastReplayCode ? replaySystem.getReplayPackage(this.lastReplayCode) : null;
+          if (pkg) this._startReplayPlayback(pkg);
+          else alert("\u627E\u4E0D\u5230\u9019\u5834\u7684\u91CD\u64AD\uFF0C\u8ACB\u91CD\u65B0\u6253\u4E00\u5834\u3002");
+        };
+      }
+      const copyBtn = document.getElementById("matchCopyReplayBtn");
+      if (copyBtn) {
+        copyBtn.onclick = async () => {
+          if (!this.lastReplayCode) return;
+          try {
+            await navigator.clipboard.writeText(this.lastReplayCode);
+            copyBtn.textContent = "\u5DF2\u8907\u88FD \u2713";
+            setTimeout(() => {
+              copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> \u8907\u88FD\u4EE3\u78BC';
+            }, 1500);
+          } catch (e) {
+            prompt("\u8ACB\u624B\u52D5\u8907\u88FD\u91CD\u64AD\u78BC\uFF1A", this.lastReplayCode);
+          }
+        };
+      }
+      const loadBtn = document.getElementById("matchLoadReplayBtn");
+      if (loadBtn) {
+        loadBtn.onclick = () => {
+          const input = document.getElementById("matchReplayCodeInput");
+          const code = (input ? input.value : "").trim().toUpperCase();
+          if (!code) {
+            alert("\u8ACB\u5148\u8F38\u5165\u91CD\u64AD\u78BC\uFF0C\u4F8B\u5982 CY-REP-123456");
+            return;
+          }
+          const pkg = replaySystem.getReplayPackage(code);
+          if (!pkg) {
+            alert("\u627E\u4E0D\u5230\u9019\u500B\u91CD\u64AD\u78BC\u3002\u91CD\u64AD\u78BC\u53EA\u5B58\u5728\u9304\u4E0B\u5B83\u7684\u90A3\u53F0\u96FB\u8166\u3001\u90A3\u500B\u700F\u89BD\u5668\u3002");
+            return;
+          }
+          this._startReplayPlayback(pkg);
+        };
+      }
+    }
+    // 用錄好的重播包從頭打一次：雙方造型、武器都照錄好的來，輸入也照錄好的餵，
+    // 所以打出的結果跟原本同一場一樣（粒子、震屏是隨機特效，看起來會有一點不同）。
+    _startReplayPlayback(pkg) {
+      if (!pkg || !pkg.meta) return;
+      const findSkin = (id) => SKINS.find((s) => s.id === id) || SKINS[0];
+      this._pendingReplayData = {
+        pkg,
+        p1: { name: pkg.meta.p1.name, skin: findSkin(pkg.meta.p1.skin), loadout: pkg.meta.p1.loadout, maxHp: 1e3 },
+        p2: { name: pkg.meta.p2.name, skin: findSkin(pkg.meta.p2.skin), loadout: pkg.meta.p2.loadout, maxHp: 1e3 }
+      };
+      this._isReplayPlayback = true;
+      this._p2pMatchData = null;
+      this.matchMode = "ai";
+      this.aiDifficulty = "normal";
+      this.battleP1Hp = 1e3;
+      this.battleP2Hp = 1e3;
+      const endModal = document.getElementById("matchEndModal");
+      if (endModal) endModal.classList.remove("active");
+      this._launchMatch();
+    }
     exitBattleToLobby() {
+      if (replaySystem.isRecording && !this._isReplayPlayback) {
+        try {
+          this.lastReplayCode = replaySystem.stopRecording();
+        } catch (e) {
+        }
+      }
+      this._isReplayPlayback = false;
+      this._replayPlayback = false;
       this.isFighting = false;
       if (this._battleLoopId) {
         cancelAnimationFrame(this._battleLoopId);
@@ -19391,7 +19560,7 @@ ${skinNames}`);
           }
           if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> \u6B63\u5728\u6AA2\u7D22\u96F2\u7AEF\u5B58\u6A94...';
+            submitBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> \u6B63\u5728\u8B80\u53D6\u672C\u6A5F\u5B58\u6A94...';
           }
           try {
             await this._completeEmailLogin(email, nick);
@@ -19481,7 +19650,7 @@ ${skinNames}`);
 \u{1F4B0} \u80FD\u91CF\u5E63\uFF1A${res.user.credits.toLocaleString()}
 \u{1F94B} \u540C\u6B65\u5916\u89C0 (${res.user.skins?.length || 0} \u5957)\uFF1A
 ${skinNames}
-\u5DF2\u81EA\u52D5\u540C\u6B65\u81F3\u5168\u7403\u96F2\u7AEF\uFF01`);
+\u5DF2\u5132\u5B58\u65BC\u672C\u6A5F\u3002`);
           } else {
             soundEngine.playHit("guard");
             alert(`\u274C \u5B58\u6A94\u4EE3\u78BC\u5C0E\u5165\u5931\u6557\uFF1A${res.reason || "\u4EE3\u78BC\u7121\u6548"}`);
