@@ -49,6 +49,8 @@ export class ReplaySystem {
   // ─── 按鍵輸入位元編碼 ───
   // bit 0: Left, bit 1: Right, bit 2: Up, bit 3: Down
   // bit 4: Punch, bit 5: Kick, bit 6: Skill1, bit 7: Skill2, bit 8: Skill3, bit 9: Burst, bit 10: Guard
+  // bit 11: Skill4, bit 12: Skill5（2026-11-22 補上：本來只錄到 Skill3，
+  // 第 4、5 招在重播裡會直接消失，播出來的跟原本那場不一樣）
   _encodeInput(inp) {
     if (!inp) return 0;
     let b = 0;
@@ -63,6 +65,8 @@ export class ReplaySystem {
     if (inp.skill3) b |= 256;
     if (inp.burst) b |= 512;
     if (inp.guard) b |= 1024;
+    if (inp.skill4) b |= 2048;
+    if (inp.skill5) b |= 4096;
     return b;
   }
 
@@ -76,7 +80,9 @@ export class ReplaySystem {
       skill2: !!(bits & 128),
       skill3: !!(bits & 256),
       burst: !!(bits & 512),
-      guard: !!(bits & 1024)
+      guard: !!(bits & 1024),
+      skill4: !!(bits & 2048),
+      skill5: !!(bits & 4096)
     };
   }
 
